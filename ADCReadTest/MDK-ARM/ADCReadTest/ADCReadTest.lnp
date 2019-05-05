@@ -1,0 +1,28 @@
+--cpu Cortex-M7.fp.dp
+"adcreadtest\startup_stm32f767xx.o"
+"adcreadtest\main.o"
+"adcreadtest\stm32f7xx_it.o"
+"adcreadtest\stm32f7xx_hal_msp.o"
+"adcreadtest\stm32f7xx_hal_adc.o"
+"adcreadtest\stm32f7xx_hal_adc_ex.o"
+"adcreadtest\stm32f7xx_hal_cortex.o"
+"adcreadtest\stm32f7xx_hal_tim.o"
+"adcreadtest\stm32f7xx_hal_tim_ex.o"
+"adcreadtest\stm32f7xx_hal_rcc.o"
+"adcreadtest\stm32f7xx_hal_rcc_ex.o"
+"adcreadtest\stm32f7xx_hal_flash.o"
+"adcreadtest\stm32f7xx_hal_flash_ex.o"
+"adcreadtest\stm32f7xx_hal_gpio.o"
+"adcreadtest\stm32f7xx_hal_dma.o"
+"adcreadtest\stm32f7xx_hal_dma_ex.o"
+"adcreadtest\stm32f7xx_hal_pwr.o"
+"adcreadtest\stm32f7xx_hal_pwr_ex.o"
+"adcreadtest\stm32f7xx_hal.o"
+"adcreadtest\stm32f7xx_hal_i2c.o"
+"adcreadtest\stm32f7xx_hal_i2c_ex.o"
+"adcreadtest\system_stm32f7xx.o"
+"..\..\..\..\AppData\Local\Arm\Packs\ARM\CMSIS\5.5.1\CMSIS\DSP\Lib\ARM\arm_cortexM7lfdp_math.lib"
+--library_type=microlib --strict --scatter "ADCReadTest\ADCReadTest.sct"
+--summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
+--info sizes --info totals --info unused --info veneers
+--list "ADCReadTest.map" -o ADCReadTest\ADCReadTest.axf
