@@ -1,5 +1,5 @@
 # Acoustics
-Repository to analyze signals from three (3) different hydrophones and estimate the positioning of a pinger in XY-coordinates.\
+Repository to analyze signals from three (3) different hydrophones and estimate the positioning of a pinger in XY-coordinates.
 
 Hydrophones used:\
   Benthowave BII-7xxx series. (Unknown series of hydrophones...)\
