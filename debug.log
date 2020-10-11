@@ -1,0 +1,2 @@
+[1011/140741.027:ERROR:settings.cc(430)] Settings version is not 5
+[1011/141741.053:ERROR:directory_reader_win.cc(43)] FindFirstFile: Systemet finner ikke angitt bane. (0x3)
