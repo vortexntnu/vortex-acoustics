@@ -1,0 +1,6 @@
+*.out
+*.swp
+.vscode/
+build/
+dox/
+vortex_acoustics

@@ -10,35 +10,7 @@
 #ifndef ACOUSTICS_HYDROPHONES_HPP
 #define ACOUSTICS_HYDROPHONES_HPP
 
-#include "DSP.hpp"
-//Find the ROS pose-header/functions
-
-/**
- * @brief Struct to keep the position
- * and heading of each object/hydrophone
- * 
- * @warning Should be replaced with the 
- * Pose included in ROS!
- */
-struct Pose{
-    /**
-     * @brief Describes the position in 
-     * x, y and z relative to the center 
-     * of the AUV.
-     */
-    double x, y, z;
-    
-    /**
-     * @brief Describes the heading, 
-     * compared to the heading of the
-     * AUV
-     */
-    double h_x, h_y, h_z;
-
-    Pose(double x, double y, 
-         double z, double h_x, 
-         double h_y, double h_z);
-};
+#include "../include/triliteration.hpp"
 
 /**
  * @brief Class for the hydrophones. 

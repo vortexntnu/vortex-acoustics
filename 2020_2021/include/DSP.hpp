@@ -6,7 +6,7 @@
 #ifndef ACOUSTICS_DSP_HPP
 #define ACOUSTICS_DSP_HPP
 
-#include "fourier.hpp"
+#include "../include/fourier.hpp"
 
 /**
  * @brief Constants. 
@@ -42,6 +42,23 @@ double correlation_coefficient(
     int x_arr, int y_arr, int n);
 
 
+/**
+ * @brief Function to calculate the correlation
+ * between to different signals
+ * 
+ * @param x_arr Array of signal 1
+ * 
+ * @param y_arr Array of signal 2
+ * 
+ * @param n Number of elements in each array
+ * 
+ * @warning Must be updated to apprehend 
+ * lists of different lengths
+ * 
+ * @warning Not implemented as of 12.10.2020
+ */
+double correlation(
+    double x_arr, double y_arr);
 
 // Required functions:
     //X-correlation

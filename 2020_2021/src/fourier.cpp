@@ -1,4 +1,4 @@
-#include "fourier.hpp"
+#include "../include/fourier.hpp"
 
 void fourier_fft(CArray& x_arr, bool take_abs_value=false)
 {

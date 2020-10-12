@@ -1,4 +1,4 @@
-#include "DSP.hpp"
+#include "../include/DSP.hpp"
  
 double correlation_coefficient(int x_arr[], int y_arr[], int n) 
 { 
