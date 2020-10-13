@@ -10,16 +10,16 @@
 #include <math.h>
 
 #include "../include/DSP.hpp"
-//Find the ROS pose-header/functions
+//Find the ROS pos-header/functions
 
 /**
  * @brief Struct to keep the position
- * and heading of each object/hydrophone
+ * for an object/hydrophone
  * 
  * @warning Should be replaced with the 
- * Pose included in ROS!
+ * Pos included in ROS!
  */
-struct Pose{
+struct Pos{
     /**
      * @brief Describes the position in 
      * x, y and z relative to the center 
@@ -35,47 +35,83 @@ struct Pose{
     double h_x, h_y, h_z;
 
     /**
-     * @brief Two different constructors.
-     * Depends whether the heading should
-     * be included or not
+     * @brief Constructor.
      */
-    Pose(double x, double y, 
-         double z, double h_x, 
-         double h_y, double h_z);
-
-    Pose(double x, double y,
+    Pos(double x, double y,
         double z);
-
 };
 
 
 /**
- * @brief Operator overload of - for Pose
+ * @brief Function to take the norm
+ * of a point pos. Takes the norm from
+ * the zero-vector, which would be the 
+ * mass-center of the AUV
+ * 
+ * @param pos The position to take
+ * the norm
  */
-Pose& operator-(const Pose& pos1, const Pose& pos2);
+double pos_norm(const Pos& pos);
+
 
 /**
- * @brief Operator overload of / for Pose.
+ * @brief Function to take the dot-
+ * product of a position pos.
+ * 
+ * @param pos1 The first position to 
+ * take the dot-product
+ * 
+ * @param pos2 The second position to
+ * take the dot-product
+ */
+double pos_dot(const Pos& pos1, const Pos & pos2);
+
+
+/**
+ * @brief Function to take the cross-
+ * product of a position pos.
+ * 
+ * @param pos The position to take
+ * the cross-product of
+ */
+Pos pos_cross(const Pos& pos1, const Pos& pos2);
+
+
+/**
+ * @brief Operator overload of - for Pos
+ */
+Pos operator-(const Pos& pos1, const Pos& pos2);
+
+
+/**
+ * @brief Operator overload of * for Pos
+ */
+Pos operator*(double val, const Pos& pos);
+
+
+/**
+ * @brief Operator overload of + for Pos
+ */
+Pos operator+(const Pos& pos1, const Pos& pos2);
+
+
+/**
+ * @brief Operator overload of / for Pos.
  * The function takes in a position, and how
  * much the point should be normalized by
  * 
- * @param pose The postion to be normalized
+ * @param pos The postion to be normalized
  * 
- * @param den Denominator. How much the pose
+ * @param den Denominator. How much the pos
  * should be normalized
  */
-Pose& operator/(const Pose& pose, const double& den);
-
-
-//Need to implement the dot and cross-
-//product for pose in some way
-
+Pos operator/(const Pos& pos, const double& den);
 
 
 /**
  * @brief Function to find the intersections between
  * three spheres. The function could therefore be used
- * to triliterate the position
+ * to triliterate the position. Returns a pair of values
  * 
  * @param pos1 Center for sphere 1
  * @param pos2 Center for sphere 2
@@ -83,10 +119,12 @@ Pose& operator/(const Pose& pose, const double& den);
  *  
  * @param rad1 Radius for sphere 1
  * @param rad2 Radius for sphere 2
- * @param rad3 Radius for sphere 3   
+ * @param rad3 Radius for sphere 3
+ * 
+ * @warning NEEDS TO HAVE UNDERSTANDABLE VARIABLE-NAMES!!   
  */
-void triliterate(Pose pos1, Pose pos2, Pose pos3, 
-            double rad1, double rad2, double rad3);
+std::pair<Pos, Pos> triliterate(Pos pos1, Pos pos2, 
+        Pos pos3, double rad1, double rad2, double rad3);
 
 
 #endif //ACOUSTICS_TRILITERATE_HPP
