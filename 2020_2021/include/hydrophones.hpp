@@ -18,15 +18,15 @@
  * each hydrophone. Makes it a lot 
  * easier to implement
  * 
- * @warning To be improved in the 
- * future! Still work in progress 
+ * @warning Must be evaluated if this
+ * class is really necessary
  */
 class Hydrophones{
 private:
-    Pose pose;
+    Pos pos;
 
 public:
-    Hydrophones(Pose pose);
+    Hydrophones(Pos pos);
     ~Hydrophones();
 };
 

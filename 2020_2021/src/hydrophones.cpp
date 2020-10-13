@@ -1,6 +1,6 @@
 #include "../include/hydrophones.hpp"
 
-Hydrophones::Hydrophones(Pose pose) : pose{pose}{}
+Hydrophones::Hydrophones(Pos pos) : pos{pos}{}
 
 Hydrophones::~Hydrophones(){}
 
