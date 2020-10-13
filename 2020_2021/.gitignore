@@ -1,6 +1,10 @@
+*.o
 *.out
 *.swp
 .vscode/
 build/
 dox/
 vortex_acoustics
+html/
+latex/
+*.txt
