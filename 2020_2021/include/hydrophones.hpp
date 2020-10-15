@@ -12,6 +12,8 @@
 
 #include "../include/triliteration.hpp"
 
+namespace HYDROPHONES{
+
 /**
  * @brief Class for the hydrophones. 
  * Combines the basic functions for
@@ -23,11 +25,13 @@
  */
 class Hydrophones{
 private:
-    Pos pos;
+    TRILITERATION::Pos pos;
 
 public:
-    Hydrophones(Pos pos);
+    Hydrophones(TRILITERATION::Pos pos);
     ~Hydrophones();
 };
+
+} //HYDROPHONES
 
 #endif //ACOUSTICS_HYDROPHONES_HPP

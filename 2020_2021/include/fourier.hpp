@@ -20,9 +20,30 @@
 
 
 /**
- * Defines and typedefs
+ * @brief Namespace/wrapper for basic-fourier
+ * functions
+ */
+namespace FOURIER{
+
+/**
+ * @brief Important values
+ * 
+ * @param PI Value for the math-constant pi
+ * 
+ * @param num_freq_intervals How many intervals is used
+ * for estimating the frequency measured. More 
+ * intervals gives lower variance in the estimated
+ * frequency. This improves the estimate and therefore 
+ * how good the system can tolerate noise and other
+ * disturbances. 
+ * 
+ * @param len_freq_intervals Describes how much data each
+ * interval can hold. 
  */
 const double PI = 3.141592653589793238460;
+const int num_freq_intervals = 1024;
+const int len_freq_intervals = 128;
+
  
 typedef std::complex<double> Complex;
 typedef std::valarray<Complex> CArray;
@@ -43,9 +64,11 @@ typedef std::valarray<Complex> CArray;
  * should return the absolute-values!
  * 
  * @warning The algorithm could be improved. 
- * It requires a lot of memory!
+ * It requires a lot of memory, so if implemented
+ * on a µ-controler the function may result in a
+ * memory overflow! 
  */
-void fourier_fft(CArray& x_arr, bool take_abs_value);
+void fft(CArray& x_arr, bool take_abs_value);
 
 
 /**
@@ -54,6 +77,42 @@ void fourier_fft(CArray& x_arr, bool take_abs_value);
  * 
  * @param x_arr Array of data to take the IDFT 
  */
-void fourier_ifft(CArray& x_arr);
+void ifft(CArray& x_arr);
+
+
+/**
+ * @brief Function to estimate the frequency-response
+ * from the samples. 
+ * 
+ * @note Mainly a helper-function to the function
+ * freq_estimation. Will sum up the entire array.
+ * Results in more overhead, but makes the code
+ * more readable.
+ *  
+ * @param x_arr Array of data to estimate the 
+ * correct frequency-response 
+ */
+Complex sum_complex_arr(const CArray& x_arr);
+
+
+/**
+ * @brief Function to estimate the frequency-response
+ * from the samples. 
+ * 
+ * @note The estimation is another 
+ * possible technique to get the frequency from 
+ * the data. This method should result in less noise
+ * compared to taking the fft of the autocorrelation.
+ *  
+ * @param x_arr Array of data to estimate the 
+ * correct frequency-response 
+ * 
+ * @warning Not implemented! Too many inaccuracies
+ * and uncertanties atm (15.10.2020)
+ */
+CArray freq_estimation(const CArray& x_arr);
+
+
+} //FOURIER
 
 #endif //ACOUSTICS_FOURIER_HPP

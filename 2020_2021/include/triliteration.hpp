@@ -13,6 +13,11 @@
 //Find the ROS pos-header/functions
 
 /**
+ * @brief Namespace/wrapper for the triliteration
+ */
+namespace TRILITERATION{
+
+/**
  * @brief Struct to keep the position
  * for an object/hydrophone
  * 
@@ -126,5 +131,7 @@ Pos operator/(const Pos& pos, const double& den);
 std::pair<Pos, Pos> triliterate(Pos pos1, Pos pos2, 
         Pos pos3, double rad1, double rad2, double rad3);
 
+
+} //TRILITERATION
 
 #endif //ACOUSTICS_TRILITERATE_HPP

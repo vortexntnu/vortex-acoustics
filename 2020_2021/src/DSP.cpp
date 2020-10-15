@@ -1,6 +1,6 @@
 #include "../include/DSP.hpp"
  
-double correlation_coefficient(int x_arr[], int y_arr[], int n) 
+double DSP::correlation_coefficient(int x_arr[], int y_arr[], int n) 
 { 
     int sum_x = 0, sum_y = 0, sum_xy = 0; 
     int square_sum_x = 0, square_sum_y = 0; 
@@ -28,3 +28,36 @@ double correlation_coefficient(int x_arr[], int y_arr[], int n)
   
     return corr; 
 } 
+
+
+
+int DSP::find_lag(const FOURIER::CArray& x_arr){
+    // N: size of the array
+    // max_val: maximum value in x_arr
+    // max_idx: idx of maximum value in x_arr   
+    const int N = x_arr.size();
+    double max_val = 0;
+    int max_idx = 0;
+
+    // Could be a potential problem by using the
+    // absolute value.
+    for(int i = 0; i < N; i++){
+        //FOURIER::Complex temp = x_arr[i];
+        double temp_abs = abs(x_arr[i]);
+        if(temp_abs >= max_val){
+            max_val = temp_abs;
+            max_idx = i;
+        }
+    }
+    return max_idx;
+}
+
+
+void DSP::freq_filtering(FOURIER::CArray& x_arr){
+    const int N = x_arr.size();
+    for(int i = 0; i < N; i++){
+        if(abs(x_arr[i]) < DSP::MIN_FREQUENCY || abs(x_arr[i]) >  MAX_FREQUENCY){
+            x_arr[i] = FOURIER::Complex(0, 0);
+        }
+    }
+}

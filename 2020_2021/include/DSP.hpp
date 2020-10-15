@@ -9,13 +9,23 @@
 #include "../include/fourier.hpp"
 
 /**
- * @brief Constants. 
- * Maximum frequency (in robosub) will be 50 KHz.
- * The minimum sampling-frequency is therefore
- * 100KHz. The sample-frequency is increased to
- * 120KHz to prevent any other aliasing.
+ * @brief Namespace/wrapper for basic DSP
+ * (digital signal processing) functions. 
  */
-const int SAMPLE_FREQUENCY = 120000;
+namespace DSP{
+
+/**
+ * @brief Constants. 
+ * The frequencie (in robosub) will be 
+ * in the range 20 KHz - 40 KHz.
+ * The minimum sampling-frequency is therefore
+ * 80 KHz, but increased to 100 KHz for safety.
+ * 
+ * The MAX_FREQUENCY and MIN_FREQUENCY are used 
+ * for filtering the data in software. Every 
+ * frequency above max or below min is noise
+ */
+const int SAMPLE_FREQUENCY = 100000;
 const int MAX_FREQUENCY = SAMPLE_FREQUENCY / 2;
 const int MIN_FREQUENCY = SAMPLE_FREQUENCY / 10;
 
@@ -57,15 +67,32 @@ double correlation_coefficient(
  * 
  * @warning Not implemented as of 12.10.2020
  */
-double correlation(
-    double x_arr, double y_arr);
+double correlation(double x_arr, double y_arr);
 
-// Required functions:
-    //X-correlation
-    //A way to calculate the lag
-    //A way to filter the data in SW
-        //by using the frequency-components 
-        //from the fft
 
+/**
+ * @brief Function to calculate the lag of an
+ * array. Finds the lag by detecting the highest
+ * value in the argument.
+ * 
+ * @param x_arr Array of signal 1 to find the
+ * lag
+ */
+int find_lag(const FOURIER::CArray& x_arr);
+
+
+/**
+ * @brief Function to filter the signal between
+ * the min and max frequency. Will therefore 
+ * implement a band-pass filter in SW.
+ * 
+ * @param x_arr Reference to an array to be BP-
+ * filtered
+ */
+void freq_filtering(FOURIER::CArray& x_arr);
+
+
+
+} //DSP
 
 #endif //ACOUSTICS_DSP_HPP

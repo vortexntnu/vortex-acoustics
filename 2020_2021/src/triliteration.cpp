@@ -3,7 +3,7 @@
 /**
  * Constructor
  */
-Pos::Pos(double x, double y, double z) : 
+TRILITERATION::Pos::Pos(double x, double y, double z) : 
         x(x), y(y), z(z) {}
 
 
@@ -11,22 +11,24 @@ Pos::Pos(double x, double y, double z) :
 /**
  * Operator overload for Pos
  */
-Pos operator*(double val, const Pos& pos){
-    return Pos(pos.x * val, pos.y * val, pos.z * val);
+TRILITERATION::Pos operator*(double val, const TRILITERATION::Pos& pos){
+    return TRILITERATION::Pos(pos.x * val, pos.y * val, pos.z * val);
 }
 
-Pos operator/(const Pos& pos, const double& den){
-    return Pos(pos.x / den, pos.y / den, pos.z / den);
+TRILITERATION::Pos operator/(const TRILITERATION::Pos& pos, const double& den){
+    return TRILITERATION::Pos(pos.x / den, pos.y / den, pos.z / den);
 }
 
 
-Pos operator-(const Pos& pos1, const Pos& pos2){
-    return Pos(pos2.x - pos1.x, pos2.y - pos1.y, 
+TRILITERATION::Pos operator-(const TRILITERATION::Pos& pos1, 
+        const TRILITERATION::Pos& pos2){
+    return TRILITERATION::Pos(pos2.x - pos1.x, pos2.y - pos1.y, 
         pos2.z - pos1.z);
 }
 
-Pos operator+(const Pos& pos1, const Pos& pos2){
-    return Pos(pos1.x + pos2.x, pos1.y + pos2.y, 
+TRILITERATION::Pos operator+(const TRILITERATION::Pos& pos1, 
+        const TRILITERATION::Pos& pos2){
+    return TRILITERATION::Pos(pos1.x + pos2.x, pos1.y + pos2.y, 
         pos1.z + pos2.z);
 }
 
@@ -35,28 +37,34 @@ Pos operator+(const Pos& pos1, const Pos& pos2){
 /**
  * Helper functions for Pos and linalg
  */
-Pos pos_cross(const Pos& pos1, const Pos& pos2){
+TRILITERATION::Pos pos_cross(const TRILITERATION::Pos& pos1, 
+        const TRILITERATION::Pos& pos2){
     //Find a good way to implement this
 }
 
 
-double pos_norm(const Pos& pos){
+double TRILITERATION::pos_norm(const TRILITERATION::Pos& pos){
     return std::sqrt(
         pow(pos.x, 2) + pow(pos.y, 2) + pow(pos.z, 2));
 }
 
 
-double pos_dot(const Pos& pos1, const Pos& pos2){
+double TRILITERATION::pos_dot(const TRILITERATION::Pos& pos1, 
+        const TRILITERATION::Pos& pos2){
     return (pos1.x * pos2.x + 
         pos1.y * pos2.y + pos1.z * pos2.z);
 }
 
 
-std::pair<Pos, Pos> triliterate(Pos pos1, Pos pos2, Pos pos3,
+std::pair<TRILITERATION::Pos, TRILITERATION::Pos> 
+        TRILITERATION::triliterate(TRILITERATION::Pos pos1, 
+        TRILITERATION::Pos pos2, TRILITERATION::Pos pos3,
                 double rad1, double rad2, double rad3){
     
     //Just what the fuck does these varible-names mean???
     // Change them, please!
+    
+    using namespace TRILITERATION;
 
     Pos temp1 = pos2 - pos1;
     Pos e_x = temp1 / pos_norm(temp1);
