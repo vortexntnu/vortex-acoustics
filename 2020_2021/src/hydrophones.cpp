@@ -1,10 +1,10 @@
 #include "../include/hydrophones.hpp"
 
 HYDROPHONES::Hydrophones::Hydrophones(TRILITERATION::Pos pos) : 
-        pos{pos}, last_lag{0}{
-
-    // Initialize the data as an empty array 
-    data{[DSP::interval_total_length]},
+        pos{pos}, last_lag{0}
+{
+    // Initialize the data as an array with garbage data 
+    data.setlength(DSP::interval_total_len);
 }
 
 HYDROPHONES::Hydrophones::~Hydrophones(){}
