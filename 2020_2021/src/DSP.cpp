@@ -31,18 +31,15 @@ double DSP::correlation_coefficient(int x_arr[], int y_arr[], int n)
 
 
 
-int DSP::find_lag(const FOURIER::CArray& x_arr){
+int DSP::find_lag(const alglib::complex_1d_array& x_arr){
     // N: size of the array
     // max_val: maximum value in x_arr
     // max_idx: idx of maximum value in x_arr   
-    const int N = x_arr.size();
+    const int N = x_arr.length();
     double max_val = 0;
     int max_idx = 0;
 
-    // Could be a potential problem by using the
-    // absolute value.
     for(int i = 0; i < N; i++){
-        //FOURIER::Complex temp = x_arr[i];
         double temp_abs = abs(x_arr[i]);
         if(temp_abs >= max_val){
             max_val = temp_abs;
@@ -53,11 +50,28 @@ int DSP::find_lag(const FOURIER::CArray& x_arr){
 }
 
 
-void DSP::freq_filtering(FOURIER::CArray& x_arr){
-    const int N = x_arr.size();
+void DSP::freq_filtering(alglib::complex_1d_array& x_arr){
+    const int N = x_arr.length();
     for(int i = 0; i < N; i++){
-        if(abs(x_arr[i]) < DSP::MIN_FREQUENCY || abs(x_arr[i]) >  MAX_FREQUENCY){
-            x_arr[i] = FOURIER::Complex(0, 0);
+        if(abs(x_arr[i]) < DSP::MIN_FREQUENCY || 
+                    abs(x_arr[i]) >  DSP::MAX_FREQUENCY){
+            x_arr[i] = alglib::complex(0);
         }
     }
 }
+
+
+void DSP::transfer_C_arr_to_alglib(int* c_arr, 
+        alglib::complex_1d_array& x_arr){
+    for(int i = 0; i < DSP::interval_total_len; i++){
+        x_arr[i] = alglib::complex(*c_arr, 0);
+        c_arr++;
+    }
+}
+
+
+
+
+
+
+

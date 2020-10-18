@@ -42,8 +42,7 @@ struct Pos{
     /**
      * @brief Constructor.
      */
-    Pos(double x, double y,
-        double z);
+    Pos(double x, double y, double z);
 };
 
 
