@@ -43,6 +43,19 @@
 
 
 
+
+
+# The makefile is basicly copy-pasted from
+# https://www.partow.net/programming/makefile/index.html
+
+# Another source could also be 
+# http://wiki.wlug.org.nz/MakefileHowto
+
+# Wouldn't study at NTNU if I didn't "kok" it
+
+
+# Need to update this to also include the C-files
+
 CXX      := -c++
 CXXFLAGS := -pedantic-errors -Wall -Wextra -Werror
 LDFLAGS  := -L/usr/lib -lstdc++ -lm
