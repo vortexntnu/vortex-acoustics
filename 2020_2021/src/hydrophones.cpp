@@ -16,13 +16,13 @@ void HYDROPHONES::Hydrophones::calculate_lag(int* c_arr){
     DSP::transfer_C_arr_to_alglib(c_arr, data);
     
     //Takes the FFT of the data
-    alglib::fftcld(data);
+    alglib::fftc1d(data);
 
     //Filters the data in SW between min and max freq in DSP
     DSP::freq_filtering(data);
 
     //Takes the IFFT to get the autocorrelation
-    alglib::fftcldinv(data);
+    alglib::fftc1dinv(data);
 
     //Finds the lag
     last_lag = DSP::find_lag(data);
