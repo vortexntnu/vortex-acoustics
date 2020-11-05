@@ -30,6 +30,10 @@ double DSP::correlation_coefficient(int x_arr[], int y_arr[], int n)
 } 
 
 
+double DSP::calculate_abs(const alglib::complex num){
+    return sqrt(pow(num.x, 2) + pow(num.y, 2));
+}
+
 
 int DSP::find_lag(const alglib::complex_1d_array& x_arr){
     // N: size of the array
@@ -40,7 +44,7 @@ int DSP::find_lag(const alglib::complex_1d_array& x_arr){
     int max_idx = 0;
 
     for(int i = 0; i < N; i++){
-        double temp_abs = abs(x_arr[i]);
+        double temp_abs = DSP::calculate_abs(x_arr[i]);
         if(temp_abs >= max_val){
             max_val = temp_abs;
             max_idx = i;
@@ -53,8 +57,9 @@ int DSP::find_lag(const alglib::complex_1d_array& x_arr){
 void DSP::freq_filtering(alglib::complex_1d_array& x_arr){
     const int N = x_arr.length();
     for(int i = 0; i < N; i++){
-        if(abs(x_arr[i]) < DSP::MIN_FREQUENCY || 
-                    abs(x_arr[i]) >  DSP::MAX_FREQUENCY){
+        double abs_val = DSP::calculate_abs(x_arr[i]);
+        if(abs_val < DSP::MIN_FREQUENCY || 
+                    abs_val > DSP::MAX_FREQUENCY){
             x_arr[i] = alglib::complex(0);
         }
     }

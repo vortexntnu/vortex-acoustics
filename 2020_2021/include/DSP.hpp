@@ -105,12 +105,30 @@ int find_lag(const alglib::complex_1d_array& x_arr);
 /**
  * @brief Function to filter the signal between
  * the min and max frequency. Will therefore 
- * implement a band-pass filter in SW.
+ * implement a naive band-pass filter in SW.
  * 
  * @param x_arr Reference to an array to be BP-
  * filtered
+ * 
+ * @warning Using this algorithm will result in
+ * convolution in the time-domain. Better algorithms
+ * for a band-pass-filter should therefore be 
+ * developed. 
  */
 void freq_filtering(alglib::complex_1d_array& x_arr);
+
+
+
+/**
+ * @brief Normal abs would not handle the complex
+ * class from alglib. The function therefore makes
+ * it possible to calculate the absolute value of an
+ * alglib::complex
+ *
+ * @param num The alglib::complex-number to take the
+ * absolute value of.
+ */
+double calculate_abs(const alglib::complex num);
 
 
 /**

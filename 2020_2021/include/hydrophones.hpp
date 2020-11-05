@@ -14,7 +14,6 @@
 #include "../include/triliteration.hpp"
 #include "../include/DSP.hpp"
 
-
 // Pseudokode to solve the problem
 // 1. Read in N number of datapoints to calculate from each hydrophone 
 // 2. Transfer those datapoints to a complex_1d_array for an easier way to
