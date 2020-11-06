@@ -22,11 +22,11 @@ double DSP::correlation_coefficient(int x_arr[], int y_arr[], int n)
         square_sum_y = square_sum_y + y_arr[i] * y_arr[i]; 
     } 
    
-    double corr = (double)(n * sum_xy - sum_x * sum_y)  
+    double corr_coeff = (double)(n * sum_xy - sum_x * sum_y)  
                   / sqrt((n * square_sum_x - sum_x * sum_x)  
                       * (n * square_sum_y - sum_y * sum_y)); 
   
-    return corr; 
+    return corr_coeff; 
 } 
 
 
@@ -55,12 +55,41 @@ int DSP::find_lag(const alglib::complex_1d_array& x_arr){
 
 
 void DSP::freq_filtering(alglib::complex_1d_array& x_arr){
+    /**
+     * @warning Haven't found a good way to implement this
+     * yet. The problem is that I've relied heavily on 
+     * alglib's library, which uses a special class for
+     * complex values and complex arrays. It makes it much
+     * safer to work with, however normal filters like 
+     * butterworth would not work with it.
+     * 
+     * Using a bit of if/else-hell to gradually reduce the
+     * gain of the values. 
+     * 
+     * f \in [10, 50] kHz => K = 1
+     * f \in [5, 10] kHz or [50, 55] kHz => K = 1/2
+     * f \leq 5 kHZ or f \geq 55 kHz => K = 0   
+     */
+
     const int N = x_arr.length();
     for(int i = 0; i < N; i++){
         double abs_val = DSP::calculate_abs(x_arr[i]);
-        if(abs_val < DSP::MIN_FREQUENCY || 
+        /*if(abs_val < DSP::MIN_FREQUENCY || 
                     abs_val > DSP::MAX_FREQUENCY){
             x_arr[i] = alglib::complex(0);
+        }*/
+        if(abs_val < (DSP::MIN_FREQUENCY / 2) ||
+                abs_val > (DSP::MAX_FREQUENCY + 
+                DSP::MIN_FREQUENCY / 2)){
+            x_arr[i] = alglib::complex(0);
+        }
+        else if((abs_val >= (DSP::MIN_FREQUENCY / 2) &&
+                abs_val < (DSP::MIN_FREQUENCY)) ||
+                (abs_val > (DSP::MAX_FREQUENCY) && abs_val
+                <= (DSP::MAX_FREQUENCY + 
+                DSP::MIN_FREQUENCY / 2))){
+            x_arr[i] = alglib::complex(1/2*x_arr[i].x, 
+                1/2*x_arr[i].y);
         }
     }
 }
@@ -69,7 +98,7 @@ void DSP::freq_filtering(alglib::complex_1d_array& x_arr){
 void DSP::transfer_C_arr_to_alglib(int* c_arr, 
         alglib::complex_1d_array& x_arr){
     for(int i = 0; i < DSP::interval_total_len; i++){
-        x_arr[i] = alglib::complex(*c_arr, 0);
+        x_arr[i] = alglib::complex(*c_arr);
         c_arr++;
     }
 }

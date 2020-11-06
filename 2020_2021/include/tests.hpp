@@ -1,5 +1,11 @@
 /**
- * @brief Different functions for creating and managing tests
+ * @brief Different functions for creating and 
+ * managing tests
+ * 
+ * @warning It is possible to increase the 
+ * efficiency by using premade functions from
+ * for example alglib. Many statistical functions
+ * can be found under alglib/statistics.h
  */
 
 #ifndef ACOUSTICS_TESTS_HPP
@@ -50,7 +56,9 @@ int* create_random_integers();
  */
 void test_lag_calculation(const int num_tests);
 
-} //TESTS
+
+
+} // TESTS
 
 
 #endif // ACOUSTICS_TEST_HPP

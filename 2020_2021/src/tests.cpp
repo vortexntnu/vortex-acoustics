@@ -1,6 +1,5 @@
 #include "../include/tests.hpp"
 
-
 int* TESTS::create_random_integers(){
     static int test_array [DSP::interval_total_len];
     for(int i = 0; i < DSP::interval_total_len; i++){
@@ -16,7 +15,7 @@ void TESTS::test_lag_calculation(const int num_tests){
     TRILITERATION::Pos pos_test(0, 0, 0);
     HYDROPHONES::Hydrophones hyd_test(pos_test);
 
-    // Doing the test @num_tests times. This is to make
+    // Doing the test #num_tests times. This is to make
     // sure that the tests have some statistical strength
     for(int i = 0; i < num_tests; i++){
         try{

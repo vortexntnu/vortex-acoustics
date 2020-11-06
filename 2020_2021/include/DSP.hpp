@@ -15,6 +15,16 @@
  */
 namespace DSP{
 
+
+// Filters could pherhaps be found in the 
+// alglib library. Some AR, MA and ARMA is 
+// found in dataanalysis.h
+
+// Possible to use functions under 
+// alglib/statistics.h for easier calculations
+// for the statistics
+
+
 /**
  * @brief Constants. 
  * The frequencie (in robosub) will be 
@@ -29,6 +39,7 @@ namespace DSP{
 const int SAMPLE_FREQUENCY = 100000;
 const int MAX_FREQUENCY = SAMPLE_FREQUENCY / 2;
 const int MIN_FREQUENCY = SAMPLE_FREQUENCY / 10;
+
 
 /**
  * @brief Constants for estimating the frequency
@@ -45,6 +56,7 @@ const int num_freq_intervals = 128;
 const int len_freq_intervals = 1024;
 const int interval_total_len = num_freq_intervals 
             * len_freq_intervals;
+
 
 /**
  * @brief Function to calculate the correlation
@@ -69,24 +81,6 @@ const int interval_total_len = num_freq_intervals
  */
 double correlation_coefficient(
     int x_arr, int y_arr, int n);
-
-
-/**
- * @brief Function to calculate the correlation
- * between to different signals
- * 
- * @param x_arr Array of signal 1
- * 
- * @param y_arr Array of signal 2
- * 
- * @param n Number of elements in each array
- * 
- * @warning Must be updated to apprehend 
- * lists of different lengths
- * 
- * @warning Not implemented as of 12.10.2020
- */
-double correlation(double x_arr, double y_arr);
 
 
 /**
