@@ -14,7 +14,8 @@ Important notes:\
 
 ## Development
 
-The files for 2020/2021, can be found in the folder "2020_2021"
+The files for 2020/2021, can be found in the folder "2020_2021". The current C/C++ - files that are implemented, are found 
+under "2020_2021/Core/". 
 
 Older files can be found in the folder "Old"
 
