@@ -44,8 +44,7 @@ TRILITERATION::Pos pos_cross(const TRILITERATION::Pos& pos1,
 
 
 double TRILITERATION::pos_norm(const TRILITERATION::Pos& pos){
-    return std::sqrt(
-        pow(pos.x, 2) + pow(pos.y, 2) + pow(pos.z, 2));
+    return sqrt(pow(pos.x, 2) + pow(pos.y, 2) + pow(pos.z, 2));
 }
 
 
@@ -85,7 +84,7 @@ std::pair<TRILITERATION::Pos, TRILITERATION::Pos>
     if(temp4 < 0){
         throw("The three spheres do not intersect");
     }
-    double z = std::sqrt(temp4);
+    double z = sqrt(temp4);
     Pos p_12_a = pos1 + x * e_x + y * e_y + z * e_z;
     Pos p_12_b = pos2 + x * e_x + y * e_y - z * e_z;
 
