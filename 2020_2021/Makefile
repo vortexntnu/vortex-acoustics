@@ -63,10 +63,10 @@ BUILD    := ./build
 OBJ_DIR  := $(BUILD)/objects
 APP_DIR  := $(BUILD)/apps
 TARGET   := program
-INCLUDE  := -Iinclude/ -Ialglib/src
+INCLUDE  := -ICore/Src -Ialglib/src
 SRC      :=                      \
    $(wildcard alglib/src/*.cpp) \
-   $(wildcard src/*.cpp) \
+   $(wildcard Core/src/*.cpp) \
 
 OBJECTS  := $(SRC:%.cpp=$(OBJ_DIR)/%.o)
 
