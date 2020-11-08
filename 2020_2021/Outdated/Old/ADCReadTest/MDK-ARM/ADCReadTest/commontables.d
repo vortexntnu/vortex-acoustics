@@ -1,0 +1,14 @@
+adcreadtest\commontables.o: C:\Users\vortex\AppData\Local\Arm\Packs\ARM\CMSIS\5.5.1\CMSIS\DSP\Source\CommonTables\CommonTables.c
+adcreadtest\commontables.o: C:\Users\vortex\AppData\Local\Arm\Packs\ARM\CMSIS\5.5.1\CMSIS\DSP\Source\CommonTables\arm_common_tables.c
+adcreadtest\commontables.o: ../Drivers/CMSIS/Include/arm_math.h
+adcreadtest\commontables.o: ../Drivers/CMSIS/Include/core_cm7.h
+adcreadtest\commontables.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
+adcreadtest\commontables.o: ../Drivers/CMSIS/Include/core_cmInstr.h
+adcreadtest\commontables.o: ../Drivers/CMSIS/Include/cmsis_armcc.h
+adcreadtest\commontables.o: ../Drivers/CMSIS/Include/core_cmFunc.h
+adcreadtest\commontables.o: ../Drivers/CMSIS/Include/core_cmSimd.h
+adcreadtest\commontables.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
+adcreadtest\commontables.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\math.h
+adcreadtest\commontables.o: ../Drivers/CMSIS/Include/arm_common_tables.h
+adcreadtest\commontables.o: C:\Users\vortex\AppData\Local\Arm\Packs\ARM\CMSIS\5.5.1\CMSIS\DSP\Source\CommonTables\arm_const_structs.c
+adcreadtest\commontables.o: ../Drivers/CMSIS/Include/arm_const_structs.h

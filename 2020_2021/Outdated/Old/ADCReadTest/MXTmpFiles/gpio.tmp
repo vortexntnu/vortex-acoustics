@@ -1,0 +1,11 @@
+
+#n/** Pinout Configuration
+*/
+static void MX_GPIO_Init(void)
+{
+#n
+#n#t/* GPIO Ports Clock Enable */
+#t__HAL_RCC_GPIOA_CLK_ENABLE();
+#n
+}
+#n
