@@ -40,6 +40,7 @@ TRILITERATION::Pos operator+(const TRILITERATION::Pos& pos1,
 TRILITERATION::Pos pos_cross(const TRILITERATION::Pos& pos1, 
         const TRILITERATION::Pos& pos2){
     //Find a good way to implement this
+    return TRILITERATION::Pos(0, 0, 0);
 }
 
 
@@ -55,6 +56,14 @@ double TRILITERATION::pos_dot(const TRILITERATION::Pos& pos1,
 }
 
 
+
+/**
+ * Functions for triliteration, estimation and calculation for
+ * the position and angles. Must be updated with better names!
+ */
+
+// Some outdated code
+/*
 std::pair<TRILITERATION::Pos, TRILITERATION::Pos> 
         TRILITERATION::triliterate(TRILITERATION::Pos pos1, 
         TRILITERATION::Pos pos2, TRILITERATION::Pos pos3,
@@ -89,4 +98,75 @@ std::pair<TRILITERATION::Pos, TRILITERATION::Pos>
     Pos p_12_b = pos2 + x * e_x + y * e_y - z * e_z;
 
     return std::make_pair(p_12_a, p_12_b);
+}
+*/
+
+double TRILITERATION::estimate_distance(double intensity){
+    return sqrt(TRILITERATION::source_power/(4*DSP::PI*intensity));
+}
+
+
+double TRILITERATION::estimate_rough_angle(double time_difference){
+    return (DSP::PI/2)*(time_difference/TRILITERATION::maximum_time_diff);
+}
+
+std::pair<double, bool> TRILITERATION::estimate_lateral(
+            double time_port, double time_starboard){
+
+    double closest_time = std::min(time_port, time_starboard);
+    double farthest_time = std::max(time_port, time_starboard);
+
+    double time_diff = farthest_time - closest_time;
+    double rough_angle = TRILITERATION::estimate_rough_angle(time_diff);
+
+    bool bool_starboard = (closest_time == time_starboard);
+    return std::pair<double, bool> (rough_angle, bool_starboard);
+}
+
+
+bool TRILITERATION::estimate_longitude(double time_port, 
+            double time_starboard, double time_stern){
+
+    double time_longitude = (std::max(time_port, time_starboard) -
+            std::min(time_port, time_starboard))/2.0;
+    return (time_longitude <= time_stern);
+}
+
+
+std::pair<double, double> TRILITERATION::estimate_pinger_position(
+            double time_port, double time_starboard, double time_stern, 
+            double intensity_port, double intensity_starboard,
+            double intensity_stern){
+
+    // Estimating the likely lateral/longitude for the acoustic pinger 
+    std::pair<double, bool> lateral_estimate = 
+            TRILITERATION::estimate_lateral(time_port, time_starboard);
+    bool longitude_estimate = TRILITERATION::estimate_longitude(
+            time_port, time_starboard, time_stern);
+        
+    // Estimating the distances
+    double distance_port = TRILITERATION::estimate_distance(
+            intensity_port);
+    double distance_starboard = TRILITERATION::estimate_distance(
+            intensity_starboard);
+    double distance_stern = TRILITERATION::estimate_distance(
+            intensity_stern);
+
+    // Averaging the distance-estimates to triliterate the 
+    // position of the pinger
+    double distance_source = (distance_port + distance_starboard
+            + distance_stern) / 3.0;
+
+    // Using the likely lateral/longitude to calculate the estimated
+    // position for the acoustic pinger
+    double x, y;
+    if(!longitude_estimate)
+        y = distance_source * sin(lateral_estimate.first);
+    else
+        y = distance_source * sin(-1 * lateral_estimate.first);
+    if(!lateral_estimate.second)
+        x = distance_source * cos(lateral_estimate.first) * (-1);
+    else
+        x = distance_source * cos(lateral_estimate.second);
+    return std::pair<double, double> (x, y);
 }

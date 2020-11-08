@@ -6,7 +6,6 @@
 #ifndef ACOUSTICS_DSP_HPP
 #define ACOUSTICS_DSP_HPP
 
-//#include "../include/fourier.hpp" //Outdated
 #include "../alglib/src/fasttransforms.h"
 
 /**
@@ -23,6 +22,15 @@ namespace DSP{
 // Possible to use functions under 
 // alglib/statistics.h for easier calculations
 // for the statistics
+
+
+/**
+ * @warning Terrible code-practice! Had some problems
+ * reading the value for M_PI under math.h and pushed
+ * it here as a global variable! Should be improved in
+ * the future!
+ */
+const double PI = 3.14159265358979323846;
 
 
 /**

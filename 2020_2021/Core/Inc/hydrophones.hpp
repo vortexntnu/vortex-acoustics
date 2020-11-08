@@ -7,6 +7,26 @@
  * @note Could be improved by using the pose
  * from ROS. Should be implemented in the 
  * future
+ * 
+ * @note It is thought that the hydrophones are
+ * placed in a form of a triangle. Therefore, we
+ * have one on front starboard, one on front port
+ * and one on the back in the middle
+ * 
+ *                    BOW
+ *                      
+ *      Port                       Starboard
+ *                      
+ *       HYD ''''''''''''''''''''' HYD
+ *           '''''''''''''''''''''
+ *           ''''''''' A '''''''''
+ *           ''''''''' U '''''''''
+ *           ''''''''' V '''''''''
+ *           '''''''''''''''''''''
+ *           '''''''''''''''''''''
+ *           '''''''''HYD'''''''''
+ * 
+ *                   STERN
  */
 #ifndef ACOUSTICS_HYDROPHONES_HPP
 #define ACOUSTICS_HYDROPHONES_HPP
@@ -90,9 +110,9 @@ public:
 
 };
 
-} //HYDROPHONES
+} // HYDROPHONES
 
-#endif //ACOUSTICS_HYDROPHONES_HPP
+#endif // ACOUSTICS_HYDROPHONES_HPP
 
 
 

@@ -10,12 +10,30 @@
 #include <math.h>
 
 #include "../Core/Inc/DSP.hpp"
-//Find the ROS pos-header/functions
 
 /**
  * @brief Namespace/wrapper for the triliteration
  */
 namespace TRILITERATION{
+
+/**
+ * @brief Constants used for the triliterations 
+ * 
+ * @param sound_speed Speed of sound in m/s
+ * 
+ * @param source_power The power from each pinger.
+ * Warning: requires us to know the type of pinger 
+ * and the battery-voltage 
+ * 
+ * @param hydrophone_distance The distance between the 
+ * hydrophones. Required to be changed later on! Could
+ * potentially be set using the hydrophone-positioning
+ */
+const int sound_speed = 1480;
+const int source_power = 177;  
+const double hydrophone_distance = 0.57; 
+const double maximum_time_diff = hydrophone_distance/sound_speed;
+
 
 /**
  * @brief Struct to keep the position
@@ -36,6 +54,9 @@ struct Pos{
      * @brief Describes the heading, 
      * compared to the heading of the
      * AUV
+     * 
+     * @warning Not used or implemented. Just
+     * included for the future
      */
     double h_x, h_y, h_z;
 
@@ -125,12 +146,91 @@ Pos operator/(const Pos& pos, const double& den);
  * @param rad2 Radius for sphere 2
  * @param rad3 Radius for sphere 3
  * 
- * @warning NEEDS TO HAVE UNDERSTANDABLE VARIABLE-NAMES!!   
+ * @warning NEEDS TO HAVE UNDERSTANDABLE VARIABLE-NAMES!!
+ * 
+ * @warning Outdated!   
  */
-std::pair<Pos, Pos> triliterate(Pos pos1, Pos pos2, 
-        Pos pos3, double rad1, double rad2, double rad3);
+//std::pair<Pos, Pos> triliterate(Pos pos1, Pos pos2, 
+//       Pos pos3, double rad1, double rad2, double rad3);
 
 
-} //TRILITERATION
+/**
+ * @brief Function to calculate an estimate for the distance
+ * given a measurement
+ * 
+ * @param intensity The strenght of the last measurement
+ */
+double estimate_distance(double intensity);
 
-#endif //ACOUSTICS_TRILITERATE_HPP
+
+/**
+ * @brief Function to calculate a rough estimate for the angle
+ * 
+ * @param time_difference The time-difference between two signals
+*/
+double estimate_rough_angle(double time_difference);
+
+
+/**
+ * @brief Function to calculate the absolute angle and tell whether
+ * the target is to the starboard or to the port side of the AUV
+ * 
+ * @note See the start of hydrophones.hpp for more information
+ * 
+ * @param time_port Time the signal was measured on the port side
+ * 
+ * @param time_starboard Time the signal was measured on the 
+ * starboard side
+ */
+std::pair<double, bool> estimate_lateral(double time_port, 
+                double time_starboard);
+
+
+/**
+ * @brief Function to estimate whether the point is to the bow or
+ * at the stern of the AUV.
+ * 
+ * @note See the start of hydrophones.hpp for more information
+ * 
+ * @param time_port Time the signal was measured on the port side
+ * 
+ * @param time_starboard Time the signal was measured on the 
+ * starboard side  
+ * 
+ * @param time_stern Time the signal was measured at the stern 
+ */
+bool estimate_longitude(double time_port, double time_starboard,
+                double time_stern);
+
+
+/**
+ * @brief Function to estimate the position of the acoustic pinger
+ * 
+ * @note See the start of hydrophones.hpp for more information
+ * 
+ * @param time_port Time the signal was measured on the port side
+ * 
+ * @param time_starboard Time the signal was measured on the 
+ * starboard side  
+ * 
+ * @param time_stern Time the signal was measured at the stern 
+ * 
+ * @param intensity_port Intensity of the signal measured at the
+ * port side
+ * 
+ * @param intensity_starboard Intensity of the signal measured at the
+ * starboard side
+ * 
+ * @param intensity_stern Intensity of the signal measured at the
+ * stern side
+ */
+std::pair<double, double> estimate_pinger_position(double time_port,
+            double time_starboard, double time_stern, 
+            double intensity_port, double intensity_starboard,
+            double intensity_stern);
+
+
+
+} // TRILITERATION
+
+#endif // ACOUSTICS_TRILITERATE_HPP
