@@ -28,11 +28,11 @@
  * 
  *                   STERN
  */
-#ifndef ACOUSTICS_HYDROPHONES_HPP
-#define ACOUSTICS_HYDROPHONES_HPP
+#ifndef ACOUSTICS_HYDROPHONES_H
+#define ACOUSTICS_HYDROPHONES_H
 
-#include "../Core/Inc/triliteration.hpp"
-#include "../Core/Inc/DSP.hpp"
+#include "triliteration.h"
+#include "DSP.h"
 
 // Pseudokode to solve the problem
 // 1. Read in N number of datapoints to calculate from each hydrophone 
@@ -53,8 +53,17 @@ To get the autocorrelation: takes the IDFT (IFFT) of the frequency
 
 To get the frequency: take the DTFT (FFT) of the sample
 */
-
 namespace HYDROPHONES{
+
+/**
+ * @brief Globals that describes the
+ * hydrophones position compared to the
+ * center of the AUV
+ */
+TRILITERATION::Pos pos_hyd_port(-1, 0, 0);
+TRILITERATION::Pos pos_hyd_starboard(1, 0, 0);
+TRILITERATION::Pos pos_hyd_stern(0, 1, 0);
+
 
 /**
  * @brief Class for the hydrophones. 
@@ -67,52 +76,71 @@ namespace HYDROPHONES{
  */
 class Hydrophones{
 private:
-    /*
-    * Position of each hydrophone 
+    /**
+    * @brief Position of each hydrophone 
     */
     TRILITERATION::Pos pos;
 
-    /*
-    * The lag calculated for the last sample
+    /**
+    * @brief The lag calculated for the last sample
     */
-    int last_lag;
+    uint32_t last_lag;
 
-    /*
-    * The dataset for one hydrophone 
+    /**
+     * @brief The intensity calculated for the last sample
+     */
+    double last_intensity;
+
+    /**
+    * @brief The dataset for one hydrophone 
     */
     alglib::complex_1d_array data;
 
 public:
-    /*
-    * Constructor and destructor 
+    /**
+    * @brief Constructor and destructor 
     */
     Hydrophones(TRILITERATION::Pos pos);
     ~Hydrophones();
     
-    /*
-    * Function to return the last calculated lag 
+    /**
+    * @brief Function to return the last calculated lag 
     */
-    int get_lag() const { return last_lag; } 
+    uint32_t get_lag() const { return last_lag; } 
 
-    /*
-    * Function to return the current data-set 
+    /**
+    * @brief Function to return the current data-set 
     */
     alglib::complex_1d_array get_data() { return data; }
 
-    /*
-    * Function to calculate everything.
+    /**
+     * @brief Function to return the intensity
+     */
+    double get_intensity() const { return last_intensity; }
+
+    /**
+    *  @brief Function to calculate everything.
     * 
     * Takes in a pointer to a C-array, calculates the 
     * complex_1d_array, takes the fft and the ifft and
     * then calculates the lag from the autocorrelation. 
     */
-    void calculate_lag(int* c_arr);
+    void calculate_lag(uint16_t* c_arr);
+
+    /**
+     * @brief Function to estimate the intensity of the
+     * last signal
+     * 
+     * @warning Not implemented as of 10.11.2020
+     */
+    double estimate_intensity(
+        const alglib::complex_1d_array & x_arr);
 
 };
 
-} // HYDROPHONES
+} // namespace HYDROPHONES
 
-#endif // ACOUSTICS_HYDROPHONES_HPP
+#endif // ACOUSTICS_HYDROPHONES_H
 
 
 

@@ -3,25 +3,17 @@
  * @brief Small library that implements some
  * DSP-functions to the acoustics for Vortex NTNU
  */
-#ifndef ACOUSTICS_DSP_HPP
-#define ACOUSTICS_DSP_HPP
+#ifndef ACOUSTICS_DSP_H
+#define ACOUSTICS_DSP_H
 
 #include "../alglib/src/fasttransforms.h"
+#include <stdint.h>
 
 /**
  * @brief Namespace/wrapper for basic DSP
  * (digital signal processing) functions. 
  */
 namespace DSP{
-
-
-// Filters could pherhaps be found in the 
-// alglib library. Some AR, MA and ARMA is 
-// found in dataanalysis.h
-
-// Possible to use functions under 
-// alglib/statistics.h for easier calculations
-// for the statistics
 
 
 /**
@@ -44,9 +36,9 @@ const double PI = 3.14159265358979323846;
  * for filtering the data in software. Every 
  * frequency above max or below min is noise
  */
-const int SAMPLE_FREQUENCY = 100000;
-const int MAX_FREQUENCY = SAMPLE_FREQUENCY / 2;
-const int MIN_FREQUENCY = SAMPLE_FREQUENCY / 10;
+const uint32_t SAMPLE_FREQUENCY = 100000;
+const uint32_t MAX_FREQUENCY = SAMPLE_FREQUENCY / 2;
+const uint32_t MIN_FREQUENCY = SAMPLE_FREQUENCY / 10;
 
 
 /**
@@ -60,35 +52,10 @@ const int MIN_FREQUENCY = SAMPLE_FREQUENCY / 10;
  * is required to find a sweet-spot between noise 
  * and spectral information.
  */
-const int num_freq_intervals = 128;
-const int len_freq_intervals = 1024;
-const int interval_total_len = num_freq_intervals 
-            * len_freq_intervals;
-
-
-/**
- * @brief Function to calculate the correlation
- * coeffisient between two different signals.
- * Runs in O(n) time.
- * Small modifications from 
- * https://www.geeksforgeeks.org/program-find-correlation-coefficient/
- * 
- * @param x_arr Array of signal 1
- * 
- * @param y_arr Array of signal 2
- * 
- * @param n Number of elements in each array
- * 
- * @warning Unsure if the function handles
- * complex values
- * 
- * @warning Must make sure that the lengths of
- * each array are identical
- * 
- * @warning outdated!
- */
-double correlation_coefficient(
-    int x_arr, int y_arr, int n);
+const uint16_t num_freq_intervals = 128;
+const uint16_t len_freq_intervals = 1024;
+const uint32_t interval_total_len = (uint32_t)(
+    num_freq_intervals * len_freq_intervals);
 
 
 /**
@@ -101,7 +68,7 @@ double correlation_coefficient(
  * @warning Assumes that the array is of length
  * interval_total_len
  */
-int find_lag(const alglib::complex_1d_array& x_arr);
+uint32_t find_lag(const alglib::complex_1d_array& x_arr);
 
 
 /**
@@ -133,6 +100,7 @@ void freq_filtering(alglib::complex_1d_array& x_arr);
 double calculate_abs(const alglib::complex num);
 
 
+
 /**
  * @brief Function to transfer a C-array of data 
  * and then transfer it to a complec_1d_array
@@ -143,10 +111,10 @@ double calculate_abs(const alglib::complex num);
  * @warning Assuming that the C-array has exactly 
  * interval_total_len length.
  */
-void transfer_C_arr_to_alglib(int* c_arr, 
+void transfer_C_arr_to_alglib(uint16_t* c_arr, 
         alglib::complex_1d_array& x_arr);
 
 
-} //DSP
+} // namespace DSP
 
-#endif //ACOUSTICS_DSP_HPP
+#endif // ACOUSTICS_DSP_H

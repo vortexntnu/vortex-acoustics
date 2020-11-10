@@ -124,6 +124,32 @@ http://www.fsf.org/licensing/licenses
 #include <stdint.h>
 #endif
 
+//////////////////////////////////////////////////////////////////////////////
+
+/**
+ * ***************************************************************************
+ * WARNING: NOT A PART OF THE OFFICIAL LIBRARY! CHANGED SUCH THAT THE COMPILER 
+ * KNOWS THAT WE ARE EXPERIENCED "PROFESSIONALS". TO PREVENT THE COMPILER
+ * THROWING ERRORS 
+ * 
+ * WARNING: Using this, result in the system throwing no errors at all! It is
+ * therefore NOT allowed to use 
+ * try{
+ *      throw(...)
+ * }
+ * catch(...)
+ * 
+ * 
+ * NOTE: THIS MAKES THREADING UNSAFE, HOWEVER THAT IS NOT REALLY A BIG PROBLEM
+ * FOR VORTEX NTNU 2020/2021
+ * ***************************************************************************
+ */
+#define AE_NO_EXCEPTIONS
+#define AE_THREADING AE_SERIAL_UNSAFE
+
+//////////////////////////////////////////////////////////////////////////////
+
+
 /*
  * SSE2 intrinsics
  *

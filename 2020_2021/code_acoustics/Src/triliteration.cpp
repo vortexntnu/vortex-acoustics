@@ -1,11 +1,10 @@
-#include "../Core/Inc/triliteration.hpp"
+#include "triliteration.h"
 
 /**
  * Constructor
  */
 TRILITERATION::Pos::Pos(double x, double y, double z) : 
         x(x), y(y), z(z) {}
-
 
 
 /**
@@ -106,35 +105,35 @@ double TRILITERATION::estimate_distance(double intensity){
 }
 
 
-double TRILITERATION::estimate_rough_angle(double time_difference){
-    return (DSP::PI/2)*(time_difference/TRILITERATION::maximum_time_diff);
+double TRILITERATION::estimate_rough_angle(uint32_t time_difference){
+    return (double)((DSP::PI/2)*(time_difference/TRILITERATION::maximum_time_diff));
 }
 
 std::pair<double, bool> TRILITERATION::estimate_lateral(
-            double time_port, double time_starboard){
+            uint32_t time_port, uint32_t time_starboard){
 
-    double closest_time = std::min(time_port, time_starboard);
-    double farthest_time = std::max(time_port, time_starboard);
+    uint32_t closest_time = std::min(time_port, time_starboard);
+    uint32_t farthest_time = std::max(time_port, time_starboard);
 
-    double time_diff = farthest_time - closest_time;
-    double rough_angle = TRILITERATION::estimate_rough_angle(time_diff);
+    uint32_t time_diff = farthest_time - closest_time;
+    uint32_t rough_angle = TRILITERATION::estimate_rough_angle(time_diff);
 
     bool bool_starboard = (closest_time == time_starboard);
     return std::pair<double, bool> (rough_angle, bool_starboard);
 }
 
 
-bool TRILITERATION::estimate_longitude(double time_port, 
-            double time_starboard, double time_stern){
+bool TRILITERATION::estimate_longitude(uint32_t time_port, 
+            uint32_t time_starboard, uint32_t time_stern){
 
-    double time_longitude = (std::max(time_port, time_starboard) -
+    uint32_t time_longitude = (std::max(time_port, time_starboard) -
             std::min(time_port, time_starboard))/2.0;
     return (time_longitude <= time_stern);
 }
 
 
 std::pair<double, double> TRILITERATION::estimate_pinger_position(
-            double time_port, double time_starboard, double time_stern, 
+            uint32_t time_port, uint32_t time_starboard, uint32_t time_stern, 
             double intensity_port, double intensity_starboard,
             double intensity_stern){
 
@@ -170,3 +169,5 @@ std::pair<double, double> TRILITERATION::estimate_pinger_position(
         x = distance_source * cos(lateral_estimate.second);
     return std::pair<double, double> (x, y);
 }
+
+

@@ -4,12 +4,12 @@
  * @brief Basic functions to triliterate the position
  */
 
-#ifndef ACOUSTICS_TRILITERATE_HPP
-#define ACOUSTICS_TRILITERATE_HPP
+#ifndef ACOUSTICS_TRILITERATE_H
+#define ACOUSTICS_TRILITERATE_H
 
 #include <math.h>
 
-#include "../Core/Inc/DSP.hpp"
+#include "DSP.h"
 
 /**
  * @brief Namespace/wrapper for the triliteration
@@ -28,12 +28,15 @@ namespace TRILITERATION{
  * @param hydrophone_distance The distance between the 
  * hydrophones. Required to be changed later on! Could
  * potentially be set using the hydrophone-positioning
+ * 
+ * @param time_error Error margin to help classify valid
+ * vs. invalid signals
  */
-const int sound_speed = 1480;
-const int source_power = 177;  
+const uint16_t sound_speed = 1480;
+const uint8_t source_power = 177;  
 const double hydrophone_distance = 0.57; 
 const double maximum_time_diff = hydrophone_distance/sound_speed;
-
+const double time_error = 0;
 
 /**
  * @brief Struct to keep the position
@@ -168,7 +171,7 @@ double estimate_distance(double intensity);
  * 
  * @param time_difference The time-difference between two signals
 */
-double estimate_rough_angle(double time_difference);
+double estimate_rough_angle(uint32_t time_difference);
 
 
 /**
@@ -182,8 +185,8 @@ double estimate_rough_angle(double time_difference);
  * @param time_starboard Time the signal was measured on the 
  * starboard side
  */
-std::pair<double, bool> estimate_lateral(double time_port, 
-                double time_starboard);
+std::pair<double, bool> estimate_lateral(uint32_t time_port, 
+                uint32_t time_starboard);
 
 
 /**
@@ -199,12 +202,14 @@ std::pair<double, bool> estimate_lateral(double time_port,
  * 
  * @param time_stern Time the signal was measured at the stern 
  */
-bool estimate_longitude(double time_port, double time_starboard,
-                double time_stern);
+bool estimate_longitude(uint32_t time_port, uint32_t time_starboard,
+                uint32_t time_stern);
 
 
 /**
  * @brief Function to estimate the position of the acoustic pinger
+ * Returns an estimate of x and y compared to the position of the 
+ * AUV
  * 
  * @note See the start of hydrophones.hpp for more information
  * 
@@ -224,13 +229,29 @@ bool estimate_longitude(double time_port, double time_starboard,
  * @param intensity_stern Intensity of the signal measured at the
  * stern side
  */
-std::pair<double, double> estimate_pinger_position(double time_port,
-            double time_starboard, double time_stern, 
+std::pair<double, double> estimate_pinger_position(uint32_t time_port,
+            uint32_t time_starboard, uint32_t time_stern, 
             double intensity_port, double intensity_starboard,
             double intensity_stern);
 
+/**
+ * @brief Function to check the validy of each signal 
+ * 
+ * @retval Returns true if the values are valid, and false if not
+ * 
+ * @param time_port Time the signal was measured on the port side
+ * 
+ * @param time_starboard Time the signal was measured on the 
+ * starboard side
+ * 
+ * @param time_stern Time the signal was measured at the stern
+ *
+ * @warning Not implemented as of 10.11.2020
+ */
+bool check_valid_signals(uint32_t time_port, uint32_t time_starboard,
+            uint32_t time_stern);
 
 
-} // TRILITERATION
+} // namespace TRILITERATION
 
-#endif // ACOUSTICS_TRILITERATE_HPP
+#endif // ACOUSTICS_TRILITERATE_H

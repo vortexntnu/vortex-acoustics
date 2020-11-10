@@ -18,13 +18,19 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include "../Core/Inc/main.h"
-#include "../Core/Inc/adc.h"
-#include "../Core/Inc/eth.h"
-#include "../Core/Inc/gpio.h"
+#include "main.h"
+#include "adc.h"
+#include "eth.h"
+#include "gpio.h"
 
-#include "../Core/Inc/hydrophones.hpp"
-#include "../Core/Inc/tests.hpp"
+#include "hydrophones.hpp"
+#include <stdint.h>
+
+
+// Function to be implemented later
+// Gives an order over ethernet
+uint8_t ethernet_order();
+
 
 /**
   * @brief  The application entry point.
@@ -55,8 +61,6 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_ADC1_Init();
-  MX_ADC2_Init();
-  MX_ADC3_Init();
   MX_ETH_Init();
   /* USER CODE BEGIN 2 */
 
@@ -64,12 +68,84 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
-    /* USER CODE END WHILE */
 
-    /* USER CODE BEGIN 3 */
+  HYDROPHONES::Hydrophones hyd_port(HYDROPHONES::pos_hyd_port);
+  HYDROPHONES::Hydrophones hyd_starboard(HYDROPHONES::pos_hyd_starboard);
+  HYDROPHONES::Hydrophones hyd_stern(HYDROPHONES::pos_hyd_stern);
+
+  // Lag from each hydrophone
+  uint32_t lag_hyd_port, lag_hyd_starboard, lag_hyd_stern;
+
+  // Intensity measured for each hydrophone
+  double intensity_port, intensity_starboard, intensity_stern;
+
+  // Range-estimate based on some calculation
+  double range_es_port, range_es_starboard, range_es_stern;
+
+  // Intializing the raw-data-arrays
+  uint16_t c_data_hyd_port[DSP::interval_total_len];
+  uint16_t c_data_hyd_starboard[DSP::interval_total_len];
+  uint16_t c_data_hyd_stern[DSP::interval_total_len];
+
+  // Simple bool to keep track of the state
+  bool invalid_data = false;
+
+  while(true){
+
+
+      /** 
+      * Using the ethernet to decleare the MCU to start recording.
+      * Start a time-estimate, such that the Xavier knows how old 
+      * the estimated position is 
+      * 
+      * NOTE: Requires more logic here! Otherwise it will be a bug,
+      * since the system will not move further 
+      */
+      while(!ethernet_order() && !invalid_data);
+
+
+      // Getting data from the pins
+
+
+      // Calculating the lag
+      hyd_port.calculate_lag(c_data_hyd_port);
+      hyd_starboard.calculate_lag(c_data_hyd_starboard);
+      hyd_stern.calculate_lag(c_data_hyd_stern);
+
+      lag_hyd_port = hyd_port.get_lag();
+      lag_hyd_starboard = hyd_starboard.get_lag();
+      lag_hyd_stern = hyd_stern.get_lag();
+
+      // Checking if the lag is valid
+      // Take new sample if not valid data
+      if(!TRILITERATION::check_valid_signals(lag_hyd_port,
+            lag_hyd_starboard, lag_hyd_stern)){
+        invalid_data = true;
+        continue;
+      }
+      invalid_data = false;
+
+      // Calculate an estimate for the range
+      intensity_port = hyd_port.get_intensity();
+      intensity_starboard = hyd_starboard.get_intensity();
+      intensity_stern = hyd_stern.get_intensity();
+
+      range_es_port = hyd_port.get_lag();
+      range_es_starboard = hyd_starboard.get_lag();
+      range_es_stern = hyd_stern.get_lag();
+
+      // Calculate estimate 
+      std::pair<double, double> position_es = 
+          TRILITERATION::estimate_pinger_position(lag_hyd_port,
+            lag_hyd_starboard, lag_hyd_stern, intensity_stern,
+            intensity_starboard, intensity_stern);
+
+      // Do something with the estimates
+
+      // Send the data to the Xavier to get the possible direction and range
   }
+
+  return 0;
   /* USER CODE END 3 */
 }
 
