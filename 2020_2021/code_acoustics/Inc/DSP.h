@@ -29,10 +29,11 @@ namespace DSP_CONSTANTS{
 /**
  * @brief Constants for sampling and DSP
  */
-const int DMA_BUFFER_LENGTH = 1024;
+const int DMA_BUFFER_LENGTH = 4096;
 const int WORKING_BUFFER_LENGTH = DMA_BUFFER_LENGTH/2;
 const int IN_BUFFER_LENGTH = DMA_BUFFER_LENGTH;
 const int FFT_SIZE = DMA_BUFFER_LENGTH;
+const int IIR_SIZE = DMA_BUFFER_LENGTH;
 
 /**
  * @note The frequencies (in robosub) will be 
@@ -42,11 +43,30 @@ const int FFT_SIZE = DMA_BUFFER_LENGTH;
  * 
  * The MAX_FREQUENCY and MIN_FREQUENCY are used 
  * for filtering the data in software. Every 
- * frequency above max or below min is noise
+ * frequency above max or below min is assumed to
+ * be noise
+ * 
+ * The SAMPLE_TIME is used to validate the signals
  */
 const uint32_t SAMPLE_FREQUENCY = 100000;
 const uint32_t MAX_FREQUENCY = SAMPLE_FREQUENCY / 2;
 const uint32_t MIN_FREQUENCY = SAMPLE_FREQUENCY / 10;
+const float32_t SAMPLE_TIME = 1/SAMPLE_FREQUENCY;   
+
+
+/**
+ * @brief An IIR-filter to filter the data before 
+ * processing it. By using this filter, we should (hopefully)
+ * eliminate unwanted frequencies. 
+ * 
+ * @warning Must have abs(filter) < 1 to prevent overflow
+ */
+const uint32_t num_stages = 1;
+float32_t state_coefficients[4*num_stages] = {};
+float32_t filter_coefficients[5*num_stages] = {};
+const arm_biquad_casd_df1_inst_f32 IIR_filter = {
+    .numStages = num_stages, .pState = &filter_coefficients,
+    .pCoeffs = &filter_coefficients};
 
 } // namespace DSP_CONSTANTS
 

@@ -118,9 +118,9 @@ int main(void)
   float32_t range_es_port, range_es_starboard, range_es_stern;
 
   // Intializing the raw-data-arrays
-  float32_t c_data_hyd_port[DSP_CONSTANTS::DMA_BUFFER_LENGTH];
-  float32_t c_data_hyd_starboard[DSP_CONSTANTS::DMA_BUFFER_LENGTH];
-  float32_t c_data_hyd_stern[DSP_CONSTANTS::DMA_BUFFER_LENGTH];
+  float32_t* c_data_hyd_port = (float32_t*) malloc(4 * DSP_CONSTANTS::DMA_BUFFER_LENGTH);
+  float32_t* c_data_hyd_starboard = (float32_t*) malloc(4 * DSP_CONSTANTS::DMA_BUFFER_LENGTH);
+  float32_t* c_data_hyd_stern = (float32_t*) malloc(4 * DSP_CONSTANTS::DMA_BUFFER_LENGTH);
 
   // Simple bool to keep track of the state
   uint8_t invalid_data = 0;

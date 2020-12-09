@@ -40,7 +40,8 @@ namespace HYDROPHONES{
 /**
  * @brief Globals that describes the
  * hydrophones position compared to the
- * center of the AUV
+ * center of the AUV. Must be updated in the future
+ * when the placement of the hydrophones are known
  */
 TRILITERATION::Pos pos_hyd_port(-1, 0, 0);
 TRILITERATION::Pos pos_hyd_starboard(1, 0, 0);
@@ -92,6 +93,14 @@ private:
      * @brief The magnitude of the dataset
      */
     float32_t* p_mag_data;
+
+    /**
+     * @brief The autocorrelated data-sequence
+     * 
+     * @warning The length of the autocorrelation will be
+     * 2 * length(p_data) - 1
+     */
+    float32_t* p_autocorr_data;
 
 public:
     /**

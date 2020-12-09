@@ -22,7 +22,8 @@ namespace TRILITERATION{
  * 
  * @param source_power The power from each pinger.
  * Warning: requires us to know the type of pinger 
- * and the battery-voltage 
+ * and the battery-voltage as these are time varying
+ * parameters
  * 
  * @param hydrophone_distance The distance between the 
  * hydrophones. Required to be changed later on! Could
@@ -32,10 +33,9 @@ namespace TRILITERATION{
  * vs. invalid signals
  */
 const uint16_t sound_speed = 1480;
-const uint8_t source_power = 177;  
+const uint16_t source_power = 177;  
 const float32_t hydrophone_distance = 0.57; 
 const float32_t maximum_time_diff = hydrophone_distance/sound_speed;
-const float32_t time_error = 0;
 
 /**
  * @brief Struct to keep the position
@@ -148,11 +148,24 @@ std::pair<float32_t, float32_t> estimate_pinger_position(uint32_t time_port,
  * 
  * @param time_stern Time the signal was measured at the stern
  *
- * @warning Not implemented as of 09.12.2020
+ * @param intensity_port Intensity of the signal detected at the
+ * port side
+ * 
+ * @param intensity_starboard Intensity of the signal detected at 
+ * the starboard side
+ * 
+ * @param intensity_stern Intensity of the signal detected at the
+ * stern of the AUV
+ * 
+ * @warning Not fully implemented as of 09.12.2020. Required to
+ * find a way to use the intensity of the signal to validate the 
+ * data, however that could become difficult without knowing how
+ * the sound-signals are detected with the AUV
  */
-uint8_t check_valid_signals(uint32_t time_port, 
-            uint32_t time_starboard, uint32_t time_stern);
-
+uint8_t check_valid_signals(const uint32_t& time_port, 
+    const uint32_t& time_starboard, const uint32_t& time_stern, 
+    const float32_t& intensity_port, const float32_t& intensity_starboard, 
+    const float32_t& intensity_stern);
 
 } // namespace TRILITERATION
 

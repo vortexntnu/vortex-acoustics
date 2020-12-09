@@ -81,8 +81,18 @@ std::pair<float32_t, float32_t> TRILITERATION::estimate_pinger_position(
 }
 
 
-uint8_t TRILITERATION::check_valid_signals(uint32_t time_port, 
-        uint32_t time_starboard, uint32_t time_stern){
+uint8_t TRILITERATION::check_valid_signals(
+const uint32_t& time_port, const uint32_t& time_starboard, 
+const uint32_t& time_stern, const float32_t& intensity_port, 
+const float32_t& intensity_starboard, const float32_t& intensity_stern){
+/**
+ * Here it is difficult to estimate the signals, as the signals must be
+ * evaluated in both regards to the signal intensity and the signal time 
+*/
+if((float32_t)(abs(time_port - time_starboard) * DSP_CONSTANTS::SAMPLE_TIME) > TRILITERATION::maximum_time_diff 
+|| (float32_t)(abs(time_starboard - time_stern) * DSP_CONSTANTS::SAMPLE_TIME) > TRILITERATION::maximum_time_diff 
+|| (float32_t)(abs(time_port - time_stern) * DSP_CONSTANTS::SAMPLE_TIME) > TRILITERATION::maximum_time_diff)
     return 0;
+return 1; // Has not taken into account the intensity as of 09.12.2020
 }
 
