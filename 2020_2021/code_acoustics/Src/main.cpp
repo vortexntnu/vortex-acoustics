@@ -23,8 +23,38 @@
 #include "eth.h"
 #include "gpio.h"
 
-#include "hydrophones.hpp"
+#include "hydrophones.h"
 #include <stdint.h>
+
+#include "stm32f7xx_hal.h"
+
+/* FPU present on STM32F4xx device */
+/* Use ARM MATH for Cortex-M7 */
+#include "arm_math.h"
+/* Include mbed-dsp libraries */
+#include "arm_const_structs.h" 
+
+/* USER CODE END Includes */
+
+/* Private variables ---------------------------------------------------------*/
+ADC_HandleTypeDef hadc1;
+DMA_HandleTypeDef hdma_adc1;
+
+uint32_t ADC1ConvertedValues[DSP_CONSTANTS::DMA_BUFFER_LENGTH];
+
+/* USER CODE END PV */
+
+/* Private function prototypes -----------------------------------------------*/
+void SystemClock_Config(void);
+static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
+static void MX_ADC1_Init(void);
+
+// WARNING: Not implemented!!
+static void read_ADC(
+            float32_t* data_hyd_port, 
+            float32_t* data_hyd_starboard,
+            float32_t* data_hyd_stern);
 
 
 // Function to be implemented later
@@ -62,12 +92,17 @@ int main(void)
   MX_GPIO_Init();
   MX_ADC1_Init();
   MX_ETH_Init();
+  
   /* USER CODE BEGIN 2 */
-
-  /* USER CODE END 2 */
-
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
+	if (HAL_ADC_Start(&hadc1) != HAL_OK)
+	{
+		return 0;
+	}
+	
+	if (HAL_ADC_Start_DMA(&hadc1, (uint32_t*) ADC1ConvertedValues, 1024) != HAL_OK)
+	{
+		return 0;
+	}
 
   HYDROPHONES::Hydrophones hyd_port(HYDROPHONES::pos_hyd_port);
   HYDROPHONES::Hydrophones hyd_starboard(HYDROPHONES::pos_hyd_starboard);
@@ -77,21 +112,24 @@ int main(void)
   uint32_t lag_hyd_port, lag_hyd_starboard, lag_hyd_stern;
 
   // Intensity measured for each hydrophone
-  double intensity_port, intensity_starboard, intensity_stern;
+  float32_t intensity_port, intensity_starboard, intensity_stern;
 
   // Range-estimate based on some calculation
-  double range_es_port, range_es_starboard, range_es_stern;
+  float32_t range_es_port, range_es_starboard, range_es_stern;
 
   // Intializing the raw-data-arrays
-  uint16_t c_data_hyd_port[DSP::interval_total_len];
-  uint16_t c_data_hyd_starboard[DSP::interval_total_len];
-  uint16_t c_data_hyd_stern[DSP::interval_total_len];
+  float32_t c_data_hyd_port[DSP_CONSTANTS::DMA_BUFFER_LENGTH];
+  float32_t c_data_hyd_starboard[DSP_CONSTANTS::DMA_BUFFER_LENGTH];
+  float32_t c_data_hyd_stern[DSP_CONSTANTS::DMA_BUFFER_LENGTH];
 
   // Simple bool to keep track of the state
-  bool invalid_data = false;
+  uint8_t invalid_data = 0;
 
+  /* USER CODE END 2 */
+
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
   while(true){
-
 
       /** 
       * Using the ethernet to decleare the MCU to start recording.
@@ -101,16 +139,15 @@ int main(void)
       * NOTE: Requires more logic here! Otherwise it will be a bug,
       * since the system will not move further 
       */
-      while(!ethernet_order() && !invalid_data);
-
+      if(!ethernet_order() && !invalid_data);
 
       // Getting data from the pins
-
+      read_ADC(c_data_hyd_port, c_data_hyd_starboard, c_data_hyd_stern);
 
       // Calculating the lag
-      hyd_port.calculate_lag(c_data_hyd_port);
-      hyd_starboard.calculate_lag(c_data_hyd_starboard);
-      hyd_stern.calculate_lag(c_data_hyd_stern);
+      hyd_port.analyze_data(c_data_hyd_port);
+      hyd_starboard.analyze_data(c_data_hyd_starboard);
+      hyd_stern.analyze_data(c_data_hyd_stern);
 
       lag_hyd_port = hyd_port.get_lag();
       lag_hyd_starboard = hyd_starboard.get_lag();
@@ -120,10 +157,10 @@ int main(void)
       // Take new sample if not valid data
       if(!TRILITERATION::check_valid_signals(lag_hyd_port,
             lag_hyd_starboard, lag_hyd_stern)){
-        invalid_data = true;
+        invalid_data = 1;
         continue;
       }
-      invalid_data = false;
+      invalid_data = 0;
 
       // Calculate an estimate for the range
       intensity_port = hyd_port.get_intensity();
@@ -135,7 +172,7 @@ int main(void)
       range_es_stern = hyd_stern.get_lag();
 
       // Calculate estimate 
-      std::pair<double, double> position_es = 
+      std::pair<float32_t, float32_t> position_es = 
           TRILITERATION::estimate_pinger_position(lag_hyd_port,
             lag_hyd_starboard, lag_hyd_stern, intensity_stern,
             intensity_starboard, intensity_stern);
@@ -199,6 +236,20 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+static void read_ADC(
+            float32_t* data_hyd_port, 
+            float32_t* data_hyd_starboard,
+            float32_t* data_hyd_stern){
+  for(int i = 0; i < DSP_CONSTANTS::DMA_BUFFER_LENGTH; i++){
+
+    /**
+     * @warning MUST BE UPDATED!!
+     */
+    data_hyd_port[i] = 0;
+    data_hyd_starboard[i] = 0;
+    data_hyd_stern[i] = 0;
+  }
+}
 
 /* USER CODE END 4 */
 

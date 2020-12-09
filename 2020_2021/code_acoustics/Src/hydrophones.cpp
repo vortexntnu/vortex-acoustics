@@ -1,44 +1,53 @@
 #include "hydrophones.h"
 
 HYDROPHONES::Hydrophones::Hydrophones(TRILITERATION::Pos pos) : 
-        pos{pos}, last_lag{0}
+    pos{pos}, last_lag{0}
 {
-    // Initialize the data as an array with garbage data 
-    data.setlength(DSP::interval_total_len);
+    /* Initial memory allocation */
+    p_data = (float32_t*) malloc(4*DSP_CONSTANTS::DMA_BUFFER_LENGTH);
+    p_mag_data = (float32_t*) malloc(4*DSP_CONSTANTS::DMA_BUFFER_LENGTH);
+    p_max_val = (float32_t*) malloc(4);
+    p_idx = (uint32_t*) malloc(4);
 }
 
-HYDROPHONES::Hydrophones::~Hydrophones(){}
+HYDROPHONES::Hydrophones::~Hydrophones()
+{
+    /* Deleting the allocated memory */
+    free(p_data);
+    free(p_mag_data);
+    free(p_max_val);
+    free(p_idx);
+}
 
-
-void HYDROPHONES::Hydrophones::calculate_lag(uint16_t* c_arr){
-    // Transforms the data from a pointer to a complex_1d_array.
-    // Assumes the data to be 
-    DSP::transfer_C_arr_to_alglib(c_arr, data);
+void HYDROPHONES::Hydrophones::analyze_data(float32_t *p_data_arr)
+{
+    /**
+     * What is interesting to get the data from:
+     *  -correlation (could be found under arm_correlate_f32.h)
+     *  -FFT/IFFT (could be found under arm_cfft_f32.h)
+     *  -power of the array (could be found under arm_power_f32.h, but must be filtered first)
+     *  -intensity of the array (could be found under arm_cmplx_mag)
+     */
     
-    // Takes the FFT of the data
-    alglib::fftc1d(data, DSP::interval_total_len);
+    // Saves the data
+    p_data = p_data_arr;
 
-    // Filters the data in SW between min and max freq in DSP
-    DSP::freq_filtering(data);
+    // Takes the complex FFT with length 1024
+    arm_cfft_f32(&arm_cfft_sR_f32_len1024, pdata, 0, 1);
 
-    // Finds the intensity of the signal
-    this->last_intensity = estimate_intensity(data);
+    // Finds the complex magnitude output
+    arm_cmplx_mag_f32(p_data, p_mag_data, DSP_CONSTANTS::FFT_SIZE);
 
-    // Takes the IFFT to get the autocorrelation
-    alglib::fftc1dinv(data, DSP::interval_total_len);
+    // Calculates the maxValue and returns corresponding value
+    arm_max_f32(p_mag_data, DSP_CONSTANTS::FFT_SIZE, p_max_val, p_idx);
 
-    // Finds the lag
-    this->last_lag = DSP::find_lag(data);
 
+    /**
+     * What is left to implement as of 09.12.2020:
+     *  -filtering of the signal, to prevent engine-noise etc. to dominate 
+     *          the data-signals
+     *  -intensity-estimates of the desired signals
+     */
 }
 
-double HYDROPHONES::Hydrophones::estimate_intensity(
-    const alglib::complex_1d_array& x_arr){
-    // Take the integral of the data
-
-    // However, must make sure that we only capture the data 
-    // of a given frequency - IDK how
-
-    return -1.0;
-}
 

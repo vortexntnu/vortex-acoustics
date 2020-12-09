@@ -332,13 +332,13 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle){
 }
 
 void FFT(){
-		/* Initialize the Complex FFT module, intFlag = 0, doBitReverse = 1
+		// Initialize the Complex FFT module, intFlag = 0, doBitReverse = 1
 		// NB using predefined arm_cfft_sR_f32_lenXXX, in this case XXX is 1024
 		arm_cfft_f32(&arm_cfft_sR_f32_len1024, input, 0, 1);
 		//Complex Magnitude Modules put results into output
 		arm_cmplx_mag_f32(input, output, FFT_SIZE);
 		// Calculates the maxValue and returns corresponding value
-		arm_max_f32(output, FFT_SIZE, &maxValue, &maxIndex);*/
+		arm_max_f32(output, FFT_SIZE, &maxValue, &maxIndex);
 		
 		arm_cfft_f32(&arm_cfft_sR_f32_len1024, input, 0, 1);
 		arm_cmplx_mag_f32(input, output, FFT_SIZE);
