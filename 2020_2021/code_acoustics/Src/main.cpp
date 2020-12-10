@@ -27,18 +27,14 @@
 #include <stdint.h>
 
 #include "stm32f7xx_hal.h"
-
-/* FPU present on STM32F4xx device */
-/* Use ARM MATH for Cortex-M7 */
 #include "arm_math.h"
-/* Include mbed-dsp libraries */
 #include "arm_const_structs.h" 
 
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
-ADC_HandleTypeDef hadc1;
-DMA_HandleTypeDef hdma_adc1;
+ADC_HandleTypeDef hadc;
+DMA_HandleTypeDef hdma_adc;
 
 uint32_t ADC1ConvertedValues[DSP_CONSTANTS::DMA_BUFFER_LENGTH];
 
@@ -59,8 +55,77 @@ static void read_ADC(
 
 // Function to be implemented later
 // Gives an order over ethernet
-uint8_t ethernet_order();
+uint8_t ethernet_coordination(uint16_t* p_data);
 
+/** 
+ * ADC init function
+ */
+MX_ADC_Init(void){
+  ADC_ChannelConfTypeDef sConfig;
+
+  hadc.Instance = ADC1;
+  hadc.Init.ClockPrescaler = ADC_CLOCKPRESCALER_PCLK_DIV2;
+  hadc.Init.Resolution = ADC_RESOLUTION_12B;
+  hadc.Init.ScanConvMode = DISABLE;
+  hadc.Init.ContinuousConvMode = ENABLE;
+  hadc.Init.DiscontinuousConvMode = DISABLE;
+  hadc.Init.NbrOfDiscConversion = 0;
+  hadc.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+  hadc.Init.ExternalTrigConv = ADC_EXTERNALTRIGCONV_T1_CC1;
+  hadc.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  hadc.Init.NbrOfConversion = 1;
+  hadc.Init.DMAContinuousRequests = ENABLE;
+  hadc.Init.EOCSelection = DISABLE;
+      
+  if(HAL_ADC_Init(&hadc) != HAL_OK)
+  {
+    /* Initialization Error */
+    Error_Handler(); 
+  }
+  
+  // Configure channel 3
+  sConfig.Channel = ADC_CHANNEL_3;
+  sConfig.Rank = 1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_15CYCLES;
+  sConfig.Offset = 0;
+  
+  if(HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK)
+  {
+    /* Channel Configuration Error */
+    Error_Handler(); 
+  }
+
+  // Configure channel 10
+  sConfig.Channel = ADC_CHANNEL_10;
+  sConfig.Rank = 2;
+  sConfig.SamplingTime = ADC_SAMPLETIME_15CYCLES;
+  sConfig.Offset = 0;
+  
+  if(HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK)
+  {
+    /* Channel Configuration Error */
+    Error_Handler(); 
+  }
+
+  // Configure channel 13
+  sConfig.Channel = ADC_CHANNEL_13;
+  sConfig.Rank = 3;
+  sConfig.SamplingTime = ADC_SAMPLETIME_15CYCLES;
+  sConfig.Offset = 0;
+  
+  if(HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK)
+  {
+    /* Channel Configuration Error */
+    Error_Handler(); 
+  }
+
+  // Start the conversion process and enable interrupt
+  if(HAL_ADC_Start_DMA(&hadc, (uint32_t*) ADC1ConvertedValues, DSP_CONSTANTS::DMA_BUFFER_LENGTH) != HAL_OK)
+  {
+    /* Start Conversation Error */
+    Error_Handler(); 
+  }
+}
 
 /**
   * @brief  The application entry point.
@@ -90,19 +155,12 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_ADC1_Init();
+  MX_ADC_Init();
   MX_ETH_Init();
   
   /* USER CODE BEGIN 2 */
-	if (HAL_ADC_Start(&hadc1) != HAL_OK)
-	{
-		return 0;
-	}
-	
-	if (HAL_ADC_Start_DMA(&hadc1, (uint32_t*) ADC1ConvertedValues, 1024) != HAL_OK)
-	{
-		return 0;
-	}
+	if (HAL_ADC_Start(&hadc) != HAL_OK)
+	  Error_Handler();
 
   HYDROPHONES::Hydrophones hyd_port(HYDROPHONES::pos_hyd_port);
   HYDROPHONES::Hydrophones hyd_starboard(HYDROPHONES::pos_hyd_starboard);
@@ -118,9 +176,12 @@ int main(void)
   float32_t range_es_port, range_es_starboard, range_es_stern;
 
   // Intializing the raw-data-arrays
-  float32_t* c_data_hyd_port = (float32_t*) malloc(4 * DSP_CONSTANTS::DMA_BUFFER_LENGTH);
-  float32_t* c_data_hyd_starboard = (float32_t*) malloc(4 * DSP_CONSTANTS::DMA_BUFFER_LENGTH);
-  float32_t* c_data_hyd_stern = (float32_t*) malloc(4 * DSP_CONSTANTS::DMA_BUFFER_LENGTH);
+  float32_t* c_data_hyd_port = 
+        (float32_t*) malloc(sizeof(float32_t) * DSP_CONSTANTS::DMA_BUFFER_LENGTH);
+  float32_t* c_data_hyd_starboard = 
+        (float32_t*) malloc(sizeof(float32_t) * DSP_CONSTANTS::DMA_BUFFER_LENGTH);
+  float32_t* c_data_hyd_stern = 
+        (float32_t*) malloc(sizeof(float32_t) * DSP_CONSTANTS::DMA_BUFFER_LENGTH);
 
   // Simple bool to keep track of the state
   uint8_t invalid_data = 0;
@@ -139,7 +200,9 @@ int main(void)
       * NOTE: Requires more logic here! Otherwise it will be a bug,
       * since the system will not move further 
       */
-      if(!ethernet_order() && !invalid_data);
+      if(ethernet_coordination(0)){
+        // Do something if given an order over ethernet
+      }
 
       // Getting data from the pins
       read_ADC(c_data_hyd_port, c_data_hyd_starboard, c_data_hyd_stern);
@@ -155,8 +218,11 @@ int main(void)
 
       // Checking if the lag is valid
       // Take new sample if not valid data
+      /**
+       * NOTE: The intensity is not implemented as of 10.12.2020
+       */
       if(!TRILITERATION::check_valid_signals(lag_hyd_port,
-            lag_hyd_starboard, lag_hyd_stern)){
+            lag_hyd_starboard, lag_hyd_stern, 0, 0, 0)){
         invalid_data = 1;
         continue;
       }
@@ -240,8 +306,27 @@ static void read_ADC(
             float32_t* data_hyd_port, 
             float32_t* data_hyd_starboard,
             float32_t* data_hyd_stern){
-  for(int i = 0; i < DSP_CONSTANTS::DMA_BUFFER_LENGTH; i++){
+  for(int i = 0; i < DSP_CONSTANTS::WORKING_BUFFER_LENGTH; i++){
+    // This is inefficient. Might be better to use the DMA
 
+    // HAL_ADC_Start(&hadc);
+    // HAL_ADC_PollForConversion(&hadc, 5);
+    // adc_6 = HAL_ADC_GetValue(&hadc);
+    // HAL_ADC_Start(&hadc)
+    // HAL_ADC_PollForConversion(&hadc, 5);
+    // adc_7 = HAL_ADC_GetValue(&hadc);
+
+    // //last ADC in the sequence
+    // HAL_ADC_Start(&hadc);
+    // HAL_ADC_PollForConversion(&hadc, 5);
+    // adc_9 = HAL_ADC_GetValue(&hadc);
+  }
+
+  for(int i = 0; i < DSP_CONSTANTS::DMA_BUFFER_LENGTH; i++){
+    // for(int i = 0; i < DSP_CONSTANTS::WORKING_BUFFER_LENGTH; i++){
+    //   input[2*i] = ADC1ConvertedValues[i];
+    //   input[2*i+1] = 0; //Imaginary part set to zero
+    // }
     /**
      * @warning MUST BE UPDATED!!
      */
@@ -264,6 +349,14 @@ void Error_Handler(void)
 
   /* USER CODE END Error_Handler_Debug */
 }
+
+/**
+ * @brief Function to handle coordination with the through ethernet
+ */
+uint8_t ethernet_coordination(uint16_t* p_data){
+  return 0;
+}
+
 
 #ifdef USE_FULL_ASSERT
 /**

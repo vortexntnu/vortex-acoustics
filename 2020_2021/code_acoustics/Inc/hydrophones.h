@@ -115,30 +115,20 @@ public:
     uint32_t get_lag() const { return last_lag; } 
 
     /**
-    * @brief Function to return the current data-set 
-    */
-    float32_t* get_data() const { return p_data; }
-
-    /**
-     * @brief Function to return the magnitude data of
-     * the current data-set
-     */
-    float32_t* get_mag_data() const { return p_mag_data; }
-
-    /**
      * @brief Function to return the intensity
      */
     float32_t get_intensity() const { return last_intensity; }
 
     /**
-    *  @brief Function to calculate everything we are
-    * interested in. This includes:
-    *   -FFT and IFFT
-    *   -index for maximum value
-    *   -maximum value of the signal
-    *   -signal intensity
+    * @brief Function to analyze the data
+    * 
+    * The raw data is filtered using a second-order biquad DF1 
+    * IIR filter to eliminate unwanted frequencies. Thereafter
+    * the frequencies magnitude and autocorrelation are found.
+    * The lag and intensity are thereafter calculated from these
+    * measurements
     */
-    void analyze_data(float32_t* data_arr);
+    void analyze_data(float32_t* p_raw_data);
 };
 
 } // namespace HYDROPHONES

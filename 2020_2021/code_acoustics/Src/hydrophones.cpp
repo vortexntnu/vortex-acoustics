@@ -21,12 +21,12 @@ HYDROPHONES::Hydrophones::~Hydrophones()
     free(p_autocorr_data);
 }
 
-void HYDROPHONES::Hydrophones::analyze_data(float32_t *p_data_arr)
+void HYDROPHONES::Hydrophones::analyze_data(float32_t *p_raw_data)
 {
     // Filters the data using an second-order IIR-filter
     // p_data is set to the filtered data 
     arm_biquad_cascade_df1_f32(&DSP_CONSTANTS::IIR_FILTER,
-            p_data_arr, p_data, DSP_CONSTANTS::IIR_SIZE);
+            p_raw_data, p_data, DSP_CONSTANTS::IIR_SIZE);
 
     // Takes the complex FFT with length 4096
     arm_cfft_f32(&arm_cfft_sR_f32_len4096, p_data, 0, 1);

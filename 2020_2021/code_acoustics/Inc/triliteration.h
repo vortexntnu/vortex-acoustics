@@ -20,7 +20,7 @@ namespace TRILITERATION{
  * 
  * @param sound_speed Speed of sound in m/s
  * 
- * @param source_power The power from each pinger.
+ * @param source_power The power from each pinger in dB.
  * Warning: requires us to know the type of pinger 
  * and the battery-voltage as these are time varying
  * parameters
@@ -40,9 +40,6 @@ const float32_t maximum_time_diff = hydrophone_distance/sound_speed;
 /**
  * @brief Struct to keep the position
  * for an object/hydrophone
- * 
- * @warning Should be replaced with the 
- * Pos included in ROS!
  */
 struct Pos{
     /**

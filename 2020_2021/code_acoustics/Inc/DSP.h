@@ -60,10 +60,29 @@ const float32_t SAMPLE_TIME = 1/SAMPLE_FREQUENCY;
  * eliminate unwanted frequencies. 
  * 
  * @warning Must have abs(filter) < 1 to prevent overflow
+ * 
+ * @warning The calculations for the filter should be automated
+ * such that the parameters changes according to the desired 
+ * frequencies. The filter's parameters are calculated using
+ *      f0 = 30000      // Passband center
+ *      Fs = 100000     // Sampling frequency
+ *      f1 = 15000      // Lower cut-off frequency
+ *      f2 = 45000      // Upper cut-off frequency
+ *      Q  = 1          // Quality-factor
+ *      K  = 1          // Gain
+ * 
+ * NOTE: For more information, see 
+ * https://arm-software.github.io/CMSIS_5/DSP/html/group__BiquadCascadeDF1__32x64.html
  */
+// Number of second order cascade-filters
 const uint32_t num_stages = 1;
-float32_t state_coefficients[4*num_stages] = {};
-float32_t filter_coefficients[5*num_stages] = {};
+// Initial values for x[n-1], x[n-2], y[n-1] and y[n-2]
+float32_t state_coefficients[4*num_stages] = {0.0, 0.0, 
+        0.0, 0.0};
+// Filter coefficients given as {b0, b1, b2, a0, a1}
+float32_t filter_coefficients[5*num_stages] = {0.32227662, 
+        0.0, -0.32227662, 0.41885608, 0.35544676};
+// Initialization of the struct
 const arm_biquad_casd_df1_inst_f32 IIR_filter = {
     .numStages = num_stages, .pState = &filter_coefficients,
     .pCoeffs = &filter_coefficients};
