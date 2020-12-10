@@ -6,19 +6,11 @@
 #ifndef ACOUSTICS_DSP_H
 #define ACOUSTICS_DSP_H
 
-/*
-These libraries were from an earlier attempt, where I
-tried to implement the DSP using proper FFT-libraries.
-The problem was that the libraries were too large for 
-the STM32, such that all of the RAM was "deleted". Tried
-to implement the data using the built in FFT from ARM
-*/
-//#include "../alglib/src/fasttransforms.h"
-//#include "../kiss_fft130/tools/kiss_fftr.h"
+#define ARM_MATH_CM7
 
+#include <stdint.h>
 #include "arm_math.h"
 #include "arm_const_structs.h" 
-#include <stdint.h>
 
 
 /**
@@ -84,8 +76,8 @@ float32_t filter_coefficients[5*num_stages] = {0.32227662,
         0.0, -0.32227662, 0.41885608, 0.35544676};
 // Initialization of the struct
 const arm_biquad_casd_df1_inst_f32 IIR_filter = {
-    .numStages = num_stages, .pState = &filter_coefficients,
-    .pCoeffs = &filter_coefficients};
+    .numStages = num_stages, .pState = &filter_coefficients[0],
+    .pCoeffs = &filter_coefficients[0]};
 
 } // namespace DSP_CONSTANTS
 

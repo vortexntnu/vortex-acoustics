@@ -20,15 +20,11 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "adc.h"
-#include "eth.h"
-#include "gpio.h"
 
 #include "hydrophones.h"
 #include <stdint.h>
 
 #include "stm32f7xx_hal.h"
-#include "arm_math.h"
-#include "arm_const_structs.h" 
 
 /* USER CODE END Includes */
 

@@ -8,21 +8,37 @@
   *          is using in the C source code, usually in main.c. This file contains:
   *           - Configuration section that allows to select:
   *              - The STM32F7xx device used in the target application
-  *              - To use or not the peripheralï¿½s drivers in application code(i.e.
-  *                code will be based on direct access to peripheralï¿½s registers
+  *              - To use or not the peripheral’s drivers in application code(i.e.
+  *                code will be based on direct access to peripheral’s registers
   *                rather than drivers API), this option is controlled by
   *                "#define USE_HAL_DRIVER"
   *
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright (c) 2016 STMicroelectronics.
-  * All rights reserved.</center></h2>
+  * <h2><center>&copy; COPYRIGHT(c) 2016 STMicroelectronics</center></h2>
   *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
+  * Redistribution and use in source and binary forms, with or without modification,
+  * are permitted provided that the following conditions are met:
+  *   1. Redistributions of source code must retain the above copyright notice,
+  *      this list of conditions and the following disclaimer.
+  *   2. Redistributions in binary form must reproduce the above copyright notice,
+  *      this list of conditions and the following disclaimer in the documentation
+  *      and/or other materials provided with the distribution.
+  *   3. Neither the name of STMicroelectronics nor the names of its contributors
+  *      may be used to endorse or promote products derived from this software
+  *      without specific prior written permission.
+  *
+  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   *
   ******************************************************************************
   */
@@ -56,10 +72,10 @@
 /* Uncomment the line below according to the target STM32 device used in your
    application
   */
-#if !defined (STM32F756xx) && !defined (STM32F746xx) && !defined (STM32F745xx) && !defined (STM32F765xx) && \
-    !defined (STM32F767xx) && !defined (STM32F769xx) && !defined (STM32F777xx) && !defined (STM32F779xx) && \
-    !defined (STM32F722xx) && !defined (STM32F723xx) && !defined (STM32F732xx) && !defined (STM32F733xx) && \
-    !defined (STM32F730xx) && !defined (STM32F750xx)
+#if !defined (STM32F756xx) && !defined (STM32F746xx) && !defined (STM32F745xx) && !defined (STM32F767xx) && \
+    !defined (STM32F769xx) && !defined (STM32F777xx) && !defined (STM32F779xx) && !defined (STM32F722xx) && \
+    !defined (STM32F723xx) && !defined (STM32F732xx) && !defined (STM32F733xx) && !defined (STM32F730xx) && \
+    !defined (STM32F750xx)
 
   /* #define STM32F756xx */   /*!< STM32F756VG, STM32F756ZG, STM32F756ZG, STM32F756IG, STM32F756BG,
                                    STM32F756NG Devices */
@@ -68,8 +84,8 @@
   /* #define STM32F745xx */   /*!< STM32F745VE, STM32F745VG, STM32F745ZG, STM32F745ZE, STM32F745IE, STM32F745IG Devices */
   /* #define STM32F765xx */   /*!< STM32F765BI, STM32F765BG, STM32F765NI, STM32F765NG, STM32F765II, STM32F765IG,
                                    STM32F765ZI, STM32F765ZG, STM32F765VI, STM32F765VG Devices */
-  #define STM32F767xx         /*!< STM32F767BG, STM32F767BI, STM32F767IG, STM32F767II, STM32F767NG, STM32F767NI,
-                                 //STM32F767VG, STM32F767VI, STM32F767ZG, STM32F767ZI Devices
+  /* #define STM32F767xx */   /*!< STM32F767BG, STM32F767BI, STM32F767IG, STM32F767II, STM32F767NG, STM32F767NI,
+                                   STM32F767VG, STM32F767VI, STM32F767ZG, STM32F767ZI Devices */
   /* #define STM32F769xx */   /*!< STM32F769AG, STM32F769AI, STM32F769BG, STM32F769BI, STM32F769IG, STM32F769II,
                                    STM32F769NG, STM32F769NI, STM32F768AI Devices */
   /* #define STM32F777xx */   /*!< STM32F777VI, STM32F777ZI, STM32F777II, STM32F777BI, STM32F777NI Devices */
@@ -97,16 +113,16 @@
 #endif /* USE_HAL_DRIVER */
 
 /**
-  * @brief CMSIS Device version number V1.2.5
+  * @brief CMSIS Device version number V1.2.3
   */
 #define __STM32F7_CMSIS_VERSION_MAIN   (0x01) /*!< [31:24] main version */
 #define __STM32F7_CMSIS_VERSION_SUB1   (0x02) /*!< [23:16] sub1 version */
-#define __STM32F7_CMSIS_VERSION_SUB2   (0x05) /*!< [15:8]  sub2 version */
+#define __STM32F7_CMSIS_VERSION_SUB2   (0x03) /*!< [15:8]  sub2 version */
 #define __STM32F7_CMSIS_VERSION_RC     (0x00) /*!< [7:0]  release candidate */
 #define __STM32F7_CMSIS_VERSION        ((__STM32F7_CMSIS_VERSION_MAIN << 24)\
                                        |(__STM32F7_CMSIS_VERSION_SUB1 << 16)\
                                        |(__STM32F7_CMSIS_VERSION_SUB2 << 8 )\
-                                       |(__STM32F7_CMSIS_VERSION_RC))
+                                       |(__STM32F7_CMSIS_VERSION))
 /**
   * @}
   */
@@ -168,8 +184,8 @@ typedef enum
 
 typedef enum
 {
-  SUCCESS = 0U,
-  ERROR = !SUCCESS
+  ERROR = 0U,
+  SUCCESS = !ERROR
 } ErrorStatus;
 
 /**
