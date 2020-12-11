@@ -51,7 +51,7 @@ static void read_ADC(
 
 // Function to be implemented later
 // Gives an order over ethernet
-uint8_t ethernet_coordination(uint16_t* p_data);
+uint8_t ethernet_coordination(void);
 
 /** 
  * ADC init function
@@ -125,7 +125,6 @@ MX_ADC_Init(void){
 
 /**
   * @brief  The application entry point.
-  * @retval int
   */
 int main(void)
 {
@@ -196,8 +195,9 @@ int main(void)
       * NOTE: Requires more logic here! Otherwise it will be a bug,
       * since the system will not move further 
       */
-      if(ethernet_coordination(0)){
+      if(ethernet_coordination()){
         // Do something if given an order over ethernet
+        // Must be implemented further
       }
 
       // Getting data from the pins
@@ -243,6 +243,9 @@ int main(void)
 
       // Send the data to the Xavier to get the possible direction and range
   }
+  free(c_data_hyd_port);
+  free(c_data_hyd_starboard);
+  free(c_data_hyd_stern);
 
   return 0;
   /* USER CODE END 3 */
@@ -303,7 +306,8 @@ static void read_ADC(
             float32_t* data_hyd_starboard,
             float32_t* data_hyd_stern){
   for(int i = 0; i < DSP_CONSTANTS::WORKING_BUFFER_LENGTH; i++){
-    // This is inefficient. Might be better to use the DMA
+    // This is inefficient. Might be better to use the DMA to 
+    // read continously... 
 
     // HAL_ADC_Start(&hadc);
     // HAL_ADC_PollForConversion(&hadc, 5);
@@ -338,8 +342,7 @@ static void read_ADC(
   * @brief  This function is executed in case of error occurrence.
   * @retval None
   */
-void Error_Handler(void)
-{
+void Error_Handler(void){
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
 
@@ -348,8 +351,12 @@ void Error_Handler(void)
 
 /**
  * @brief Function to handle coordination with the through ethernet
+ * 
+ * @warning Not implemented as of 11.12.2020, as I am not sure how the
+ * communication between the STM32 and the main CPU should be
+ * 
  */
-uint8_t ethernet_coordination(uint16_t* p_data){
+uint8_t ethernet_coordination(void){
   return 0;
 }
 
@@ -362,8 +369,7 @@ uint8_t ethernet_coordination(uint16_t* p_data){
   * @param  line: assert_param error line source number
   * @retval None
   */
-void assert_failed(uint8_t *file, uint32_t line)
-{
+void assert_failed(uint8_t *file, uint32_t line){
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
      tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */

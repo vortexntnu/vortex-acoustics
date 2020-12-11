@@ -33,16 +33,9 @@ const int IIR_SIZE = DMA_BUFFER_LENGTH;
  * The minimum sampling-frequency is therefore
  * 80 KHz, but increased to 100 KHz for safety.
  * 
- * The MAX_FREQUENCY and MIN_FREQUENCY are used 
- * for filtering the data in software. Every 
- * frequency above max or below min is assumed to
- * be noise
- * 
  * The SAMPLE_TIME is used to validate the signals
  */
 const uint32_t SAMPLE_FREQUENCY = 100000;
-const uint32_t MAX_FREQUENCY = SAMPLE_FREQUENCY / 2;
-const uint32_t MIN_FREQUENCY = SAMPLE_FREQUENCY / 10;
 const float32_t SAMPLE_TIME = 1/SAMPLE_FREQUENCY;   
 
 

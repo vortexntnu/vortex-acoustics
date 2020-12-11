@@ -39,7 +39,8 @@ const float32_t maximum_time_diff = hydrophone_distance/sound_speed;
 
 /**
  * @brief Struct to keep the position
- * for an object/hydrophone
+ * for an object/hydrophone. Could also
+ * have used the POS found inside ROS
  */
 struct Pos{
     /**
