@@ -27,7 +27,7 @@
 extern "C" {
 #endif
 
-#include "../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal.h"
+#include "stm32f7xx_hal.h"
 
 /**
  * @brief Function to configure the system-clock 

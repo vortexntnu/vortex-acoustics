@@ -9,6 +9,7 @@
 #define ARM_MATH_CM7
 
 #include <stdint.h>
+#include <math.h>
 #include "arm_math.h"
 #include "arm_const_structs.h" 
 

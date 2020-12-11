@@ -7,7 +7,6 @@
 #ifndef ACOUSTICS_TRILITERATE_H
 #define ACOUSTICS_TRILITERATE_H
 
-#include <math.h>
 #include "DSP.h"
 
 /**
