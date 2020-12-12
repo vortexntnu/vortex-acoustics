@@ -11,12 +11,12 @@ TRILITERATION::Pos::Pos(float32_t x, float32_t y, float32_t z) :
  * the position and angles
  */
 float32_t TRILITERATION::estimate_distance(float32_t intensity){
-    return sqrt(TRILITERATION::source_power/(4*DSP::PI*intensity));
+    return sqrt(TRILITERATION::source_power/(4*_MATH_H_::M_PI*intensity));
 }
 
 
 float32_t TRILITERATION::estimate_rough_angle(uint32_t time_difference){
-    return (float32_t)((DSP::PI/2)*(time_difference/TRILITERATION::maximum_time_diff));
+    return (float32_t)((_MATH_H_::M_PI/2)*(time_difference/TRILITERATION::maximum_time_diff));
 }
 
 std::pair<float32_t, uint8_t> TRILITERATION::estimate_lateral(

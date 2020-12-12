@@ -7,6 +7,7 @@
 #define ACOUSTICS_DSP_H
 
 #define ARM_MATH_CM7
+#define _USE_MATH_DEFINES
 
 #include <stdint.h>
 #include <math.h>
@@ -22,11 +23,11 @@ namespace DSP_CONSTANTS{
 /**
  * @brief Constants for sampling and DSP
  */
-const int DMA_BUFFER_LENGTH = 4096;
-const int WORKING_BUFFER_LENGTH = DMA_BUFFER_LENGTH/2;
-const int IN_BUFFER_LENGTH = DMA_BUFFER_LENGTH;
-const int FFT_SIZE = DMA_BUFFER_LENGTH;
-const int IIR_SIZE = DMA_BUFFER_LENGTH;
+const uint16_t DMA_BUFFER_LENGTH = 4096;
+const uint16_t WORKING_BUFFER_LENGTH = DMA_BUFFER_LENGTH / 2;
+const uint16_t IN_BUFFER_LENGTH = DMA_BUFFER_LENGTH;
+const uint16_t FFT_SIZE = DMA_BUFFER_LENGTH;
+const uint16_t IIR_SIZE = DMA_BUFFER_LENGTH;
 
 /**
  * @note The frequencies (in robosub) will be 
