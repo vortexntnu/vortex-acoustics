@@ -1,11 +1,11 @@
 /**
  * @file
  * 
- * @brief Basic functions to triliterate the position
+ * @brief Basic functions to triliterate the position of
+ * the acoustic pinger
  */
-
-#ifndef ACOUSTICS_TRILITERATE_H
-#define ACOUSTICS_TRILITERATE_H
+#ifndef ACOUSTICS_TRILITERATION_H
+#define ACOUSTICS_TRILITERATION_H
 
 #include "DSP.h"
 
@@ -164,6 +164,40 @@ uint8_t check_valid_signals(const uint32_t& time_port,
     const float32_t& intensity_port, const float32_t& intensity_starboard, 
     const float32_t& intensity_stern);
 
+
+/**
+ * @brief Helper function. Checks if the time-difference between two 
+ * signals are valid. The time difference between the signals are checked 
+ * against TRILITERATION::maximum_time_diff
+ * 
+ * @retval Returns false/true (0/1) depending on the result of the test
+ * 
+ * @param time_lhs One of the time-samples to check against
+ * 
+ * @param time_rhs The other time-sample to check 
+ */
+uint8_t valid_time_check(const uint32_t& time_lhs, const uint32_t& time_rhs);
+
+
+/**
+ * @brief Helper function. Checks if the measured/estimated intensity of 
+ * two signals appears valid.
+ * 
+ * @retval Returns true/false, with the retval depending on the result of the
+ * test. 
+ * 
+ * @param intensity_lhs The first signal to check against
+ * 
+ * @param intensity_rhs The second signal to check against 
+ * 
+ * @warning Not implemented as og 12.12.2020, as I have no idea how to 
+ * implement or calculate the intensity of the signals. The function will 
+ * hopefully be updated/implemented in the upcoming weeks.
+ */
+uint8_t valid_intensity_check(const float32_t& intensity_lhs, 
+    const float32_t& intensity_rhs);
+
+
 } // namespace TRILITERATION
 
-#endif // ACOUSTICS_TRILITERATE_H
+#endif // ACOUSTICS_TRILITERATION_H

@@ -1,14 +1,14 @@
 #include "triliteration.h"
 
 /**
- * Constructor
+ * Constructor for Pos
  */
 TRILITERATION::Pos::Pos(float32_t x, float32_t y, float32_t z) : 
         x(x), y(y), z(z) {}
 
 /**
  * Functions for triliteration, estimation and calculation for
- * the position and angles. Must be updated with better names!
+ * the position and angles
  */
 float32_t TRILITERATION::estimate_distance(float32_t intensity){
     return sqrt(TRILITERATION::source_power/(4*DSP::PI*intensity));
@@ -81,18 +81,38 @@ std::pair<float32_t, float32_t> TRILITERATION::estimate_pinger_position(
 }
 
 
-uint8_t TRILITERATION::check_valid_signals(
-const uint32_t& time_port, const uint32_t& time_starboard, 
-const uint32_t& time_stern, const float32_t& intensity_port, 
-const float32_t& intensity_starboard, const float32_t& intensity_stern){
 /**
- * Here it is difficult to estimate the signals, as the signals must be
- * evaluated in both regards to the signal intensity and the signal time 
-*/
-if((float32_t)(abs(time_port - time_starboard) * DSP_CONSTANTS::SAMPLE_TIME) > TRILITERATION::maximum_time_diff 
-|| (float32_t)(abs(time_starboard - time_stern) * DSP_CONSTANTS::SAMPLE_TIME) > TRILITERATION::maximum_time_diff 
-|| (float32_t)(abs(time_port - time_stern) * DSP_CONSTANTS::SAMPLE_TIME) > TRILITERATION::maximum_time_diff)
-    return 0;
-return 1; // Has not taken into account the intensity as of 09.12.2020
+ * Functions to check if signals/data are valid
+ */
+uint8_t TRILITERATION::check_valid_signals(
+        const uint32_t& time_port, const uint32_t& time_starboard, 
+        const uint32_t& time_stern, const float32_t& intensity_port, 
+        const float32_t& intensity_starboard, const float32_t& intensity_stern){
+
+        /**
+         * Here it is difficult to estimate the signals, as the signals must be
+         * evaluated in both regards to the signal intensity and the signal time 
+        */
+        if(valid_time_check(time_port, time_starboard) || 
+        valid_time_check(time_port, time_stern) || 
+        valid_time_check(time_starboard, time_stern)
+        return 0;
+
+        // Intensity is not implemented as of 12.12.2020, however time is more
+        // important in the beginning - and time is more straightforward to 
+        // implement, while the intensity might require more data from the AUV.
+
+        return 1;
 }
 
+
+uint8_t valid_time_check(const uint32_t& time_lhs, const uint32_t& time_rhs){
+        return (float32_t)(abs(time_lhs - time_rhs) * DSP_CONSTANTS::SAMPLE_TIME) > TRILITERATION::maximum_time_diff
+}
+
+
+
+uint8_t valid_intensity_check(const float32_t& intensity_lhs, 
+        const float32_t& intensity_rhs){
+    return 1;                
+}
