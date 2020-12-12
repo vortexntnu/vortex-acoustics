@@ -45,6 +45,7 @@ static void MX_ETH_Init(void);
 static void MX_SPI1_Init(void);
 
 // WARNING: Not implemented!!
+// The function should read/use DMA to get the data from each hydrophone
 static void read_ADC(
             float32_t* data_hyd_port, 
             float32_t* data_hyd_starboard,
@@ -52,131 +53,145 @@ static void read_ADC(
 
 
 // Function to be implemented later
-// Gives an order over ethernet
+// Gives an order over ethernet, or sends the data over ethernet.
+// Unclear how to implement the function and what it should do
 uint8_t ethernet_coordination(void);
 
 /**
-  * @brief  The application entry point.
+  * @brief The application entry point.
   */
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+  /** 
+   * Would like the system to try to restart if an error occurs.
+   * The system has therefore two infinite loops, and only a power-cut (should)
+   * stop the system from restarting
+   * 
+   * Should only calibrate the system once - the first time it starts up
+   * This is due to calibration taking relatively long time
+   */
+  while(1){
+    /* USER CODE END 1 */
 
-  /* USER CODE END 1 */
+    /* MCU Configuration--------------------------------------------------------*/
 
-  /* MCU Configuration--------------------------------------------------------*/
+    /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+    HAL_Init();
 
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
+    /* USER CODE BEGIN Init */
 
-  /* USER CODE BEGIN Init */
+    /* USER CODE END Init */
 
-  /* USER CODE END Init */
+    /* Configure the system clock */
+    SystemClock_Config();
 
-  /* Configure the system clock */
-  SystemClock_Config();
+    /* USER CODE BEGIN SysInit */
 
-  /* USER CODE BEGIN SysInit */
+    /* USER CODE END SysInit */
 
-  /* USER CODE END SysInit */
+    /* Initialize all configured peripherals */
+    MX_GPIO_Init();
+    MX_DMA_Init();
+    MX_ADC1_Init();
+    MX_ETH_Init();
+    MX_SPI1_Init();
+    
+    /* USER CODE BEGIN 2 */
+    if (HAL_ADC_Start(&hadc) != HAL_OK)
+      continue;
+    
+    if (HAL_ADC_Start_DMA(&hadc1, (uint32_t*) ADC1ConvertedValues, 
+                      DSP_CONSTANTS::DMA_BUFFER_LENGTH) != HAL_OK)
+      continue;
 
-  /* Initialize all configured peripherals */
-  MX_GPIO_Init();
-  MX_DMA_Init();
-  MX_ADC1_Init();
-  MX_ETH_Init();
-  MX_SPI1_Init();
-  
-  /* USER CODE BEGIN 2 */
-	if (HAL_ADC_Start(&hadc) != HAL_OK)
-	  Error_Handler();
+    HYDROPHONES::Hydrophones hyd_port(HYDROPHONES::pos_hyd_port);
+    HYDROPHONES::Hydrophones hyd_starboard(HYDROPHONES::pos_hyd_starboard);
+    HYDROPHONES::Hydrophones hyd_stern(HYDROPHONES::pos_hyd_stern);
 
-  HYDROPHONES::Hydrophones hyd_port(HYDROPHONES::pos_hyd_port);
-  HYDROPHONES::Hydrophones hyd_starboard(HYDROPHONES::pos_hyd_starboard);
-  HYDROPHONES::Hydrophones hyd_stern(HYDROPHONES::pos_hyd_stern);
+    // Lag from each hydrophone
+    uint32_t lag_hyd_port, lag_hyd_starboard, lag_hyd_stern;
 
-  // Lag from each hydrophone
-  uint32_t lag_hyd_port, lag_hyd_starboard, lag_hyd_stern;
+    // Intensity measured for each hydrophone
+    float32_t intensity_port, intensity_starboard, intensity_stern;
 
-  // Intensity measured for each hydrophone
-  float32_t intensity_port, intensity_starboard, intensity_stern;
+    // Range-estimate based on some calculation
+    float32_t range_es_port, range_es_starboard, range_es_stern;
 
-  // Range-estimate based on some calculation
-  float32_t range_es_port, range_es_starboard, range_es_stern;
+    // Intializing the raw-data-arrays
+    float32_t* c_data_hyd_port = 
+          (float32_t*) malloc(sizeof(float32_t) * DSP_CONSTANTS::DMA_BUFFER_LENGTH);
+    float32_t* c_data_hyd_starboard = 
+          (float32_t*) malloc(sizeof(float32_t) * DSP_CONSTANTS::DMA_BUFFER_LENGTH);
+    float32_t* c_data_hyd_stern = 
+          (float32_t*) malloc(sizeof(float32_t) * DSP_CONSTANTS::DMA_BUFFER_LENGTH);
 
-  // Intializing the raw-data-arrays
-  float32_t* c_data_hyd_port = 
-        (float32_t*) malloc(sizeof(float32_t) * DSP_CONSTANTS::DMA_BUFFER_LENGTH);
-  float32_t* c_data_hyd_starboard = 
-        (float32_t*) malloc(sizeof(float32_t) * DSP_CONSTANTS::DMA_BUFFER_LENGTH);
-  float32_t* c_data_hyd_stern = 
-        (float32_t*) malloc(sizeof(float32_t) * DSP_CONSTANTS::DMA_BUFFER_LENGTH);
+    /* USER CODE END 2 */
 
-  /* USER CODE END 2 */
+    /* Infinite loop */
+    /* USER CODE BEGIN WHILE */
+    while(1){
 
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
-  while(true){
+        /** 
+        * Using the ethernet to decleare the MCU to start recording.
+        * Start a time-estimate, such that the Xavier knows how old 
+        * the estimated position is 
+        * 
+        * NOTE: Requires more logic here! Otherwise it will be a bug,
+        * since the system will not move further 
+        */
+        if(ethernet_coordination()){
+          // Do something if given an order over ethernet
+          // Must be implemented further
+        }
 
-      /** 
-      * Using the ethernet to decleare the MCU to start recording.
-      * Start a time-estimate, such that the Xavier knows how old 
-      * the estimated position is 
-      * 
-      * NOTE: Requires more logic here! Otherwise it will be a bug,
-      * since the system will not move further 
-      */
-      if(ethernet_coordination()){
-        // Do something if given an order over ethernet
-        // Must be implemented further
-      }
+        // Getting data from the pins
+        read_ADC(c_data_hyd_port, c_data_hyd_starboard, c_data_hyd_stern);
 
-      // Getting data from the pins
-      read_ADC(c_data_hyd_port, c_data_hyd_starboard, c_data_hyd_stern);
+        // Calculating the lag
+        hyd_port.analyze_data(c_data_hyd_port);
+        hyd_starboard.analyze_data(c_data_hyd_starboard);
+        hyd_stern.analyze_data(c_data_hyd_stern);
 
-      // Calculating the lag
-      hyd_port.analyze_data(c_data_hyd_port);
-      hyd_starboard.analyze_data(c_data_hyd_starboard);
-      hyd_stern.analyze_data(c_data_hyd_stern);
+        lag_hyd_port = hyd_port.get_lag();
+        lag_hyd_starboard = hyd_starboard.get_lag();
+        lag_hyd_stern = hyd_stern.get_lag();
 
-      lag_hyd_port = hyd_port.get_lag();
-      lag_hyd_starboard = hyd_starboard.get_lag();
-      lag_hyd_stern = hyd_stern.get_lag();
+        // Checking if the lag is valid
+        // Take new sample if not valid data
+        /**
+         * NOTE: The intensity is not implemented as of 10.12.2020
+         */
+        if(!TRILITERATION::check_valid_signals(lag_hyd_port,
+              lag_hyd_starboard, lag_hyd_stern, 0, 0, 0)){
+          continue;
+        }
 
-      // Checking if the lag is valid
-      // Take new sample if not valid data
-      /**
-       * NOTE: The intensity is not implemented as of 10.12.2020
-       */
-      if(!TRILITERATION::check_valid_signals(lag_hyd_port,
-            lag_hyd_starboard, lag_hyd_stern, 0, 0, 0)){
-        continue;
-      }
+        // Calculate an estimate for the range
+        intensity_port = hyd_port.get_intensity();
+        intensity_starboard = hyd_starboard.get_intensity();
+        intensity_stern = hyd_stern.get_intensity();
 
-      // Calculate an estimate for the range
-      intensity_port = hyd_port.get_intensity();
-      intensity_starboard = hyd_starboard.get_intensity();
-      intensity_stern = hyd_stern.get_intensity();
+        range_es_port = hyd_port.get_lag();
+        range_es_starboard = hyd_starboard.get_lag();
+        range_es_stern = hyd_stern.get_lag();
 
-      range_es_port = hyd_port.get_lag();
-      range_es_starboard = hyd_starboard.get_lag();
-      range_es_stern = hyd_stern.get_lag();
+        // Calculate estimate 
+        std::pair<float32_t, float32_t> position_es = 
+            TRILITERATION::estimate_pinger_position(lag_hyd_port,
+              lag_hyd_starboard, lag_hyd_stern, intensity_stern,
+              intensity_starboard, intensity_stern);
 
-      // Calculate estimate 
-      std::pair<float32_t, float32_t> position_es = 
-          TRILITERATION::estimate_pinger_position(lag_hyd_port,
-            lag_hyd_starboard, lag_hyd_stern, intensity_stern,
-            intensity_starboard, intensity_stern);
+        // Do something with the estimates
 
-      // Do something with the estimates
+        // Send the data to the Xavier to get the possible direction and range
+    }
+    free(c_data_hyd_port);
+    free(c_data_hyd_starboard);
+    free(c_data_hyd_stern);
 
-      // Send the data to the Xavier to get the possible direction and range
+    HAL_ADC_Stop_DMA(&hadc)
   }
-  free(c_data_hyd_port);
-  free(c_data_hyd_starboard);
-  free(c_data_hyd_stern);
-
-  return 0;
   /* USER CODE END 3 */
 }
 
@@ -295,7 +310,6 @@ static void MX_ADC1_Init(void)
   /* USER CODE BEGIN ADC1_Init 2 */
 
   /* USER CODE END ADC1_Init 2 */
-
 }
 
 /**
