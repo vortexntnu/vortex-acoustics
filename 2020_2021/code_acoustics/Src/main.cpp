@@ -29,7 +29,7 @@
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
-ADC_HandleTypeDef hadc;
+ADC_HandleTypeDef hadc1;
 DMA_HandleTypeDef hdma_adc;
 
 uint32_t ADC1ConvertedValues[DSP_CONSTANTS::DMA_BUFFER_LENGTH];
@@ -41,6 +41,8 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
 static void MX_ADC1_Init(void);
+static void MX_ETH_Init(void);
+static void MX_SPI1_Init(void);
 
 // WARNING: Not implemented!!
 static void read_ADC(
@@ -52,76 +54,6 @@ static void read_ADC(
 // Function to be implemented later
 // Gives an order over ethernet
 uint8_t ethernet_coordination(void);
-
-/** 
- * ADC init function
- */
-MX_ADC_Init(void){
-  ADC_ChannelConfTypeDef sConfig;
-
-  hadc.Instance = ADC1;
-  hadc.Init.ClockPrescaler = ADC_CLOCKPRESCALER_PCLK_DIV2;
-  hadc.Init.Resolution = ADC_RESOLUTION_12B;
-  hadc.Init.ScanConvMode = DISABLE;
-  hadc.Init.ContinuousConvMode = ENABLE;
-  hadc.Init.DiscontinuousConvMode = DISABLE;
-  hadc.Init.NbrOfDiscConversion = 0;
-  hadc.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-  hadc.Init.ExternalTrigConv = ADC_EXTERNALTRIGCONV_T1_CC1;
-  hadc.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc.Init.NbrOfConversion = 1;
-  hadc.Init.DMAContinuousRequests = ENABLE;
-  hadc.Init.EOCSelection = DISABLE;
-      
-  if(HAL_ADC_Init(&hadc) != HAL_OK)
-  {
-    /* Initialization Error */
-    Error_Handler(); 
-  }
-  
-  // Configure channel 3
-  sConfig.Channel = ADC_CHANNEL_3;
-  sConfig.Rank = 1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_15CYCLES;
-  sConfig.Offset = 0;
-  
-  if(HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK)
-  {
-    /* Channel Configuration Error */
-    Error_Handler(); 
-  }
-
-  // Configure channel 10
-  sConfig.Channel = ADC_CHANNEL_10;
-  sConfig.Rank = 2;
-  sConfig.SamplingTime = ADC_SAMPLETIME_15CYCLES;
-  sConfig.Offset = 0;
-  
-  if(HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK)
-  {
-    /* Channel Configuration Error */
-    Error_Handler(); 
-  }
-
-  // Configure channel 13
-  sConfig.Channel = ADC_CHANNEL_13;
-  sConfig.Rank = 3;
-  sConfig.SamplingTime = ADC_SAMPLETIME_15CYCLES;
-  sConfig.Offset = 0;
-  
-  if(HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK)
-  {
-    /* Channel Configuration Error */
-    Error_Handler(); 
-  }
-
-  // Start the conversion process and enable interrupt
-  if(HAL_ADC_Start_DMA(&hadc, (uint32_t*) ADC1ConvertedValues, DSP_CONSTANTS::DMA_BUFFER_LENGTH) != HAL_OK)
-  {
-    /* Start Conversation Error */
-    Error_Handler(); 
-  }
-}
 
 /**
   * @brief  The application entry point.
@@ -150,8 +82,10 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_ADC_Init();
+  MX_DMA_Init();
+  MX_ADC1_Init();
   MX_ETH_Init();
+  MX_SPI1_Init();
   
   /* USER CODE BEGIN 2 */
 	if (HAL_ADC_Start(&hadc) != HAL_OK)
@@ -177,9 +111,6 @@ int main(void)
         (float32_t*) malloc(sizeof(float32_t) * DSP_CONSTANTS::DMA_BUFFER_LENGTH);
   float32_t* c_data_hyd_stern = 
         (float32_t*) malloc(sizeof(float32_t) * DSP_CONSTANTS::DMA_BUFFER_LENGTH);
-
-  // Simple bool to keep track of the state
-  uint8_t invalid_data = 0;
 
   /* USER CODE END 2 */
 
@@ -219,10 +150,8 @@ int main(void)
        */
       if(!TRILITERATION::check_valid_signals(lag_hyd_port,
             lag_hyd_starboard, lag_hyd_stern, 0, 0, 0)){
-        invalid_data = 1;
         continue;
       }
-      invalid_data = 0;
 
       // Calculate an estimate for the range
       intensity_port = hyd_port.get_intensity();
@@ -275,7 +204,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLM = 8;
   RCC_OscInitStruct.PLL.PLLN = 216;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-  RCC_OscInitStruct.PLL.PLLQ = 2;
+  RCC_OscInitStruct.PLL.PLLQ = 6;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -288,17 +217,201 @@ void SystemClock_Config(void)
   }
   /** Initializes the CPU, AHB and APB buses clocks
   */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV4;  // Affect the sampling frequency of the ADC. With ..._DIV4, we get
+                                                     // a sample frequency of 450 kHz. This results in 112,5 kHz per 
+                                                     // hydrophone
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_7) != HAL_OK)
   {
     Error_Handler();
   }
 }
+
+/**
+  * @brief ADC1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_ADC1_Init(void)
+{
+
+  /* USER CODE BEGIN ADC1_Init 0 */
+
+  /* USER CODE END ADC1_Init 0 */
+
+  ADC_ChannelConfTypeDef sConfig = {0};
+
+  /* USER CODE BEGIN ADC1_Init 1 */
+
+  /* USER CODE END ADC1_Init 1 */
+  /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
+  */
+  hadc1.Instance = ADC1;
+  hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV8;
+  hadc1.Init.Resolution = ADC_RESOLUTION_12B;
+  hadc1.Init.ScanConvMode = ADC_SCAN_ENABLE;
+  hadc1.Init.ContinuousConvMode = ENABLE;
+  hadc1.Init.DiscontinuousConvMode = DISABLE;
+  hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  hadc1.Init.NbrOfConversion = 3;
+  hadc1.Init.DMAContinuousRequests = DISABLE;
+  hadc1.Init.EOCSelection = ADC_EOC_SEQ_CONV;
+  if (HAL_ADC_Init(&hadc1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_3;
+  sConfig.Rank = ADC_REGULAR_RANK_1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_10;
+  sConfig.Rank = ADC_REGULAR_RANK_2;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_13;
+  sConfig.Rank = ADC_REGULAR_RANK_3;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN ADC1_Init 2 */
+
+  /* USER CODE END ADC1_Init 2 */
+
+}
+
+/**
+  * @brief ETH Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_ETH_Init(void)
+{
+
+  /* USER CODE BEGIN ETH_Init 0 */
+
+  /* USER CODE END ETH_Init 0 */
+
+  /* USER CODE BEGIN ETH_Init 1 */
+
+  /* USER CODE END ETH_Init 1 */
+  heth.Instance = ETH;
+  heth.Init.AutoNegotiation = ETH_AUTONEGOTIATION_ENABLE;
+  heth.Init.PhyAddress = LAN8742A_PHY_ADDRESS;
+  heth.Init.MACAddr[0] =   0x00;
+  heth.Init.MACAddr[1] =   0x80;
+  heth.Init.MACAddr[2] =   0xE1;
+  heth.Init.MACAddr[3] =   0x00;
+  heth.Init.MACAddr[4] =   0x00;
+  heth.Init.MACAddr[5] =   0x00;
+  heth.Init.RxMode = ETH_RXPOLLING_MODE;
+  heth.Init.ChecksumMode = ETH_CHECKSUM_BY_HARDWARE;
+  heth.Init.MediaInterface = ETH_MEDIA_INTERFACE_RMII;
+
+  /* USER CODE BEGIN MACADDRESS */
+
+  /* USER CODE END MACADDRESS */
+
+  if (HAL_ETH_Init(&heth) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN ETH_Init 2 */
+
+  /* USER CODE END ETH_Init 2 */
+
+}
+
+/**
+  * @brief SPI1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_SPI1_Init(void)
+{
+
+  /* USER CODE BEGIN SPI1_Init 0 */
+
+  /* USER CODE END SPI1_Init 0 */
+
+  /* USER CODE BEGIN SPI1_Init 1 */
+
+  /* USER CODE END SPI1_Init 1 */
+  /* SPI1 parameter configuration*/
+  hspi1.Instance = SPI1;
+  hspi1.Init.Mode = SPI_MODE_MASTER;
+  hspi1.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi1.Init.DataSize = SPI_DATASIZE_4BIT;
+  hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
+  hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi1.Init.NSS = SPI_NSS_SOFT;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+  hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi1.Init.CRCPolynomial = 7;
+  hspi1.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
+  hspi1.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
+  if (HAL_SPI_Init(&hspi1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN SPI1_Init 2 */
+
+  /* USER CODE END SPI1_Init 2 */
+
+}
+
+/**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA2_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA2_Stream0_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Stream0_IRQn);
+
+}
+
+/**
+  * @brief GPIO Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_GPIO_Init(void)
+{
+
+  /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
+
+}
+
 
 /* USER CODE BEGIN 4 */
 static void read_ADC(
