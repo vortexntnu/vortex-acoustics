@@ -98,16 +98,22 @@ int main(void)
     MX_SPI1_Init();
     
     /* USER CODE BEGIN 2 */
+    // Start ADC and DMA
     if (HAL_ADC_Start(&hadc) != HAL_OK)
       continue;
     
     if (HAL_ADC_Start_DMA(&hadc1, (uint32_t*) ADC1ConvertedValues, 
-                      DSP_CONSTANTS::DMA_BUFFER_LENGTH) != HAL_OK)
+          DSP_CONSTANTS::DMA_BUFFER_LENGTH) != HAL_OK)
       continue;
 
+    // Initialize the class Hydrophone
     HYDROPHONES::Hydrophones hyd_port(HYDROPHONES::pos_hyd_port);
     HYDROPHONES::Hydrophones hyd_starboard(HYDROPHONES::pos_hyd_starboard);
     HYDROPHONES::Hydrophones hyd_stern(HYDROPHONES::pos_hyd_stern);
+
+    // Initialize variables for triliteration
+    TRILITERATION::initialize_triliteration_globals(HYDROPHONES::pos_hyd_port,
+          HYDROPHONES::pos_hyd_starboard, HYDROPHONES::pos_hyd_stern);
 
     // Lag from each hydrophone
     uint32_t lag_hyd_port, lag_hyd_starboard, lag_hyd_stern;
