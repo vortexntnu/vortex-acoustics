@@ -11,6 +11,7 @@
 
 #include <stdint.h>
 #include <math.h>
+#include <cmath>
 #include "arm_math.h"
 #include "arm_const_structs.h" 
 
