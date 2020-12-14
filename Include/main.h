@@ -41,6 +41,8 @@ enum class Error_types{
   ERROR_ADC_CONFIG,           // Error on configuring ADC 
   ERROR_DMA_INIT,             // Error on initializing DMA
   ERROR_DMA_CONFIG,           // Error on configuring DMA
+  ERROR_DMA_START,            // Error while starting DMA
+  ERROR_DMA_STOP,             // Error while stopping DMA
   ERROR_TRILITERATION_INIT,   // Error on initializing TRILITERATION 
   ERROR_INVALID_SIGNAL,       // Error on recieving invalid signals
   ERROR_UNIDENTIFIED,         // Unidentified error. Thrown using Error_handler 

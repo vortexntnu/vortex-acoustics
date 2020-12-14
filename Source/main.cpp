@@ -167,11 +167,17 @@ int main(void)
 
         // Getting data from ADC 
         // Stopping the DMA to prevent the data from updating while reading 
-        HAL_ADC_Stop_DMA(&hadc)
+        if(HAL_ADC_Stop_DMA(&hadc) != HAL_OK){
+          log_error(Error_types::ERROR_DMA_STOP);
+          continue;
+        }
         read_ADC(p_data_hyd_port, p_data_hyd_starboard, p_data_hyd_stern);
 
         // Restarting the DMA
-        HAL_ADC_START_DMA(&hadc)
+        if(HAL_ADC_START_DMA(&hadc) != HAL_OK){
+          log_error(Error_types::ERROR_DMA_START);
+          continue;
+        }
 
         // Calculating the lag
         hyd_port.analyze_data(p_data_hyd_port);
