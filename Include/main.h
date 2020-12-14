@@ -42,7 +42,9 @@ enum class Error_types{
   ERROR_DMA_INIT,             // Error on initializing DMA
   ERROR_DMA_CONFIG,           // Error on configuring DMA
   ERROR_TRILITERATION_INIT,   // Error on initializing TRILITERATION 
-  ERROR_INVALID_SIGNAL        // Error on recieving invalid signals
+  ERROR_INVALID_SIGNAL,       // Error on recieving invalid signals
+  ERROR_UNIDENTIFIED,         // Unidentified error. Thrown using Error_handler 
+  ERROR_MEMORY                // Out of memory for error_handling
 };
 
 

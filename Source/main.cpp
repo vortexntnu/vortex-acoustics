@@ -34,6 +34,11 @@
 ADC_HandleTypeDef hadc1;
 DMA_HandleTypeDef hdma_adc;
 
+// Errors and errors-detected
+uint32_t error_idx = 0;
+uint16_t max_num_errors = std::pow(2, 8);
+volatile Error_types errors_occured[max_errors];
+
 // Memory that the DMA will push the data to
 volatile uint32_t ADC1ConvertedValues[3 * DSP_CONSTANTS::DMA_BUFFER_LENGTH];
 
@@ -512,24 +517,33 @@ uint8_t ethernet_coordination(void){
  * error occurs. This could be done in the future, but is not a priority
  * as of 14.12.2020
  * 
+ * NOTE: Could be improved by using a txt-file or other log, or send the number
+ * of errors to the Xavier to be analyzed later. Using an array for temporary
+ * storage, however should be improved in the future
+ * 
  * @param error The error that occured
  */
 static void log_error(Error_types error){
-  // Do something to log the error
-  return;
+  if(error_idx < max_num_errors - 1){
+    errors_occured[error_idx] = error;
+    error_idx++;
+    return;
+  }
+  if(error_idx == max_num_errors - 1){
+    errors_occured = Error_types::ERROR_MEMORY;
+  }
 }
 
 /* USER CODE END 4 */
 
 /**
-  * @brief  This function is executed in case of error occurrence.
+  * @brief  This function is executed in case of error occurrence
+  * Calls log_error() with unidentified error
+  * 
   * @retval None
   */
 void Error_Handler(void){
-  /* USER CODE BEGIN Error_Handler_Debug */
-  /* User can add his own implementation to report the HAL error return state */
-
-  /* USER CODE END Error_Handler_Debug */
+  log_error(Error_types::ERROR_UNIDENTIFIED);
 }
 
 
