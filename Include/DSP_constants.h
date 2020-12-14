@@ -3,14 +3,15 @@
  * @brief Small library that implements some
  * constants for the DSP 
  */
-#ifndef ACOUSTICS_DSP_H
-#define ACOUSTICS_DSP_H
+#ifndef ACOUSTICS_DSP_CONSTANTS_H
+#define ACOUSTICS_DSP_CONSTANTS_H
 
 #define ARM_MATH_CM7
 #define _USE_MATH_DEFINES
 
 #include <stdint.h>
 #include <math.h>
+#include <cmath>
 #include "arm_math.h"
 #include "arm_const_structs.h" 
 
@@ -76,4 +77,4 @@ const arm_biquad_casd_df1_inst_f32 IIR_filter = {
 
 } // namespace DSP_CONSTANTS
 
-#endif // ACOUSTICS_DSP_H
+#endif // ACOUSTICS_DSP_CONSTANTS_H

@@ -7,7 +7,7 @@
 #ifndef ACOUSTICS_TRILITERATION_H
 #define ACOUSTICS_TRILITERATION_H
 
-#include "DSP.h"
+#include "DSP_constants.h"
 
 /**
  * @brief Namespace/wrapper for the triliteration
@@ -17,24 +17,32 @@ namespace TRILITERATION{
 /**
  * @brief Constants used for the triliterations 
  * 
- * @param sound_speed Speed of sound in m/s
+ * @param sound_speed Speed of sound in water in m/s
  * 
  * @param source_power The power from each pinger in dB.
  * Warning: requires us to know the type of pinger 
  * and the battery-voltage as these are time varying
  * parameters
  * 
- * @param hydrophone_distance The distance between the 
- * hydrophones. Required to be changed later on! Could
- * potentially be set using the hydrophone-positioning
+ * @param time_diff_epsilon Safety margin to reduce the 
+ * likelyhood of an error. A value of 0.1 shows that we accept
+ * signals that arrive 10 % later. 
+ * NOTE: 0 <= time_diff_epsilon < 1
  * 
- * @param time_error Error margin to help classify valid
- * vs. invalid signals
+ * @param max_hydrophone_distance The maximum distance 
+ * measured between the hydrophones. 
+ * 
+ * @param maximum_time_diff The maximum time-difference that
+ * should be possible between the data signals
+ * 
+ * @warning max_hydrophone_distance and maximum_time_diff are
+ * decleared as extern, as they are decleared in .cpp 
  */
 const uint16_t sound_speed = 1480;
-const uint16_t source_power = 177;  
-const float32_t hydrophone_distance = 0.57; 
-const float32_t maximum_time_diff = hydrophone_distance/sound_speed;
+const uint16_t source_power = 177; 
+const float32_t time_diff_epsilon = 0.1; 
+extern float32_t max_hydrophone_distance; 
+extern float32_t maximum_time_diff;
 
 /**
  * @brief Struct to keep the position
@@ -54,6 +62,35 @@ struct Pos{
      */
     Pos(float32_t x, float32_t y, float32_t z);
 };
+
+
+/**
+ * @brief Helper function. Calculates the distance betweeen
+ * two Pos
+ * 
+ * @retval Returns the distance between two positions
+ * 
+ * @param pos_lhs First position
+ * 
+ * @param pos_rhs Second position
+ */
+float32_t calculate_distance(const Pos& pos_lhs, const Pos& pos_rhs);
+
+
+/**
+ * @brief Function that calculates the maximum distance
+ * between the hydrophones, and use it to calculate the
+ * allowed time_difference. See the overview in hydrophones.h
+ * for a better explenation of the hydrophones positioning
+ * 
+ * @param pos_hyd_port Position of port hydrophone
+ * 
+ * @param pos_hyd_starboard Position of starboard hydrophone
+ * 
+ * @param pos_hyd_stern Position of stern hydrophone 
+ */
+void initialize_triliteration_globals(const Pos& pos_hyd_port,
+        const Pos& pos_hyd_starboard, const Pos& pos_hyd_stern);
 
 
 /**
