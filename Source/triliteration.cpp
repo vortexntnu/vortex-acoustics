@@ -3,9 +3,11 @@
 /**
  * Initializing the variables maximum_time_diff and max_hydrophone_distance.
  * These values are updated in the function initialize_triliteration_globals
+ * 
+ * Initialized to -1 such that it's easy to check if the variables are incorrect
  */
-float32_t TRILITERATION::maximum_hydrophone_distance = 0;
-float32_t TRILITERATION::maximum_time_diff = 0;
+float32_t TRILITERATION::maximum_hydrophone_distance = -1;
+float32_t TRILITERATION::maximum_time_diff = -1;
 
 
 /**
@@ -27,7 +29,7 @@ float32_t TRILITERATION::calculate_distance(
 }
 
 
-void TRILITERATION::initialize_triliteration_globals(
+uint8_t TRILITERATION::initialize_triliteration_globals(
                 const Pos& pos_hyd_port, const Pos& pos_hyd_starboard,
                 const Pos& pos_hyd_stern){
         float32_t dist_port_starboard = 
@@ -40,6 +42,8 @@ void TRILITERATION::initialize_triliteration_globals(
                 std::max(dist_port_starboard, std::max(dist_starboard_stern, dist_port_stern));
         TRILITERATION::maximum_time_diff = (1 + TRILITERATION::time_diff_epsilon) *
                 (TRILITERATION::max_hydrophone_distance / TRILITERATION::sound_speed);
+        return (TRILITERATION::maximum_hydrophone_distance != -1 && 
+                TRILITERATION::maximum_time_diff != 1)
 }
 
 

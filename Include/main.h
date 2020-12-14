@@ -30,6 +30,21 @@ extern "C" {
 #include "stm32f7xx_hal.h"
 
 /**
+ * @brief Enum to hold some of the potential errors that could occur
+ * 
+ * @warning ERROR_INVALID_SIGNAL is most likely on occuring, as it 
+ * is calculated multiple times a second. Must prevent it from 
+ * eliminating the RAM/memory
+ */
+enum class Error_types{
+  ERROR_ADC_INIT,             // Error on initializing ADC
+  ERROR_DMA_INIT,             // Error on initializing DMA
+  ERROR_TRILITERATION_INIT,   // Error on initializing TRILITERATION 
+  ERROR_INVALID_SIGNAL        // Error on recieving invalid signals
+};
+
+
+/**
  * @brief Function to configure the system-clock 
  * 
  * Could be made as a private function, to prevent

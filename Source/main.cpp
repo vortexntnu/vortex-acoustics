@@ -29,14 +29,19 @@
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
+
+// Handler for the ADC and the DMA
 ADC_HandleTypeDef hadc1;
 DMA_HandleTypeDef hdma_adc;
 
-uint32_t ADC1ConvertedValues[DSP_CONSTANTS::DMA_BUFFER_LENGTH];
+// Mmemory that the DMA will push the data to
+uint32_t ADC1ConvertedValues[3 * DSP_CONSTANTS::DMA_BUFFER_LENGTH];
 
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
+
+// INIT-functions
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
@@ -44,17 +49,16 @@ static void MX_ADC1_Init(void);
 static void MX_ETH_Init(void);
 static void MX_SPI1_Init(void);
 
-// WARNING: Not implemented!!
-// The function should read/use DMA to get the data from each hydrophone
+// Function to acces DMA to get data from the hydrophones
 static void read_ADC(
-            float32_t* data_hyd_port, 
-            float32_t* data_hyd_starboard,
-            float32_t* data_hyd_stern);
+            float32_t* p_data_hyd_port, 
+            float32_t* p_data_hyd_starboard,
+            float32_t* p_data_hyd_stern);
 
+// Function to log errors
+static void log_error(Error_types error_code);
 
-// Function to be implemented later
-// Gives an order over ethernet, or sends the data over ethernet.
-// Unclear how to implement the function and what it should do
+// Function to coordinate the communication over the ethernet.
 uint8_t ethernet_coordination(void);
 
 /**
@@ -99,21 +103,28 @@ int main(void)
     
     /* USER CODE BEGIN 2 */
     // Start ADC and DMA
-    if (HAL_ADC_Start(&hadc) != HAL_OK)
+    if (HAL_ADC_Start(&hadc) != HAL_OK){
+      log_error(Error_types::ERROR_ADC_INIT);
       continue;
+    }
     
     if (HAL_ADC_Start_DMA(&hadc1, (uint32_t*) ADC1ConvertedValues, 
-          DSP_CONSTANTS::DMA_BUFFER_LENGTH) != HAL_OK)
+          DSP_CONSTANTS::DMA_BUFFER_LENGTH) != HAL_OK){
+      log_error(Error_types::ERROR_DMA_INIT);
       continue;
+    }
 
     // Initialize the class Hydrophone
     HYDROPHONES::Hydrophones hyd_port(HYDROPHONES::pos_hyd_port);
     HYDROPHONES::Hydrophones hyd_starboard(HYDROPHONES::pos_hyd_starboard);
     HYDROPHONES::Hydrophones hyd_stern(HYDROPHONES::pos_hyd_stern);
 
-    // Initialize variables for triliteration
-    TRILITERATION::initialize_triliteration_globals(HYDROPHONES::pos_hyd_port,
-          HYDROPHONES::pos_hyd_starboard, HYDROPHONES::pos_hyd_stern);
+    // Initialize variables for triliteration. Log error if invalid
+    if(!TRILITERATION::initialize_triliteration_globals(HYDROPHONES::pos_hyd_port,
+          HYDROPHONES::pos_hyd_starboard, HYDROPHONES::pos_hyd_stern)){
+      log_error(Error_types::ERROR_TRILITERATION_INIT);
+      continue;
+    }
 
     // Lag from each hydrophone
     uint32_t lag_hyd_port, lag_hyd_starboard, lag_hyd_stern;
@@ -125,11 +136,11 @@ int main(void)
     float32_t range_es_port, range_es_starboard, range_es_stern;
 
     // Intializing the raw-data-arrays
-    float32_t* c_data_hyd_port = 
+    float32_t* p_data_hyd_port = 
           (float32_t*) malloc(sizeof(float32_t) * DSP_CONSTANTS::DMA_BUFFER_LENGTH);
-    float32_t* c_data_hyd_starboard = 
+    float32_t* p_data_hyd_starboard = 
           (float32_t*) malloc(sizeof(float32_t) * DSP_CONSTANTS::DMA_BUFFER_LENGTH);
-    float32_t* c_data_hyd_stern = 
+    float32_t* p_data_hyd_stern = 
           (float32_t*) malloc(sizeof(float32_t) * DSP_CONSTANTS::DMA_BUFFER_LENGTH);
 
     /* USER CODE END 2 */
@@ -151,13 +162,13 @@ int main(void)
           // Must be implemented further
         }
 
-        // Getting data from the pins
-        read_ADC(c_data_hyd_port, c_data_hyd_starboard, c_data_hyd_stern);
+        // Getting data from ADC
+        read_ADC(p_data_hyd_port, p_data_hyd_starboard, p_data_hyd_stern);
 
         // Calculating the lag
-        hyd_port.analyze_data(c_data_hyd_port);
-        hyd_starboard.analyze_data(c_data_hyd_starboard);
-        hyd_stern.analyze_data(c_data_hyd_stern);
+        hyd_port.analyze_data(p_data_hyd_port);
+        hyd_starboard.analyze_data(p_data_hyd_starboard);
+        hyd_stern.analyze_data(p_data_hyd_stern);
 
         lag_hyd_port = hyd_port.get_lag();
         lag_hyd_starboard = hyd_starboard.get_lag();
@@ -165,11 +176,9 @@ int main(void)
 
         // Checking if the lag is valid
         // Take new sample if not valid data
-        /**
-         * NOTE: The intensity is not implemented as of 10.12.2020
-         */
         if(!TRILITERATION::check_valid_signals(lag_hyd_port,
               lag_hyd_starboard, lag_hyd_stern, 0, 0, 0)){
+          log_error(Error_types::ERROR_INVALID_SIGNAL)
           continue;
         }
 
@@ -192,9 +201,9 @@ int main(void)
 
         // Send the data to the Xavier to get the possible direction and range
     }
-    free(c_data_hyd_port);
-    free(c_data_hyd_starboard);
-    free(c_data_hyd_stern);
+    free(p_data_hyd_port);
+    free(p_data_hyd_starboard);
+    free(p_data_hyd_stern);
 
     HAL_ADC_Stop_DMA(&hadc)
   }
@@ -434,10 +443,18 @@ static void MX_GPIO_Init(void)
 
 
 /* USER CODE BEGIN 4 */
+
+/**
+ * @brief Read the ADC by using DMA
+ * 
+ * @param p_data_hyd_port Pointer to the memory for the port hydrophone
+ * @param p_data_hyd_starboard Pointer to the starboard hydrophone's memory
+ * @param p_data_hyd_stern Pointer to the stern hydrophone's memory
+ */
 static void read_ADC(
-            float32_t* data_hyd_port, 
-            float32_t* data_hyd_starboard,
-            float32_t* data_hyd_stern){
+            float32_t* p_data_hyd_port, 
+            float32_t* p_data_hyd_starboard,
+            float32_t* p_data_hyd_stern){
   for(int i = 0; i < DSP_CONSTANTS::WORKING_BUFFER_LENGTH; i++){
     // This is inefficient. Might be better to use the DMA to 
     // read continously... 
@@ -469,6 +486,31 @@ static void read_ADC(
   }
 }
 
+
+/**
+ * @brief Function to handle communication over ethernet
+ * 
+ * @warning Not implemented as of 11.12.2020, as I am not sure how the
+ * communication between the STM32 and the main CPU should be
+ */
+uint8_t ethernet_coordination(void){
+  return 0;
+}
+
+
+/**
+ * @brief Function to log the errors
+ * Could also be interesting to implement a timestamp to detect when the
+ * error occurs. This could be done in the future, but is not a priority
+ * as of 14.12.2020
+ * 
+ * @param error The error that occured
+ */
+static void log_error(Error_types error){
+  // Do something to log the error
+  return;
+}
+
 /* USER CODE END 4 */
 
 /**
@@ -480,17 +522,6 @@ void Error_Handler(void){
   /* User can add his own implementation to report the HAL error return state */
 
   /* USER CODE END Error_Handler_Debug */
-}
-
-/**
- * @brief Function to handle coordination with the through ethernet
- * 
- * @warning Not implemented as of 11.12.2020, as I am not sure how the
- * communication between the STM32 and the main CPU should be
- * 
- */
-uint8_t ethernet_coordination(void){
-  return 0;
 }
 
 
