@@ -34,8 +34,8 @@
 ADC_HandleTypeDef hadc1;
 DMA_HandleTypeDef hdma_adc;
 
-// Mmemory that the DMA will push the data to
-uint32_t ADC1ConvertedValues[3 * DSP_CONSTANTS::DMA_BUFFER_LENGTH];
+// Memory that the DMA will push the data to
+volatile uint32_t ADC1ConvertedValues[3 * DSP_CONSTANTS::DMA_BUFFER_LENGTH];
 
 /* USER CODE END PV */
 
@@ -50,9 +50,7 @@ static void MX_ETH_Init(void);
 static void MX_SPI1_Init(void);
 
 // Function to acces DMA to get data from the hydrophones
-static void read_ADC(
-            float32_t* p_data_hyd_port, 
-            float32_t* p_data_hyd_starboard,
+static void read_ADC(float32_t* p_data_hyd_port, float32_t* p_data_hyd_starboard,
             float32_t* p_data_hyd_stern);
 
 // Function to log errors
@@ -162,8 +160,13 @@ int main(void)
           // Must be implemented further
         }
 
-        // Getting data from ADC
+        // Getting data from ADC 
+        // Stopping the DMA to prevent the data from updating while reading 
+        HAL_ADC_Stop_DMA(&hadc)
         read_ADC(p_data_hyd_port, p_data_hyd_starboard, p_data_hyd_stern);
+
+        // Restarting the DMA
+        HAL_ADC_START_DMA(&hadc)
 
         // Calculating the lag
         hyd_port.analyze_data(p_data_hyd_port);
@@ -201,11 +204,15 @@ int main(void)
 
         // Send the data to the Xavier to get the possible direction and range
     }
+    // Should never reach here
+    // Freeing memory just in case
     free(p_data_hyd_port);
     free(p_data_hyd_starboard);
     free(p_data_hyd_stern);
 
-    HAL_ADC_Stop_DMA(&hadc)
+    // Stopping the ADC and the DMA
+    HAL_ADC_Start(&hadc);
+    HAL_ADC_Stop_DMA(&hadc);
   }
   /* USER CODE END 3 */
 }
@@ -291,11 +298,11 @@ static void MX_ADC1_Init(void)
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
   hadc1.Init.NbrOfConversion = 3;
-  hadc1.Init.DMAContinuousRequests = DISABLE;
+  hadc1.Init.DMAContinuousRequests = ENABLE;
   hadc1.Init.EOCSelection = ADC_EOC_SEQ_CONV;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
   {
-    Error_Handler();
+    log_error(Error_types::ERROR_ADC_INIT);
   }
   /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
   */
@@ -304,7 +311,7 @@ static void MX_ADC1_Init(void)
   sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
-    Error_Handler();
+    log_error(Error_types::ERROR_ADC_CONFIG);
   }
   /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
   */
@@ -312,7 +319,7 @@ static void MX_ADC1_Init(void)
   sConfig.Rank = ADC_REGULAR_RANK_2;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
-    Error_Handler();
+    log_error(Error_types::ERROR_ADC_CONFIG);
   }
   /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
   */
@@ -320,7 +327,7 @@ static void MX_ADC1_Init(void)
   sConfig.Rank = ADC_REGULAR_RANK_3;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
-    Error_Handler();
+    log_error(Error_types::ERROR_ADC_CONFIG);
   }
   /* USER CODE BEGIN ADC1_Init 2 */
 
@@ -450,39 +457,40 @@ static void MX_GPIO_Init(void)
  * @param p_data_hyd_port Pointer to the memory for the port hydrophone
  * @param p_data_hyd_starboard Pointer to the starboard hydrophone's memory
  * @param p_data_hyd_stern Pointer to the stern hydrophone's memory
+ * 
+ * @warning Unsure if I have read/understood it correctly!
+ * Assuming that there exists two possibilities for the DMA to push the
+ * data depending on the rank:
+ * 
+ *    1) 
+ *      Data is pushed in serial after rank. Since the DMA/ADC is in scan
+ *      mode, it scans all of the channel after rank. Most likely
+ *        
+ *        r1 = rank1, r2 = rank2, r3 = rank3
+ *        {r1, r2, r3, r1, r2, r3, ... , r1, r2, r3}
+ * 
+ *    2) 
+ *      All of the data for the highest priority rank is pushed first, then
+ *      the data belonging to the second priority rank and so forth
+ * 
+ *      {r1, r1, ..., r1, r2, r2, ..., r2, r3, r3, ..., r3}
+ * 
+ * From my understanding of the circular DMA and ADC in scan-mode, it uses
+ * the first method. This is assumed true, however that is potentially a serious
+ * bug! 
  */
-static void read_ADC(
-            float32_t* p_data_hyd_port, 
-            float32_t* p_data_hyd_starboard,
+static void read_ADC(float32_t* p_data_hyd_port, float32_t* p_data_hyd_starboard,
             float32_t* p_data_hyd_stern){
-  for(int i = 0; i < DSP_CONSTANTS::WORKING_BUFFER_LENGTH; i++){
-    // This is inefficient. Might be better to use the DMA to 
-    // read continously... 
-
-    // HAL_ADC_Start(&hadc);
-    // HAL_ADC_PollForConversion(&hadc, 5);
-    // adc_6 = HAL_ADC_GetValue(&hadc);
-    // HAL_ADC_Start(&hadc)
-    // HAL_ADC_PollForConversion(&hadc, 5);
-    // adc_7 = HAL_ADC_GetValue(&hadc);
-
-    // //last ADC in the sequence
-    // HAL_ADC_Start(&hadc);
-    // HAL_ADC_PollForConversion(&hadc, 5);
-    // adc_9 = HAL_ADC_GetValue(&hadc);
-  }
-
-  for(int i = 0; i < DSP_CONSTANTS::DMA_BUFFER_LENGTH; i++){
-    // for(int i = 0; i < DSP_CONSTANTS::WORKING_BUFFER_LENGTH; i++){
-    //   input[2*i] = ADC1ConvertedValues[i];
-    //   input[2*i+1] = 0; //Imaginary part set to zero
-    // }
-    /**
-     * @warning MUST BE UPDATED!!
-     */
-    data_hyd_port[i] = 0;
-    data_hyd_starboard[i] = 0;
-    data_hyd_stern[i] = 0;
+  /**
+   * Reading the data. Dropping the last couple of datapoints, since
+   * 4096 % 3 = 1. Reducing the number of datapoints reduces the 
+   * accuracy of the analysis, however prevents out-of-range error
+   */
+  for(int i = 0; i < DSP_CONSTANTS::DMA_BUFFER_LENGHT - 
+        NUM_HYDROPHONES, i += NUM_HYDROPHONES){
+    data_hyd_port[i] = ADC1ConvertedValues[i];
+    data_hyd_starboard[i] = ADC1ConvertedValues[i + 1];
+    data_hyd_stern[i] = ADC1ConvertedValues[i + 2];
   }
 }
 

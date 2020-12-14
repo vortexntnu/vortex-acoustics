@@ -38,26 +38,12 @@ extern "C" {
  */
 enum class Error_types{
   ERROR_ADC_INIT,             // Error on initializing ADC
+  ERROR_ADC_CONFIG,           // Error on configuring ADC 
   ERROR_DMA_INIT,             // Error on initializing DMA
+  ERROR_DMA_CONFIG,           // Error on configuring DMA
   ERROR_TRILITERATION_INIT,   // Error on initializing TRILITERATION 
   ERROR_INVALID_SIGNAL        // Error on recieving invalid signals
 };
-
-
-/**
- * @brief Function to configure the system-clock 
- * 
- * Could be made as a private function, to prevent
- * other functions/files to change the clock
- */
-void SystemClock_Config(void);
-
-/**
- * @brief Function to handle errors.
- * 
- * Not implemented at the moment
- */
-void Error_Handler(void);
 
 
 #ifdef __cplusplus
