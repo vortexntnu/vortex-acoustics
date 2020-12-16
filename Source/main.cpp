@@ -498,7 +498,7 @@ static void read_ADC(float32_t* p_data_hyd_port, float32_t* p_data_hyd_starboard
    * accuracy of the analysis, however prevents out-of-range error
    */
   for(int i = 0; i < DSP_CONSTANTS::DMA_BUFFER_LENGHT - 
-        NUM_HYDROPHONES, i += NUM_HYDROPHONES){
+        NUM_HYDROPHONES; i += NUM_HYDROPHONES){
     data_hyd_port[i] = ADC1ConvertedValues[i];
     data_hyd_starboard[i] = ADC1ConvertedValues[i + 1];
     data_hyd_stern[i] = ADC1ConvertedValues[i + 2];
@@ -566,6 +566,7 @@ void assert_failed(uint8_t *file, uint32_t line){
   /* User can add his own implementation to report the file name and line number,
      tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
   /* USER CODE END 6 */
+  Error_handler();
 }
 #endif /* USE_FULL_ASSERT */
 
