@@ -26,7 +26,8 @@ Files with a short description:
 
 
 # Resource files
-Resource files are found in the folder "resource". This includes the CMSIS-library
+Resource files are found in the folder "Resource". 
+The folder includes the CMSIS-library and basic driver for the STM32.
 
 
 
