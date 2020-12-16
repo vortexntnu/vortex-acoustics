@@ -83,13 +83,17 @@ float32_t calculate_distance(const Pos& pos_lhs, const Pos& pos_rhs);
  * allowed time_difference. See the overview in hydrophones.h
  * for a better explenation of the hydrophones positioning
  * 
+ * @retval Returns 1/0 to indicate whether the values are initialized
+ * correctly. Returns 0 if either max_hydrophone_distance or
+ * maximum_time_diff is unchanged
+ * 
  * @param pos_hyd_port Position of port hydrophone
  * 
  * @param pos_hyd_starboard Position of starboard hydrophone
  * 
  * @param pos_hyd_stern Position of stern hydrophone 
  */
-void initialize_triliteration_globals(const Pos& pos_hyd_port,
+uint8_t initialize_triliteration_globals(const Pos& pos_hyd_port,
         const Pos& pos_hyd_starboard, const Pos& pos_hyd_stern);
 
 

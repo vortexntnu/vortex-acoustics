@@ -30,19 +30,24 @@ extern "C" {
 #include "stm32f7xx_hal.h"
 
 /**
- * @brief Function to configure the system-clock 
+ * @brief Enum to hold some of the potential errors that could occur
  * 
- * Could be made as a private function, to prevent
- * other functions/files to change the clock
+ * @warning ERROR_INVALID_SIGNAL is most likely on occuring, as it 
+ * is calculated multiple times a second. Must prevent it from 
+ * eliminating the RAM/memory
  */
-void SystemClock_Config(void);
-
-/**
- * @brief Function to handle errors.
- * 
- * Not implemented at the moment
- */
-void Error_Handler(void);
+enum class Error_types{
+  ERROR_ADC_INIT,             // Error on initializing ADC
+  ERROR_ADC_CONFIG,           // Error on configuring ADC 
+  ERROR_DMA_INIT,             // Error on initializing DMA
+  ERROR_DMA_CONFIG,           // Error on configuring DMA
+  ERROR_DMA_START,            // Error while starting DMA
+  ERROR_DMA_STOP,             // Error while stopping DMA
+  ERROR_TRILITERATION_INIT,   // Error on initializing TRILITERATION 
+  ERROR_INVALID_SIGNAL,       // Error on recieving invalid signals
+  ERROR_UNIDENTIFIED,         // Unidentified error. Thrown using Error_handler 
+  ERROR_MEMORY                // Out of memory for error_handling
+};
 
 
 #ifdef __cplusplus

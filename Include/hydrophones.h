@@ -34,6 +34,8 @@
 #include "triliteration.h"
 #include "DSP_constants.h"
 
+// Number of hydrophones used on the AUV
+#define NUM_HYDROPHONES 3
 
 namespace HYDROPHONES{
 

@@ -22,7 +22,8 @@
 namespace DSP_CONSTANTS{
 
 /**
- * @brief Constants for sampling and DSP
+ * @brief Constants for sampling and DSP.
+ * These values could also be defines/macros
  */
 const uint16_t DMA_BUFFER_LENGTH = 4096;
 const uint16_t WORKING_BUFFER_LENGTH = DMA_BUFFER_LENGTH / 2;

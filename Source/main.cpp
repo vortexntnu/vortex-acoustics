@@ -29,14 +29,24 @@
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
+
+// Handler for the ADC and the DMA
 ADC_HandleTypeDef hadc1;
 DMA_HandleTypeDef hdma_adc;
 
-uint32_t ADC1ConvertedValues[DSP_CONSTANTS::DMA_BUFFER_LENGTH];
+// Errors and errors-detected
+uint32_t error_idx = 0;
+uint16_t max_num_errors = std::pow(2, 8);
+volatile Error_types errors_occured[max_errors];
+
+// Memory that the DMA will push the data to
+volatile uint32_t ADC1ConvertedValues[3 * DSP_CONSTANTS::DMA_BUFFER_LENGTH];
 
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
+
+// INIT-functions
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
@@ -44,17 +54,14 @@ static void MX_ADC1_Init(void);
 static void MX_ETH_Init(void);
 static void MX_SPI1_Init(void);
 
-// WARNING: Not implemented!!
-// The function should read/use DMA to get the data from each hydrophone
-static void read_ADC(
-            float32_t* data_hyd_port, 
-            float32_t* data_hyd_starboard,
-            float32_t* data_hyd_stern);
+// Function to acces DMA to get data from the hydrophones
+static void read_ADC(float32_t* p_data_hyd_port, float32_t* p_data_hyd_starboard,
+            float32_t* p_data_hyd_stern);
 
+// Function to log errors
+static void log_error(Error_types error_code);
 
-// Function to be implemented later
-// Gives an order over ethernet, or sends the data over ethernet.
-// Unclear how to implement the function and what it should do
+// Function to coordinate the communication over the ethernet.
 uint8_t ethernet_coordination(void);
 
 /**
@@ -99,21 +106,28 @@ int main(void)
     
     /* USER CODE BEGIN 2 */
     // Start ADC and DMA
-    if (HAL_ADC_Start(&hadc) != HAL_OK)
+    if (HAL_ADC_Start(&hadc) != HAL_OK){
+      log_error(Error_types::ERROR_ADC_INIT);
       continue;
+    }
     
     if (HAL_ADC_Start_DMA(&hadc1, (uint32_t*) ADC1ConvertedValues, 
-          DSP_CONSTANTS::DMA_BUFFER_LENGTH) != HAL_OK)
+          DSP_CONSTANTS::DMA_BUFFER_LENGTH) != HAL_OK){
+      log_error(Error_types::ERROR_DMA_INIT);
       continue;
+    }
 
     // Initialize the class Hydrophone
     HYDROPHONES::Hydrophones hyd_port(HYDROPHONES::pos_hyd_port);
     HYDROPHONES::Hydrophones hyd_starboard(HYDROPHONES::pos_hyd_starboard);
     HYDROPHONES::Hydrophones hyd_stern(HYDROPHONES::pos_hyd_stern);
 
-    // Initialize variables for triliteration
-    TRILITERATION::initialize_triliteration_globals(HYDROPHONES::pos_hyd_port,
-          HYDROPHONES::pos_hyd_starboard, HYDROPHONES::pos_hyd_stern);
+    // Initialize variables for triliteration. Log error if invalid
+    if(!TRILITERATION::initialize_triliteration_globals(HYDROPHONES::pos_hyd_port,
+          HYDROPHONES::pos_hyd_starboard, HYDROPHONES::pos_hyd_stern)){
+      log_error(Error_types::ERROR_TRILITERATION_INIT);
+      continue;
+    }
 
     // Lag from each hydrophone
     uint32_t lag_hyd_port, lag_hyd_starboard, lag_hyd_stern;
@@ -125,11 +139,11 @@ int main(void)
     float32_t range_es_port, range_es_starboard, range_es_stern;
 
     // Intializing the raw-data-arrays
-    float32_t* c_data_hyd_port = 
+    float32_t* p_data_hyd_port = 
           (float32_t*) malloc(sizeof(float32_t) * DSP_CONSTANTS::DMA_BUFFER_LENGTH);
-    float32_t* c_data_hyd_starboard = 
+    float32_t* p_data_hyd_starboard = 
           (float32_t*) malloc(sizeof(float32_t) * DSP_CONSTANTS::DMA_BUFFER_LENGTH);
-    float32_t* c_data_hyd_stern = 
+    float32_t* p_data_hyd_stern = 
           (float32_t*) malloc(sizeof(float32_t) * DSP_CONSTANTS::DMA_BUFFER_LENGTH);
 
     /* USER CODE END 2 */
@@ -151,13 +165,24 @@ int main(void)
           // Must be implemented further
         }
 
-        // Getting data from the pins
-        read_ADC(c_data_hyd_port, c_data_hyd_starboard, c_data_hyd_stern);
+        // Getting data from ADC 
+        // Stopping the DMA to prevent the data from updating while reading 
+        if(HAL_ADC_Stop_DMA(&hadc) != HAL_OK){
+          log_error(Error_types::ERROR_DMA_STOP);
+          continue;
+        }
+        read_ADC(p_data_hyd_port, p_data_hyd_starboard, p_data_hyd_stern);
+
+        // Restarting the DMA
+        if(HAL_ADC_START_DMA(&hadc) != HAL_OK){
+          log_error(Error_types::ERROR_DMA_START);
+          continue;
+        }
 
         // Calculating the lag
-        hyd_port.analyze_data(c_data_hyd_port);
-        hyd_starboard.analyze_data(c_data_hyd_starboard);
-        hyd_stern.analyze_data(c_data_hyd_stern);
+        hyd_port.analyze_data(p_data_hyd_port);
+        hyd_starboard.analyze_data(p_data_hyd_starboard);
+        hyd_stern.analyze_data(p_data_hyd_stern);
 
         lag_hyd_port = hyd_port.get_lag();
         lag_hyd_starboard = hyd_starboard.get_lag();
@@ -165,11 +190,9 @@ int main(void)
 
         // Checking if the lag is valid
         // Take new sample if not valid data
-        /**
-         * NOTE: The intensity is not implemented as of 10.12.2020
-         */
         if(!TRILITERATION::check_valid_signals(lag_hyd_port,
               lag_hyd_starboard, lag_hyd_stern, 0, 0, 0)){
+          log_error(Error_types::ERROR_INVALID_SIGNAL)
           continue;
         }
 
@@ -192,11 +215,15 @@ int main(void)
 
         // Send the data to the Xavier to get the possible direction and range
     }
-    free(c_data_hyd_port);
-    free(c_data_hyd_starboard);
-    free(c_data_hyd_stern);
+    // Should never reach here
+    // Freeing memory just in case
+    free(p_data_hyd_port);
+    free(p_data_hyd_starboard);
+    free(p_data_hyd_stern);
 
-    HAL_ADC_Stop_DMA(&hadc)
+    // Stopping the ADC and the DMA
+    HAL_ADC_Start(&hadc);
+    HAL_ADC_Stop_DMA(&hadc);
   }
   /* USER CODE END 3 */
 }
@@ -282,11 +309,11 @@ static void MX_ADC1_Init(void)
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
   hadc1.Init.NbrOfConversion = 3;
-  hadc1.Init.DMAContinuousRequests = DISABLE;
+  hadc1.Init.DMAContinuousRequests = ENABLE;
   hadc1.Init.EOCSelection = ADC_EOC_SEQ_CONV;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
   {
-    Error_Handler();
+    log_error(Error_types::ERROR_ADC_INIT);
   }
   /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
   */
@@ -295,7 +322,7 @@ static void MX_ADC1_Init(void)
   sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
-    Error_Handler();
+    log_error(Error_types::ERROR_ADC_CONFIG);
   }
   /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
   */
@@ -303,7 +330,7 @@ static void MX_ADC1_Init(void)
   sConfig.Rank = ADC_REGULAR_RANK_2;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
-    Error_Handler();
+    log_error(Error_types::ERROR_ADC_CONFIG);
   }
   /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
   */
@@ -311,7 +338,7 @@ static void MX_ADC1_Init(void)
   sConfig.Rank = ADC_REGULAR_RANK_3;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
-    Error_Handler();
+    log_error(Error_types::ERROR_ADC_CONFIG);
   }
   /* USER CODE BEGIN ADC1_Init 2 */
 
@@ -434,63 +461,95 @@ static void MX_GPIO_Init(void)
 
 
 /* USER CODE BEGIN 4 */
-static void read_ADC(
-            float32_t* data_hyd_port, 
-            float32_t* data_hyd_starboard,
-            float32_t* data_hyd_stern){
-  for(int i = 0; i < DSP_CONSTANTS::WORKING_BUFFER_LENGTH; i++){
-    // This is inefficient. Might be better to use the DMA to 
-    // read continously... 
 
-    // HAL_ADC_Start(&hadc);
-    // HAL_ADC_PollForConversion(&hadc, 5);
-    // adc_6 = HAL_ADC_GetValue(&hadc);
-    // HAL_ADC_Start(&hadc)
-    // HAL_ADC_PollForConversion(&hadc, 5);
-    // adc_7 = HAL_ADC_GetValue(&hadc);
-
-    // //last ADC in the sequence
-    // HAL_ADC_Start(&hadc);
-    // HAL_ADC_PollForConversion(&hadc, 5);
-    // adc_9 = HAL_ADC_GetValue(&hadc);
+/**
+ * @brief Read the ADC by using DMA
+ * 
+ * @param p_data_hyd_port Pointer to the memory for the port hydrophone
+ * @param p_data_hyd_starboard Pointer to the starboard hydrophone's memory
+ * @param p_data_hyd_stern Pointer to the stern hydrophone's memory
+ * 
+ * @warning Unsure if I have read/understood it correctly!
+ * Assuming that there exists two possibilities for the DMA to push the
+ * data depending on the rank:
+ * 
+ *    1) 
+ *      Data is pushed in serial after rank. Since the DMA/ADC is in scan
+ *      mode, it scans all of the channel after rank. Most likely
+ *        
+ *        r1 = rank1, r2 = rank2, r3 = rank3
+ *        {r1, r2, r3, r1, r2, r3, ... , r1, r2, r3}
+ * 
+ *    2) 
+ *      All of the data for the highest priority rank is pushed first, then
+ *      the data belonging to the second priority rank and so forth
+ * 
+ *      {r1, r1, ..., r1, r2, r2, ..., r2, r3, r3, ..., r3}
+ * 
+ * From my understanding of the circular DMA and ADC in scan-mode, it uses
+ * the first method. This is assumed true, however that is potentially a serious
+ * bug! 
+ */
+static void read_ADC(float32_t* p_data_hyd_port, float32_t* p_data_hyd_starboard,
+            float32_t* p_data_hyd_stern){
+  /**
+   * Reading the data. Dropping the last couple of datapoints, since
+   * 4096 % 3 = 1. Reducing the number of datapoints reduces the 
+   * accuracy of the analysis, however prevents out-of-range error
+   */
+  for(int i = 0; i < DSP_CONSTANTS::DMA_BUFFER_LENGHT - 
+        NUM_HYDROPHONES; i += NUM_HYDROPHONES){
+    data_hyd_port[i] = ADC1ConvertedValues[i];
+    data_hyd_starboard[i] = ADC1ConvertedValues[i + 1];
+    data_hyd_stern[i] = ADC1ConvertedValues[i + 2];
   }
+}
 
-  for(int i = 0; i < DSP_CONSTANTS::DMA_BUFFER_LENGTH; i++){
-    // for(int i = 0; i < DSP_CONSTANTS::WORKING_BUFFER_LENGTH; i++){
-    //   input[2*i] = ADC1ConvertedValues[i];
-    //   input[2*i+1] = 0; //Imaginary part set to zero
-    // }
-    /**
-     * @warning MUST BE UPDATED!!
-     */
-    data_hyd_port[i] = 0;
-    data_hyd_starboard[i] = 0;
-    data_hyd_stern[i] = 0;
+
+/**
+ * @brief Function to handle communication over ethernet
+ * 
+ * @warning Not implemented as of 11.12.2020, as I am not sure how the
+ * communication between the STM32 and the main CPU should be
+ */
+uint8_t ethernet_coordination(void){
+  return 0;
+}
+
+
+/**
+ * @brief Function to log the errors
+ * Could also be interesting to implement a timestamp to detect when the
+ * error occurs. This could be done in the future, but is not a priority
+ * as of 14.12.2020
+ * 
+ * NOTE: Could be improved by using a txt-file or other log, or send the number
+ * of errors to the Xavier to be analyzed later. Using an array for temporary
+ * storage, however should be improved in the future
+ * 
+ * @param error The error that occured
+ */
+static void log_error(Error_types error){
+  if(error_idx < max_num_errors - 1){
+    errors_occured[error_idx] = error;
+    error_idx++;
+    return;
+  }
+  if(error_idx == max_num_errors - 1){
+    errors_occured = Error_types::ERROR_MEMORY;
   }
 }
 
 /* USER CODE END 4 */
 
 /**
-  * @brief  This function is executed in case of error occurrence.
+  * @brief  This function is executed in case of error occurrence
+  * Calls log_error() with unidentified error
+  * 
   * @retval None
   */
 void Error_Handler(void){
-  /* USER CODE BEGIN Error_Handler_Debug */
-  /* User can add his own implementation to report the HAL error return state */
-
-  /* USER CODE END Error_Handler_Debug */
-}
-
-/**
- * @brief Function to handle coordination with the through ethernet
- * 
- * @warning Not implemented as of 11.12.2020, as I am not sure how the
- * communication between the STM32 and the main CPU should be
- * 
- */
-uint8_t ethernet_coordination(void){
-  return 0;
+  log_error(Error_types::ERROR_UNIDENTIFIED);
 }
 
 
@@ -507,6 +566,7 @@ void assert_failed(uint8_t *file, uint32_t line){
   /* User can add his own implementation to report the file name and line number,
      tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
   /* USER CODE END 6 */
+  Error_handler();
 }
 #endif /* USE_FULL_ASSERT */
 
