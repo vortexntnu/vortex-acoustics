@@ -33,6 +33,7 @@ const uint16_t IN_BUFFER_LENGTH = DMA_BUFFER_LENGTH;
 const uint16_t FFT_SIZE = DMA_BUFFER_LENGTH;
 const uint16_t IIR_SIZE = DMA_BUFFER_LENGTH;
 
+
 /**
  * @note The frequencies (in robosub) will be 
  * in the range 20 KHz - 40 KHz.

@@ -31,6 +31,7 @@
 // Handler for the ADC and the DMA
 ADC_HandleTypeDef hadc1;      /* Somehow doesn't ecists */
 DMA_HandleTypeDef hdma_adc;   /* Somehow doesn't exists */
+ETH_HandleTypeDef 
 
 // Errors and errors-detected
 uint32_t error_idx = 0;
