@@ -57,7 +57,7 @@ float32_t TRILITERATION::estimate_distance(float32_t intensity){
 
 
 float32_t TRILITERATION::estimate_rough_angle(uint32_t time_difference){
-    return (float32_t)((_MATH_H_::M_PI/2)*(time_difference / TRILITERATION::max_time_diff));
+    return (float32_t)((_MATH_H_::M_PI_2) * (time_difference / TRILITERATION::max_time_diff));
 }
 
 
