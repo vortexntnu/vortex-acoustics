@@ -40,7 +40,7 @@ const uint16_t IIR_SIZE = DMA_BUFFER_LENGTH;
  * The SAMPLE_TIME is used to validate the signals
  */
 const uint32_t SAMPLE_FREQUENCY = 100000;
-const float32_t SAMPLE_TIME = 1/SAMPLE_FREQUENCY;   
+const float32_t SAMPLE_TIME = (float32_t) 1/SAMPLE_FREQUENCY;   
 
 
 /**
