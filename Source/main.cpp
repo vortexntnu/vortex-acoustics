@@ -22,20 +22,20 @@
 #include "main.h"
 #include "hydrophones.h"
 #include "stm32f7xx_hal.h"
-#include "adc.h"
+#include "adc.h"              /* Somehow throws an error */
 
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
 
 // Handler for the ADC and the DMA
-ADC_HandleTypeDef hadc1;
-DMA_HandleTypeDef hdma_adc;
+ADC_HandleTypeDef hadc1;      /* Somehow doesn't ecists */
+DMA_HandleTypeDef hdma_adc;   /* Somehow doesn't exists */
 
 // Errors and errors-detected
 uint32_t error_idx = 0;
 uint16_t max_num_errors = std::pow(2, 8);
-volatile Error_types errors_occured[max_errors];
+volatile Error_types errors_occured[max_num_errors];
 
 // Memory that the DMA will push the data to
 volatile uint32_t ADC1ConvertedValues[3 * DSP_CONSTANTS::DMA_BUFFER_LENGTH];
@@ -56,8 +56,9 @@ static void MX_SPI1_Init(void);
 static void read_ADC(float32_t* p_data_hyd_port, float32_t* p_data_hyd_starboard,
             float32_t* p_data_hyd_stern);
 
-// Function to log errors
+// Functions to log errors
 static void log_error(Error_types error_code);
+static void Error_Handler(void);
 
 // Function to coordinate the communication over the ethernet.
 uint8_t ethernet_coordination(void);
@@ -104,7 +105,7 @@ int main(void)
     
     /* USER CODE BEGIN 2 */
     // Start ADC and DMA
-    if (HAL_ADC_Start(&hadc) != HAL_OK){
+    if (HAL_ADC_Start(&hadc1) != HAL_OK){
       log_error(Error_types::ERROR_ADC_INIT);
       continue;
     }
@@ -165,14 +166,14 @@ int main(void)
 
         // Getting data from ADC 
         // Stopping the DMA to prevent the data from updating while reading 
-        if(HAL_ADC_Stop_DMA(&hadc) != HAL_OK){
+        if(HAL_ADC_Stop_DMA(&hadc1) != HAL_OK){
           log_error(Error_types::ERROR_DMA_STOP);
           continue;
         }
         read_ADC(p_data_hyd_port, p_data_hyd_starboard, p_data_hyd_stern);
 
         // Restarting the DMA
-        if(HAL_ADC_START_DMA(&hadc) != HAL_OK){
+        if(HAL_ADC_START_DMA(&hadc1) != HAL_OK){
           log_error(Error_types::ERROR_DMA_START);
           continue;
         }
@@ -190,7 +191,7 @@ int main(void)
         // Take new sample if not valid data
         if(!TRILITERATION::check_valid_signals(lag_hyd_port,
               lag_hyd_starboard, lag_hyd_stern, 0, 0, 0)){
-          log_error(Error_types::ERROR_INVALID_SIGNAL)
+          log_error(Error_types::ERROR_INVALID_SIGNAL);
           continue;
         }
 
@@ -220,8 +221,8 @@ int main(void)
     free(p_data_hyd_stern);
 
     // Stopping the ADC and the DMA
-    HAL_ADC_Start(&hadc);
-    HAL_ADC_Stop_DMA(&hadc);
+    HAL_ADC_Start(&hadc1);
+    HAL_ADC_Stop_DMA(&hadc1);
   }
   /* USER CODE END 3 */
 }
@@ -497,9 +498,9 @@ static void read_ADC(float32_t* p_data_hyd_port, float32_t* p_data_hyd_starboard
    */
   for(int i = 0; i < DSP_CONSTANTS::DMA_BUFFER_LENGHT - 
         NUM_HYDROPHONES; i += NUM_HYDROPHONES){
-    data_hyd_port[i] = ADC1ConvertedValues[i];
-    data_hyd_starboard[i] = ADC1ConvertedValues[i + 1];
-    data_hyd_stern[i] = ADC1ConvertedValues[i + 2];
+    p_data_hyd_port[i] = ADC1ConvertedValues[i];
+    p_data_hyd_starboard[i] = ADC1ConvertedValues[i + 1];
+    p_data_hyd_stern[i] = ADC1ConvertedValues[i + 2];
   }
 }
 

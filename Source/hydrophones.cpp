@@ -44,7 +44,7 @@ void HYDROPHONES::Hydrophones::analyze_data(float32_t *p_raw_data)
     // Iterating over the autocorrelation to find the lag
     float32_t max = 0;
     last_lag = 0;
-    for(int i = 0; i < 2 * DSP::DMA_BUFFER_LENGTH - 1; i++){
+    for(int i = 0; i < 2 * DSP_CONSTANTS::DMA_BUFFER_LENGTH - 1; i++){
         if(p_autocorr_data[i] > max){
             max = p_autocorr_data[i];
             last_lag = i;

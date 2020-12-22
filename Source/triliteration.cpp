@@ -25,7 +25,7 @@ float32_t TRILITERATION::calculate_distance(
         return (float32_t)(std::sqrt(
                 std::pow(pos_lhs.x - pos_rhs.x, 2) +
                 std::pow(pos_lhs.y - pos_rhs.y, 2) +
-                std::pow(pos_lhs.z - pos_rhs.z, 2))
+                std::pow(pos_lhs.z - pos_rhs.z, 2));
 }
 
 
@@ -43,7 +43,7 @@ uint8_t TRILITERATION::initialize_triliteration_globals(
         TRILITERATION::maximum_time_diff = (1 + TRILITERATION::time_diff_epsilon) *
                 (TRILITERATION::max_hydrophone_distance / TRILITERATION::sound_speed);
         return (TRILITERATION::maximum_hydrophone_distance != -1 && 
-                TRILITERATION::maximum_time_diff != 1)
+                TRILITERATION::maximum_time_diff != 1);
 }
 
 
@@ -52,7 +52,7 @@ uint8_t TRILITERATION::initialize_triliteration_globals(
  * the position and angles
  */
 float32_t TRILITERATION::estimate_distance(float32_t intensity){
-    return sqrt(TRILITERATION::source_power/(4*_MATH_H_::M_PI*intensity));
+    return (float32_t)(sqrt(TRILITERATION::source_power/(4*_MATH_H_::M_PI*intensity)));
 }
 
 

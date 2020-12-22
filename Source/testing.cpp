@@ -2,7 +2,7 @@
 
 
 // Test-function for memory
-void TESTING::test_memory_leekage(void);
+void TESTING::test_memory_leakage(void);
 
 
 // Test-function for the filter-coefficients

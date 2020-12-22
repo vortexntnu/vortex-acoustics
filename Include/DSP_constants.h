@@ -8,10 +8,12 @@
 
 #define ARM_MATH_CM7
 #define _USE_MATH_DEFINES
+#define __SOFTFP__
 
 #include <stdint.h>
 #include <math.h>
 #include <cmath>
+#include <utility>
 #include "arm_math.h"
 #include "arm_const_structs.h" 
 
