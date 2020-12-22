@@ -18,13 +18,11 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include "main.h"
-#include "adc.h"
-
-#include "hydrophones.h"
 #include <stdint.h>
-
+#include "main.h"
+#include "hydrophones.h"
 #include "stm32f7xx_hal.h"
+#include "adc.h"
 
 /* USER CODE END Includes */
 
@@ -54,7 +52,7 @@ static void MX_ADC1_Init(void);
 static void MX_ETH_Init(void);
 static void MX_SPI1_Init(void);
 
-// Function to acces DMA to get data from the hydrophones
+// Function to access DMA to get data from the hydrophones
 static void read_ADC(float32_t* p_data_hyd_port, float32_t* p_data_hyd_starboard,
             float32_t* p_data_hyd_stern);
 

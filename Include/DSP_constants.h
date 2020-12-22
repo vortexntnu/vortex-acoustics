@@ -62,16 +62,23 @@ const float32_t SAMPLE_TIME = 1/SAMPLE_FREQUENCY;
  * 
  * NOTE: For more information, see 
  * https://arm-software.github.io/CMSIS_5/DSP/html/group__BiquadCascadeDF1__32x64.html
+ * 
+ * NOTE: The function void TESTING::test_filter_coefficients(void)
+ * is under development for testing the filter
+ * 
+ * @param num_stages            Number of second order cascade-filters
+ * 
+ * @param state_coefficients    Initial values for x[n-1], x[n-2], y[n-1] and y[n-2]
+ * 
+ * @param filter_coefficients   Filter coefficients given as {b0, b1, b2, a0, a1}
+ * 
+ * @param IIR_filter            A struct describing a DF1 IIR filter
  */
-// Number of second order cascade-filters
 const uint32_t num_stages = 1;
-// Initial values for x[n-1], x[n-2], y[n-1] and y[n-2]
 float32_t state_coefficients[4*num_stages] = {0.0, 0.0, 
         0.0, 0.0};
-// Filter coefficients given as {b0, b1, b2, a0, a1}
 float32_t filter_coefficients[5*num_stages] = {0.32227662, 
         0.0, -0.32227662, 0.41885608, 0.35544676};
-// Initialization of the struct
 const arm_biquad_casd_df1_inst_f32 IIR_filter = {
     .numStages = num_stages, .pState = &filter_coefficients[0],
     .pCoeffs = &filter_coefficients[0]};
