@@ -7,6 +7,7 @@
 #ifndef ACOUSTICS_TRILITERATION_H
 #define ACOUSTICS_TRILITERATION_H
 
+#include <algorithm> 
 #include "DSP_constants.h"
 
 /**
@@ -32,7 +33,7 @@ namespace TRILITERATION{
  * @param max_hydrophone_distance The maximum distance 
  * measured between the hydrophones. 
  * 
- * @param maximum_time_diff The maximum time-difference that
+ * @param max_time_diff The maximum time-difference that
  * should be possible between the data signals
  * 
  * @warning max_hydrophone_distance and maximum_time_diff are
@@ -42,7 +43,7 @@ const uint16_t sound_speed = 1480;
 const uint16_t source_power = 177; 
 const float32_t time_diff_epsilon = 0.1; 
 extern float32_t max_hydrophone_distance; 
-extern float32_t maximum_time_diff;
+extern float32_t max_time_diff;
 
 /**
  * @brief Struct to keep the position

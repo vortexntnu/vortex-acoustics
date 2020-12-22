@@ -496,7 +496,7 @@ static void read_ADC(float32_t* p_data_hyd_port, float32_t* p_data_hyd_starboard
    * 4096 % 3 = 1. Reducing the number of datapoints reduces the 
    * accuracy of the analysis, however prevents out-of-range error
    */
-  for(int i = 0; i < DSP_CONSTANTS::DMA_BUFFER_LENGHT - 
+  for(int i = 0; i < DSP_CONSTANTS::DMA_BUFFER_LENGTH - 
         NUM_HYDROPHONES; i += NUM_HYDROPHONES){
     p_data_hyd_port[i] = ADC1ConvertedValues[i];
     p_data_hyd_starboard[i] = ADC1ConvertedValues[i + 1];

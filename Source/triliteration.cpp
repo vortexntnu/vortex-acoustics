@@ -6,8 +6,8 @@
  * 
  * Initialized to -1 such that it's easy to check if the variables are incorrect
  */
-float32_t TRILITERATION::maximum_hydrophone_distance = -1;
-float32_t TRILITERATION::maximum_time_diff = -1;
+float32_t TRILITERATION::max_hydrophone_distance = -1;
+float32_t TRILITERATION::max_time_diff = -1;
 
 
 /**
@@ -25,7 +25,7 @@ float32_t TRILITERATION::calculate_distance(
         return (float32_t)(std::sqrt(
                 std::pow(pos_lhs.x - pos_rhs.x, 2) +
                 std::pow(pos_lhs.y - pos_rhs.y, 2) +
-                std::pow(pos_lhs.z - pos_rhs.z, 2));
+                std::pow(pos_lhs.z - pos_rhs.z, 2)));
 }
 
 
@@ -40,10 +40,10 @@ uint8_t TRILITERATION::initialize_triliteration_globals(
                 TRILITERATION::calculate_distance(pos_hyd_starboard, pos_hyd_stern);
         TRILITERATION::max_hydrophone_distance = 
                 std::max(dist_port_starboard, std::max(dist_starboard_stern, dist_port_stern));
-        TRILITERATION::maximum_time_diff = (1 + TRILITERATION::time_diff_epsilon) *
+        TRILITERATION::max_time_diff = (1 + TRILITERATION::time_diff_epsilon) *
                 (TRILITERATION::max_hydrophone_distance / TRILITERATION::sound_speed);
-        return (TRILITERATION::maximum_hydrophone_distance != -1 && 
-                TRILITERATION::maximum_time_diff != 1);
+        return (TRILITERATION::max_hydrophone_distance != -1 && 
+                TRILITERATION::max_time_diff != 1);
 }
 
 
@@ -52,12 +52,12 @@ uint8_t TRILITERATION::initialize_triliteration_globals(
  * the position and angles
  */
 float32_t TRILITERATION::estimate_distance(float32_t intensity){
-    return (float32_t)(sqrt(TRILITERATION::source_power/(4*_MATH_H_::M_PI*intensity)));
+    return (float32_t)(sqrt(TRILITERATION::source_power / (4*_MATH_H_::M_PI*intensity)));
 }
 
 
 float32_t TRILITERATION::estimate_rough_angle(uint32_t time_difference){
-    return (float32_t)((_MATH_H_::M_PI/2)*(time_difference/TRILITERATION::maximum_time_diff));
+    return (float32_t)((_MATH_H_::M_PI/2)*(time_difference / TRILITERATION::maximum_time_diff));
 }
 
 
@@ -127,8 +127,8 @@ std::pair<float32_t, float32_t> TRILITERATION::estimate_pinger_position(
  * Functions to check if signals/data are valid
  */
 uint8_t valid_time_check(const uint32_t& time_lhs, const uint32_t& time_rhs){
-        return (float32_t)(abs(time_lhs - time_rhs) * DSP_CONSTANTS::SAMPLE_TIME) 
-                > TRILITERATION::maximum_time_diff
+        return ((float32_t)(abs(time_lhs - time_rhs) * DSP_CONSTANTS::SAMPLE_TIME) 
+                > TRILITERATION::max_time_diff);
 }
 
 
@@ -149,12 +149,12 @@ uint8_t TRILITERATION::check_valid_signals(
         */
         if(valid_time_check(time_port, time_starboard) || 
         valid_time_check(time_port, time_stern) || 
-        valid_time_check(time_starboard, time_stern)
-        return 0;
+        valid_time_check(time_starboard, time_stern))
+                return (uint8_t) 0;
 
         // Intensity is not implemented as of 12.12.2020, however time is more
         // important in the beginning - and time is more straightforward to 
         // implement, while the intensity might require more data from the AUV.
 
-        return 1;
+        return (uint8_t) 1;
 }
