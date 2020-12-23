@@ -35,14 +35,15 @@ const uint16_t IIR_SIZE = DMA_BUFFER_LENGTH;
 
 
 /**
- * @note The frequencies (in robosub) will be 
- * in the range 20 KHz - 40 KHz.
- * The minimum sampling-frequency is therefore
- * 80 KHz, but increased to 100 KHz for safety.
+ * @note The frequencies (in robosub) will be in the 
+ * range 20 KHz - 40 KHz. The minimum sampling-frequency 
+ * is therefore 80 KHz, but should minimum be 100 KHz due to
+ * safety. The sampling-frequency is set to 112500 since that
+ * is the closest the ADC can sample
  * 
  * The SAMPLE_TIME is used to validate the signals
  */
-const uint32_t SAMPLE_FREQUENCY = 100000;
+const uint32_t SAMPLE_FREQUENCY = 1125000;
 const float32_t SAMPLE_TIME = (float32_t) 1 / SAMPLE_FREQUENCY;   
 
 
@@ -78,9 +79,9 @@ const float32_t SAMPLE_TIME = (float32_t) 1 / SAMPLE_FREQUENCY;
  * @param IIR_filter            A struct describing a DF1 IIR filter
  */
 const uint32_t num_stages = 1;
-float32_t state_coefficients[4*num_stages] = {0.0, 0.0, 
+const float32_t state_coefficients[4*num_stages] = {0.0, 0.0, 
         0.0, 0.0};
-float32_t filter_coefficients[5*num_stages] = {0.32227662, 
+const float32_t filter_coefficients[5*num_stages] = {0.32227662, 
         0.0, -0.32227662, 0.41885608, 0.35544676};
 const arm_biquad_casd_df1_inst_f32 IIR_filter = {
     .numStages = num_stages, .pState = &filter_coefficients[0],

@@ -61,6 +61,8 @@ static void read_ADC(float32_t* p_data_hyd_port, float32_t* p_data_hyd_starboard
 // Functions to log errors
 static void log_error(Error_types error_code);
 static void Error_Handler(void);
+static void check_signal_error(uint8_t* p_bool_time_error, 
+            uint8_t* p_bool_intensity_error); 
 
 // Function to coordinate the communication over the ethernet.
 uint8_t ethernet_coordination(void);
@@ -118,17 +120,17 @@ int main(void)
       continue;
     }
 
-    // Initialize the class Hydrophone
-    HYDROPHONES::Hydrophones hyd_port(HYDROPHONES::pos_hyd_port);
-    HYDROPHONES::Hydrophones hyd_starboard(HYDROPHONES::pos_hyd_starboard);
-    HYDROPHONES::Hydrophones hyd_stern(HYDROPHONES::pos_hyd_stern);
-
     // Initialize variables for triliteration. Log error if invalid
     if(!TRILITERATION::initialize_triliteration_globals(HYDROPHONES::pos_hyd_port,
           HYDROPHONES::pos_hyd_starboard, HYDROPHONES::pos_hyd_stern)){
       log_error(Error_types::ERROR_TRILITERATION_INIT);
       continue;
     }
+
+    // Initialize the class Hydrophone
+    HYDROPHONES::Hydrophones hyd_port(HYDROPHONES::pos_hyd_port);
+    HYDROPHONES::Hydrophones hyd_starboard(HYDROPHONES::pos_hyd_starboard);
+    HYDROPHONES::Hydrophones hyd_stern(HYDROPHONES::pos_hyd_stern);
 
     // Lag from each hydrophone
     uint32_t lag_hyd_port, lag_hyd_starboard, lag_hyd_stern;
@@ -146,6 +148,10 @@ int main(void)
           (float32_t*) malloc(sizeof(float32_t) * DSP_CONSTANTS::DMA_BUFFER_LENGTH);
     float32_t* p_data_hyd_stern = 
           (float32_t*) malloc(sizeof(float32_t) * DSP_CONSTANTS::DMA_BUFFER_LENGTH);
+
+    // Ints used to analyze signal-error
+    uint8_t bool_time_error = 0;
+    uint8_t bool_intensity_error = 0;
 
     /* USER CODE END 2 */
 
@@ -180,7 +186,7 @@ int main(void)
           continue;
         }
 
-        // Calculating the lag
+        // Calculating lag and intensity
         hyd_port.analyze_data(p_data_hyd_port);
         hyd_starboard.analyze_data(p_data_hyd_starboard);
         hyd_stern.analyze_data(p_data_hyd_stern);
@@ -189,19 +195,21 @@ int main(void)
         lag_hyd_starboard = hyd_starboard.get_lag();
         lag_hyd_stern = hyd_stern.get_lag();
 
-        // Checking if the lag is valid
-        // Take new sample if not valid data
-        if(!TRILITERATION::check_valid_signals(lag_hyd_port,
-              lag_hyd_starboard, lag_hyd_stern, 0, 0, 0)){
-          log_error(Error_types::ERROR_INVALID_SIGNAL);
-          continue;
-        }
-
-        // Calculate an estimate for the range
         intensity_port = hyd_port.get_intensity();
         intensity_starboard = hyd_starboard.get_intensity();
         intensity_stern = hyd_stern.get_intensity();
 
+        // Checking if the lag is valid
+        // Take new sample if not valid data
+        if(!TRILITERATION::check_valid_signals(lag_hyd_port,
+              lag_hyd_starboard, lag_hyd_stern, intensity_port,
+              intensity_starboard, intensity_stern, &bool_time_error,
+              &bool_intensity_error)){
+          check_signal_error(&bool_time_error, &bool_intensity_error);
+          continue;
+        }
+
+        // Calculate an estimate for the range
         range_es_port = hyd_port.get_lag();
         range_es_starboard = hyd_starboard.get_lag();
         range_es_stern = hyd_stern.get_lag();
@@ -212,9 +220,7 @@ int main(void)
               lag_hyd_starboard, lag_hyd_stern, intensity_stern,
               intensity_starboard, intensity_stern);
 
-        // Do something with the estimates
-
-        // Send the data to the Xavier to get the possible direction and range
+        // Send the data to the Xavier
     }
     // Should never reach here
     // Freeing memory just in case
@@ -503,6 +509,28 @@ static void read_ADC(float32_t* p_data_hyd_port, float32_t* p_data_hyd_starboard
     p_data_hyd_port[i] = ADC1ConvertedValues[i];
     p_data_hyd_starboard[i] = ADC1ConvertedValues[i + 1];
     p_data_hyd_stern[i] = ADC1ConvertedValues[i + 2];
+  }
+}
+
+
+/**
+ * @brief Detects if the error was caused by either time or the intensity
+ * and logs the correct error
+ * 
+ * @param p_bool_time_error Pointer to indicate error with the time
+ * 
+ * @param p_bool_intensity_error Pointer to indicate error with the 
+ * intensity
+ */
+static void check_signal_error(uint8_t* p_bool_time_error, 
+            uint8_t* p_bool_intensity_error){
+  if(*p_bool_time_error){
+    *p_bool_time_error = 0;
+    log_error(Error_types::ERROR_TIME_SIGNAL);
+  }
+  if(*p_bool_intensity_error){
+    *p_bool_intensity_error = 0;
+    log_error(Error_types::ERROR_INTENSITY_SIGNAL);
   }
 }
 

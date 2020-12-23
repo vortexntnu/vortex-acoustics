@@ -1,12 +1,12 @@
 #include "hydrophones.h"
 
 HYDROPHONES::Hydrophones::Hydrophones(TRILITERATION::Pos pos) : 
-    pos{pos}, last_lag{0}
+    pos{pos}, last_lag{0}, last_intensity{0}
 {
     /* Initial memory allocation */
     p_data = (float32_t*) malloc(sizeof(float32_t) * DSP_CONSTANTS::DMA_BUFFER_LENGTH);
     p_mag_data = (float32_t*) malloc(sizeof(float32_t) * DSP_CONSTANTS::DMA_BUFFER_LENGTH);
-    p_autocorr_data = (float32_t*) malloc(sizeof(float32_t) * DSP_CONSTANTS::DMA_BUFFER_LENGTH * 2 - 1);
+    p_autocorr_data = (float32_t*) malloc(sizeof(float32_t) * (DSP_CONSTANTS::DMA_BUFFER_LENGTH * 2 - 1));
     p_max_val = (float32_t*) malloc(sizeof(float32_t));
     p_idx = (uint32_t*) malloc(sizeof(uint32_t));
 }
@@ -49,7 +49,10 @@ void HYDROPHONES::Hydrophones::analyze_data(float32_t *p_raw_data)
             max = p_autocorr_data[i];
             last_lag = i;
         }
-    }    
+    }
+
+    // Calculates the intensity in dB
+    last_intensity = TRILITERATION::estimate_signal_intensity(p_data);     
 }
 
 
