@@ -30,7 +30,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 // Handler for the ADC, DMA, ETH and SPI
-ADC_HandleTypeDef hadc1;      /* Somehow doesn't ecists */
+ADC_HandleTypeDef hadc1;      /* Somehow doesn't exists */
 DMA_HandleTypeDef hdma_adc;   /* Somehow doesn't exists */
 ETH_HandleTypeDef heth;       /* Somehow doesn't exists */
 SPI_HandleTypeDef hspi1;      /* Somehow doesn't exists */
