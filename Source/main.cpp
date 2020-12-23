@@ -227,6 +227,9 @@ int main(void)
               lag_hyd_starboard, lag_hyd_stern, intensity_stern,
               intensity_starboard, intensity_stern);
 
+        // Calculate estimated distance and angle to the pinger
+        TRILITERATION::calculate_distance_and_angle(position_es, 
+              &distance_estimate, &angle_estimate);
 
         // Send the data to the Xavier
         /**
