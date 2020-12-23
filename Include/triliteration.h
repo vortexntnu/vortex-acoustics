@@ -131,7 +131,7 @@ float32_t estimate_rough_angle(uint32_t time_difference);
  * starboard side
  */
 std::pair<float32_t, uint8_t> estimate_latitude(
-        uint32_t time_port, uint32_t time_starboard);
+            int32_t time_port, uint32_t time_starboard);
 
 
 /**
@@ -148,7 +148,7 @@ std::pair<float32_t, uint8_t> estimate_latitude(
  * @param time_stern Time the signal was measured at the stern 
  */
 uint8_t estimate_longitude(uint32_t time_port, uint32_t time_starboard,
-                uint32_t time_stern);
+            uint32_t time_stern);
 
 
 /**
@@ -167,8 +167,9 @@ float32_t estimate_signal_intensity(float32_t* p_signal_data);
 
 /**
  * @brief Function to estimate the position of the acoustic pinger
- * Returns an estimate of x and y compared to the position of the 
- * AUV
+ * 
+ * @retval Returns an std::pair containing the estimates of x and y 
+ * compared to the position of the AUV at the time of measurement.
  * 
  * @note See the start of hydrophones.hpp for more information
  * 
@@ -188,10 +189,41 @@ float32_t estimate_signal_intensity(float32_t* p_signal_data);
  * @param intensity_stern Intensity of the signal measured at the
  * stern side
  */
-std::pair<float32_t, float32_t> estimate_pinger_position(uint32_t time_port,
-            uint32_t time_starboard, uint32_t time_stern, 
-            float32_t intensity_port, float32_t intensity_starboard,
-            float32_t intensity_stern);
+std::pair<float32_t, float32_t> estimate_pinger_position(
+            uint32_t time_port, uint32_t time_starboard, 
+            uint32_t time_stern, float32_t intensity_port, 
+            float32_t intensity_starboard, float32_t intensity_stern);
+
+
+/**
+ * @brief Function to calculate distance and angle to the estimated
+ * position of the acoustic pinger
+ * 
+ * NOTE: Not directly necessary to calculate this twice as both the angle
+ * and the distance is used to calculate the @p position_estimate however
+ * it is easier to use a helper-function to implement this, compared to 
+ * cluttering the original function. By separating into two functions, it 
+ * gives us more flexibility to choose the optimal way of reporting the 
+ * position-estimate to the Xavier
+ * 
+ * @retval Returns the values indirectly using the pointers 
+ * @p p_distance_estimate and @p p_angle_estimate 
+ * 
+ * @param p_distance_estimate Pointer to return the calculated distance 
+ * 
+ * @param p_angle_estimate Pointer to return the calculated angle
+ * 
+ * @param position_estimate The position estimated 
+ * 
+ * @warning Not implemented as of 23.10.2020, as I suddenly realized that 
+ * the original estimate also takes into account the distance in z. Must 
+ * be discussed on how important this is to be included, however it will 
+ * obstruct the usage of an estimated position. 
+ */
+void calculate_distance_and_angle(
+            const std::pair<float32_t, float32_t>& position_estimate,
+            float32_t* p_distance_estimate, 
+            float32_t* p_angle_estimate);
 
 
 /**

@@ -1,7 +1,7 @@
 /* USER CODE BEGIN Header */
 /**
   ******************************************************************************
-  * @file           : main.c
+  * @file           : main.cpp
   * @brief          : Main program body
   ******************************************************************************
   * @attention
@@ -19,6 +19,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include <stdint.h>
+#include <time.h>
 #include "main.h"
 #include "hydrophones.h"
 #include "stm32f7xx_hal.h"
@@ -138,8 +139,14 @@ int main(void)
     // Intensity measured for each hydrophone
     float32_t intensity_port, intensity_starboard, intensity_stern;
 
-    // Range-estimate based on some calculation
-    float32_t range_es_port, range_es_starboard, range_es_stern;
+    // Range-estimate to the acoustic pinger
+    float32_t distance_estimate;
+
+    // Angle-estimate to the acoustic pinger
+    float32_t angle_estimate;
+
+    // Initializing time-measurement
+    time_t time_initial_startup = time(NULL);
 
     // Intializing the raw-data-arrays
     float32_t* p_data_hyd_port = 
@@ -172,13 +179,18 @@ int main(void)
           // Must be implemented further
         }
 
-        // Getting data from ADC 
+        
         // Stopping the DMA to prevent the data from updating while reading 
         if(HAL_ADC_Stop_DMA(&hadc1) != HAL_OK){
           log_error(Error_types::ERROR_DMA_STOP);
           continue;
         }
+
+        // Reading the data
         read_ADC(p_data_hyd_port, p_data_hyd_starboard, p_data_hyd_stern);
+
+        // Recording the time of measurement in seconds after startup
+        float32_t time_measurement = (float32_t)difftime(time(NULL) - time_initial_startup);
 
         // Restarting the DMA
         if(HAL_ADC_START_DMA(&hadc1) != HAL_OK){
@@ -199,7 +211,7 @@ int main(void)
         intensity_starboard = hyd_starboard.get_intensity();
         intensity_stern = hyd_stern.get_intensity();
 
-        // Checking if the lag is valid
+        // Checking is the measurements are valid
         // Take new sample if not valid data
         if(!TRILITERATION::check_valid_signals(lag_hyd_port,
               lag_hyd_starboard, lag_hyd_stern, intensity_port,
@@ -209,18 +221,20 @@ int main(void)
           continue;
         }
 
-        // Calculate an estimate for the range
-        range_es_port = hyd_port.get_lag();
-        range_es_starboard = hyd_starboard.get_lag();
-        range_es_stern = hyd_stern.get_lag();
-
-        // Calculate estimate 
+        // Calculate estimated position
         std::pair<float32_t, float32_t> position_es = 
             TRILITERATION::estimate_pinger_position(lag_hyd_port,
               lag_hyd_starboard, lag_hyd_stern, intensity_stern,
               intensity_starboard, intensity_stern);
 
+
         // Send the data to the Xavier
+        /**
+         * Required to send one of
+         *    1. position-estimate
+         *    2. angle- and distance-estimate
+         * alongside the time of measurment
+         */
     }
     // Should never reach here
     // Freeing memory just in case
@@ -232,6 +246,7 @@ int main(void)
     HAL_ADC_Start(&hadc1);
     HAL_ADC_Stop_DMA(&hadc1);
   }
+  return 0;
   /* USER CODE END 3 */
 }
 

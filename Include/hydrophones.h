@@ -103,7 +103,7 @@ private:
      * 2 * length(p_data) - 1
      */
     float32_t* p_autocorr_data;
-
+     
 public:
     /**
     * @brief Constructor and destructor 
@@ -127,8 +127,8 @@ public:
     * The raw data is filtered using a second-order biquad DF1 
     * IIR filter to eliminate unwanted frequencies. Thereafter
     * the frequencies magnitude and autocorrelation are found.
-    * The lag and intensity are thereafter calculated from these
-    * measurements
+    * The lag, intensity and distance are thereafter estimated 
+    * from these measurements
     */
     void analyze_data(float32_t* p_raw_data);
 };

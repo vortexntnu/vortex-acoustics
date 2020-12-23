@@ -57,6 +57,7 @@ float32_t TRILITERATION::estimate_distance(float32_t intensity){
 
 
 float32_t TRILITERATION::estimate_rough_angle(uint32_t time_difference){
+        // M_PI_2 is a macro for M_PI / 2
     return (float32_t)((_MATH_H_::M_PI_2) * (time_difference / TRILITERATION::max_time_diff));
 }
 
@@ -147,6 +148,22 @@ std::pair<float32_t, float32_t> TRILITERATION::estimate_pinger_position(
         x = distance_source * std::cos(lateral_estimate.second);
     return std::pair<float32_t, float32_t> (x, y);
 }
+
+
+void TRILITERATION::calculate_distance_and_angle(
+        const std::pair<float32_t, float32_t>& position_estimate,
+        float32_t* p_distance_estimate,
+        float32_t* p_angle_estimate){
+        
+        // Calculating the distance
+        Pos current_pos{0, 0, 0};
+        Pos estimated_pos{position_estimate.first, position_estimate.second, 0};
+        *p_distance_estimate = calculate_pos_distance(current_pos, estimated_pos);
+
+        // Calculating the angle from the AUV
+        *p_angle_estimate = _MATH_H_::atan2(position_estimate.second, position_estimate.first);
+}
+
 
 
 /**
