@@ -166,11 +166,11 @@ int main(void)
 
     /* Intializing memory for the raw-data-arrays */
     float32_t* p_data_hyd_port = 
-          (float32_t*) malloc(sizeof(float32_t) * DSP_CONSTANTS::FFT_SIZE);
+          (float32_t*) malloc(sizeof(float32_t) * DSP_CONSTANTS::IN_BUFFER_LENGTH);
     float32_t* p_data_hyd_starboard = 
-          (float32_t*) malloc(sizeof(float32_t) * DSP_CONSTANTS::FFT_SIZE);
+          (float32_t*) malloc(sizeof(float32_t) * DSP_CONSTANTS::IN_BUFFER_LENGTH);
     float32_t* p_data_hyd_stern = 
-          (float32_t*) malloc(sizeof(float32_t) * DSP_CONSTANTS::FFT_SIZE);
+          (float32_t*) malloc(sizeof(float32_t) * DSP_CONSTANTS::IN_BUFFER_LENGTH);
 
     /* Variables used to indicate error(s) with the signal */
     uint8_t bool_time_error = 0;
