@@ -34,9 +34,6 @@
 #include "triliteration.h"
 #include "DSP_constants.h"
 
-// Number of hydrophones used on the AUV
-#define NUM_HYDROPHONES 3
-
 namespace HYDROPHONES{
 
 /**
@@ -131,9 +128,9 @@ public:
     * from these measurements
     */
     void analyze_data(float32_t* p_raw_data);
-};
+}; /* class Hydrophones */
 
-} // namespace HYDROPHONES
+} /* namespace HYDROPHONES */
 
 #endif // ACOUSTICS_HYDROPHONES_H
 

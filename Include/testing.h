@@ -52,7 +52,7 @@ void test_memory_leakage(void);
  */
 void test_filter_coefficients(void);
 
-} // namespace TESTING
+} /* namespace TESTING */
 
 
-#endif // ACOUSTICS_TESTING_H
+#endif /* ACOUSTICS_TESTING_H */

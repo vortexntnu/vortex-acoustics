@@ -66,7 +66,7 @@ struct Pos{
      * @brief Constructor.
      */
     Pos(float32_t x, float32_t y, float32_t z);
-};
+}; /* struct Pos */
 
 
 /**
@@ -290,6 +290,6 @@ uint8_t valid_intensity_check(const float32_t& intensity_lhs,
     const float32_t& intensity_rhs);
 
 
-} // namespace TRILITERATION
+} /* namespace TRILITERATION */
 
-#endif // ACOUSTICS_TRILITERATION_H
+#endif /* ACOUSTICS_TRILITERATION_H */

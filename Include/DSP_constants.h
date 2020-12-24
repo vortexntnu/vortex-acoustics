@@ -6,10 +6,6 @@
 #ifndef ACOUSTICS_DSP_CONSTANTS_H
 #define ACOUSTICS_DSP_CONSTANTS_H
 
-#define ARM_MATH_CM7
-#define _USE_MATH_DEFINES
-#define __SOFTFP__
-
 #include <stdint.h>
 #include <math.h>
 #include <cmath>
@@ -87,6 +83,6 @@ const arm_biquad_casd_df1_inst_f32 IIR_filter = {
     .numStages = num_stages, .pState = &filter_coefficients[0],
     .pCoeffs = &filter_coefficients[0]};
 
-} // namespace DSP_CONSTANTS
+} /* namespace DSP_CONSTANTS */
 
-#endif // ACOUSTICS_DSP_CONSTANTS_H
+#endif /* ACOUSTICS_DSP_CONSTANTS_H */

@@ -29,25 +29,25 @@
 
 /* Private variables ---------------------------------------------------------*/
 
-// Handler for the ADC, DMA, ETH and SPI
+/* Handler for the ADC, DMA, ETH and SPI */
 ADC_HandleTypeDef hadc1;      /* Somehow doesn't exists */
 DMA_HandleTypeDef hdma_adc;   /* Somehow doesn't exists */
 ETH_HandleTypeDef heth;       /* Somehow doesn't exists */
 SPI_HandleTypeDef hspi1;      /* Somehow doesn't exists */
 
-// Errors and errors-detected
+/* Errors and errors-detected */
 uint32_t error_idx = 0;
 uint16_t max_num_errors = std::pow(2, 8);
 volatile Error_types errors_occured[max_num_errors];
 
-// Memory that the DMA will push the data to
+/* Memory that the DMA will push the data to */
 volatile uint32_t ADC1ConvertedValues[3 * DSP_CONSTANTS::DMA_BUFFER_LENGTH];
 
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 
-// INIT-functions
+/* INIT-functions */
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
@@ -55,17 +55,17 @@ static void MX_ADC1_Init(void);
 static void MX_ETH_Init(void);
 static void MX_SPI1_Init(void);
 
-// Function to access DMA to get data from the hydrophones
+/* Function to access DMA to get data from the hydrophones */
 static void read_ADC(float32_t* p_data_hyd_port, float32_t* p_data_hyd_starboard,
             float32_t* p_data_hyd_stern);
 
-// Functions to log errors
+/* Functions to log errors */
 static void log_error(Error_types error_code);
 static void Error_Handler(void);
 static void check_signal_error(uint8_t* p_bool_time_error, 
             uint8_t* p_bool_intensity_error); 
 
-// Function to coordinate the communication over the ethernet.
+/* Function to coordinate the communication over the ethernet */
 uint8_t ethernet_coordination(void);
 
 /**
@@ -109,48 +109,62 @@ int main(void)
     MX_SPI1_Init();
     
     /* USER CODE BEGIN 2 */
-    // Start ADC and DMA
-    // Might be uneccessary, as this starts the ADC in polling-mode. which 
-    // is not desired
+    /** 
+     * Start ADC in polling-mode
+     * Basicly useless, since usage of DMA is preferred. 
+     * 
+     * The function-call is commented out, until the function and usage
+     * is better understood  
+     */
+    /*
     if (HAL_ADC_Start(&hadc1) != HAL_OK){
       log_error(Error_types::ERROR_ADC_INIT);
       continue;
-    }
+    }*/
     
+    /**
+     * Starts ADC using DMA and transfers DSP_CONSTANTS::DMA_BUFFER_LENGTH
+     * number of datapoints from &hadc1 to ADCConvertedValues
+     * 
+     * The preferred method of reading the ADC
+     */
     if (HAL_ADC_Start_DMA(&hadc1, (uint32_t*) ADC1ConvertedValues, 
           DSP_CONSTANTS::DMA_BUFFER_LENGTH) != HAL_OK){
       log_error(Error_types::ERROR_DMA_INIT);
       continue;
     }
 
-    // Initialize variables for triliteration. Log error if invalid
+    /** 
+     * Initialize variables for triliteration 
+     * Log error if invalid
+     */
     if(!TRILITERATION::initialize_triliteration_globals(HYDROPHONES::pos_hyd_port,
           HYDROPHONES::pos_hyd_starboard, HYDROPHONES::pos_hyd_stern)){
       log_error(Error_types::ERROR_TRILITERATION_INIT);
       continue;
     }
 
-    // Initialize the class Hydrophone
+    /* Initialize the class Hydrophone */
     HYDROPHONES::Hydrophones hyd_port(HYDROPHONES::pos_hyd_port);
     HYDROPHONES::Hydrophones hyd_starboard(HYDROPHONES::pos_hyd_starboard);
     HYDROPHONES::Hydrophones hyd_stern(HYDROPHONES::pos_hyd_stern);
 
-    // Lag from each hydrophone
+    /* Lag from each hydrophone */
     uint32_t lag_hyd_port, lag_hyd_starboard, lag_hyd_stern;
 
-    // Intensity measured for each hydrophone
+    /* Intensity measured for each hydrophone */
     float32_t intensity_port, intensity_starboard, intensity_stern;
 
-    // Range-estimate to the acoustic pinger
+    /* Range-estimate to the acoustic pinger */
     float32_t distance_estimate;
 
-    // Angle-estimate to the acoustic pinger
+    /* Angle-estimate to the acoustic pinger */
     float32_t angle_estimate;
 
-    // Initializing time-measurement
+    /* Initializing time-measurement */
     time_t time_initial_startup = time(NULL);
 
-    // Intializing the raw-data-arrays
+    /* Intializing memory for the raw-data-arrays */
     float32_t* p_data_hyd_port = 
           (float32_t*) malloc(sizeof(float32_t) * DSP_CONSTANTS::DMA_BUFFER_LENGTH);
     float32_t* p_data_hyd_starboard = 
@@ -158,7 +172,7 @@ int main(void)
     float32_t* p_data_hyd_stern = 
           (float32_t*) malloc(sizeof(float32_t) * DSP_CONSTANTS::DMA_BUFFER_LENGTH);
 
-    // Ints used to analyze signal-error
+    /* Variables used to indicate error(s) with the signal */
     uint8_t bool_time_error = 0;
     uint8_t bool_intensity_error = 0;
 
@@ -177,31 +191,55 @@ int main(void)
         * since the system will not move further 
         */
         if(ethernet_coordination()){
-          // Do something if given an order over ethernet
-          // Must be implemented further
+          /** 
+           * TODO@TODO
+           * 
+           * Do something if given an order over ethernet
+           * Must be implemented further and in coordination with the team
+           * making the code/implementation for the Xavier
+           */
         }
 
         
-        // Stopping the DMA to prevent the data from updating while reading 
-        // Doesn't look like this is the correct way to handle this - but to tired atm
+        /**
+         * Originally thought to stop the DMA to prevent the data updating 
+         * while reading from the ADC
+         *  
+         * Doesn't look like this is the correct way to handle this, and should
+         * be looked into further to make sure that the data is read correctly
+         */
         if(HAL_ADC_Stop_DMA(&hadc1) != HAL_OK){     
           log_error(Error_types::ERROR_DMA_STOP);
           continue;
         }
 
-        // Reading the data
+        /** 
+         * Reading the data from the ADC 
+         * 
+         * Necessary to make sure that the data is correctly read by using the
+         * DMA, such that the data doesn't change while reading it
+         */
         read_ADC(p_data_hyd_port, p_data_hyd_starboard, p_data_hyd_stern);
 
-        // Recording the time of measurement in seconds after startup
+        /** 
+         * Recording the time of measurement in seconds after startup
+         * 
+         * This should be synchronized with the Xavier, such that the main system
+         * knows when the measurements where taken and could act accordingly
+         */
         float32_t time_measurement = (float32_t)difftime(time(NULL) - time_initial_startup);
 
-        // Restarting the DMA
+        /** 
+         * Restarting the DMA
+         * 
+         * Must be checked if this is correct usage
+         */
         if(HAL_ADC_START_DMA(&hadc1) != HAL_OK){
           log_error(Error_types::ERROR_DMA_START);
           continue;
         }
 
-        // Calculating lag and intensity
+        /* Calculating lag and intensity */
         hyd_port.analyze_data(p_data_hyd_port);
         hyd_starboard.analyze_data(p_data_hyd_starboard);
         hyd_stern.analyze_data(p_data_hyd_stern);
@@ -214,8 +252,13 @@ int main(void)
         intensity_starboard = hyd_starboard.get_intensity();
         intensity_stern = hyd_stern.get_intensity();
 
-        // Checking is the measurements are valid
-        // Take new sample if not valid data
+        /**
+         * Checking is the measurements are valid. The measurements 
+         * are discarded if they deviate too much in either signal
+         * intensity or time lag
+         * 
+         * Take new samples if the data is invalid
+         */
         if(!TRILITERATION::check_valid_signals(lag_hyd_port,
               lag_hyd_starboard, lag_hyd_stern, intensity_port,
               intensity_starboard, intensity_stern, &bool_time_error,
@@ -224,31 +267,45 @@ int main(void)
           continue;
         }
 
-        // Calculate estimated position
+        /** 
+         * Calculate estimated position of the acoustic pinger in 
+         * relation to the AUV
+         * 
+         * The first function returns a std::pair as (x, y)
+         * 
+         * The second function returns an estimate of the distance and
+         * the angle to the target  
+         */
         std::pair<float32_t, float32_t> position_es = 
             TRILITERATION::estimate_pinger_position(lag_hyd_port,
               lag_hyd_starboard, lag_hyd_stern, intensity_stern,
               intensity_starboard, intensity_stern);
 
-        // Calculate estimated distance and angle to the pinger
         TRILITERATION::calculate_distance_and_angle(position_es, 
               &distance_estimate, &angle_estimate);
 
-        // Send the data to the Xavier
         /**
+         * TODO@TODO
+         * 
+         * Send the data to the Xavier in a predetermined format
+         * 
          * Required to send one of
          *    1. position-estimate
          *    2. angle- and distance-estimate
          * alongside the time of measurment
          */
     }
-    // Should never reach here
-    // Freeing memory just in case
+    /** 
+     * The function should never reach here, as it should always be
+     * stuck inside the while-loop
+     * 
+     * Freeing memory just in case
+     */
     free(p_data_hyd_port);
     free(p_data_hyd_starboard);
     free(p_data_hyd_stern);
 
-    // Stopping the ADC and the DMA
+    /* Stopping the ADC and the DMA */
     HAL_ADC_Stop(&hadc1);
     HAL_ADC_Stop_DMA(&hadc1);
   }
@@ -297,10 +354,15 @@ void SystemClock_Config(void)
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+
+  /* 
+  Affect the sampling frequency of the ADC. By using ..._DIV4, we get
+  a sample frequency of 450 kHz, which results in 150 kHz per 
+  hydrophone. By using ..._DIV8 the sampling-frequency would become 75kHz
+  for each hydrophone, which would result in aliasing 
+  */
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV4;  // Affect the sampling frequency of the ADC. With ..._DIV4, we get
-                                                     // a sample frequency of 450 kHz. This results in 112,5 kHz per 
-                                                     // hydrophone
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV4;  
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_7) != HAL_OK)
   {
@@ -524,6 +586,11 @@ static void read_ADC(float32_t* p_data_hyd_port, float32_t* p_data_hyd_starboard
    * Reading the data. Dropping the last couple of datapoints, since
    * 4096 % 3 = 1. Reducing the number of datapoints reduces the 
    * accuracy of the analysis, however prevents out-of-range error
+   * 
+   * @warning Must be updated such that the odd indexes in the array is
+   * set to zero, while the even indexes contain the data from the array. 
+   * This is due to the FFT-code uses even indexes for the real signal-part,
+   * and the odd indexes for the imaginary signal-part.
    */
   for(int i = 0; i < DSP_CONSTANTS::DMA_BUFFER_LENGTH - 
         NUM_HYDROPHONES; i += NUM_HYDROPHONES){

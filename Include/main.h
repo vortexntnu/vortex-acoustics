@@ -28,6 +28,20 @@ extern "C" {
 #endif
 
 /**
+ * @brief Important defines 
+ */
+#ifndef DEFINED_SYSTEM_VARIABLES
+#define DEFINED_SYSTEM_VARIABLES
+  
+  #define STM32F767xx               /* Current MCU used for the project           */
+  #define ARM_MATH_CM7              /* Processor-version used on the STM32        */
+  #define _USE_MATH_DEFINES         /* Gives access to math-defines such as M_PI  */
+  #define __SOFTFP__                /* Allows assert by softwa                    */
+  #define NUM_HYDROPHONES 3         /* Number of hydrophones used on the AUV      */
+
+#endif /* DEFINED_SYSTEM_VARIABLES */
+
+/**
  * @brief Enum to hold some of the potential errors that could occur
  * 
  * @warning ERROR_INVALID_SIGNAL is most likely on occuring, as it 
@@ -35,20 +49,20 @@ extern "C" {
  * eliminating the RAM/memory
  */
 enum class Error_types{
-  ERROR_ADC_INIT,             /* Error on initializing ADC */
-  ERROR_ADC_CONFIG,           /* Error on configuring ADC */
-  ERROR_DMA_INIT,             /* Error on initializing DMA */
-  ERROR_DMA_CONFIG,           /* Error on configuring DMA */
-  ERROR_DMA_START,            /* Error while starting DMA */
-  ERROR_DMA_STOP,             /* Error while stopping DMA */
-  ERROR_SPI_INIT,             /* Error on initializing SPI */
-  ERROR_ETH_INIT,             /* Error on initializing ETH */
-  ERROR_TRILITERATION_INIT,   /* Error on initializing TRILITERATION */
-  ERROR_TIME_SIGNAL,          /* Error on calculating invalid time of signals */
-  ERROR_INTENSITY_SIGNAL,     /* Error on calculating invalid intensity of signals */
-  ERROR_UNIDENTIFIED,         /* Unidentified error. Thrown using Error_handler */
-  ERROR_MEMORY                /* Out of memory for error_handling */
-};
+  ERROR_ADC_INIT,             /* Error on initializing ADC                          */
+  ERROR_ADC_CONFIG,           /* Error on configuring ADC                           */
+  ERROR_DMA_INIT,             /* Error on initializing DMA                          */
+  ERROR_DMA_CONFIG,           /* Error on configuring DMA                           */
+  ERROR_DMA_START,            /* Error while starting DMA                           */
+  ERROR_DMA_STOP,             /* Error while stopping DMA                           */
+  ERROR_SPI_INIT,             /* Error on initializing SPI                          */
+  ERROR_ETH_INIT,             /* Error on initializing ETH                          */
+  ERROR_TRILITERATION_INIT,   /* Error on initializing TRILITERATION                */
+  ERROR_TIME_SIGNAL,          /* Error on calculating invalid time of signals       */
+  ERROR_INTENSITY_SIGNAL,     /* Error on calculating invalid intensity of signals  */
+  ERROR_UNIDENTIFIED,         /* Unidentified error. Thrown using Error_handler     */
+  ERROR_MEMORY                /* Out of memory for error_handling                   */
+}; /* enum class Error_types */
 
 
 #ifdef __cplusplus
