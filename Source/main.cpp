@@ -166,11 +166,11 @@ int main(void)
 
     /* Intializing memory for the raw-data-arrays */
     float32_t* p_data_hyd_port = 
-          (float32_t*) malloc(sizeof(float32_t) * DSP_CONSTANTS::DMA_BUFFER_LENGTH);
+          (float32_t*) malloc(sizeof(float32_t) * DSP_CONSTANTS::FFT_SIZE);
     float32_t* p_data_hyd_starboard = 
-          (float32_t*) malloc(sizeof(float32_t) * DSP_CONSTANTS::DMA_BUFFER_LENGTH);
+          (float32_t*) malloc(sizeof(float32_t) * DSP_CONSTANTS::FFT_SIZE);
     float32_t* p_data_hyd_stern = 
-          (float32_t*) malloc(sizeof(float32_t) * DSP_CONSTANTS::DMA_BUFFER_LENGTH);
+          (float32_t*) malloc(sizeof(float32_t) * DSP_CONSTANTS::FFT_SIZE);
 
     /* Variables used to indicate error(s) with the signal */
     uint8_t bool_time_error = 0;
@@ -555,6 +555,10 @@ static void MX_GPIO_Init(void)
 /**
  * @brief Read the ADC by using DMA
  * 
+ * The data is fed into the even indeces of the arrays, while the odd indeces
+ * are set to 0. This is due to the usage of complex FFT, which requires the
+ * imaginary components to be on the odd indeces. 
+ * 
  * @param p_data_hyd_port Pointer to the memory for the port hydrophone
  * @param p_data_hyd_starboard Pointer to the starboard hydrophone's memory
  * @param p_data_hyd_stern Pointer to the stern hydrophone's memory
@@ -577,26 +581,27 @@ static void MX_GPIO_Init(void)
  *      {r1, r1, ..., r1, r2, r2, ..., r2, r3, r3, ..., r3}
  * 
  * From my understanding of the circular DMA and ADC in scan-mode, it uses
- * the first method. This is assumed true, however that is potentially a serious
- * bug! 
+ * the first method. The code assumes this true, however it is potentially 
+ * a serious bug! 
  */
 static void read_ADC(float32_t* p_data_hyd_port, float32_t* p_data_hyd_starboard,
             float32_t* p_data_hyd_stern){
+
   /**
    * Reading the data. Dropping the last couple of datapoints, since
-   * 4096 % 3 = 1. Reducing the number of datapoints reduces the 
+   * 2048 % 3 = 2. Reducing the number of datapoints reduces the 
    * accuracy of the analysis, however prevents out-of-range error
-   * 
-   * @warning Must be updated such that the odd indexes in the array is
-   * set to zero, while the even indexes contain the data from the array. 
-   * This is due to the FFT-code uses even indexes for the real signal-part,
-   * and the odd indexes for the imaginary signal-part.
    */
-  for(int i = 0; i < DSP_CONSTANTS::DMA_BUFFER_LENGTH - 
+  for(int i = 0; i < DSP_CONSTANTS::WORKING_BUFFER_LENGTH - 
         NUM_HYDROPHONES; i += NUM_HYDROPHONES){
-    p_data_hyd_port[i] = ADC1ConvertedValues[i];
-    p_data_hyd_starboard[i] = ADC1ConvertedValues[i + 1];
-    p_data_hyd_stern[i] = ADC1ConvertedValues[i + 2];
+    p_data_hyd_port[2 * i] = ADC1ConvertedValues[i];
+    p_data_hyd_port[(2 * i) + 1] = 0;
+
+    p_data_hyd_starboard[2 * i] = ADC1ConvertedValues[i + 1];
+    p_data_hyd_starboard[(2 * i) + 1] = 0;
+
+    p_data_hyd_stern[2 * i] = ADC1ConvertedValues[i + 2];
+    p_data_hyd_stern[(2 * i) + 1] = 0;
   }
 }
 
