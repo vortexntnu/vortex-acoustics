@@ -57,7 +57,7 @@ float32_t TRILITERATION::estimate_distance(float32_t intensity){
 
 
 float32_t TRILITERATION::estimate_rough_angle(uint32_t time_difference){
-        // M_PI_2 is a macro for M_PI / 2
+        /* M_PI_2 is a macro for M_PI / 2 */
     return (float32_t)((_MATH_H_::M_PI_2) * (time_difference / TRILITERATION::max_time_diff));
 }
 
@@ -86,7 +86,7 @@ uint8_t TRILITERATION::estimate_longitude(uint32_t time_port,
 
 
 float32_t TRILITERATION::estimate_signal_intensity(float32_t* p_signal_data){
-        // Initializating variables
+        /* Initializating variables */
         float32_t signal_energy = 0;
         float32_t signal_mean_energy, signal_intensity;
 
@@ -99,9 +99,7 @@ float32_t TRILITERATION::estimate_signal_intensity(float32_t* p_signal_data){
         }
         signal_energy /= DSP_CONSTANTS::DMA_BUFFER_LENGTH;
 
-        /**
-         * Calculating signal intensity in dB
-         */
+        /* Calculating signal intensity in dB */
         signal_mean_energy = signal_energy / 
                 (DSP_CONSTANTS::SAMPLE_TIME * DSP_CONSTANTS::DMA_BUFFER_LENGTH);
         signal_intensity = 20 * log10(signal_mean_energy);
@@ -116,13 +114,13 @@ std::pair<float32_t, float32_t> TRILITERATION::estimate_pinger_position(
             float32_t intensity_port, float32_t intensity_starboard,
             float32_t intensity_stern){
 
-    // Estimating the likely lateral/longitude for the acoustic pinger 
+    /* Estimating the likely lateral/longitude for the acoustic pinger */
     std::pair<float32_t, uint8_t> lateral_estimate = 
             TRILITERATION::estimate_latitude(time_port, time_starboard);
     uint8_t longitude_estimate = TRILITERATION::estimate_longitude(
             time_port, time_starboard, time_stern);
         
-    // Estimating the distances
+    /* Estimating the distances */
     float32_t distance_port = TRILITERATION::estimate_distance(
             intensity_port);
     float32_t distance_starboard = TRILITERATION::estimate_distance(
@@ -130,13 +128,17 @@ std::pair<float32_t, float32_t> TRILITERATION::estimate_pinger_position(
     float32_t distance_stern = TRILITERATION::estimate_distance(
             intensity_stern);
 
-    // Averaging the distance-estimates to triliterate the 
-    // position of the pinger
+    /** 
+     * Averaging the distance-estimates to triliterate the 
+     * position of the pinger
+     */
     float32_t distance_source = (distance_port + distance_starboard
             + distance_stern) / 3.0;
 
-    // Using the likely lateral/longitude to calculate the estimated
-    // position for the acoustic pinger
+    /** 
+     * Using the likely lateral/longitude to calculate the estimated
+     * position for the acoustic pinger
+     */
     float32_t x, y;
     if(!longitude_estimate)
         y = distance_source * std::sin(lateral_estimate.first);
@@ -155,12 +157,12 @@ void TRILITERATION::calculate_distance_and_angle(
         float32_t* p_distance_estimate,
         float32_t* p_angle_estimate){
         
-        // Calculating the distance
+        /* Calculating the distance */
         Pos current_pos{0, 0, 0};
         Pos estimated_pos{position_estimate.first, position_estimate.second, 0};
         *p_distance_estimate = calculate_pos_distance(current_pos, estimated_pos);
 
-        // Calculating the angle from the AUV
+        /* Calculating the angle from the AUV */
         *p_angle_estimate = _MATH_H_::atan2(position_estimate.second, position_estimate.first);
 }
 
