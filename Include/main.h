@@ -28,20 +28,6 @@ extern "C" {
 #endif
 
 /**
- * @brief Important defines 
- */
-#ifndef DEFINED_SYSTEM_VARIABLES
-#define DEFINED_SYSTEM_VARIABLES
-  
-  #define STM32F767xx               /* Current MCU used for the project           */
-  #define ARM_MATH_CM7              /* Processor-version used on the STM32        */
-  #define _USE_MATH_DEFINES         /* Gives access to math-defines such as M_PI  */
-  #define __SOFTFP__                /* Allows assert by softwa                    */
-  #define NUM_HYDROPHONES 3         /* Number of hydrophones used on the AUV      */
-
-#endif /* DEFINED_SYSTEM_VARIABLES */
-
-/**
  * @brief Enum to hold some of the potential errors that could occur
  * 
  * @warning ERROR_INVALID_SIGNAL is most likely on occuring, as it 
