@@ -41,6 +41,8 @@ enum class Error_types{
   ERROR_DMA_CONFIG,           /* Error on configuring DMA */
   ERROR_DMA_START,            /* Error while starting DMA */
   ERROR_DMA_STOP,             /* Error while stopping DMA */
+  ERROR_SPI_INIT,             /* Error on initializing SPI */
+  ERROR_ETH_INIT,             /* Error on initializing ETH */
   ERROR_TRILITERATION_INIT,   /* Error on initializing TRILITERATION */
   ERROR_TIME_SIGNAL,          /* Error on calculating invalid time of signals */
   ERROR_INTENSITY_SIGNAL,     /* Error on calculating invalid intensity of signals */

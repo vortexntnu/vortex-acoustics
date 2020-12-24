@@ -110,6 +110,8 @@ int main(void)
     
     /* USER CODE BEGIN 2 */
     // Start ADC and DMA
+    // Might be uneccessary, as this starts the ADC in polling-mode. which 
+    // is not desired
     if (HAL_ADC_Start(&hadc1) != HAL_OK){
       log_error(Error_types::ERROR_ADC_INIT);
       continue;
@@ -181,7 +183,8 @@ int main(void)
 
         
         // Stopping the DMA to prevent the data from updating while reading 
-        if(HAL_ADC_Stop_DMA(&hadc1) != HAL_OK){
+        // Doesn't look like this is the correct way to handle this - but to tired atm
+        if(HAL_ADC_Stop_DMA(&hadc1) != HAL_OK){     
           log_error(Error_types::ERROR_DMA_STOP);
           continue;
         }
@@ -246,7 +249,7 @@ int main(void)
     free(p_data_hyd_stern);
 
     // Stopping the ADC and the DMA
-    HAL_ADC_Start(&hadc1);
+    HAL_ADC_Stop(&hadc1);
     HAL_ADC_Stop_DMA(&hadc1);
   }
   return 0;
@@ -444,7 +447,7 @@ static void MX_SPI1_Init(void)
   hspi1.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
   if (HAL_SPI_Init(&hspi1) != HAL_OK)
   {
-    Error_Handler();
+    log_error(Error_types::ERROR_SPI_INIT);
   }
   /* USER CODE BEGIN SPI1_Init 2 */
 
@@ -583,7 +586,7 @@ static void log_error(Error_types error){
     return;
   }
   if(error_idx == max_num_errors - 1){
-    errors_occured = Error_types::ERROR_MEMORY;
+    errors_occured[error_idx] = Error_types::ERROR_MEMORY;
   }
 }
 
@@ -596,6 +599,8 @@ static void log_error(Error_types error){
   * @retval None
   */
 void Error_Handler(void){
+  // Should also possibly take in an error message saying which line and
+  // file caused the error
   log_error(Error_types::ERROR_UNIDENTIFIED);
 }
 
