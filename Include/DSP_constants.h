@@ -16,7 +16,7 @@
   #define STM32F767xx               /* Current MCU used for the project           */
   #define ARM_MATH_CM7              /* Processor-version used on the STM32        */
   #define _USE_MATH_DEFINES         /* Gives access to math-defines such as M_PI  */
-  #define __SOFTFP__                /* Allows assert by softwa                    */
+  #define __SOFTFP__                /* Allows assert by software                  */
   #define HAL_ADC_MODULE_ENABLED    /* Enables the HAL_ADC                        */
 
 #endif /* STM32_DEFINES */
@@ -40,7 +40,7 @@
 #ifndef VORTEX_AUV_SETUP
 #define VORTEX_AUV_SETUP
 
-#define NUM_HYDROPHONES 3           /* Number of hydrophones used on the AUV      */
+  #define NUM_HYDROPHONES 3           /* Number of hydrophones used on the AUV      */
 
 #endif /* VORTEX_AUV_SETUP */
 
