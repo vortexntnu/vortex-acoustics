@@ -101,12 +101,17 @@ const float32_t SAMPLE_TIME = (float32_t) 1 / SAMPLE_FREQUENCY;
  * https://www.earlevel.com/main/2013/10/13/biquad-calculator-v2/
  * 
  * The calculator reports the values as {a0, a1, a2, b1, b2}, instead
- * of {b0, b1, b2, a1, a2}. It is assumed that the calculator has 
- * swapped names between the denominator and the numerator, because of
- * the number of filter coefficients given. (The first filter coefficient
- * in the denominator is trivially assigned to 1). This must nonetheless 
- * be tested in the future
- * 
+ * of {b0, b1, b2, a1, a2}. As we are using a DF1 IIR-filter, the filter's 
+ * transferfunction is given as 
+ *      H(z) = B(z) * 1 / A(z)
+ * where
+ *      B(z) = b0 + b1 * z^(-1) + b2 * z^(-2)
+ *      A(z) = 1 + a1 * z^(-1) + a2 * z^(-2)
+ * It is assumed that the calculator has swapped names between the denominator 
+ * and the numerator. Otherwise, the filter coefficients would not
+ * be possible given a DF1 IIR-filter with the first coefficient
+ * in the denominator trivially assigned to 1. 
+ * This must nonetheless be tested in the future
  * 
  * NOTE: For more information, see 
  * https://arm-software.github.io/CMSIS_5/DSP/html/group__BiquadCascadeDF1__32x64.html
