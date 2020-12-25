@@ -17,6 +17,7 @@
   #define ARM_MATH_CM7              /* Processor-version used on the STM32        */
   #define _USE_MATH_DEFINES         /* Gives access to math-defines such as M_PI  */
   #define __SOFTFP__                /* Allows assert by softwa                    */
+  #define HAL_ADC_MODULE_ENABLED    /* Enables the HAL_ADC                        */
 
 #endif /* STM32_DEFINES */
 

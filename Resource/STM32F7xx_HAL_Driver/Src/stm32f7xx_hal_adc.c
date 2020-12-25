@@ -201,6 +201,8 @@
   * @{
   */ 
 
+#define HAL_ADC_MODULE_ENABLED /* Just to prevent an error while changing the code */
+
 #ifdef HAL_ADC_MODULE_ENABLED
     
 /* Private typedef -----------------------------------------------------------*/

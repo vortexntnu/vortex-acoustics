@@ -41,7 +41,10 @@ uint16_t max_num_errors = std::pow(2, 8);
 volatile Error_types errors_occured[max_num_errors];
 
 /* Memory that the DMA will push the data to */
-volatile uint32_t ADC1ConvertedValues[3 * DSP_CONSTANTS::DMA_BUFFER_LENGTH];
+volatile uint32_t ADC1_converted_values[3 * DSP_CONSTANTS::DMA_BUFFER_LENGTH];
+
+/* Variable used to indicate if conversion is ready. Changed via cb-function */
+volatile uint8_t bool_DMA_ready = 0;
 
 /* USER CODE END PV */
 
@@ -54,6 +57,9 @@ static void MX_DMA_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_ETH_Init(void);
 static void MX_SPI1_Init(void);
+
+/* Overwrite of weak cb-function */
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc);
 
 /* Function to access DMA to get data from the hydrophones */
 static void read_ADC(float32_t* p_data_hyd_port, float32_t* p_data_hyd_starboard,
@@ -128,7 +134,7 @@ int main(void)
      * 
      * The preferred method of reading the ADC
      */
-    if (HAL_ADC_Start_DMA(&hadc1, (uint32_t*) ADC1ConvertedValues, 
+    if (HAL_ADC_Start_DMA(&hadc1, (uint32_t*) ADC1_converted_values, 
           DSP_CONSTANTS::DMA_BUFFER_LENGTH) != HAL_OK){
       log_error(Error_types::ERROR_DMA_INIT);
       continue;
@@ -208,16 +214,25 @@ int main(void)
          * Doesn't look like this is the correct way to handle this, and should
          * be looked into further to make sure that the data is read correctly
          */
-        if(HAL_ADC_Stop_DMA(&hadc1) != HAL_OK){     
-          log_error(Error_types::ERROR_DMA_STOP);
-          continue;
-        }
+        // if(HAL_ADC_Stop_DMA(&hadc1) != HAL_OK){     
+        //   log_error(Error_types::ERROR_DMA_STOP);
+        //   continue;
+        // }
+
+        /* Waiting for the DMA to be ready */
+        while(!bool_DMA_ready);
+
+        /* Reseting the value */
+        bool_DMA_ready = 0;
 
         /** 
          * Reading the data from the ADC 
          * 
          * Necessary to make sure that the data is correctly read by using the
          * DMA, such that the data doesn't change while reading it
+         * 
+         * Could pherhaps be done by using a cb-function to notify when the DMA
+         * has read x num characters
          */
         read_ADC(p_data_hyd_port, p_data_hyd_starboard, p_data_hyd_stern);
 
@@ -234,10 +249,10 @@ int main(void)
          * 
          * Must be checked if this is correct usage
          */
-        if(HAL_ADC_START_DMA(&hadc1) != HAL_OK){
-          log_error(Error_types::ERROR_DMA_START);
-          continue;
-        }
+        // if(HAL_ADC_START_DMA(&hadc1) != HAL_OK){
+        //   log_error(Error_types::ERROR_DMA_START);
+        //   continue;
+        // }
 
         /* Calculating lag and intensity */
         hyd_port.analyze_data(p_data_hyd_port);
@@ -594,13 +609,13 @@ static void read_ADC(float32_t* p_data_hyd_port, float32_t* p_data_hyd_starboard
    */
   for(int i = 0; i < DSP_CONSTANTS::WORKING_BUFFER_LENGTH - 
         NUM_HYDROPHONES; i += NUM_HYDROPHONES){
-    p_data_hyd_port[2 * i] = ADC1ConvertedValues[i];
+    p_data_hyd_port[2 * i] = ADC1_converted_values[i];
     p_data_hyd_port[(2 * i) + 1] = 0;
 
-    p_data_hyd_starboard[2 * i] = ADC1ConvertedValues[i + 1];
+    p_data_hyd_starboard[2 * i] = ADC1_converted_values[i + 1];
     p_data_hyd_starboard[(2 * i) + 1] = 0;
 
-    p_data_hyd_stern[2 * i] = ADC1ConvertedValues[i + 2];
+    p_data_hyd_stern[2 * i] = ADC1_converted_values[i + 2];
     p_data_hyd_stern[(2 * i) + 1] = 0;
   }
 }
@@ -662,17 +677,31 @@ static void log_error(Error_types error){
   }
 }
 
+
+/**
+ * @brief Overwriting a weak CB-function. The function is triggered when the
+ * DMA is finished transfering data to ADC1_converted_values
+ * 
+ * The funtion changes the variable bool_DMA_ready
+ * 
+ * @param hadc Pointer to the ADC-handler that uses this CB-function
+ */
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
+  bool_DMA_ready = 1;
+}
+
 /* USER CODE END 4 */
 
 /**
   * @brief  This function is executed in case of error occurrence
   * Calls log_error() with unidentified error
   * 
+  * Could also add the possibility to take in the line and file, and log these.
+  * Would require some more future work and tighter integration with the Xavier
+  * 
   * @retval None
   */
 void Error_Handler(void){
-  // Should also possibly take in an error message saying which line and
-  // file caused the error
   log_error(Error_types::ERROR_UNIDENTIFIED);
 }
 
