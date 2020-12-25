@@ -134,11 +134,11 @@ int main(void)
      * 
      * The preferred method of reading the ADC
      */
-    if (HAL_ADC_Start_DMA(&hadc1, (uint32_t*) ADC1_converted_values, 
-          DSP_CONSTANTS::DMA_BUFFER_LENGTH) != HAL_OK){
-      log_error(Error_types::ERROR_DMA_INIT);
-      continue;
-    }
+    // if (HAL_ADC_Start_DMA(&hadc1, (uint32_t*) ADC1_converted_values, 
+    //       DSP_CONSTANTS::DMA_BUFFER_LENGTH) != HAL_OK){
+    //   log_error(Error_types::ERROR_DMA_INIT);
+    //   continue;
+    // }
 
     /** 
      * Initialize variables for triliteration 
@@ -187,7 +187,6 @@ int main(void)
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
     while(1){
-
         /** 
         * Using the ethernet to decleare the MCU to start recording.
         * Start a time-estimate, such that the Xavier knows how old 
@@ -206,33 +205,33 @@ int main(void)
            */
         }
 
-        
-        /**
-         * Originally thought to stop the DMA to prevent the data updating 
-         * while reading from the ADC
-         *  
-         * Doesn't look like this is the correct way to handle this, and should
-         * be looked into further to make sure that the data is read correctly
-         */
-        // if(HAL_ADC_Stop_DMA(&hadc1) != HAL_OK){     
-        //   log_error(Error_types::ERROR_DMA_STOP);
-        //   continue;
-        // }
+
+        /* (Re)setting the DMA's state-value */
+        bool_DMA_ready = 0;
+
+        /* (Re)starting DMA */
+        if (HAL_ADC_Start_DMA(&hadc1, (uint32_t*) ADC1_converted_values, 
+            DSP_CONSTANTS::DMA_BUFFER_LENGTH) != HAL_OK){
+          log_error(Error_types::ERROR_DMA_START);
+          continue;
+        }
 
         /* Waiting for the DMA to be ready */
         while(!bool_DMA_ready);
 
-        /* Reseting the value */
-        bool_DMA_ready = 0;
+        /**
+         * Stopping the DMA to prevent overwriting the memory
+         */
+        if(HAL_ADC_Stop_DMA(&hadc1) != HAL_OK){     
+          log_error(Error_types::ERROR_DMA_STOP);
+          continue;
+        }
 
         /** 
          * Reading the data from the ADC 
          * 
-         * Necessary to make sure that the data is correctly read by using the
-         * DMA, such that the data doesn't change while reading it
-         * 
-         * Could pherhaps be done by using a cb-function to notify when the DMA
-         * has read x num characters
+         * The data should be correct, as the DMA-transfer has stopped. It should
+         * therefore be impossible to overwrite the memory
          */
         read_ADC(p_data_hyd_port, p_data_hyd_starboard, p_data_hyd_stern);
 
@@ -243,16 +242,6 @@ int main(void)
          * knows when the measurements where taken and could act accordingly
          */
         float32_t time_measurement = (float32_t)difftime(time(NULL) - time_initial_startup);
-
-        /** 
-         * Restarting the DMA
-         * 
-         * Must be checked if this is correct usage
-         */
-        // if(HAL_ADC_START_DMA(&hadc1) != HAL_OK){
-        //   log_error(Error_types::ERROR_DMA_START);
-        //   continue;
-        // }
 
         /* Calculating lag and intensity */
         hyd_port.analyze_data(p_data_hyd_port);
