@@ -150,7 +150,8 @@ const arm_biquad_casd_df1_inst_f32 IIR_filter = {
     .numStages = num_stages, 
     .pState = &filter_coefficients[0],
     .pCoeffs = &filter_coefficients[0], 
-    .postShift = post_shift};
+    .postShift = post_shift
+};
 
 } /* namespace DSP_CONSTANTS */
 
