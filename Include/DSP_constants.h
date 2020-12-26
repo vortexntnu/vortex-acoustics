@@ -131,8 +131,11 @@ const float32_t SAMPLE_TIME = (float32_t) 1 / SAMPLE_FREQUENCY;
 const uint32_t num_stages = 1;
 const float32_t state_coefficients[4*num_stages] = {0.0, 0.0, 
         0.0, 0.0};
-const float32_t filter_coefficients[5*num_stages] = {0.32227662, 
-        0.0, -0.32227662, -0.41885608, 0.35544676};
+//const float32_t filter_coefficients[5*num_stages] = {0.32227662, 
+//        0.0, -0.32227662, -0.41885608, 0.35544676};
+// Filter coefficients recommended by MATLAB (Chebychev T1 PB IIR)
+const float32_t filter_coefficients[5*num_stages] = {0.58810799,
+        0, -0.58810799, -0.31465750, -0.17621597}; 
 const arm_biquad_casd_df1_inst_f32 IIR_filter = {
     .numStages = num_stages, .pState = &filter_coefficients[0],
     .pCoeffs = &filter_coefficients[0]};

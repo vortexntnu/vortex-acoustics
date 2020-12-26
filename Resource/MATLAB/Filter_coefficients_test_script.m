@@ -13,15 +13,15 @@ before and after filtering
 
 %% Filter
 % Filter-coefficients (numerator)
-b0 = 0.32227662;
+b0 = 0.58810799;
 b1 = 0;
-b2 = -0.32227662;
+b2 = -0.58810799;
 B = [b0, b1, b2];
 
 % Filter coefficients (denominator)
 a0 = 1;
-a1 = -0.41885608;
-a2 = 0.35544676;
+a1 = -0.31465750;
+a2 = -0.17621597;
 A = [a0, a1, a2];
 
 %% Signal generation
