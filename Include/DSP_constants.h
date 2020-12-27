@@ -85,12 +85,13 @@ const float32_t SAMPLE_TIME = (float32_t) 1 / SAMPLE_FREQUENCY;
  * 
  * @warning The filter is designed with the filterdesigner 
  * in MATLAB, using
- *      Fs = 112500     Sampling frequency
- *      f0 = 30000      Passband center
- *      f1 = 15000      Lower cut-off frequency
- *      f2 = 45000      Upper cut-off frequency
- *      Q  = 1          Quality-factor
- *      K  = 1          Gain 
+ *      Fs    = 112500        Sampling frequency
+ *      Fc1   = 15000         Lower cut-off frequency
+ *      Fc2   = 45000         Upper cut-off frequency
+ *      
+ *      Order = 4             Filter order
+ *      Type  = Butterworth   Filter type
+ *      
  * 
  * The filter's transferfunction is given as 
  *      H(z) = B(z) * 1 / A(z)
