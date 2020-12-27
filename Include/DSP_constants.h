@@ -69,7 +69,7 @@ const uint16_t IIR_SIZE = DMA_BUFFER_LENGTH;
  * 
  * The SAMPLE_TIME is used to validate the signals
  */
-const uint32_t SAMPLE_FREQUENCY = 150000;
+const uint32_t SAMPLE_FREQUENCY = 112500;
 const float32_t SAMPLE_TIME = (float32_t) 1 / SAMPLE_FREQUENCY;   
 
 
@@ -85,7 +85,7 @@ const float32_t SAMPLE_TIME = (float32_t) 1 / SAMPLE_FREQUENCY;
  * 
  * @warning The filter is designed with the filterdesigner 
  * in MATLAB, using
- *      Fs = 150000     Sampling frequency
+ *      Fs = 112500     Sampling frequency
  *      f0 = 30000      Passband center
  *      f1 = 15000      Lower cut-off frequency
  *      f2 = 45000      Upper cut-off frequency
@@ -137,15 +137,15 @@ const float32_t SAMPLE_TIME = (float32_t) 1 / SAMPLE_FREQUENCY;
  *                              IMPORTANT: post_shift is a factor of 2, so post_shift = 1 
  *                              scales by 2
  */
-const uint32_t num_stages = 2;
-const float32_t state_coefficients[4 * num_stages] = {0.0, 0.0, 
+uint32_t num_stages = 2;
+float32_t state_coefficients[4 * num_stages] = {0.0, 0.0, 
         0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-const float32_t filter_coefficients[5 * num_stages] = {
-        0.22725101, 0.0, -0.22725101,   /* Numerator filter 1 */ 
-        -0.58226175, 0.26593912,        /* Denominator filter 1 */
-        0.45450202, 0.0, -0.45450202,   /* Numerator filter 2 */
-        0.25944456, 0.36815892}         /* Denominator filter 2 */
-const uint8_t post_shift = 1; 
+float32_t filter_coefficients[5 * num_stages] = {
+        0.28471242, 0.0, -0.28471242,   /* Numerator filter 1 */ 
+        -0.56275933, 0.23234810,        /* Denominator filter 1 */
+        0.28471242, 0.0, -0.28471242,   /* Numerator filter 2 */
+        -0.41613102, 0.18747447}        /* Denominator filter 2 */
+uint8_t post_shift = 1; 
 const arm_biquad_casd_df1_inst_f32 IIR_filter = {
     .numStages = num_stages, 
     .pState = &filter_coefficients[0],

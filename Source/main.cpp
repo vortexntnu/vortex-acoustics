@@ -360,13 +360,13 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
 
   /* 
-  Affect the sampling frequency of the ADC. By using ..._DIV4, we get
-  a sample frequency of 450 kHz, which results in 150 kHz per 
+  Affect the sampling frequency of the ADC. By using ..._DIV16, we get
+  a sample frequency of 112.5 kHz, which results in 150 kHz per 
   hydrophone. By using ..._DIV8 the sampling-frequency would become 75kHz
   for each hydrophone, which would result in aliasing 
   */
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV4;  
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV16;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV16;  
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_7) != HAL_OK)
   {
