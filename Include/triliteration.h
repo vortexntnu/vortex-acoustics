@@ -42,10 +42,10 @@ namespace TRILITERATION{
  * @warning max_hydrophone_distance and maximum_time_diff are
  * decleared as extern, as they are decleared in .cpp 
  */
-const uint16_t sound_speed = 1480;
-const float32_t source_power = 177;
-const float32_t max_intensity_diff = 20;
-const float32_t time_diff_epsilon = 0.1; 
+const uint16_t sound_speed          = 1480;
+const float32_t source_power        = 177;
+const float32_t max_intensity_diff  = 20;
+const float32_t time_diff_epsilon   = 0.1; 
 extern float32_t max_hydrophone_distance; 
 extern float32_t max_time_diff;
 
@@ -289,6 +289,25 @@ uint8_t valid_time_check(const uint32_t& time_lhs, const uint32_t& time_rhs);
 uint8_t valid_intensity_check(const float32_t& intensity_lhs, 
     const float32_t& intensity_rhs);
 
+
+/**
+ * @brief Function prototype as of 03.01.21. The function should transfer 
+ * the measured data to values given in the unit Pa.
+ * This is to make sure that the calculated intensity is correct. Takes
+ * into account pre-amplification and sensitivity of the hydrophone at the
+ * given frequency
+ * 
+ * At first, the values are given in intervals of 0 to 4095, where 0 
+ * represents 0.0 V and 4095 represents 3.3 V measured. This is thereafter
+ * shifted to accomodate the preamplifier, and divided by the sensitivity 
+ * to get measured pressure.
+ * 
+ * NOTE: Is it really required to do this? The intensity should be calculculated
+ * well enough by using Parseval's theorem(?)  
+ * 
+ * @param p_data Pointer to filtered data that is to be transformed 
+ */
+void transform_data(float32_t* p_data);
 
 } /* namespace TRILITERATION */
 

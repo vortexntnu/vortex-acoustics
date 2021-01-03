@@ -211,3 +211,9 @@ uint8_t TRILITERATION::check_valid_signals(
          */
         return !((*p_bool_intensity_error) || (*p_bool_time_error));
 }
+
+
+/**
+ * Functions to tranform the data such that the intensity calculated is
+ * given in 
+ */
