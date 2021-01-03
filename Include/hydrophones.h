@@ -34,6 +34,26 @@
 #include "triliteration.h"
 #include "DSP_constants.h"
 
+
+/**
+ * @brief Defines that indicate the setup of the hardware on the AUV
+ * 
+ * These variables must be changed according to the hydrophones used.
+ * As of 03.01.21, three hydrophones of the type Benthowave BII-7014FG 
+ * is used. See the datasheet at 
+ * https://www.benthowave.com/products/Specs/BII-7014FGPGDatasheet.pdf
+ * for more information
+ */
+#ifndef HYDROPHONE_DETAILS
+#define HYDROPHONE_DETAILS
+
+  #define NUM_HYDROPHONES   3        /* Number of hydrophones used on the AUV       */
+  #define HYD_PREAMP_DB     40       /* Number of dB the signal is preamplifies     */
+  #define HYD_FFVS          -173     /* Average FFVS for 20 - 40 kHz [dB V/μPa]     */    
+
+#endif /* HYDROPHONE_DETAILS */
+
+
 namespace HYDROPHONES{
 
 /**
@@ -74,7 +94,7 @@ private:
     float32_t* p_max_val;
 
     /**
-     * @brief The index the maximum-value was detected on
+     * @brief The index the maximum magnitude was detected on
      */
     uint32_t* p_idx;
 

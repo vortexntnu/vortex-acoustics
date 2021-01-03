@@ -17,7 +17,7 @@
   #define ARM_MATH_CM7              /* Processor-version used on the STM32        */
   #define _USE_MATH_DEFINES         /* Gives access to math-defines such as M_PI  */
   #define __SOFTFP__                /* Allows assert by software                  */
-  #define HAL_ADC_MODULE_ENABLED    /* Enables the HAL_ADC                        */
+  #define HAL_ADC_MODULE_ENABLED    /* Enables functions operating on hardware    */
 
 #endif /* STM32_DEFINES */
 
@@ -28,53 +28,42 @@
 #include "arm_math.h"
 #include "arm_const_structs.h" 
 
-
-/**
- * @brief Defines that indicate the setup of the hardware on the AUV
- * 
- * NOTE: It may be possible to transfer more of the global/extern variables
- * over to macros. Will require a lot of work, and pherhaps not be optimal
- * in the short run, however would be optimzed better by the compiler and
- * could result in a better code
- */
-#ifndef VORTEX_AUV_SETUP
-#define VORTEX_AUV_SETUP
-
-  #define NUM_HYDROPHONES 3           /* Number of hydrophones used on the AUV      */
-
-#endif /* VORTEX_AUV_SETUP */
-
 /**
  * @brief Namespace/wrapper for basic DSP functions. 
  */
 namespace DSP_CONSTANTS{
 
 /**
- * @brief Constants for sampling and DSP.
- * These values could also be defines/macros
+ * @brief Constants for sampling and DSP
+ *     
+ * @param IN_BUFFER_LENGHT     Number of measurements for each hydrophone. 
+ *                               This includes both real and imaginary measurements
+ * @param DMA_BUFFER_LENGTH    Number of (real) measurements transferred over DMA  
+ * @param FFT_SIZE             Number of data-points to fourier-transform
+ * @param IIR_SIZE             Number of data-points to filter
  */
-const uint16_t DMA_BUFFER_LENGTH = 4096;
-const uint16_t WORKING_BUFFER_LENGTH = DMA_BUFFER_LENGTH / 2;
-const uint16_t IN_BUFFER_LENGTH = DMA_BUFFER_LENGTH;
-const uint16_t FFT_SIZE = DMA_BUFFER_LENGTH;
-const uint16_t IIR_SIZE = DMA_BUFFER_LENGTH;
+const uint16_t IN_BUFFER_LENGTH    = 4096;
+const uint16_t DMA_BUFFER_LENGTH   = IN_BUFFER_LENGTH / 2;
+const uint16_t FFT_SIZE            = IN_BUFFER_LENGTH;
+const uint16_t IIR_SIZE            = IN_BUFFER_LENGTH;
 
 
 /**
- * @note The frequencies (in robosub) will be in the 
- * range 20 KHz - 40 KHz. The minimum sampling-frequency 
- * is therefore 80 KHz, but should minimum be 100 KHz due to
- * safety. The sampling-frequency is set to 112500 since that
+ * @brief The frequencies (in robosub) will be in the range 20 KHz - 40 KHz. 
+ * The minimum sampling-frequency is therefore 80 KHz, but should minimum 
+ * be 100 KHz due to safety. The sampling-frequency is set to 112500 Hz since that
  * is the closest the ADC can sample
  * 
- * The SAMPLE_TIME is used to validate the signals
+ * @param SAMPLE_FREQUENCY  Frequency of sampling
+ * @param SAMPLE_TIME       Time between each sample. Inverse of sample-frequency. 
+ *                            Used to validate the signals
  */
 const uint32_t SAMPLE_FREQUENCY = 112500;
 const float32_t SAMPLE_TIME = (float32_t) 1 / SAMPLE_FREQUENCY;   
 
 
 /**
- * @brief An IIR-filter to filter the data before 
+ * @brief A fourth-order IIR-filter to filter the data before 
  * processing it. By using this filter, we should (hopefully)
  * eliminate unwanted frequencies. 
  * 
@@ -110,7 +99,6 @@ const float32_t SAMPLE_TIME = (float32_t) 1 / SAMPLE_FREQUENCY;
  *          A(z) = 1 + a1 * z^(-1) + a2 * z^(-2) + a3 * z^(-3) + a4 * z^(-4)
  *    
  *      is instead given as H(z) = B_1(z)/A_1(z) * B_2(z)/A_2(z), where
- *      H_1(z) = B_1(z)/A_1(z)
  * 
  *          B_1(z) = b10 + b11 * z^(-1) + b12 * z^(-2)
  *          A_1(z) = 1 + a11 * z^(-1) + a12 * z^(-2)
@@ -135,19 +123,24 @@ const float32_t SAMPLE_TIME = (float32_t) 1 / SAMPLE_FREQUENCY;
  * 
  * @param post_shift            Scaling-factor to keep all filter coefficients in the range
  *                              [-1, +1). Scales all of the filter coefficients! 
- *                              IMPORTANT: post_shift is a factor of 2, so post_shift = 1 
- *                              scales by 2
+ *                              IMPORTANT: post_shift is a power of 2, so post_shift = 1 
+ *                              scales by 2, while post_shift = 2 scales by 4
  */
 uint32_t num_stages = 2;
-float32_t state_coefficients[4 * num_stages] = {0.0, 0.0, 
-        0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-float32_t filter_coefficients[5 * num_stages] = {
-        0.28471242, 0.0, -0.28471242,   /* Numerator filter 1 */ 
-        -0.56275933, 0.23234810,        /* Denominator filter 1 */
-        0.28471242, 0.0, -0.28471242,   /* Numerator filter 2 */
-        -0.41613102, 0.18747447}        /* Denominator filter 2 */
+float32_t state_coefficients[4 * num_stages] = 
+{
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+};
+float32_t filter_coefficients[5 * num_stages] = 
+{
+        0.28471242, 0.0, -0.28471242,     /* Numerator filter 1 */ 
+        -0.56275933, 0.23234810,          /* Denominator filter 1 */
+        0.28471242, 0.0, -0.28471242,     /* Numerator filter 2 */
+        -0.41613102, 0.18747447           /* Denominator filter 2 */
+};
 uint8_t post_shift = 1; 
-const arm_biquad_casd_df1_inst_f32 IIR_filter = {
+const arm_biquad_casd_df1_inst_f32 IIR_filter = 
+{
     .numStages = num_stages, 
     .pState = &filter_coefficients[0],
     .pCoeffs = &filter_coefficients[0], 

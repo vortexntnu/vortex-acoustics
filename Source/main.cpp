@@ -41,7 +41,7 @@ uint16_t max_num_errors = std::pow(2, 8);
 volatile Error_types errors_occured[max_num_errors];
 
 /* Memory that the DMA will push the data to */
-volatile uint32_t ADC1_converted_values[3 * DSP_CONSTANTS::DMA_BUFFER_LENGTH];
+volatile uint32_t ADC1_converted_values[NUM_HYDROPHONES * DSP_CONSTANTS::DMA_BUFFER_LENGTH];
 
 /* Variable used to indicate if conversion is ready. Changed via cb-function */
 volatile uint8_t bool_DMA_ready = 0;
@@ -116,31 +116,6 @@ int main(void)
     
     /* USER CODE BEGIN 2 */
     /** 
-     * Start ADC in polling-mode
-     * Basicly useless, since usage of DMA is preferred. 
-     * 
-     * The function-call is commented out, until the function and usage
-     * is better understood  
-     */
-    /*
-    if (HAL_ADC_Start(&hadc1) != HAL_OK){
-      log_error(Error_types::ERROR_ADC_INIT);
-      continue;
-    }*/
-    
-    /**
-     * Starts ADC using DMA and transfers DSP_CONSTANTS::DMA_BUFFER_LENGTH
-     * number of datapoints from &hadc1 to ADCConvertedValues
-     * 
-     * The preferred method of reading the ADC
-     */
-    // if (HAL_ADC_Start_DMA(&hadc1, (uint32_t*) ADC1_converted_values, 
-    //       DSP_CONSTANTS::DMA_BUFFER_LENGTH) != HAL_OK){
-    //   log_error(Error_types::ERROR_DMA_INIT);
-    //   continue;
-    // }
-
-    /** 
      * Initialize variables for triliteration 
      * Log error if invalid
      */
@@ -211,7 +186,7 @@ int main(void)
 
         /* (Re)starting DMA */
         if (HAL_ADC_Start_DMA(&hadc1, (uint32_t*) ADC1_converted_values, 
-            DSP_CONSTANTS::DMA_BUFFER_LENGTH) != HAL_OK){
+            NUM_HYDROPHONES * DSP_CONSTANTS::DMA_BUFFER_LENGTH) != HAL_OK){
           log_error(Error_types::ERROR_DMA_START);
           continue;
         }
@@ -310,8 +285,10 @@ int main(void)
     free(p_data_hyd_stern);
 
     /* Stopping the ADC and the DMA */
-    HAL_ADC_Stop(&hadc1);
-    HAL_ADC_Stop_DMA(&hadc1);
+    if(HAL_ADC_Stop_DMA(&hadc1) != HAL_OK){     
+      log_error(Error_types::ERROR_DMA_STOP);
+      continue;
+    }
   }
   return 0;
   /* USER CODE END 3 */
