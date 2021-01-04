@@ -23,9 +23,6 @@
 #ifndef __MAIN_H
 #define __MAIN_H
 
-#include "stm32f7xx_hal_conf.h"
-#include "stm32f7xx_it.h"
-
 /**
  * @brief Important defines that unlocks multiple of the functions
  * and defines from the include-files. Many of the files could be defined 
@@ -91,7 +88,18 @@
   #define HAL_CORTEX_MODULE_ENABLED /* Enables driver for Cortex M7               */
 #endif /* HAL_CORTEX_MODULE_ENABLED */
 
+#ifndef __IO
+  #define __IO volatile             /* Low-level macro for compilation            */
+#endif /* __IO */
+
 #endif /* STM32_DEFINES */
+
+/** 
+ * Includes
+ */
+#include "stm32f7xx.h"
+#include "stm32f767xx.h"
+#include "system_stm32f7xx.h"
 
 /**
  * @brief Enum to hold some of the potential errors that could occur

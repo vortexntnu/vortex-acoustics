@@ -20,9 +20,12 @@
 /* Includes ------------------------------------------------------------------*/
 #include <stdint.h>
 #include <time.h>
+
 #include "main.h"
 #include "hydrophones.h"
+
 #include "stm32f7xx_hal.h"
+#include "stm32f7xx_hal_adc.h"
 
 /* USER CODE END Includes */
 
@@ -57,18 +60,18 @@ static void MX_ADC1_Init(void);
 static void MX_ETH_Init(void);
 //static void MX_SPI1_Init(void);
 
-/* Overwrite of weak cb-function. Called when DMA is finished */
+/* Overwrite of weak cb-function. Called when DMA is finished. Changes bool_DMA_ready */
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc);
 
 /* Function to access DMA to get data from the hydrophones */
 static void read_ADC(float32_t* p_data_hyd_port, float32_t* p_data_hyd_starboard,
-            float32_t* p_data_hyd_stern);
+          float32_t* p_data_hyd_stern);
 
 /* Functions to log errors */
 static void log_error(ERROR_TYPES error_code);
 static void Error_Handler(void);
 static void check_signal_error(uint8_t* p_bool_time_error, 
-            uint8_t* p_bool_intensity_error); 
+          uint8_t* p_bool_intensity_error); 
 
 /* Function to coordinate the communication over the ethernet */
 uint8_t ethernet_coordination(void);
