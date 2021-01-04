@@ -40,9 +40,12 @@ namespace ANALYZE_DATA{
  * @param p_lag             Pointer indicating the index/lag of the strongest 
  *                            signal in @p p_autocorr_data
  */
-void analyze_data(float32_t* p_raw_data, float32_t* p_data,
-      float32_t* p_autocorr_data, float32_t* p_intensity,
-      uint32_t* p_lag);
+void analyze_data(
+            float32_t* p_raw_data, 
+            float32_t* p_data,
+            float32_t* p_autocorr_data, 
+            float32_t* p_intensity,
+            uint32_t* p_lag);
 
 } /* namespace ANALYZE_DATA */
 

@@ -58,7 +58,7 @@ static void MX_ADC1_Init(void);
 static void MX_ETH_Init(void);
 static void MX_SPI1_Init(void);
 
-/* Overwrite of weak cb-function */
+/* Overwrite of weak cb-function. Called when DMA is finished */
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc);
 
 /* Function to access DMA to get data from the hydrophones */
@@ -146,12 +146,9 @@ int main(void)
     time_t time_initial_startup = time(NULL);
 
     /* Intializing memory for the raw-data-arrays */
-    float32_t* p_data_hyd_port = 
-          (float32_t*) malloc(sizeof(float32_t) * DSP_CONSTANTS::IN_BUFFER_LENGTH);
-    float32_t* p_data_hyd_starboard = 
-          (float32_t*) malloc(sizeof(float32_t) * DSP_CONSTANTS::IN_BUFFER_LENGTH);
-    float32_t* p_data_hyd_stern = 
-          (float32_t*) malloc(sizeof(float32_t) * DSP_CONSTANTS::IN_BUFFER_LENGTH);
+    float32_t data_hyd_port[DSP_CONSTANTS::IN_BUFFER_LENGTH];
+    float32_t data_hyd_starboard[DSP_CONSTANTS::IN_BUFFER_LENGTH];
+    float32_t data_hyd_stern[DSP_CONSTANTS::IN_BUFFER_LENGTH];
 
     /* Variables used to indicate error(s) with the signal */
     uint8_t bool_time_error = 0;
@@ -208,7 +205,7 @@ int main(void)
          * The data should be correct, as the DMA-transfer has stopped. It should
          * therefore be impossible to overwrite the memory
          */
-        read_ADC(p_data_hyd_port, p_data_hyd_starboard, p_data_hyd_stern);
+        read_ADC(data_hyd_port, data_hyd_starboard, data_hyd_stern);
 
         /** 
          * Recording the time of measurement in seconds after startup
@@ -219,17 +216,19 @@ int main(void)
         float32_t time_measurement = (float32_t)difftime(time(NULL) - time_initial_startup);
 
         /* Calculating lag and intensity */
-        hyd_port.analyze_data(p_data_hyd_port);
-        hyd_starboard.analyze_data(p_data_hyd_starboard);
-        hyd_stern.analyze_data(p_data_hyd_stern);
+        hyd_port.analyze_data(data_hyd_port);
+        hyd_starboard.analyze_data(data_hyd_starboard);
+        hyd_stern.analyze_data(data_hyd_stern);
 
         lag_hyd_port = hyd_port.get_lag();
         lag_hyd_starboard = hyd_starboard.get_lag();
         lag_hyd_stern = hyd_stern.get_lag();
+        uint32_t lag_array[NUM_HYDROPHONES] = { lag_hyd_port, lag_hyd_starboard, lag_hyd_stern };
 
         intensity_port = hyd_port.get_intensity();
         intensity_starboard = hyd_starboard.get_intensity();
         intensity_stern = hyd_stern.get_intensity();
+        float32_t intensity_array[NUM_HYDROPHONES] = { intensity_port, intensity_starboard, intensity_stern };
 
         /**
          * Checking is the measurements are valid. The measurements 
@@ -238,10 +237,8 @@ int main(void)
          * 
          * Take new samples if the data is invalid
          */
-        if(!TRILITERATION::check_valid_signals(lag_hyd_port,
-              lag_hyd_starboard, lag_hyd_stern, intensity_port,
-              intensity_starboard, intensity_stern, &bool_time_error,
-              &bool_intensity_error)){
+        if(!TRILITERATION::check_valid_signals(lag_array, intensity_array,
+              &bool_time_error, &bool_intensity_error)){
           check_signal_error(&bool_time_error, &bool_intensity_error);
           continue;
         }
@@ -256,9 +253,7 @@ int main(void)
          * the angle to the target  
          */
         std::pair<float32_t, float32_t> position_es = 
-            TRILITERATION::estimate_pinger_position(lag_hyd_port,
-              lag_hyd_starboard, lag_hyd_stern, intensity_stern,
-              intensity_starboard, intensity_stern);
+            TRILITERATION::estimate_pinger_position(lag_array, intensity_array);
 
         TRILITERATION::calculate_distance_and_angle(position_es, 
               &distance_estimate, &angle_estimate);
@@ -274,16 +269,6 @@ int main(void)
          * alongside the time of measurment
          */
     }
-    /** 
-     * The function should never reach here, as it should always be
-     * stuck inside the while-loop
-     * 
-     * Freeing memory just in case
-     */
-    free(p_data_hyd_port);
-    free(p_data_hyd_starboard);
-    free(p_data_hyd_stern);
-
     /* Stopping the ADC and the DMA */
     if(HAL_ADC_Stop_DMA(&hadc1) != HAL_OK){     
       log_error(Error_types::ERROR_DMA_STOP);
@@ -563,15 +548,17 @@ static void MX_GPIO_Init(void)
  * the first method. The code assumes this true, however it is potentially 
  * a serious bug! 
  */
-static void read_ADC(float32_t* p_data_hyd_port, float32_t* p_data_hyd_starboard,
-            float32_t* p_data_hyd_stern){
+static void read_ADC(
+        float32_t* p_data_hyd_port, 
+        float32_t* p_data_hyd_starboard,
+        float32_t* p_data_hyd_stern){
 
   /**
    * Reading the data. Dropping the last couple of datapoints, since
    * 2048 % 3 = 2. Reducing the number of datapoints reduces the 
    * accuracy of the analysis, however prevents out-of-range error
    */
-  for(int i = 0; i < DSP_CONSTANTS::WORKING_BUFFER_LENGTH - 
+  for(int i = 0; i < DSP_CONSTANTS::DMA_BUFFER_LENGTH - 
         NUM_HYDROPHONES; i += NUM_HYDROPHONES){
     p_data_hyd_port[2 * i] = ADC1_converted_values[i];
     p_data_hyd_port[(2 * i) + 1] = 0;
@@ -594,8 +581,9 @@ static void read_ADC(float32_t* p_data_hyd_port, float32_t* p_data_hyd_starboard
  * @param p_bool_intensity_error Pointer to indicate error with the 
  * intensity
  */
-static void check_signal_error(uint8_t* p_bool_time_error, 
-            uint8_t* p_bool_intensity_error){
+static void check_signal_error(
+          uint8_t* p_bool_time_error, 
+          uint8_t* p_bool_intensity_error){
   if(*p_bool_time_error){
     *p_bool_time_error = 0;
     log_error(Error_types::ERROR_TIME_SIGNAL);

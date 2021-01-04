@@ -79,7 +79,9 @@ struct Pos{
  * 
  * @param pos_rhs Second position
  */
-float32_t calculate_pos_distance(const Pos& pos_lhs, const Pos& pos_rhs);
+float32_t calculate_pos_distance(
+            const Pos& pos_lhs, 
+            const Pos& pos_rhs);
 
 
 /**
@@ -98,8 +100,10 @@ float32_t calculate_pos_distance(const Pos& pos_lhs, const Pos& pos_rhs);
  * 
  * @param pos_hyd_stern Position of stern hydrophone 
  */
-uint8_t initialize_triliteration_globals(const Pos& pos_hyd_port,
-        const Pos& pos_hyd_starboard, const Pos& pos_hyd_stern);
+uint8_t initialize_triliteration_globals(
+            const Pos& pos_hyd_port,
+            const Pos& pos_hyd_starboard, 
+            const Pos& pos_hyd_stern);
 
 
 /**
@@ -125,13 +129,14 @@ float32_t estimate_rough_angle(uint32_t time_difference);
  * 
  * @note See the start of hydrophones.hpp for more information
  * 
- * @param time_port Time the signal was measured on the port side
+ * @param lag_port Time the signal was measured on the port side
  * 
- * @param time_starboard Time the signal was measured on the 
+ * @param lag_starboard Time the signal was measured on the 
  * starboard side
  */
 std::pair<float32_t, uint8_t> estimate_latitude(
-            int32_t time_port, uint32_t time_starboard);
+            int32_t lag_port, 
+            uint32_t lag_starboard);
 
 
 /**
@@ -140,15 +145,15 @@ std::pair<float32_t, uint8_t> estimate_latitude(
  * 
  * @note See the start of hydrophones.hpp for more information
  * 
- * @param time_port Time the signal was measured on the port side
+ * @param lag_port Time the signal was measured on the port side
  * 
- * @param time_starboard Time the signal was measured on the 
+ * @param lag_starboard Time the signal was measured on the 
  * starboard side  
  * 
- * @param time_stern Time the signal was measured at the stern 
+ * @param lag_stern Time the signal was measured at the stern 
  */
-uint8_t estimate_longitude(uint32_t time_port, uint32_t time_starboard,
-            uint32_t time_stern);
+uint8_t estimate_longitude(uint32_t lag_port, uint32_t lag_starboard,
+            uint32_t lag_stern);
 
 
 /**
@@ -173,26 +178,17 @@ float32_t estimate_signal_intensity(float32_t* p_signal_data);
  * 
  * @note See the start of hydrophones.hpp for more information
  * 
- * @param time_port Time the signal was measured on the port side
+ * @param p_lag_array Pointer to an array containing the lag.
+ *      @p p_lag_array expands to 
+ *      *p_lag_array = { lag_port, lag_starboard, lag_stern }
  * 
- * @param time_starboard Time the signal was measured on the 
- * starboard side  
- * 
- * @param time_stern Time the signal was measured at the stern 
- * 
- * @param intensity_port Intensity of the signal measured at the
- * port side
- * 
- * @param intensity_starboard Intensity of the signal measured at the
- * starboard side
- * 
- * @param intensity_stern Intensity of the signal measured at the
- * stern side
+ * @param p_intensity_array Pointer to an array containing the 
+ * measured intensities. @p p_intensity_array expands to
+ *      *p_intensity_array = { intensity_port, intensity_starboard, intensity_stern } 
  */
 std::pair<float32_t, float32_t> estimate_pinger_position(
-            uint32_t time_port, uint32_t time_starboard, 
-            uint32_t time_stern, float32_t intensity_port, 
-            float32_t intensity_starboard, float32_t intensity_stern);
+            uint32_t* p_lag_array,
+            float32_t* p_intensity_array);
 
 
 /**
@@ -234,31 +230,23 @@ void calculate_distance_and_angle(
  * @p p_bool_intensity_error is set to 1. Otherwise both are set to
  * 0
  * 
- * @param time_port Time the signal was measured on the port side
+ * @param p_lag_array Pointer to an array containing the measured
+ * lags. @p p_lag_array expands to 
+ *      *p_lag_array = { lag_port, lag_starboard, lag_stern }
  * 
- * @param time_starboard Time the signal was measured on the 
- * starboard side
- * 
- * @param time_stern Time the signal was measured at the stern
- *
- * @param intensity_port Intensity of the signal detected at the
- * port side
- * 
- * @param intensity_starboard Intensity of the signal detected at 
- * the starboard side
- * 
- * @param intensity_stern Intensity of the signal detected at the
- * stern of the AUV
+ * @param p_intensity_array Pointer to an array containing the intensity
+ * measured. @p p_intensity_array expands to 
+ *      *p_intensity_array = { intensity_port, intensity_starboard, intensity_stern}
  * 
  * @param p_bool_time_error Pointer to indicate time-error
  * 
  * @param p_bool_intensity_error Pointer to indicate intensity-error
  */
-uint8_t check_valid_signals(const uint32_t& time_port, 
-    const uint32_t& time_starboard, const uint32_t& time_stern, 
-    const float32_t& intensity_port, const float32_t& intensity_starboard, 
-    const float32_t& intensity_stern, uint8_t* p_bool_time_error,
-    uint8_t* p_bool_intensity_error);
+uint8_t check_valid_signals(
+            uint32_t* p_lag_array,
+            float32_t* p_intensity_array,
+            uint8_t* p_bool_time_error,
+            uint8_t* p_bool_intensity_error); 
 
 
 /**
@@ -272,7 +260,9 @@ uint8_t check_valid_signals(const uint32_t& time_port,
  * 
  * @param time_rhs The other time-sample to check 
  */
-uint8_t valid_time_check(const uint32_t& time_lhs, const uint32_t& time_rhs);
+uint8_t valid_time_check(
+            const uint32_t& time_lhs, 
+            const uint32_t& time_rhs);
 
 
 /**
@@ -286,8 +276,9 @@ uint8_t valid_time_check(const uint32_t& time_lhs, const uint32_t& time_rhs);
  * 
  * @param intensity_rhs The second signal to check against 
  */
-uint8_t valid_intensity_check(const float32_t& intensity_lhs, 
-    const float32_t& intensity_rhs);
+uint8_t valid_intensity_check(
+            const float32_t& intensity_lhs, 
+            const float32_t& intensity_rhs);
 
 
 /**
@@ -303,7 +294,7 @@ uint8_t valid_intensity_check(const float32_t& intensity_lhs,
  * to get measured pressure.
  * 
  * NOTE: Is it really required to do this? The intensity should be calculculated
- * well enough by using Parseval's theorem(?)  
+ * well enough by using Parseval's theorem(?). Must be developed further!  
  * 
  * @param p_data Pointer to filtered data that is to be transformed 
  */

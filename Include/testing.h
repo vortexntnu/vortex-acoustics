@@ -11,7 +11,7 @@
  *      5. Filter coefficients
  *      6. ...
  * 
- * @warning For otimum performance, the code should be "public", such 
+ * @warning For optimum performance, the code should be "public", such 
  * that this file has access to the code. This is not done as of 22.12.2020,
  * however should pherhaps be implemented over the following days/weeks 
  */

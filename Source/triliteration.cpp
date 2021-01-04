@@ -63,25 +63,28 @@ float32_t TRILITERATION::estimate_rough_angle(uint32_t time_difference){
 
 
 std::pair<float32_t, uint8_t> TRILITERATION::estimate_latitude(
-            uint32_t time_port, uint32_t time_starboard){
+                uint32_t lag_port, 
+                uint32_t lag_starboard){
 
-    uint32_t closest_time = std::min(time_port, time_starboard);
-    uint32_t farthest_time = std::max(time_port, time_starboard);
+    uint32_t closest_time = std::min(lag_port, lag_starboard);
+    uint32_t farthest_time = std::max(lag_port, lag_starboard);
 
     uint32_t time_diff = farthest_time - closest_time;
     float32_t rough_angle = TRILITERATION::estimate_rough_angle(time_diff);
 
-    uint8_t bool_starboard = (closest_time == time_starboard);
+    uint8_t bool_starboard = (closest_time == lag_starboard);
     return std::pair<float32_t, uint8_t> (rough_angle, bool_starboard);
 }
 
 
-uint8_t TRILITERATION::estimate_longitude(uint32_t time_port, 
-            uint32_t time_starboard, uint32_t time_stern){
+uint8_t TRILITERATION::estimate_longitude(
+                uint32_t lag_port, 
+                uint32_t lag_starboard, 
+                uint32_t lag_stern){
 
-    uint32_t time_longitude = (uint32_t)(std::max(time_port, time_starboard) -
-            std::min(time_port, time_starboard))/2.0;
-    return (time_longitude <= time_stern);
+    uint32_t time_longitude = (uint32_t)(std::max(lag_port, lag_starboard) -
+            std::min(lag_port, lag_starboard))/2.0;
+    return (time_longitude <= lag_stern);
 }
 
 
@@ -110,15 +113,29 @@ float32_t TRILITERATION::estimate_signal_intensity(float32_t* p_signal_data){
 
 
 std::pair<float32_t, float32_t> TRILITERATION::estimate_pinger_position(
-            uint32_t time_port, uint32_t time_starboard, uint32_t time_stern, 
-            float32_t intensity_port, float32_t intensity_starboard,
-            float32_t intensity_stern){
+            uint32_t* p_lag_array,
+            float32_t* p_intensity_array){
+
+        /**
+         * Recovering the values from the arrays
+         */
+        uint32_t lag_port, lag_starboard, lag_stern;
+        float32_t intensity_port, intensity_starboard, intensity_stern;
+
+        lag_port = p_lag_array[0];
+        lag_starboard = p_lag_array[1];
+        lag_stern = p_lag_array[2];
+
+        intensity_port = p_intensity_array[0];
+        intensity_starboard = p_intensity_array[1];
+        intensity_stern = p_intensity_array[2];
+
 
     /* Estimating the likely lateral/longitude for the acoustic pinger */
     std::pair<float32_t, uint8_t> lateral_estimate = 
-            TRILITERATION::estimate_latitude(time_port, time_starboard);
+            TRILITERATION::estimate_latitude(lag_port, lag_starboard);
     uint8_t longitude_estimate = TRILITERATION::estimate_longitude(
-            time_port, time_starboard, time_stern);
+            lag_port, lag_starboard, lag_stern);
         
     /* Estimating the distances */
     float32_t distance_port = TRILITERATION::estimate_distance(
@@ -185,17 +202,31 @@ uint8_t TRILITERATION::valid_intensity_check(const float32_t& intensity_lhs,
 
 
 uint8_t TRILITERATION::check_valid_signals(
-        const uint32_t& time_port, const uint32_t& time_starboard, 
-        const uint32_t& time_stern, const float32_t& intensity_port, 
-        const float32_t& intensity_starboard, const float32_t& intensity_stern,
-        uint8_t* p_bool_time_error, uint8_t* p_bool_intensity_error){
+        uint32_t* p_lag_array,
+        float32_t* p_intensity_array,
+        uint8_t* p_bool_time_error, 
+        uint8_t* p_bool_intensity_error){
+        
+        /**
+         * Recovering the values from the arrays
+         */
+        uint32_t lag_port, lag_starboard, lag_stern;
+        float32_t intensity_port, intensity_starboard, intensity_stern;
+
+        lag_port = p_lag_array[0];
+        lag_starboard = p_lag_array[1];
+        lag_stern = p_lag_array[2];
+
+        intensity_port = p_intensity_array[0];
+        intensity_starboard = p_intensity_array[1];
+        intensity_stern = p_intensity_array[2];
 
         /**
          * Evaluating if the signals are valid in time
         */
-        if(TRILITERATION::valid_time_check(time_port, time_starboard) || 
-        TRILITERATION::valid_time_check(time_port, time_stern) || 
-        TRILITERATION::valid_time_check(time_starboard, time_stern))
+        if(TRILITERATION::valid_time_check(lag_port, lag_starboard) || 
+        TRILITERATION::valid_time_check(lag_port, lag_stern) || 
+        TRILITERATION::valid_time_check(lag_starboard, lag_stern))
                 *p_bool_time_error = 1;
 
         /**
@@ -215,5 +246,6 @@ uint8_t TRILITERATION::check_valid_signals(
 
 /**
  * Functions to tranform the data such that the intensity calculated is
- * given in 
+ * given in the correct units
  */
+void TRILITERATION::transform_data(float32_t* p_data);
