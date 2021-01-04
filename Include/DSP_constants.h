@@ -17,7 +17,16 @@
   #define ARM_MATH_CM7              /* Processor-version used on the STM32        */
   #define _USE_MATH_DEFINES         /* Gives access to math-defines such as M_PI  */
   #define __SOFTFP__                /* Allows assert by software                  */
-  #define HAL_ADC_MODULE_ENABLED    /* Enables ADC and DMA in hardware            */
+  #define HAL_ADC_MODULE_ENABLED    /* Enables ADC                                */
+  #define HAL_GPIO_MODULE_ENABLED   /* Enables GPIO                               */
+  #define HAL_ETH_MODULE_ENABLED    /* Enables ETH                                */
+  #define HAL_EXTI_MODULE_ENABLED   /* Enables interrupt when GPIO is toggling    */
+  #define HAL_DMA_MODULE_ENABLED    /* Enables DMA                                */
+  #define HAL_RCC_MODULE_ENABLED    /* Enables peripheral clocks                  */
+  #define HAL_FLASH_MODULE_ENABLED  /* Enables flash                              */
+  #define HAL_PWR_MODULE_ENABLED    /* Enables power-control                      */
+  #define HAL_I2C_MODULE_ENABLED    /* Enables I2C                                */
+  #define HAL_CORTEX_MODULE_ENABLED /* Enables driver for Cortex M7               */
 
 #endif /* STM32_DEFINES */
 
