@@ -23,6 +23,76 @@
 #ifndef __MAIN_H
 #define __MAIN_H
 
+#include "stm32f7xx_hal_conf.h"
+#include "stm32f7xx_it.h"
+
+/**
+ * @brief Important defines that unlocks multiple of the functions
+ * and defines from the include-files. Many of the files could be defined 
+ * in the dependencies/lib-files, and therefore #ifndef #define #endif is
+ * used for each single #define 
+ */
+#ifndef STM32_DEFINES
+#define STM32_DEFINES
+
+#ifndef STM32F767xx 
+  #define STM32F767xx               /* Current MCU used for the project           */
+#endif /* STM32F767xx */  
+
+#ifndef ARM_MATH_CM7
+  #define ARM_MATH_CM7              /* Processor-version used on the STM32        */
+#endif /* ARM_MATH_CM7 */
+
+#ifndef _USE_MATH_DEFINES
+  #define _USE_MATH_DEFINES         /* Gives access to math-defines such as M_PI  */
+#endif /* _USE_MATH_DEFINES */
+
+#ifndef __SOFTFP__
+  #define __SOFTFP__                /* Allows assert by software                  */
+#endif /* __SOFTFP__ */
+
+#ifndef HAL_ADC_MODULE_ENABLED
+  #define HAL_ADC_MODULE_ENABLED    /* Enables ADC                                */
+#endif /* HAL_ADC_MODULE_ENABLED */ 
+
+#ifndef HAL_GPIO_MODULE_ENABLED
+  #define HAL_GPIO_MODULE_ENABLED   /* Enables GPIO                               */
+#endif /* HAL_GPIO_MODULE_ENABLED */
+
+#ifndef HAL_ETH_MODULE_ENABLED
+  #define HAL_ETH_MODULE_ENABLED    /* Enables ETH                                */
+#endif /* HAL_ETH_MODULE_ENABLED */
+
+#ifndef HAL_EXTI_MODULE_ENABLED
+  #define HAL_EXTI_MODULE_ENABLED   /* Enables interrupt when GPIO is toggling    */
+#endif /* HAL_EXTI_MODULE_ENABLED */
+
+#ifndef HAL_DMA_MODULE_ENABLED
+  #define HAL_DMA_MODULE_ENABLED    /* Enables DMA                                */
+#endif /* HAL_DMA_MODULE_ENABLED */
+
+#ifndef HAL_RCC_MODULE_ENABLED
+  #define HAL_RCC_MODULE_ENABLED    /* Enables peripheral clocks                  */
+#endif /* HAL_RCC_MODULE_ENABLED */
+
+#ifndef HAL_FLASH_MODULE_ENABLED
+  #define HAL_FLASH_MODULE_ENABLED  /* Enables flash                              */
+#endif /* HAL_FLASH_MODULE_ENABLED */
+
+#ifndef HAL_PWR_MODULE_ENABLED  
+  #define HAL_PWR_MODULE_ENABLED    /* Enables power-control                      */
+#endif /* HAL_PWR_MODULE_ENABLED */
+
+#ifndef HAL_I2C_MODULE_ENABLED  
+  #define HAL_I2C_MODULE_ENABLED    /* Enables I2C                                */
+#endif /* HAL_I2C_MODULE_ENABLED */
+
+#ifndef HAL_CORTEX_MODULE_ENABLED
+  #define HAL_CORTEX_MODULE_ENABLED /* Enables driver for Cortex M7               */
+#endif /* HAL_CORTEX_MODULE_ENABLED */
+
+#endif /* STM32_DEFINES */
+
 /**
  * @brief Enum to hold some of the potential errors that could occur
  * 

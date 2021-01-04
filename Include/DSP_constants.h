@@ -6,30 +6,6 @@
 #ifndef ACOUSTICS_DSP_CONSTANTS_H
 #define ACOUSTICS_DSP_CONSTANTS_H
 
-/**
- * @brief Important defines that unlocks multiple of the functions
- * and defines from the include-files
- */
-#ifndef STM32_DEFINES
-#define STM32_DEFINES
-  
-  #define STM32F767xx               /* Current MCU used for the project           */
-  #define ARM_MATH_CM7              /* Processor-version used on the STM32        */
-  #define _USE_MATH_DEFINES         /* Gives access to math-defines such as M_PI  */
-  #define __SOFTFP__                /* Allows assert by software                  */
-  #define HAL_ADC_MODULE_ENABLED    /* Enables ADC                                */
-  #define HAL_GPIO_MODULE_ENABLED   /* Enables GPIO                               */
-  #define HAL_ETH_MODULE_ENABLED    /* Enables ETH                                */
-  #define HAL_EXTI_MODULE_ENABLED   /* Enables interrupt when GPIO is toggling    */
-  #define HAL_DMA_MODULE_ENABLED    /* Enables DMA                                */
-  #define HAL_RCC_MODULE_ENABLED    /* Enables peripheral clocks                  */
-  #define HAL_FLASH_MODULE_ENABLED  /* Enables flash                              */
-  #define HAL_PWR_MODULE_ENABLED    /* Enables power-control                      */
-  #define HAL_I2C_MODULE_ENABLED    /* Enables I2C                                */
-  #define HAL_CORTEX_MODULE_ENABLED /* Enables driver for Cortex M7               */
-
-#endif /* STM32_DEFINES */
-
 #include <stdint.h>
 #include <math.h>
 #include <cmath>
@@ -43,7 +19,7 @@
  * to eliminate such error 
  */
 float32_t pi   = 3.14159265358979323846;        /* PI (obviously)               */
-float32_t pi_2 = 1.57079632679489661923;        /* PI / 2                       /*
+float32_t pi_2 = 1.57079632679489661923;        /* PI / 2                       */
 
 /**
  * @brief Namespace/wrapper for basic DSP functions. 
@@ -142,10 +118,10 @@ float32_t state_coefficients[4 * num_stages] =
 };
 const float32_t filter_coefficients[5 * num_stages] = 
 {
-        0.56942484, 0.0, -0.56942484,     /* Numerator filter 1 */ 
-        -1.12551866, 0.46469620,          /* Denominator filter 1 */
-        0.56942484, 0.0, -0.56942484,     /* Numerator filter 2 */
-        -0.83226204, 0.3694894           /* Denominator filter 2 */
+        0.56942484, 0.0, -0.56942484,     /* Numerator filter 1                 */ 
+        -1.12551866, 0.46469620,          /* Denominator filter 1               */
+        0.56942484, 0.0, -0.56942484,     /* Numerator filter 2                 */
+        -0.83226204, 0.3694894            /* Denominator filter 2               */
 };
 const arm_biquad_casd_df1_inst_f32 IIR_FILTER = 
 {
