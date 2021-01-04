@@ -23,7 +23,6 @@
 #include "main.h"
 #include "hydrophones.h"
 #include "stm32f7xx_hal.h"
-#include "adc.h"              /* Somehow throws an error */
 
 /* USER CODE END Includes */
 
@@ -37,8 +36,8 @@ SPI_HandleTypeDef hspi1;      /* Somehow doesn't exists */
 
 /* Errors and errors-detected */
 uint32_t error_idx = 0;
-uint16_t max_num_errors = std::pow(2, 8);
-volatile Error_types errors_occured[max_num_errors];
+const uint16_t max_num_errors = std::pow(2, 8);
+volatile ERROR_TYPES errors_occured[max_num_errors];
 
 /* Memory that the DMA will push the data to */
 volatile uint32_t ADC1_converted_values[NUM_HYDROPHONES * DSP_CONSTANTS::DMA_BUFFER_LENGTH];
@@ -66,7 +65,7 @@ static void read_ADC(float32_t* p_data_hyd_port, float32_t* p_data_hyd_starboard
             float32_t* p_data_hyd_stern);
 
 /* Functions to log errors */
-static void log_error(Error_types error_code);
+static void log_error(ERROR_TYPES error_code);
 static void Error_Handler(void);
 static void check_signal_error(uint8_t* p_bool_time_error, 
             uint8_t* p_bool_intensity_error); 
@@ -121,7 +120,7 @@ int main(void)
      */
     if(!TRILITERATION::initialize_triliteration_globals(HYDROPHONES::pos_hyd_port,
           HYDROPHONES::pos_hyd_starboard, HYDROPHONES::pos_hyd_stern)){
-      log_error(Error_types::ERROR_TRILITERATION_INIT);
+      log_error(ERROR_TYPES::ERROR_TRILITERATION_INIT);
       continue;
     }
 
@@ -184,7 +183,7 @@ int main(void)
         /* (Re)starting DMA */
         if (HAL_ADC_Start_DMA(&hadc1, (uint32_t*) ADC1_converted_values, 
             NUM_HYDROPHONES * DSP_CONSTANTS::DMA_BUFFER_LENGTH) != HAL_OK){
-          log_error(Error_types::ERROR_DMA_START);
+          log_error(ERROR_TYPES::ERROR_DMA_START);
           continue;
         }
 
@@ -195,7 +194,7 @@ int main(void)
          * Stopping the DMA to prevent overwriting the memory
          */
         if(HAL_ADC_Stop_DMA(&hadc1) != HAL_OK){     
-          log_error(Error_types::ERROR_DMA_STOP);
+          log_error(ERROR_TYPES::ERROR_DMA_STOP);
           continue;
         }
 
@@ -213,7 +212,7 @@ int main(void)
          * This should be synchronized with the Xavier, such that the main system
          * knows when the measurements where taken and could act accordingly
          */
-        float32_t time_measurement = (float32_t)difftime(time(NULL) - time_initial_startup);
+        float32_t time_measurement = (float32_t)difftime(time(NULL), time_initial_startup);
 
         /* Calculating lag and intensity */
         hyd_port.analyze_data(data_hyd_port);
@@ -271,7 +270,7 @@ int main(void)
     }
     /* Stopping the ADC and the DMA */
     if(HAL_ADC_Stop_DMA(&hadc1) != HAL_OK){     
-      log_error(Error_types::ERROR_DMA_STOP);
+      log_error(ERROR_TYPES::ERROR_DMA_STOP);
       continue;
     }
   }
@@ -367,7 +366,7 @@ static void MX_ADC1_Init(void)
   hadc1.Init.EOCSelection = ADC_EOC_SEQ_CONV;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
   {
-    log_error(Error_types::ERROR_ADC_INIT);
+    log_error(ERROR_TYPES::ERROR_ADC_INIT);
   }
   /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
   */
@@ -376,7 +375,7 @@ static void MX_ADC1_Init(void)
   sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
-    log_error(Error_types::ERROR_ADC_CONFIG);
+    log_error(ERROR_TYPES::ERROR_ADC_CONFIG);
   }
   /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
   */
@@ -384,7 +383,7 @@ static void MX_ADC1_Init(void)
   sConfig.Rank = ADC_REGULAR_RANK_2;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
-    log_error(Error_types::ERROR_ADC_CONFIG);
+    log_error(ERROR_TYPES::ERROR_ADC_CONFIG);
   }
   /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
   */
@@ -392,7 +391,7 @@ static void MX_ADC1_Init(void)
   sConfig.Rank = ADC_REGULAR_RANK_3;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
-    log_error(Error_types::ERROR_ADC_CONFIG);
+    log_error(ERROR_TYPES::ERROR_ADC_CONFIG);
   }
   /* USER CODE BEGIN ADC1_Init 2 */
 
@@ -473,7 +472,7 @@ static void MX_SPI1_Init(void)
   hspi1.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
   if (HAL_SPI_Init(&hspi1) != HAL_OK)
   {
-    log_error(Error_types::ERROR_SPI_INIT);
+    log_error(ERROR_TYPES::ERROR_SPI_INIT);
   }
   /* USER CODE BEGIN SPI1_Init 2 */
 
@@ -586,11 +585,11 @@ static void check_signal_error(
           uint8_t* p_bool_intensity_error){
   if(*p_bool_time_error){
     *p_bool_time_error = 0;
-    log_error(Error_types::ERROR_TIME_SIGNAL);
+    log_error(ERROR_TYPES::ERROR_TIME_SIGNAL);
   }
   if(*p_bool_intensity_error){
     *p_bool_intensity_error = 0;
-    log_error(Error_types::ERROR_INTENSITY_SIGNAL);
+    log_error(ERROR_TYPES::ERROR_INTENSITY_SIGNAL);
   }
 }
 
@@ -618,14 +617,14 @@ uint8_t ethernet_coordination(void){
  * 
  * @param error The error that occured
  */
-static void log_error(Error_types error){
+static void log_error(ERROR_TYPES error){
   if(error_idx < max_num_errors - 1){
     errors_occured[error_idx] = error;
     error_idx++;
     return;
   }
   if(error_idx == max_num_errors - 1){
-    errors_occured[error_idx] = Error_types::ERROR_MEMORY;
+    errors_occured[error_idx] = ERROR_TYPES::ERROR_MEMORY;
   }
 }
 
@@ -654,7 +653,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
   * @retval None
   */
 void Error_Handler(void){
-  log_error(Error_types::ERROR_UNIDENTIFIED);
+  log_error(ERROR_TYPES::ERROR_UNIDENTIFIED);
 }
 
 

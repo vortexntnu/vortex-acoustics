@@ -29,6 +29,14 @@
 #include "arm_const_structs.h" 
 
 /**
+ * @brief Duplicating code is terrible code-practice! These constants somehow 
+ * throws an error during compilation. Therefore tried to move the variables 
+ * to eliminate such error 
+ */
+float32_t pi   = 3.14159265358979323846;        /* PI (obviously)               */
+float32_t pi_2 = 1.57079632679489661923;        /* PI / 2                       /*
+
+/**
  * @brief Namespace/wrapper for basic DSP functions. 
  */
 namespace DSP_CONSTANTS{
@@ -68,9 +76,6 @@ const float32_t SAMPLE_TIME = (float32_t) 1 / SAMPLE_FREQUENCY;
  * eliminate unwanted frequencies. 
  * 
  * @warning Must have abs(filter) < 1 to prevent overflow
- * 
- * @warning Filter coefficients are represented as fractional 
- * values and restricted to lie in the range [-1, +1)
  * 
  * @warning The filter is designed with the filterdesigner 
  * in MATLAB, using
@@ -119,32 +124,25 @@ const float32_t SAMPLE_TIME = (float32_t) 1 / SAMPLE_FREQUENCY;
  * @param filter_coefficients   Filter coefficients given as {b10, b11, b12, a11, a12
  *                              b20, b21, b22, a21, a22, ...}
  * 
- * @param IIR_filter            A struct describing a biquad DF1 IIR filter
- * 
- * @param post_shift            Scaling-factor to keep all filter coefficients in the range
- *                              [-1, +1). Scales all of the filter coefficients! 
- *                              IMPORTANT: post_shift is a power of 2, so post_shift = 1 
- *                              scales by 2, while post_shift = 2 scales by 4
+ * @param IIR_FILTER            A struct describing a biquad DF1 IIR filter
  */
-uint32_t num_stages = 2;
+const uint32_t num_stages = 2;
 float32_t state_coefficients[4 * num_stages] = 
 {
         0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
 };
-float32_t filter_coefficients[5 * num_stages] = 
+const float32_t filter_coefficients[5 * num_stages] = 
 {
-        0.28471242, 0.0, -0.28471242,     /* Numerator filter 1 */ 
-        -0.56275933, 0.23234810,          /* Denominator filter 1 */
-        0.28471242, 0.0, -0.28471242,     /* Numerator filter 2 */
-        -0.41613102, 0.18747447           /* Denominator filter 2 */
+        0.56942484, 0.0, -0.56942484,     /* Numerator filter 1 */ 
+        -1.12551866, 0.46469620,          /* Denominator filter 1 */
+        0.56942484, 0.0, -0.56942484,     /* Numerator filter 2 */
+        -0.83226204, 0.3694894           /* Denominator filter 2 */
 };
-uint8_t post_shift = 1; 
-const arm_biquad_casd_df1_inst_f32 IIR_filter = 
+const arm_biquad_casd_df1_inst_f32 IIR_FILTER = 
 {
     .numStages = num_stages, 
-    .pState = &filter_coefficients[0],
-    .pCoeffs = &filter_coefficients[0], 
-    .postShift = post_shift
+    .pState = &state_coefficients[0],
+    .pCoeffs = &filter_coefficients[0]
 };
 
 } /* namespace DSP_CONSTANTS */

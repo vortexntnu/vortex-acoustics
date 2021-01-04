@@ -23,10 +23,6 @@
 #ifndef __MAIN_H
 #define __MAIN_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /**
  * @brief Enum to hold some of the potential errors that could occur
  * 
@@ -34,7 +30,7 @@ extern "C" {
  * is calculated multiple times a second. Must prevent it from 
  * eliminating the RAM/memory
  */
-enum class Error_types{
+typedef enum{
   ERROR_ADC_INIT,             /* Error on initializing ADC                          */
   ERROR_ADC_CONFIG,           /* Error on configuring ADC                           */
   ERROR_DMA_INIT,             /* Error on initializing DMA                          */
@@ -48,8 +44,11 @@ enum class Error_types{
   ERROR_INTENSITY_SIGNAL,     /* Error on calculating invalid intensity of signals  */
   ERROR_UNIDENTIFIED,         /* Unidentified error. Thrown using Error_handler     */
   ERROR_MEMORY                /* Out of memory for error_handling                   */
-}; /* enum class Error_types */
+}ERROR_TYPES; /* enum ERROR_TYPES */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifdef __cplusplus
 }

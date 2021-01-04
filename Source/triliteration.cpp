@@ -52,13 +52,23 @@ uint8_t TRILITERATION::initialize_triliteration_globals(
  * the position and angles
  */
 float32_t TRILITERATION::estimate_distance(float32_t intensity){
-    return (float32_t)(sqrt(TRILITERATION::source_power / (4*_MATH_H_::M_PI*intensity)));
+    /**
+     * The proper line using _MATH_H::M_PI throws an error. IDK why
+     */
+
+    /* return (float32_t)(sqrt(TRILITERATION::source_power / (4*_MATH_H_::M_PI*intensity))); */
+    return (float32_t)(sqrt(TRILITERATION::source_power / (4*pi*intensity)));
 }
 
 
 float32_t TRILITERATION::estimate_rough_angle(uint32_t time_difference){
-        /* M_PI_2 is a macro for M_PI / 2 */
-    return (float32_t)((_MATH_H_::M_PI_2) * (time_difference / TRILITERATION::max_time_diff));
+    /** 
+     * M_PI_2 is a macro for M_PI / 2
+     * The proper line using _MATH_H::M_PI_2 throws an error. IDK why
+     */
+
+    /* return (float32_t)((_MATH_H_::M_PI_2) * (time_difference / TRILITERATION::max_time_diff)); */
+    return (float32_t)(pi_2 * (time_difference / TRILITERATION::max_time_diff));
 }
 
 
@@ -189,14 +199,15 @@ void TRILITERATION::calculate_distance_and_angle(
  * Functions to check if signals/data are valid
  */
 uint8_t TRILITERATION::valid_time_check(const uint32_t& time_lhs, const uint32_t& time_rhs){
-        return (float32_t)(abs(time_lhs - time_rhs) * DSP_CONSTANTS::SAMPLE_TIME) 
-                > TRILITERATION::max_time_diff;
+        int32_t time_diff = time_lhs - time_rhs;
+        return (std::abs(time_diff) * DSP_CONSTANTS::SAMPLE_TIME)
+		> TRILITERATION::max_time_diff;
 }
 
 
 uint8_t TRILITERATION::valid_intensity_check(const float32_t& intensity_lhs, 
         const float32_t& intensity_rhs){
-    return abs(intensity_lhs - intensity_rhs) > TRILITERATION::max_intensity_diff;
+    return std::abs(intensity_lhs - intensity_rhs) > TRILITERATION::max_intensity_diff;
                 
 }
 

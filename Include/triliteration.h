@@ -135,7 +135,7 @@ float32_t estimate_rough_angle(uint32_t time_difference);
  * starboard side
  */
 std::pair<float32_t, uint8_t> estimate_latitude(
-            int32_t lag_port, 
+            uint32_t lag_port, 
             uint32_t lag_starboard);
 
 
@@ -152,7 +152,9 @@ std::pair<float32_t, uint8_t> estimate_latitude(
  * 
  * @param lag_stern Time the signal was measured at the stern 
  */
-uint8_t estimate_longitude(uint32_t lag_port, uint32_t lag_starboard,
+uint8_t estimate_longitude(
+            uint32_t lag_port, 
+            uint32_t lag_starboard,
             uint32_t lag_stern);
 
 
