@@ -32,7 +32,6 @@
 #define ACOUSTICS_HYDROPHONES_H
 
 #include "triliteration.h"
-#include "DSP_constants.h"
 
 
 /**

@@ -32,10 +32,10 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* Handler for the ADC, DMA, ETH and SPI */
-ADC_HandleTypeDef hadc1;      /* Somehow doesn't exists */
-DMA_HandleTypeDef hdma_adc;   /* Somehow doesn't exists */
-ETH_HandleTypeDef heth;       /* Somehow doesn't exists */
-SPI_HandleTypeDef hspi1;      /* Somehow doesn't exists */
+ADC_HandleTypeDef hadc1;      
+DMA_HandleTypeDef hdma_adc;   
+ETH_HandleTypeDef heth;       
+SPI_HandleTypeDef hspi1;      
 
 /* Errors and errors-detected */
 uint32_t error_idx = 0;
