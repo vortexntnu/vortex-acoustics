@@ -1,6 +1,6 @@
 #include "hydrophones.h"
 
-HYDROPHONES::Hydrophones::Hydrophones(TRILITERATION::Pos pos) : 
+HYDROPHONES::Hydrophones::Hydrophones(TRILATERATION::Pos pos) : 
     pos{pos}, last_lag{0}, last_intensity{0}
 {
     /* Initial memory allocation */
@@ -54,7 +54,7 @@ void HYDROPHONES::Hydrophones::analyze_data(float32_t *p_raw_data)
     }
 
     /* Calculates the intensity in dB */
-    last_intensity = TRILITERATION::estimate_signal_intensity(p_data); 
+    last_intensity = TRILATERATION::estimate_signal_intensity(p_data); 
 }
 
 

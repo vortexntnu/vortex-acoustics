@@ -118,12 +118,12 @@ int main(void)
     
     /* USER CODE BEGIN 2 */
     /** 
-     * Initialize variables for triliteration 
+     * Initialize variables for trilateration 
      * Log error if invalid
      */
-    if(!TRILITERATION::initialize_triliteration_globals(HYDROPHONES::pos_hyd_port,
+    if(!TRILATERATION::initialize_trilateration_globals(HYDROPHONES::pos_hyd_port,
           HYDROPHONES::pos_hyd_starboard, HYDROPHONES::pos_hyd_stern)){
-      log_error(ERROR_TYPES::ERROR_TRILITERATION_INIT);
+      log_error(ERROR_TYPES::ERROR_TRILATERATION_INIT);
       continue;
     }
 
@@ -239,7 +239,7 @@ int main(void)
          * 
          * Take new samples if the data is invalid
          */
-        if(!TRILITERATION::check_valid_signals(lag_array, intensity_array,
+        if(!TRILATERATION::check_valid_signals(lag_array, intensity_array,
               &bool_time_error, &bool_intensity_error)){
           check_signal_error(&bool_time_error, &bool_intensity_error);
           continue;
@@ -255,9 +255,9 @@ int main(void)
          * the angle to the target  
          */
         std::pair<float32_t, float32_t> position_es = 
-            TRILITERATION::estimate_pinger_position(lag_array, intensity_array);
+            TRILATERATION::estimate_pinger_position(lag_array, intensity_array);
 
-        TRILITERATION::calculate_distance_and_angle(position_es, 
+        TRILATERATION::calculate_distance_and_angle(position_es, 
               &distance_estimate, &angle_estimate);
 
         /**

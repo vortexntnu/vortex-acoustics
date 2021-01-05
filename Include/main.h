@@ -117,7 +117,7 @@ typedef enum{
   ERROR_DMA_STOP,             /* Error while stopping DMA                           */
   ERROR_SPI_INIT,             /* Error on initializing SPI                          */
   ERROR_ETH_INIT,             /* Error on initializing ETH                          */
-  ERROR_TRILITERATION_INIT,   /* Error on initializing TRILITERATION                */
+  ERROR_TRILATERATION_INIT,   /* Error on initializing TRILATERATION                */
   ERROR_TIME_SIGNAL,          /* Error on calculating invalid time of signals       */
   ERROR_INTENSITY_SIGNAL,     /* Error on calculating invalid intensity of signals  */
   ERROR_UNIDENTIFIED,         /* Unidentified error. Thrown using Error_handler     */

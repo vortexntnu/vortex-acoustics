@@ -31,7 +31,7 @@
 #ifndef ACOUSTICS_HYDROPHONES_H
 #define ACOUSTICS_HYDROPHONES_H
 
-#include "triliteration.h"
+#include "trilateration.h"
 
 
 /**
@@ -61,9 +61,9 @@ namespace HYDROPHONES{
  * center of the AUV. Must be updated in the future
  * when the placement of the hydrophones are known
  */
-TRILITERATION::Pos pos_hyd_port(-1, 0, 0);
-TRILITERATION::Pos pos_hyd_starboard(1, 0, 0);
-TRILITERATION::Pos pos_hyd_stern(0, -1, 0);
+TRILATERATION::Pos pos_hyd_port(-1, 0, 0);
+TRILATERATION::Pos pos_hyd_starboard(1, 0, 0);
+TRILATERATION::Pos pos_hyd_stern(0, -1, 0);
 
 
 /**
@@ -80,7 +80,7 @@ private:
     /**
     * @brief Position of each hydrophone 
     */
-    TRILITERATION::Pos pos;
+    TRILATERATION::Pos pos;
 
     /**
     * @brief The lag calculated for the last sample
@@ -124,7 +124,7 @@ public:
     /**
     * @brief Constructor and destructor 
     */
-    Hydrophones(TRILITERATION::Pos pos);
+    Hydrophones(TRILATERATION::Pos pos);
     ~Hydrophones();
     
     /**

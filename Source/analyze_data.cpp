@@ -29,5 +29,5 @@ void ANALYZE_DATA::analyze_data(float32_t* p_raw_data, float32_t* p_data,
     }
 
     /* Calculates the intensity in dB */
-    *p_intensity = TRILITERATION::estimate_signal_intensity(p_data); 
+    *p_intensity = TRILATERATION::estimate_signal_intensity(p_data); 
 }

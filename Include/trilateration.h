@@ -1,22 +1,22 @@
 /**
  * @file
  * 
- * @brief Basic functions to triliterate the position of
+ * @brief Basic functions to trilaterate the position of
  * the acoustic pinger
  */
-#ifndef ACOUSTICS_TRILITERATION_H
-#define ACOUSTICS_TRILITERATION_H
+#ifndef ACOUSTICS_TRILATERATION_H
+#define ACOUSTICS_TRILATERATION_H
 
 #include <algorithm> 
 #include "DSP_constants.h"
 
 /**
- * @brief Namespace/wrapper for the triliteration
+ * @brief Namespace/wrapper for the trilateration
  */
-namespace TRILITERATION{
+namespace TRILATERATION{
 
 /**
- * @brief Constants used for the triliterations 
+ * @brief Constants used for the trilaterations 
  * 
  * @param sound_speed Speed of sound in water in m/s
  * 
@@ -100,7 +100,7 @@ float32_t calculate_pos_distance(
  * 
  * @param pos_hyd_stern Position of stern hydrophone 
  */
-uint8_t initialize_triliteration_globals(
+uint8_t initialize_trilateration_globals(
             const Pos& pos_hyd_port,
             const Pos& pos_hyd_starboard, 
             const Pos& pos_hyd_stern);
@@ -254,7 +254,7 @@ uint8_t check_valid_signals(
 /**
  * @brief Helper function. Checks if the time-difference between two 
  * signals are valid. The time difference between the signals are checked 
- * against TRILITERATION::maximum_time_diff
+ * against TRILATERATION::maximum_time_diff
  * 
  * @retval Returns false/true (0/1) depending on the result of the test
  * 
@@ -302,6 +302,6 @@ uint8_t valid_intensity_check(
  */
 void transform_data(float32_t* p_data);
 
-} /* namespace TRILITERATION */
+} /* namespace TRILATERATION */
 
-#endif /* ACOUSTICS_TRILITERATION_H */
+#endif /* ACOUSTICS_TRILATERATION_H */
