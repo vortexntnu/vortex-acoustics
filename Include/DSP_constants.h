@@ -6,7 +6,7 @@
 #ifndef ACOUSTICS_DSP_CONSTANTS_H
 #define ACOUSTICS_DSP_CONSTANTS_H
 
-#include <stdint.h>
+#include <cstdint>
 #include <math.h>
 #include <cmath>
 #include <utility>

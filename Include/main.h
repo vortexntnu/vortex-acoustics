@@ -92,11 +92,6 @@
   #define __IO volatile             /* Low-level macro for compilation            */
 #endif /* __IO */
 
-#if __STDC_HOSTED__                 /* 1 if C-library in hosted environment       */
-  #undef __STDC_HOSTED__            /* Reset define                               */
-  #define __STDC_HOSTED__ 0         /* Define to 0, since not hosted environment  */
-#endif /* __STDC_HOSTED__           */
-
 #endif /* STM32_DEFINES */
 
 /** 
