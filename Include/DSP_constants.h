@@ -18,8 +18,8 @@
  * throws an error during compilation. Therefore tried to move the variables 
  * to eliminate such error 
  */
-float32_t pi   = 3.14159265358979323846;        /* PI (obviously)               */
-float32_t pi_2 = 1.57079632679489661923;        /* PI / 2                       */
+float32_t Pi   = 3.14159265358979323846;        /* PI (obviously)               */
+float32_t Pi_2 = 1.57079632679489661923;        /* PI / 2                       */
 
 /**
  * @brief Namespace/wrapper for basic DSP functions. 
