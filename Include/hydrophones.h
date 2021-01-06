@@ -4,10 +4,6 @@
  * @brief Small library that implements the 
  * hydrophones for the AUV for Vortex NTNU
  * 
- * @note Could be improved by using the pose
- * from ROS. Should be implemented in the 
- * future
- * 
  * @note It is thought that the hydrophones are
  * placed in a form of a triangle. Therefore, we
  * have one on front starboard, one on front port

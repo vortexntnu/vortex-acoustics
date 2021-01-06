@@ -40,7 +40,7 @@ uint8_t TRILATERATION::initialize_trilateration_globals(
                 TRILATERATION::calculate_pos_distance(pos_hyd_starboard, pos_hyd_stern);
         TRILATERATION::max_hydrophone_distance = 
                 std::max(dist_port_starboard, std::max(dist_starboard_stern, dist_port_stern));
-        TRILATERATION::max_time_diff = (1 + TRILATERATION::time_diff_epsilon) *
+        TRILATERATION::max_time_diff = (1 + MARGIN_TIME_EPSILON) *
                 (TRILATERATION::max_hydrophone_distance / TRILATERATION::sound_speed);
         return (TRILATERATION::max_hydrophone_distance != -1 && 
                 TRILATERATION::max_time_diff != 1);
@@ -207,7 +207,7 @@ uint8_t TRILATERATION::valid_time_check(const uint32_t& time_lhs, const uint32_t
 
 uint8_t TRILATERATION::valid_intensity_check(const float32_t& intensity_lhs, 
         const float32_t& intensity_rhs){
-    return std::abs(intensity_lhs - intensity_rhs) > TRILATERATION::max_intensity_diff;
+        return std::abs(intensity_lhs - intensity_rhs) > MARGIN_INTENSITY;
                 
 }
 
@@ -266,116 +266,31 @@ void TRILATERATION::transform_data(float32_t* p_data);
 /**
  * Functions for trilateration based on TDOA 
  */
-std::pair<float32_t, float32_t> TRILATERATION::triliterate_pinger_position(uint32_t* p_lag_array){
-        /**
-         * Matlab code used for reference
-         */
+void TRILATERATION::trilaterate_pinger_position(
+        const Matrix4f& A,
+        const Vector4f B,
+        uint32_t* p_lag_array,
+        float32_t& x_estimate,
+        float32_t& y_estimate){
 
-        /*
-        % parameter values for anchor node coordinates and signal speed
-        a = 10 ;
-        b = 20 ;
-        c = 30 ;
-        v = 300 ;
+        Matrix4f A_T, A_copy;
+        A_T = A.transpose();
+        A_copy = A;
 
-        % TDOA of Signals at Blind Node
-        del_t_1 = 0.05 ; % input example
-        del_t_2 = 0.03 ; % input example
-        del_t_3 = 0.02 ; % input example
-        J_1 = (v.*del_t_1)./2 ;
-        J_2 = (v.*del_t_2)./2 ;
-        J_3 = (v.*del_t_3)./2 ;
-        x = linspace(-10, 20, 10000) ;
-        % Hyperbolas with side AB as transverse axis
-        y_1 = sqrt(((a+b)./2)^2 - (J_1).^2).*sqrt(((x - (b-a)./2)./(J_1)).^2 - 1) ;
-        y_2 = -sqrt(((a+b)./2)^2 - (J_1).^2).*sqrt(((x - (b-a)./2)./(J_1)).^2 - 1) ;
-        % Hyperbolas with side AC as transverse axis
-        A = 8.*b.*c.*x - 4.*c.*(b.^2 - c.^2) - 16.*c.*(J_2).^2 ;
-        B = sqrt(64.*((J_2).^2).*(b.^2 + c.^2 - 4.*(J_2).^2).*(4.*x.^2 - 4.*b.*x +
-        b.^2 + c.^2 - 4.*(J_2).^2)) ;
-        C = 8.*(c.^2 - 4.*(J_2).^2) ;
-        y_3 = (A+B)./C ;
-        y_4 = (A-B)./C ;
-        % Hyperbolas with side CB as axis
-        E = -8.*a.*c.*x - 4.*c.*(a.^2 - c.^2) - 16.*c.*(J_3).^2 ;
-        F = sqrt(64.*((J_3).^2).*(a.^2 + c.^2 - 4.*(J_3).^2).*(4.*x.^2 + 4.*a.*x +
-        a.^2 + c.^2 - 4.*(J_3).^2)) ;
-        G = 8.*(c.^2 - 4.*(J_3).^2) ;
-        y_5 = (E+F)./G ;
-        y_6 = (E-F)./G ;
-        hold on
-        plot(x,y_1,'r',x,y_2,'r')
-        plot(x,y_3,'g',x,y_4,'g')
-        plot(x,y_5,'b',x,y_6,'b')
-        plot(x,0,'k',x,3.*x+30,'k',x,-(1.5).*x+30,'k')
-        axis square
-        axis([-10 20 0 30])
-        text(-9,0.5,'A(-10,0)')
-        text(2,29,'C(0,30)')
-        text(17,0.5,'B(20,0)')
-        text(15.75,12.5,'P_1 (x,y)')
-        text(-4.7,11.88,'P_2 (x,y)')
-        hold off
-        */
+        /* Calculating the solution-vector */
+        Vector4f state_vec = (A_T * A_copy).inverse() * A_T * B;
 
-        /**
-         * Recovering the values from the arrays
-         */
-        uint32_t lag_port, lag_starboard, lag_stern;
-
-        lag_port = p_lag_array[0];
-        lag_starboard = p_lag_array[1];
-        lag_stern = p_lag_array[2];
-
-
-        /**
-         * Calculating the TDOA (time difference on arrival)
-         */
-        uint32_t diff_lag_port_starboard = abs(lag_port - lag_starboard);
-        uint32_t diff_lag_port_stern = abs(lag_port - lag_stern);
-        uint32_t diff_lag_starboard_stern = abs(lag_starboard - lag_stern);
-
-        /**
-         * Calculating the estimated distance from the midpoint of each hydrophone to the 
-         * acoustic pinger
-         */
-        float32_t r_port_starboard, r_port_stern, r_starboard_stern;
-        r_port_starboard = (float32_t)(TRILATERATION::sound_speed * diff_lag_port_starboard) / 2.0f;
-        r_port_stern = (float32_t)(TRILATERATION::sound_speed * diff_lag_port_stern) / 2.0f;
-        r_starboard_stern = (float32_t)(TRILATERATION::sound_speed * diff_lag_starboard_stern) / 2.0f;
-
-        /**
-         * Moving the reference-frame, such that the point (x,y) calculated is relative to 
-         * the center of the AUV
-         * 
-         * Using positions A, B and C to symbolize the hydrophones positions. See the research-
-         * paper for further details. These values are used (instead of the predetermined hydrophones'
-         * positions) since the reference-frame must be moved
-         *      A: Port hydrophone
-         *      B: Starboard hydrophone
-         *      C: Stern hydrophone
-         * 
-         * Therefore the values a, b and c completely determines the position of the hydrophones. It
-         * is assumed that z = 0:
-         *      A := (-a, 0, 0)
-         *      B := (b, 0, 0)
-         *      C := (0, c, 0)
-         */
-        float32_t a, b, c;
-        a = PORT_HYD_X;
-        b = STARBOARD_HYD_X;
-
-        if(STERN_HYD_X){
-                a += STERN_HYD_X;
-                b -= STERN_HYD_X;
-        }
-
-        c = STERN_HYD_Y;
-
-        /**
-         * Pherhaps necessary using a rotational-matrix here
-         */
+        x_estimate = state_vec.coeff(0);
+        y_estimate = state_vec.coeff(1);
+}
 
 
 
+
+float32_t TRILATERATION::calculate_plane_distance(
+            const float32_t& x1,
+            const float32_t& y1,
+            const float32_t& x2,
+            const float32_t& y2){
+        return std::sqrt(std::pow(x1 - x2, 2) + std::pow(y1 - y2));
 }

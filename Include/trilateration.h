@@ -9,7 +9,14 @@
 #define ACOUSTICS_TRILATERATION_H
 
 #include <algorithm> 
+#include <Eigen/Dense>
 #include "DSP_constants.h"
+
+/**
+ * @brief Typedef used during trilateration
+ */
+typedef Eigen::Matrix<float32_t, 4, 4> Matrix4f;
+typedef Eigen::Matrix<float32_t, 4, 1> Vector4f;
 
 /**
  * @brief Namespace/wrapper for the trilateration
@@ -45,8 +52,6 @@ namespace TRILATERATION{
  */
 const uint16_t sound_speed          = 1480;
 const float32_t source_power        = 177;
-const float32_t max_intensity_diff  = 20;
-const float32_t time_diff_epsilon   = 0.1; 
 extern float32_t max_hydrophone_distance; 
 extern float32_t max_time_diff;
 
@@ -106,6 +111,22 @@ uint8_t initialize_trilateration_globals(
             const Pos& pos_hyd_starboard, 
             const Pos& pos_hyd_stern);
 
+
+/**
+ * @brief Initializes the matrices @p A and @p B
+ * 
+ * The function sets the port hydrophone as it's initial anchor. The other
+ * datapoints are therefore calculated based on the position/distance from
+ * the port hydrophone
+ * 
+ * @retval Returns 1 if the A-matrix is invertible
+ * Returns 0 if A not invertible 
+ * 
+ * @param A Matrix containing positions and distance between the hydrophones
+ */
+uint8_t initialize_trilateration_matrices(
+            Matrix4f& A,
+            Vector4f& B);
 
 /**
  * @brief Function to calculate an estimate for the distance
@@ -306,18 +327,67 @@ void transform_data(float32_t* p_data);
 
 /**
  * @brief Function to trilaterate the position of the acoustic pinger based
- * on the time of arrival. The function calculates the TDOA, and uses it to 
- * calculate the position.
+ * on the time of arrival. The function uses the TDOA and linear algebra to 
+ * calculate the position using minimal square error.
  * 
- * Based on the MATLAB-code propused in the article
- * https://www.researchgate.net/publication/265336167_A_Novel_Trilateration_Algorithm_for_Localization_of_a_TransmitterReceiver_Station_in_a_2D_Plane_Using_Analytical_Geometry 
+ * The mathematics are copy/paste from 
+ * https://math.stackexchange.com/questions/1722021/trilateration-using-tdoa
  * 
+ * @retval Returns the estimated x- and y-value indirectly using references
+ * 
+ * @warning The code assumes that the hydrophones are on the same plane/level 
+ * as the acoustic pinger. The estimates will therefore exceed the actual 
+ * position of the acoustic pinger somewhat.
+ * 
+ * @warning The code does not take into consideration any pitch/roll which will
+ * affect the hydrophones' position
+ * 
+ * @param A A @c Matrix4f that holds the positions of, and the distances between
+ * the hydrophones. Size: 4x4
+ * 
+ * @param B A @c Vector4f that holds the minimal solutions to the equations. 
+ * Size: 4x1
  * 
  * @param p_lag_array Pointer to an array containing the measured
  * lags. @p p_lag_array expands to 
  *      *p_lag_array = { lag_port, lag_starboard, lag_stern }
+ * 
+ * @param x_estimate Reference to the estimated x-position. Used to return
+ * the x-position indirectly
+ * 
+ * @param y_estimate Reference to the estimated y-position. Used to return
+ * the y-position indirectly
  */
-std::pair<float32_t, float32_t> triliterate_pinger_position(uint32_t* p_lag_array);
+void trilaterate_pinger_position(
+            const Matrix4f& A,
+            const Vector4f& B,
+            uint32_t* p_lag_array,
+            float32_t& x_estimate,
+            float32_t& y_estimate); 
+
+/**
+ * @brief Function to calculate distance between {x1, y1} and {x2, y2}. 
+ * Easier than TRILATERATION::calculate_pos_distance(), since this does not
+ * use the struct Pos. Uses only x and y
+ * 
+ * @retval Returns the distance between the points
+ * 
+ * @param x1 x-position of point 1
+ * 
+ * @param y1 y-position of point 1
+ * 
+ * @param x2 x-position of point 2
+ * 
+ * @param y2 y-position of point 2
+ */
+float32_t calculate_plane_distance(
+            float32_t* p_x_array,
+            float32_t* p_y_array,
+            float32_t* p_z_array,
+            const float32_t& x1,
+            const float32_t& y1,
+            const float32_t& x2,
+            const float32_t& y2);       
 
 } /* namespace TRILATERATION */
 
