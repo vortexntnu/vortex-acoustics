@@ -303,6 +303,22 @@ uint8_t valid_intensity_check(
  */
 void transform_data(float32_t* p_data);
 
+
+/**
+ * @brief Function to trilaterate the position of the acoustic pinger based
+ * on the time of arrival. The function calculates the TDOA, and uses it to 
+ * calculate the position.
+ * 
+ * Based on the MATLAB-code propused in the article
+ * https://www.researchgate.net/publication/265336167_A_Novel_Trilateration_Algorithm_for_Localization_of_a_TransmitterReceiver_Station_in_a_2D_Plane_Using_Analytical_Geometry 
+ * 
+ * 
+ * @param p_lag_array Pointer to an array containing the measured
+ * lags. @p p_lag_array expands to 
+ *      *p_lag_array = { lag_port, lag_starboard, lag_stern }
+ */
+std::pair<float32_t, float32_t> triliterate_pinger_position(uint32_t* p_lag_array);
+
 } /* namespace TRILATERATION */
 
 #endif /* ACOUSTICS_TRILATERATION_H */

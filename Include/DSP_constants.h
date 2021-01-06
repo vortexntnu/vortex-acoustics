@@ -12,6 +12,7 @@
 #include <utility>
 #include "arm_math.h"
 #include "arm_const_structs.h" 
+#include "parameters.h"
 
 /**
  * @brief Duplicating code is terrible code-practice! These constants somehow 
