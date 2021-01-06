@@ -2,7 +2,8 @@
  * @file
  * 
  * @brief Basic functions to trilaterate the position of
- * the acoustic pinger
+ * the acoustic pinger. Preferable to change it with the MANYEARS-
+ * library
  */
 #ifndef ACOUSTICS_TRILATERATION_H
 #define ACOUSTICS_TRILATERATION_H
