@@ -31,11 +31,27 @@
 #ifndef ACOUSTICS_HYDROPHONES_H
 #define ACOUSTICS_HYDROPHONES_H
 
-#include "triliteration.h"
-#include "DSP_constants.h"
+#include "trilateration.h"
 
-// Number of hydrophones used on the AUV
-#define NUM_HYDROPHONES 3
+
+/**
+ * @brief Defines that indicate the setup of the hardware on the AUV
+ * 
+ * These variables must be changed according to the hydrophones used.
+ * As of 03.01.21, three hydrophones of the type Benthowave BII-7014FG 
+ * is used. See the datasheet at 
+ * https://www.benthowave.com/products/Specs/BII-7014FGPGDatasheet.pdf
+ * for more information
+ */
+#ifndef HYDROPHONE_DETAILS
+#define HYDROPHONE_DETAILS
+
+  #define NUM_HYDROPHONES   3        /* Number of hydrophones used on the AUV       */
+  #define HYD_PREAMP_DB     40       /* Number of dB the signal is preamplifies     */
+  #define HYD_FFVS          -173     /* Average FFVS for 20 - 40 kHz [dB V/μPa]     */    
+
+#endif /* HYDROPHONE_DETAILS */
+
 
 namespace HYDROPHONES{
 
@@ -45,9 +61,9 @@ namespace HYDROPHONES{
  * center of the AUV. Must be updated in the future
  * when the placement of the hydrophones are known
  */
-TRILITERATION::Pos pos_hyd_port(-1, 0, 0);
-TRILITERATION::Pos pos_hyd_starboard(1, 0, 0);
-TRILITERATION::Pos pos_hyd_stern(0, -1, 0);
+TRILATERATION::Pos pos_hyd_port(-1, 0, 0);
+TRILATERATION::Pos pos_hyd_starboard(1, 0, 0);
+TRILATERATION::Pos pos_hyd_stern(0, -1, 0);
 
 
 /**
@@ -64,7 +80,7 @@ private:
     /**
     * @brief Position of each hydrophone 
     */
-    TRILITERATION::Pos pos;
+    TRILATERATION::Pos pos;
 
     /**
     * @brief The lag calculated for the last sample
@@ -77,7 +93,7 @@ private:
     float32_t* p_max_val;
 
     /**
-     * @brief The index the maximum-value was detected on
+     * @brief The index the maximum magnitude was detected on
      */
     uint32_t* p_idx;
 
@@ -103,12 +119,12 @@ private:
      * 2 * length(p_data) - 1
      */
     float32_t* p_autocorr_data;
-
+     
 public:
     /**
     * @brief Constructor and destructor 
     */
-    Hydrophones(TRILITERATION::Pos pos);
+    Hydrophones(TRILATERATION::Pos pos);
     ~Hydrophones();
     
     /**
@@ -127,13 +143,13 @@ public:
     * The raw data is filtered using a second-order biquad DF1 
     * IIR filter to eliminate unwanted frequencies. Thereafter
     * the frequencies magnitude and autocorrelation are found.
-    * The lag and intensity are thereafter calculated from these
-    * measurements
+    * The lag, intensity and distance are thereafter estimated 
+    * from these measurements
     */
     void analyze_data(float32_t* p_raw_data);
-};
+}; /* class Hydrophones */
 
-} // namespace HYDROPHONES
+} /* namespace HYDROPHONES */
 
 #endif // ACOUSTICS_HYDROPHONES_H
 

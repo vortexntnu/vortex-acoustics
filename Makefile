@@ -48,33 +48,69 @@
 # The makefile is basicly copy-pasted from
 # https://www.partow.net/programming/makefile/index.html
 
-# Another source could also be 
-# http://wiki.wlug.org.nz/MakefileHowto
+# CXX      := -c++
+CXX      := g++  
+CC       := gcc
 
-# Wouldn't study at NTNU if I didn't "kok" it
+# CXXFLAGS := -pedantic-errors -Wall -Wextra -Werror
+CPPFLAGS := -pedantic-errors -Wall -Wextra -Werror
 
+# LDFLAGS  := -L/usr/lib -lstdc++ -lm
+LDFLAGS     := -lm
+BUILD       := ./build
+OBJ_DIR     := $(BUILD)/objects
+APP_DIR     := $(BUILD)/apps
+TARGET      := program
 
-# Need to update this to also include the C-files
+CINCLUDE :=
+   -IResource/STM32F7xx_HAL_Driver/Src 
+   -IResource/CMSIS/DSP_Lib/Source/BasicMathFunctions
+   -IResource/CMSIS/DSP_Lib/Source/CommonTables
+   -IResource/CMSIS/DSP_Lib/Source/ComplexMathFunctions
+   -IResource/CMSIS/DSP_Lib/Source/ControllerFunctions
+   -IResource/CMSIS/DSP_Lib/Source/FastMathFunctions
+   -IResource/CMSIS/DSP_Lib/Source/FilteringFunctions
+   -IResource/CMSIS/DSP_Lib/Source/MatrixFunctions
+   -IResource/CMSIS/DSP_Lib/Source/StatisticsFunctions
+   -IResource/CMSIS/DSP_Lib/Source/SupportFunctions
+   -IResource/CMSIS/DSP_Lib/Source/TransformFunctions
 
-CXX      := -c++
-CXXFLAGS := -pedantic-errors -Wall -Wextra -Werror
-LDFLAGS  := -L/usr/lib -lstdc++ -lm
-BUILD    := ./build
-OBJ_DIR  := $(BUILD)/objects
-APP_DIR  := $(BUILD)/apps
-TARGET   := program
-INCLUDE  := -ICore/Src -Ialglib/src
-SRC      :=                      \
-   $(wildcard alglib/src/*.cpp) \
-   $(wildcard Core/src/*.cpp) \
+CXXINCLUDE  :=
+   -ISource
 
-OBJECTS  := $(SRC:%.cpp=$(OBJ_DIR)/%.o)
+CSRC        :=                      \
+   $(wildcard Resource/STM32F7xx_HAL_Driver/Src/*.c) \
+   $(wildcard Resource/CMSIS/DSP_Lib/Source/BasicMathFunctions/*.c) \
+   $(wildcard Resource/CMSIS/DSP_Lib/Source/CommonTables/*.c) \
+   $(wildcard Resource/CMSIS/DSP_Lib/Source/ComplexMathFunctions/*.c) \
+   $(wildcard Resource/CMSIS/DSP_Lib/Source/ControllerFunctions/*.c) \
+   $(wildcard Resource/CMSIS/DSP_Lib/Source/FastMathFunctions/*.c) \
+   $(wildcard Resource/CMSIS/DSP_Lib/Source/FilteringFunctions/*.c) \
+   $(wildcard Resource/CMSIS/DSP_Lib/Source/MatrixFunctions/*.c) \
+   $(wildcard Resource/CMSIS/DSP_Lib/Source/StatisticsFunctions/*.c) \
+   $(wildcard Resource/CMSIS/DSP_Lib/Source/SupportFunctions/*.c) \
+   $(wildcard Resource/CMSIS/DSP_Lib/Source/TransformFunctions/*.c) \
+
+CXXSRC      :=
+   $(wildcard Source/*.cpp) \
+
+COBJ        := $(CSRC:%.c=$(OBJ_DIR)/%.o)
+CXXOBJ      := $(CXXSRC:%.cpp=$(OBJ_DIR)/%.o)
+
 
 all: build $(APP_DIR)/$(TARGET)
 
+$(OBJ_DIR)/%.o: %.c
+   @mkdir -p $(@D)
+   $(CC) $(CPPFLAGS) $(CINCLUDE) -c $< -o $@ $(LDFLAGS)
+
+$(APP_DIR)/$(TARGET): $(OBJECTS)
+   @mkdir -p $(@D)
+   $(CC) $(CPPFLAGS) -o $(APP_DIR)/$(TARGET) $^ $(LDFLAGS)
+
 $(OBJ_DIR)/%.o: %.cpp
    @mkdir -p $(@D)
-   $(CXX) $(CXXFLAGS) $(INCLUDE) -c $< -o $@ $(LDFLAGS)
+   $(CXX) $(CXXFLAGS) $(CXXINCLUDE) -c $< -o $@ $(LDFLAGS)
 
 $(APP_DIR)/$(TARGET): $(OBJECTS)
    @mkdir -p $(@D)
@@ -86,12 +122,12 @@ build:
    @mkdir -p $(APP_DIR)
    @mkdir -p $(OBJ_DIR)
 
-debug: CXXFLAGS += -DDEBUG -g
+debug: CPPFLAGS += -DDEBUG -g
 debug: all
 
-release: CXXFLAGS += -O2
+release: CPPFLAGS += -O2
 release: all
 
 clean:
-   -@rm -rvf $(OBJ_DIR)/*
-   -@rm -rvf $(APP_DIR)/*
+   -@rm -rvf $(OBJ_DIR)/*.o
+   -@rm -rvf $(APP_DIR)/*.o
