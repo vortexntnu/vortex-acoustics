@@ -121,11 +121,14 @@ int main(void)
     /** 
      * Initialize variables for trilateration 
      * Log error if invalid
+     * 
+     * If there is an error, this indicates that there is a more serious error
+     * in the code. Breaks out of the while loop and shuts down the system if that is the case
      */
     if(!TRILATERATION::initialize_trilateration_globals(HYDROPHONES::pos_hyd_port,
           HYDROPHONES::pos_hyd_starboard, HYDROPHONES::pos_hyd_stern)){
       log_error(ERROR_TYPES::ERROR_TRILATERATION_INIT);
-      continue;
+      break; 
     }
 
     /* Initialize the class Hydrophone */
@@ -259,6 +262,15 @@ int main(void)
       continue;
     }
   }
+
+  /**
+   * TODO@TODO
+   * 
+   * If broken out of the loop by an error
+   * 
+   * Send an error-report to the Xavier
+   */
+
   return 0;
   /* USER CODE END 3 */
 }

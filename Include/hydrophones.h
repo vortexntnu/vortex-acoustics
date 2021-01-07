@@ -38,8 +38,7 @@ namespace HYDROPHONES{
 /**
  * @brief Globals that describes the
  * hydrophones position compared to the
- * center of the AUV. Must be updated in the future
- * when the placement of the hydrophones are known
+ * center of the AUV
  */
 TRILATERATION::Pos pos_hyd_port{PORT_HYD_X, PORT_HYD_Y, PORT_HYD_Z};
 TRILATERATION::Pos pos_hyd_starboard{STARBOARD_HYD_X, STARBOARD_HYD_Y, STARBOARD_HYD_Z};
