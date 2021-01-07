@@ -64,14 +64,15 @@ static void MX_ETH_Init(void);
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc);
 
 /* Function to access DMA to get data from the hydrophones */
-static void read_ADC(float32_t* p_data_hyd_port, float32_t* p_data_hyd_starboard,
+static void read_ADC(
+          float32_t* p_data_hyd_port, 
+          float32_t* p_data_hyd_starboard,
           float32_t* p_data_hyd_stern);
 
 /* Functions to log errors */
 static void log_error(ERROR_TYPES error_code);
 static void Error_Handler(void);
-static void check_signal_error(uint8_t* p_bool_time_error, 
-          uint8_t* p_bool_intensity_error); 
+static void check_signal_error(uint8_t& bool_time_error); 
 
 /* Function to coordinate the communication over the ethernet */
 uint8_t ethernet_coordination(void);
@@ -139,15 +140,6 @@ int main(void)
     /* Lag from each hydrophone */
     uint32_t lag_hyd_port, lag_hyd_starboard, lag_hyd_stern;
 
-    /* Intensity measured for each hydrophone */
-    //float32_t intensity_port, intensity_starboard, intensity_stern;
-
-    /* Range-estimate to the acoustic pinger */
-    //float32_t distance_estimate;
-
-    /* Angle-estimate to the acoustic pinger */
-    //float32_t angle_estimate;
-
     /* Estimated position of the acoustic pinger */
     float32_t x_pos_es, y_pos_es;
 
@@ -161,7 +153,6 @@ int main(void)
 
     /* Variables used to indicate error(s) with the signal */
     uint8_t bool_time_error = 0;
-    //uint8_t bool_intensity_error = 0;
 
     /* USER CODE END 2 */
 
@@ -240,26 +231,11 @@ int main(void)
          * 
          * Take new samples if the data is invalid
          */
-        // if(!TRILATERATION::check_valid_signals(lag_array, intensity_array,
-        //       &bool_time_error, &bool_intensity_error)){
-        //   check_signal_error(&bool_time_error, &bool_intensity_error);
-        //   continue;
-        // }
-
-        /** 
-         * Calculate estimated position of the acoustic pinger in 
-         * relation to the AUV
-         * 
-         * The first function returns a std::pair as (x, y)
-         * 
-         * The second function returns an estimate of the distance and
-         * the angle to the target  
-         */
-        // std::pair<float32_t, float32_t> position_es = 
-        //     TRILATERATION::estimate_pinger_position(lag_array, intensity_array);
-
-        // TRILATERATION::calculate_distance_and_angle(position_es, 
-        //       &distance_estimate, &angle_estimate);
+        if(!TRILATERATION::check_valid_signals(lag_array,
+              bool_time_error)){
+          check_signal_error(bool_time_error);
+          continue;
+        }
 
         /**
          * Triliterate the position of the acoustic pinger
@@ -273,9 +249,7 @@ int main(void)
          * 
          * Send the data to the Xavier in a predetermined format
          * 
-         * Required to send one of
-         *    1. position-estimate
-         *    2. angle- and distance-estimate
+         * Required to send the estimated position of the acoustic pinger
          * alongside the time of measurment
          */
     }
@@ -588,21 +562,14 @@ static void read_ADC(
  * @brief Detects if the error was caused by either time or the intensity
  * and logs the correct error
  * 
- * @param p_bool_time_error Pointer to indicate error with the time
+ * Could be updated to detect other errors
  * 
- * @param p_bool_intensity_error Pointer to indicate error with the 
- * intensity
+ * @param bool_time_error Int used to indicate error with the time
  */
-static void check_signal_error(
-          uint8_t* p_bool_time_error, 
-          uint8_t* p_bool_intensity_error){
-  if(*p_bool_time_error){
-    *p_bool_time_error = 0;
+static void check_signal_error(uint8_t& bool_time_error){
+  if(bool_time_error){
+    bool_time_error = 0;
     log_error(ERROR_TYPES::ERROR_TIME_SIGNAL);
-  }
-  if(*p_bool_intensity_error){
-    *p_bool_intensity_error = 0;
-    log_error(ERROR_TYPES::ERROR_INTENSITY_SIGNAL);
   }
 }
 
