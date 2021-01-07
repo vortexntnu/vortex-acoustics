@@ -36,16 +36,6 @@
 namespace HYDROPHONES{
 
 /**
- * @brief Globals that describes the
- * hydrophones position compared to the
- * center of the AUV
- */
-TRILATERATION::Pos pos_hyd_port{PORT_HYD_X, PORT_HYD_Y, PORT_HYD_Z};
-TRILATERATION::Pos pos_hyd_starboard{STARBOARD_HYD_X, STARBOARD_HYD_Y, STARBOARD_HYD_Z};
-TRILATERATION::Pos pos_hyd_stern{STERN_HYD_X, STERN_HYD_Y, STERN_HYD_Z};
-
-
-/**
  * @brief Class for the hydrophones. 
  * Combines the basic functions for
  * each hydrophone. Makes it a lot 
@@ -56,11 +46,6 @@ TRILATERATION::Pos pos_hyd_stern{STERN_HYD_X, STERN_HYD_Y, STERN_HYD_Z};
  */
 class Hydrophones{
 private:
-    /**
-    * @brief Position of each hydrophone 
-    */
-    TRILATERATION::Pos pos;
-
     /**
     * @brief The lag calculated for the last sample
     */
@@ -88,7 +73,7 @@ public:
     /**
     * @brief Constructor and destructor 
     */
-    Hydrophones(TRILATERATION::Pos pos);
+    Hydrophones();
     ~Hydrophones();
     
     /**

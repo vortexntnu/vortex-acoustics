@@ -12,24 +12,8 @@ float32_t TRILATERATION::max_time_diff = -1;
 
 
 /**
- * Constructor for Pos
+ * Functions for initializing 
  */
-TRILATERATION::Pos::Pos(float32_t x, float32_t y, float32_t z) : 
-        x{x}, y{y}, z{z} {}
-
-
-/**
- * Calculating distance between postions and the global variables
- */
-float32_t TRILATERATION::calculate_pos_distance(
-                const Pos& pos_lhs, const Pos& pos_rhs){
-        return (float32_t)(std::sqrt(
-                std::pow(pos_lhs.x - pos_rhs.x, 2) +
-                std::pow(pos_lhs.y - pos_rhs.y, 2) +
-                std::pow(pos_lhs.z - pos_rhs.z, 2)));
-}
-
-
 uint8_t TRILATERATION::initialize_trilateration_globals(){
 
         /* Calculating the distances between the hydrophones */

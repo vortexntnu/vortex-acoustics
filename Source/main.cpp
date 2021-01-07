@@ -132,9 +132,9 @@ int main(void)
     }
 
     /* Initialize the class Hydrophone */
-    HYDROPHONES::Hydrophones hyd_port(HYDROPHONES::pos_hyd_port);
-    HYDROPHONES::Hydrophones hyd_starboard(HYDROPHONES::pos_hyd_starboard);
-    HYDROPHONES::Hydrophones hyd_stern(HYDROPHONES::pos_hyd_stern);
+    HYDROPHONES::Hydrophones hyd_port();
+    HYDROPHONES::Hydrophones hyd_starboard();
+    HYDROPHONES::Hydrophones hyd_stern();
 
     /* Initialize the matrices used for trilatiration */
     Matrix_2_3_f A_matrix = TRILATERATION::initialize_A_matrix();

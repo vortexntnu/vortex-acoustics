@@ -42,41 +42,6 @@ extern float32_t max_hydrophone_distance;
 extern float32_t max_time_diff;
 
 /**
- * @brief Struct to keep the position
- * for an object/hydrophone. Could also
- * have used the POS found inside ROS
- */
-struct Pos{
-    /**
-     * @brief Describes the position in 
-     * x, y and z relative to the center 
-     * of the AUV.
-     */
-    float32_t x, y, z;
-
-    /**
-     * @brief Constructor.
-     */
-    Pos(float32_t x, float32_t y, float32_t z);
-}; /* struct Pos */
-
-
-/**
- * @brief Helper function. Calculates the distance betweeen
- * two Pos
- * 
- * @retval Returns the distance between two positions
- * 
- * @param pos_lhs First position
- * 
- * @param pos_rhs Second position
- */
-float32_t calculate_pos_distance(
-            const Pos& pos_lhs, 
-            const Pos& pos_rhs);
-
-
-/**
  * @brief Function that calculates the maximum distance
  * between the hydrophones, and use it to calculate the
  * allowed time_difference. See the overview in hydrophones.h
