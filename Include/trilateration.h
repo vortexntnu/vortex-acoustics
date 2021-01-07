@@ -10,13 +10,16 @@
 
 #include <algorithm> 
 #include <Eigen/Dense>
+#include <Eigen/LU> 
+#include <Eigen/Core>
+
 #include "DSP_constants.h"
 
 /**
  * @brief Typedef used during trilateration
  */
-typedef Eigen::Matrix<float32_t, 4, 4> Matrix4f;
-typedef Eigen::Matrix<float32_t, 4, 1> Vector4f;
+typedef Eigen::Matrix<float32_t, 2, 3> Matrix_2_3_f;
+typedef Eigen::Matrix<float32_t, 2, 1> Vector_2_1_f;
 
 /**
  * @brief Namespace/wrapper for the trilateration
@@ -125,8 +128,8 @@ uint8_t initialize_trilateration_globals(
  * @param A Matrix containing positions and distance between the hydrophones
  */
 uint8_t initialize_trilateration_matrices(
-            Matrix4f& A,
-            Vector4f& B);
+            Matrix_2_3_f& A,
+            Vector_2_1_f& B);
 
 /**
  * @brief Function to calculate an estimate for the distance
@@ -333,6 +336,10 @@ void transform_data(float32_t* p_data);
  * The mathematics are copy/paste from 
  * https://math.stackexchange.com/questions/1722021/trilateration-using-tdoa
  * 
+ * Abbrivations used:
+ *      TOA: Time of arrival
+ *      TDOA: Time-difference of arrival
+ * 
  * @retval Returns the estimated x- and y-value indirectly using references
  * 
  * @warning The code assumes that the hydrophones are on the same plane/level 
@@ -342,10 +349,10 @@ void transform_data(float32_t* p_data);
  * @warning The code does not take into consideration any pitch/roll which will
  * affect the hydrophones' position
  * 
- * @param A A @c Matrix4f that holds the positions of, and the distances between
+ * @param A A @c Matrix_2_3_f that holds the positions of, and the distances between
  * the hydrophones. Size: 4x4
  * 
- * @param B A @c Vector4f that holds the minimal solutions to the equations. 
+ * @param B A @c Vector_2_1_f that holds the minimal solutions to the equations. 
  * Size: 4x1
  * 
  * @param p_lag_array Pointer to an array containing the measured
@@ -358,36 +365,36 @@ void transform_data(float32_t* p_data);
  * @param y_estimate Reference to the estimated y-position. Used to return
  * the y-position indirectly
  */
-void trilaterate_pinger_position(
-            const Matrix4f& A,
-            const Vector4f& B,
+uint8_t trilaterate_pinger_position(
+            Matrix_2_3_f& A,
+            Vector_2_1_f& B,
             uint32_t* p_lag_array,
             float32_t& x_estimate,
             float32_t& y_estimate); 
-
+            
 /**
- * @brief Function to calculate distance between {x1, y1} and {x2, y2}. 
- * Easier than TRILATERATION::calculate_pos_distance(), since this does not
- * use the struct Pos. Uses only x and y
+ * @brief Helper-function that set the matrices @p A and @p B to the desired
+ * values specified in @p TDOA_array
  * 
- * @retval Returns the distance between the points
+ * The values of @p A and @p B are calculated from @p TDOA_array and the position
+ * of the hydrophones. Calcualtions are described at
+ * https://math.stackexchange.com/questions/1722021/trilateration-using-tdoa
  * 
- * @param x1 x-position of point 1
+ * @param TDOA_array Array containg the calculated TDOA 
+ * The array is given as 
+ *      @p TDOA_array = { TDOA_port_starboard, TDOA_port_stern, TDOA_starboard_stern }
+ * where ex. TDOA_port_starboard is the time-difference between port and starboard
  * 
- * @param y1 y-position of point 1
+ * @param A The matrix containing the parameters to the linear equations
  * 
- * @param x2 x-position of point 2
- * 
- * @param y2 y-position of point 2
+ * @param B A vector containing the solutions to the linear equations
  */
-float32_t calculate_plane_distance(
-            float32_t* p_x_array,
-            float32_t* p_y_array,
-            float32_t* p_z_array,
-            const float32_t& x1,
-            const float32_t& y1,
-            const float32_t& x2,
-            const float32_t& y2);       
+void calculate_tdoa_matrices(
+            float32_t* TDOA_array, 
+            Matrix_2_3_f& A,
+            Vector_2_1_f& B);
+
+
 
 } /* namespace TRILATERATION */
 

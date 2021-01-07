@@ -266,31 +266,105 @@ void TRILATERATION::transform_data(float32_t* p_data);
 /**
  * Functions for trilateration based on TDOA 
  */
-void TRILATERATION::trilaterate_pinger_position(
-        const Matrix4f& A,
-        const Vector4f B,
+uint8_t TRILATERATION::trilaterate_pinger_position(
+        Matrix_2_3_f& A,
+        Vector_2_1_f& B,
         uint32_t* p_lag_array,
         float32_t& x_estimate,
         float32_t& y_estimate){
 
-        Matrix4f A_T, A_copy;
-        A_T = A.transpose();
-        A_copy = A;
+        /* Recovering the lags from the array */
+        uint32_t lag_port = p_lag_array[0];
+        uint32_t lag_starboard = p_lag_array[1];
+        uint32_t lag_stern = p_lag_array[2];
+
+        /* Calculating TDOA and creating an array to hold the data */
+        float32_t TDOA_port_starboard = (float32_t)
+                DSP_CONSTANTS::SAMPLE_TIME * SOUND_SPEED * (lag_port - lag_starboard);
+        float32_t TDOA_port_stern = (float32_t)
+                DSP_CONSTANTS::SAMPLE_TIME * SOUND_SPEED * (lag_port - lag_stern);
+        float32_t TDOA_starboard_stern = (float32_t)
+                DSP_CONSTANTS::SAMPLE_TIME * SOUND_SPEED * (lag_starboard - lag_stern);
+
+        float32_t TDOA_array[NUM_HYDROPHONES] = { 
+                TDOA_port_starboard, TDOA_port_stern, TDOA_starboard_stern};
+        
+        /* Calculating the matrices */
+        TRILATERATION::calculate_tdoa_matrices(TDOA_array, A, B);
+
+        /* Calculating the transpose */
+        Matrix_2_3_f A_T = A.transpose();
+
+        /* Checking if A * A_T is invertible. Return 0 if not */
+        if(!((A_T * A).determinant())){
+                return 0;
+        }
 
         /* Calculating the solution-vector */
-        Vector4f state_vec = (A_T * A_copy).inverse() * A_T * B;
+        Vector_2_1_f solution_vec = (A_T * A).inverse() * A_T * B;
 
-        x_estimate = state_vec.coeff(0);
-        y_estimate = state_vec.coeff(1);
+        /* Extracting the values */
+        x_estimate = solution_vec.coeff(0);
+        y_estimate = solution_vec.coeff(1);
+
+        return 1;       
 }
 
 
+void TRILATERATION::calculate_tdoa_matrices(
+        float32_t* TDOA_array, 
+        Matrix_2_3_f& A,
+        Vector_2_1_f& B){
+                
+        /**
+         * @brief Hydrophones are here labeled as a number
+         *      Port hydrophone         : 0
+         *      Starboard hydrophone    : 1
+         *      Stern hydrophone        : 2
+         * 
+         * The positions and distances are therefore calculated using the
+         * port hydrophone as a reference. Example:
+         *      x_01 = x_0 - x_1        Difference in x-position between hyd 0 and 1
+         *      x_02 = x_0 - x_2        Difference in x-position between hyd 0 and 2
+         *      etc.
+         * 
+         * @note Only x and y is required as we are using 3 hydrophones and calculating
+         * z will in most cases result in linear dependent equations 
+         */
 
+        /* Calculating the difference in position between the hydrophones */
+        float32_t x_01 = PORT_HYD_X - STARBOARD_HYD_X;
+        float32_t x_02 = PORT_HYD_X - STERN_HYD_X;
 
-float32_t TRILATERATION::calculate_plane_distance(
-            const float32_t& x1,
-            const float32_t& y1,
-            const float32_t& x2,
-            const float32_t& y2){
-        return std::sqrt(std::pow(x1 - x2, 2) + std::pow(y1 - y2));
+        float32_t y_01 = PORT_HYD_Y - STARBOARD_HYD_Y;
+        float32_t y_02 = PORT_HYD_Y - STERN_HYD_Y;
+
+        /* Calculating the distance between the hydrophones */
+        float32_t d_01 = std::sqrt(std::pow(x_01, 2) + std::pow(y_01, 2));
+        float32_t d_02 = std::sqrt(std::pow(x_02, 2) + std::pow(y_02, 2));
+
+        /* Setting A */
+        A << x_01, y_01, d_01,
+             x_02, y_02, d_02;
+
+        /**
+         * @brief Calculating the values of the B-vector
+         * 
+         * The variables refer to the position (1-indexed) in the vector.
+         * 
+         * Check the link in the .h file for a better explanation   
+         */
+        float32_t b1 = 1 / 2 * (
+                std::pow(d_01, 2) +
+                std::pow(PORT_HYD_X, 2) - std::pow(STARBOARD_HYD_X, 2) +
+                std::pow(PORT_HYD_Y, 2) - std::pow(STARBOARD_HYD_Y, 2));
+        
+        float32_t b2 = 1 / 2 * (
+                std::pow(d_02, 2) +
+                std::pow(PORT_HYD_X, 2) - std::pow(STERN_HYD_X, 2) +
+                std::pow(PORT_HYD_Y, 2) - std::pow(STERN_HYD_Y, 2));
+
+        /* Setting B */
+        B << b1,
+             b2;
 }

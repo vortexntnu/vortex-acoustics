@@ -64,4 +64,16 @@
 
 #endif /* SYSTEM_MARGINS */
 
+
+/**
+ * @brief Defines that indicate physical characteristics/constants 
+ * of the system
+ */
+#ifndef PHYSICAL_CONSTANTS
+#define PHYSICAL_CONSTANTS
+
+  #define SOUND_SPEED       1480.0f   /* Speed of sound in water [m/s]                    */
+
+#endif /* PHYSICAL_CONSTANTS */
+
 #endif /* ACOUSTICS_PARAMETERS_H */
