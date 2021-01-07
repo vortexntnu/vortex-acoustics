@@ -4,14 +4,11 @@
  * @brief Small library that implements the 
  * hydrophones for the AUV for Vortex NTNU
  * 
- * @note Could be improved by using the pose
- * from ROS. Should be implemented in the 
- * future
- * 
  * @note It is thought that the hydrophones are
  * placed in a form of a triangle. Therefore, we
  * have one on front starboard, one on front port
- * and one on the back in the middle
+ * and one on the stern in the middle. Could be changed
+ * in the future
  * 
  *                    BOW
  *                      
@@ -27,31 +24,14 @@
  *           '''''''''HYD'''''''''
  * 
  *                   STERN
+ * 
+ * @note The position of the hydrophones are relative
+ * to the center of the AUV
  */
 #ifndef ACOUSTICS_HYDROPHONES_H
 #define ACOUSTICS_HYDROPHONES_H
 
 #include "trilateration.h"
-
-
-/**
- * @brief Defines that indicate the setup of the hardware on the AUV
- * 
- * These variables must be changed according to the hydrophones used.
- * As of 03.01.21, three hydrophones of the type Benthowave BII-7014FG 
- * is used. See the datasheet at 
- * https://www.benthowave.com/products/Specs/BII-7014FGPGDatasheet.pdf
- * for more information
- */
-#ifndef HYDROPHONE_DETAILS
-#define HYDROPHONE_DETAILS
-
-  #define NUM_HYDROPHONES   3        /* Number of hydrophones used on the AUV       */
-  #define HYD_PREAMP_DB     40       /* Number of dB the signal is preamplifies     */
-  #define HYD_FFVS          -173     /* Average FFVS for 20 - 40 kHz [dB V/μPa]     */    
-
-#endif /* HYDROPHONE_DETAILS */
-
 
 namespace HYDROPHONES{
 
@@ -61,9 +41,9 @@ namespace HYDROPHONES{
  * center of the AUV. Must be updated in the future
  * when the placement of the hydrophones are known
  */
-TRILATERATION::Pos pos_hyd_port(-1, 0, 0);
-TRILATERATION::Pos pos_hyd_starboard(1, 0, 0);
-TRILATERATION::Pos pos_hyd_stern(0, -1, 0);
+TRILATERATION::Pos pos_hyd_port{PORT_HYD_X, PORT_HYD_Y, PORT_HYD_Z};
+TRILATERATION::Pos pos_hyd_starboard{STARBOARD_HYD_X, STARBOARD_HYD_Y, STARBOARD_HYD_Z};
+TRILATERATION::Pos pos_hyd_stern{STERN_HYD_X, STERN_HYD_Y, STERN_HYD_Z};
 
 
 /**
@@ -88,16 +68,6 @@ private:
     uint32_t last_lag;
 
     /**
-     * @brief The maximum value detected 
-     */
-    float32_t* p_max_val;
-
-    /**
-     * @brief The index the maximum magnitude was detected on
-     */
-    uint32_t* p_idx;
-
-    /**
      * @brief The intensity calculated for the last sample
      */
     float32_t last_intensity;
@@ -106,11 +76,6 @@ private:
     * @brief The dataset for one hydrophone 
     */
     float32_t* p_data;
-
-    /**
-     * @brief The magnitude of the dataset
-     */
-    float32_t* p_mag_data;
 
     /**
      * @brief The autocorrelated data-sequence
@@ -142,9 +107,9 @@ public:
     * 
     * The raw data is filtered using a second-order biquad DF1 
     * IIR filter to eliminate unwanted frequencies. Thereafter
-    * the frequencies magnitude and autocorrelation are found.
-    * The lag, intensity and distance are thereafter estimated 
-    * from these measurements
+    * the autocorrelation is found and used to calculate the lag, 
+    * intensity and distance are thereafter estimated 
+    * from the filtered data
     */
     void analyze_data(float32_t* p_raw_data);
 }; /* class Hydrophones */
