@@ -31,30 +31,13 @@ namespace TRILATERATION{
  * 
  * @param sound_speed Speed of sound in water in m/s
  * 
- * @param source_power The power from each pinger in dB.
- * Warning: requires us to know the type of pinger 
- * and the battery-voltage as these are time varying
- * parameters
- * 
- * @param max_intensity_diff Number of dB we allow the detected
- * signals to differentiate from each other.
- * 
- * @param time_diff_epsilon Safety margin to reduce the 
- * likelyhood of an error. A value of 0.1 shows that we accept
- * signals that arrive 10 % later. 
- * NOTE: 0 <= time_diff_epsilon < 1
- * 
  * @param max_hydrophone_distance The maximum distance 
  * measured between the hydrophones. 
  * 
  * @param max_time_diff The maximum time-difference that
  * should be possible between the data signals
- * 
- * @warning max_hydrophone_distance and maximum_time_diff are
- * decleared as extern, as they are decleared in .cpp 
  */
 const uint16_t sound_speed          = 1480;
-const float32_t source_power        = 177;
 extern float32_t max_hydrophone_distance; 
 extern float32_t max_time_diff;
 
@@ -109,10 +92,7 @@ float32_t calculate_pos_distance(
  * 
  * @param pos_hyd_stern Position of stern hydrophone 
  */
-uint8_t initialize_trilateration_globals(
-            const Pos& pos_hyd_port,
-            const Pos& pos_hyd_starboard, 
-            const Pos& pos_hyd_stern);
+uint8_t initialize_trilateration_globals();
 
 
 /**
@@ -128,6 +108,16 @@ Matrix_2_3_f initialize_A_matrix();
  * @retval Returns a 2x1 vector with both entries set to 0
  */
 Vector_2_1_f initialize_B_matrix();
+
+
+/**
+ * @brief Function that check if the global variables 
+ * @p max_hydrophone_distance and @p max_time_diff have been 
+ * initialized correctly 
+ * 
+ * @retval Returns true if set up correctly
+ */
+uint8_t check_initialized_globals();
 
 
 /**

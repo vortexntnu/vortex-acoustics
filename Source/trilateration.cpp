@@ -30,21 +30,32 @@ float32_t TRILATERATION::calculate_pos_distance(
 }
 
 
-uint8_t TRILATERATION::initialize_trilateration_globals()
-                const Pos& pos_hyd_port, const Pos& pos_hyd_starboard,
-                const Pos& pos_hyd_stern){
-        float32_t dist_port_starboard = 
-                TRILATERATION::calculate_pos_distance(pos_hyd_port, pos_hyd_starboard);
-        float32_t dist_port_stern = 
-                TRILATERATION::calculate_pos_distance(pos_hyd_port, pos_hyd_stern);
-        float32_t dist_starboard_stern =
-                TRILATERATION::calculate_pos_distance(pos_hyd_starboard, pos_hyd_stern);
+uint8_t TRILATERATION::initialize_trilateration_globals(){
+
+        /* Calculating the distances between the hydrophones */
+        float32_t dist_port_starboard = (float32_t) std::sqrt(
+                std::pow(STARBOARD_HYD_X - PORT_HYD_X, 2) + 
+                std::pow(STARBOARD_HYD_Y - PORT_HYD_Y, 2) +
+                std::pow(STARBOARD_HYD_Z - PORT_HYD_Z, 2));
+        float32_t dist_port_stern = (float32_t) std::sqrt(
+                std::pow(STERN_HYD_X - PORT_HYD_X, 2) + 
+                std::pow(STERN_HYD_Y - PORT_HYD_Y, 2) +
+                std::pow(STERN_HYD_Z - PORT_HYD_Z, 2));
+        float32_t dist_starboard_stern = (float32_t) std::sqrt(
+                std::pow(STERN_HYD_X - STARBOARD_HYD_X, 2) + 
+                std::pow(STERN_HYD_Y - STARBOARD_HYD_Y, 2) +
+                std::pow(STERN_HYD_Z - STARBOARD_HYD_Z, 2));
+
+        /* Finding the maximum distance */
         TRILATERATION::max_hydrophone_distance = 
                 std::max(dist_port_starboard, std::max(dist_starboard_stern, dist_port_stern));
+        
+        /* Calculating max time allowed over that distance */
         TRILATERATION::max_time_diff = (1 + MARGIN_TIME_EPSILON) *
                 (TRILATERATION::max_hydrophone_distance / TRILATERATION::sound_speed);
-        return (TRILATERATION::max_hydrophone_distance != -1 && 
-                TRILATERATION::max_time_diff != 1);
+
+        /* Returning if both variables have been set correctly */
+        return check_initalized_globals(); 
 }
 
 
@@ -64,6 +75,12 @@ Vector_2_1_f initialize_B_matrix(){
 /**
  * Functions to check if signals/data are valid
  */
+uint8_t check_initialized_globals(){
+       return (TRILATERATION::max_hydrophone_distance != -1 && 
+                TRILATERATION::max_time_diff != 1); 
+}
+
+
 uint8_t TRILATERATION::valid_time_check(const uint32_t& time_lhs, const uint32_t& time_rhs){
         int32_t time_diff = time_lhs - time_rhs;
         return (std::abs(time_diff) * DSP_CONSTANTS::SAMPLE_TIME)
