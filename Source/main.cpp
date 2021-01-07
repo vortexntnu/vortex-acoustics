@@ -234,15 +234,9 @@ int main(void)
         lag_hyd_stern = hyd_stern.get_lag();
         uint32_t lag_array[NUM_HYDROPHONES] = { lag_hyd_port, lag_hyd_starboard, lag_hyd_stern };
 
-        // intensity_port = hyd_port.get_intensity();
-        // intensity_starboard = hyd_starboard.get_intensity();
-        // intensity_stern = hyd_stern.get_intensity();
-        // float32_t intensity_array[NUM_HYDROPHONES] = { intensity_port, intensity_starboard, intensity_stern };
-
         /**
          * Checking is the measurements are valid. The measurements 
-         * are discarded if they deviate too much in either signal
-         * intensity or time lag
+         * are discarded if they deviate too much in either time lag
          * 
          * Take new samples if the data is invalid
          */
