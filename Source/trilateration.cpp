@@ -35,7 +35,7 @@ uint8_t TRILATERATION::initialize_trilateration_globals(){
         
         /* Calculating max time allowed over that distance */
         TRILATERATION::max_time_diff = (1 + MARGIN_TIME_EPSILON) *
-                (TRILATERATION::max_hydrophone_distance / TRILATERATION::sound_speed);
+                (TRILATERATION::max_hydrophone_distance / SOUND_SPEED);
 
         /* Returning if both variables have been set correctly */
         return check_initalized_globals(); 
@@ -64,16 +64,22 @@ uint8_t check_initialized_globals(){
 }
 
 
-uint8_t TRILATERATION::valid_time_check(const uint32_t& time_lhs, const uint32_t& time_rhs){
+uint8_t TRILATERATION::valid_time_check(
+        const uint32_t& time_lhs, 
+        const uint32_t& time_rhs){
+        
+        /**
+         * Calculating the time-difference and checking if it exceeds the maximum
+         * allowed time for a valid signal
+         */
         int32_t time_diff = time_lhs - time_rhs;
-        return (std::abs(time_diff) * SAMPLE_TIME)
-		> TRILATERATION::max_time_diff;
+        return (std::abs(time_diff) * SAMPLE_TIME) > TRILATERATION::max_time_diff;
 }
 
 
 uint8_t TRILATERATION::check_valid_signals(
         uint32_t lag_array[NUM_HYDROPHONES],
-        uint8_t& p_bool_time_error){
+        uint8_t& bool_time_error){
         
         /**
          * Recovering the values from the arrays
@@ -110,14 +116,14 @@ uint8_t TRILATERATION::check_valid_signals(
 uint8_t TRILATERATION::trilaterate_pinger_position(
         Matrix_2_3_f& A,
         Vector_2_1_f& B,
-        uint32_t* p_lag_array,
+        uint32_t lag_array[NUM_HYDROPHONES],
         float32_t& x_estimate,
         float32_t& y_estimate){
 
         /* Recovering the lags from the array */
-        uint32_t lag_port = p_lag_array[0];
-        uint32_t lag_starboard = p_lag_array[1];
-        uint32_t lag_stern = p_lag_array[2];
+        uint32_t lag_port = lag_array[0];
+        uint32_t lag_starboard = lag_array[1];
+        uint32_t lag_stern = lag_array[2];
 
         /* Calculating TDOA and creating an array to hold the data */
         float32_t TDOA_port_starboard = (float32_t)
@@ -153,7 +159,7 @@ uint8_t TRILATERATION::trilaterate_pinger_position(
 
 
 void TRILATERATION::calculate_tdoa_matrices(
-        float32_t* TDOA_array, 
+        float32_t TDOA_array[NUM_HYDROPHONES], 
         Matrix_2_3_f& A,
         Vector_2_1_f& B){
                 

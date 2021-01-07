@@ -89,18 +89,17 @@ uint8_t check_initialized_globals();
  * @brief Function to check the validy of each signal 
  * 
  * @retval Returns true if the values are valid, and false if not. 
- * If false is returned, @p p_bool_time_error is set to 1
+ * If false is returned, @p bool_time_error is set to 1
  * 
  * @param lag_array Array containing the measured lags. 
- * @p p_lag_array expands to 
- *      *p_lag_array = { lag_port, lag_starboard, lag_stern }
+ * @p lag_array expands to 
+ *      lag_array = { lag_port, lag_starboard, lag_stern }
  *
  * @param bool_time_error Int used to indicate time-error
  */
 uint8_t check_valid_signals(
-            uint32_t* p_lag_array,
-            float32_t* p_intensity_array,
-            uint8_t& p_bool_time_error); 
+            uint32_t lag_array[NUM_HYDROPHONES],
+            uint8_t& bool_time_error); 
 
 
 /**
@@ -146,9 +145,9 @@ uint8_t valid_time_check(
  * @param B A @c Vector_2_1_f that holds the minimal solutions to the equations. 
  * Size: 4x1
  * 
- * @param p_lag_array Pointer to an array containing the measured
- * lags. @p p_lag_array expands to 
- *      *p_lag_array = { lag_port, lag_starboard, lag_stern }
+ * @param lag_array Array containing the measured lags. 
+ * @p lag_array expands to 
+ *      lag_array = { lag_port, lag_starboard, lag_stern }
  * 
  * @param x_estimate Reference to the estimated x-position. Used to return
  * the x-position indirectly
@@ -159,7 +158,7 @@ uint8_t valid_time_check(
 uint8_t trilaterate_pinger_position(
             Matrix_2_3_f& A,
             Vector_2_1_f& B,
-            uint32_t* p_lag_array,
+            uint32_t lag_array[NUM_HYDROPHONES],
             float32_t& x_estimate,
             float32_t& y_estimate); 
             
@@ -181,7 +180,7 @@ uint8_t trilaterate_pinger_position(
  * @param B A vector containing the solutions to the linear equations
  */
 void calculate_tdoa_matrices(
-            float32_t* TDOA_array, 
+            float32_t TDOA_array[NUM_HYDROPHONES], 
             Matrix_2_3_f& A,
             Vector_2_1_f& B);
 

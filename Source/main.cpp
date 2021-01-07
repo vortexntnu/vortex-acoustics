@@ -65,9 +65,9 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc);
 
 /* Function to access DMA to get data from the hydrophones */
 static void read_ADC(
-          float32_t* p_data_hyd_port, 
-          float32_t* p_data_hyd_starboard,
-          float32_t* p_data_hyd_stern);
+          float32_t data_hyd_port[IN_BUFFER_LENGTH], 
+          float32_t data_hyd_starboard[IN_BUFFER_LENGTH],
+          float32_t data_hyd_stern[IN_BUFFER_LENGTH]);
 
 /* Functions to log errors */
 static void log_error(ERROR_TYPES error_code);
@@ -545,9 +545,9 @@ static void MX_GPIO_Init(void)
  * a serious bug! 
  */
 static void read_ADC(
-        float32_t* p_data_hyd_port, 
-        float32_t* p_data_hyd_starboard,
-        float32_t* p_data_hyd_stern){
+        float32_t p_data_hyd_port[IN_BUFFER_LENGTH], 
+        float32_t p_data_hyd_starboard[IN_BUFFER_LENGTH],
+        float32_t p_data_hyd_stern[IN_BUFFER_LENGTH]){
 
   /**
    * Reading the data. Dropping the last couple of datapoints, since
