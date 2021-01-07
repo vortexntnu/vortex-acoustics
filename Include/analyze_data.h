@@ -4,21 +4,16 @@
  * @brief Small library that implements the 
  * hydrophones for the AUV for Vortex NTNU
  */
-#ifndef ACOUSTICS_HYDROPHONES_H
-#define ACOUSTICS_HYDROPHONES_H
+#ifndef ACOUSTICS_ANALYZE_DATA_H
+#define ACOUSTICS_ANALYZE_DATA_H
 
 #include "trilateration.h"
 
-namespace HYDROPHONES{
+namespace ANALYZE_DATA{
 
 /**
- * @brief Class for the hydrophones. 
- * Combines the basic functions for
- * each hydrophone. Makes it a lot 
- * easier to implement
- * 
- * @warning Must be evaluated if this
- * class is really necessary.
+ * @brief Class for the hydrophones. This allows us to easier analyze
+ * the data-points, and access the results from each hydrophone.
  */
 class Hydrophones{
 private:
@@ -26,11 +21,6 @@ private:
     * @brief The lag calculated for the last sample
     */
     uint32_t last_lag;
-
-    /**
-     * @brief The intensity calculated for the last sample
-     */
-    float32_t last_intensity;
 
     /**
     * @brief The dataset for one hydrophone 
@@ -55,12 +45,7 @@ public:
     /**
     * @brief Function to return the last calculated lag 
     */
-    uint32_t get_lag() const { return last_lag; } 
-
-    /**
-     * @brief Function to return the intensity
-     */
-    float32_t get_intensity() const { return last_intensity; }
+    uint32_t get_measured_lag() const { return last_lag; } 
 
     /**
     * @brief Function to analyze the data
@@ -71,12 +56,12 @@ public:
     * intensity and distance are thereafter estimated 
     * from the filtered data
     */
-    void analyze_data(float32_t* p_raw_data);
+    void analyze_hydrophone_data(float32_t* p_raw_data);
 }; /* class Hydrophones */
 
-} /* namespace HYDROPHONES */
+} /* namespace ANALYZE_DATA */
 
-#endif // ACOUSTICS_HYDROPHONES_H
+#endif // ACOUSTICS_ANALYZE_DATA_H
 
 
 

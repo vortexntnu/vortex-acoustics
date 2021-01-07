@@ -22,7 +22,7 @@
 #include <time.h>
 
 #include "main.h"
-#include "hydrophones.h"
+#include "analyze_data.h"
 
 #include "stm32f7xx_hal.h"
 #include "stm32f7xx_hal_adc.h"
@@ -125,16 +125,15 @@ int main(void)
      * If there is an error, this indicates that there is a more serious error
      * in the code. Breaks out of the while loop and shuts down the system if that is the case
      */
-    if(!TRILATERATION::initialize_trilateration_globals(HYDROPHONES::pos_hyd_port,
-          HYDROPHONES::pos_hyd_starboard, HYDROPHONES::pos_hyd_stern)){
+    if(!TRILATERATION::initialize_trilateration_globals()){
       log_error(ERROR_TYPES::ERROR_TRILATERATION_INIT);
       break; 
     }
 
     /* Initialize the class Hydrophone */
-    HYDROPHONES::Hydrophones hyd_port();
-    HYDROPHONES::Hydrophones hyd_starboard();
-    HYDROPHONES::Hydrophones hyd_stern();
+    ANALYZE_DATA::Hydrophones hyd_port();
+    ANALYZE_DATA::Hydrophones hyd_starboard();
+    ANALYZE_DATA::Hydrophones hyd_stern();
 
     /* Initialize the matrices used for trilatiration */
     Matrix_2_3_f A_matrix = TRILATERATION::initialize_A_matrix();
@@ -219,13 +218,13 @@ int main(void)
         float32_t time_measurement = (float32_t)difftime(time(NULL), time_initial_startup);
 
         /* Calculating lag and intensity */
-        hyd_port.analyze_data(data_hyd_port);
-        hyd_starboard.analyze_data(data_hyd_starboard);
-        hyd_stern.analyze_data(data_hyd_stern);
+        hyd_port.analyze_hydrophone_data(data_hyd_port);
+        hyd_starboard.analyze_hydrophone_data(data_hyd_starboard);
+        hyd_stern.analyze_hydrophone_data(data_hyd_stern);
 
-        lag_hyd_port = hyd_port.get_lag();
-        lag_hyd_starboard = hyd_starboard.get_lag();
-        lag_hyd_stern = hyd_stern.get_lag();
+        lag_hyd_port = hyd_port.get_measured_lag();
+        lag_hyd_starboard = hyd_starboard.get_measured_lag();
+        lag_hyd_stern = hyd_stern.get_measured_lag();
         uint32_t lag_array[NUM_HYDROPHONES] = { lag_hyd_port, lag_hyd_starboard, lag_hyd_stern };
 
         /**
@@ -234,8 +233,7 @@ int main(void)
          * 
          * Take new samples if the data is invalid
          */
-        if(!TRILATERATION::check_valid_signals(lag_array,
-              bool_time_error)){
+        if(!TRILATERATION::check_valid_signals(lag_array, bool_time_error)){
           check_signal_error(bool_time_error);
           continue;
         }

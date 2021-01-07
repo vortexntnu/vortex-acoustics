@@ -18,7 +18,7 @@
 #ifndef ACOUSTICS_TESTING_H
 #define ACOUSTICS_TESTING_H
 
-#include "hydrophones.h"
+#include "analyze_data.h"
 
 /**
  * @brief Namespace to hold the testing-functions
