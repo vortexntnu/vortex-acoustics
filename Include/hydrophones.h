@@ -3,30 +3,6 @@
  * 
  * @brief Small library that implements the 
  * hydrophones for the AUV for Vortex NTNU
- * 
- * @note It is thought that the hydrophones are
- * placed in a form of a triangle. Therefore, we
- * have one on front starboard, one on front port
- * and one on the stern in the middle. Could be changed
- * in the future
- * 
- *                    BOW
- *                      
- *      Port                       Starboard
- *                      
- *       HYD ''''''''''''''''''''' HYD
- *           '''''''''''''''''''''
- *           ''''''''' A '''''''''
- *           ''''''''' U '''''''''
- *           ''''''''' V '''''''''
- *           '''''''''''''''''''''
- *           '''''''''''''''''''''
- *           '''''''''HYD'''''''''
- * 
- *                   STERN
- * 
- * @note The position of the hydrophones are relative
- * to the center of the AUV
  */
 #ifndef ACOUSTICS_HYDROPHONES_H
 #define ACOUSTICS_HYDROPHONES_H

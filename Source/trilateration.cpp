@@ -5,7 +5,6 @@
  * These values are updated in the function initialize_trilateration_globals
  * 
  * Initialized to -1 such that it's easy to check if the variables are incorrect
- * (Not that it is done as of 07.01.21)
  */
 float32_t TRILATERATION::max_hydrophone_distance = -1;
 float32_t TRILATERATION::max_time_diff = -1;
@@ -67,7 +66,7 @@ uint8_t check_initialized_globals(){
 
 uint8_t TRILATERATION::valid_time_check(const uint32_t& time_lhs, const uint32_t& time_rhs){
         int32_t time_diff = time_lhs - time_rhs;
-        return (std::abs(time_diff) * DSP_CONSTANTS::SAMPLE_TIME)
+        return (std::abs(time_diff) * SAMPLE_TIME)
 		> TRILATERATION::max_time_diff;
 }
 
@@ -122,11 +121,11 @@ uint8_t TRILATERATION::trilaterate_pinger_position(
 
         /* Calculating TDOA and creating an array to hold the data */
         float32_t TDOA_port_starboard = (float32_t)
-                DSP_CONSTANTS::SAMPLE_TIME * SOUND_SPEED * (lag_port - lag_starboard);
+                SAMPLE_TIME * SOUND_SPEED * (lag_port - lag_starboard);
         float32_t TDOA_port_stern = (float32_t)
-                DSP_CONSTANTS::SAMPLE_TIME * SOUND_SPEED * (lag_port - lag_stern);
+                SAMPLE_TIME * SOUND_SPEED * (lag_port - lag_stern);
         float32_t TDOA_starboard_stern = (float32_t)
-                DSP_CONSTANTS::SAMPLE_TIME * SOUND_SPEED * (lag_starboard - lag_stern);
+                SAMPLE_TIME * SOUND_SPEED * (lag_starboard - lag_stern);
 
         float32_t TDOA_array[NUM_HYDROPHONES] = { 
                 TDOA_port_starboard, TDOA_port_stern, TDOA_starboard_stern};

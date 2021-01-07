@@ -43,7 +43,7 @@ const uint16_t max_num_errors = std::pow(2, 8);
 volatile ERROR_TYPES errors_occured[max_num_errors];
 
 /* Memory that the DMA will push the data to */
-volatile uint32_t ADC1_converted_values[NUM_HYDROPHONES * DSP_CONSTANTS::DMA_BUFFER_LENGTH];
+volatile uint32_t ADC1_converted_values[NUM_HYDROPHONES * DMA_BUFFER_LENGTH];
 
 /* Variable used to indicate if conversion is ready. Changed via cb-function */
 volatile uint8_t bool_DMA_ready = 0;
@@ -150,9 +150,9 @@ int main(void)
     time_t time_initial_startup = time(NULL);
 
     /* Intializing memory for the raw-data-arrays */
-    float32_t data_hyd_port[DSP_CONSTANTS::IN_BUFFER_LENGTH];
-    float32_t data_hyd_starboard[DSP_CONSTANTS::IN_BUFFER_LENGTH];
-    float32_t data_hyd_stern[DSP_CONSTANTS::IN_BUFFER_LENGTH];
+    float32_t data_hyd_port[IN_BUFFER_LENGTH];
+    float32_t data_hyd_starboard[IN_BUFFER_LENGTH];
+    float32_t data_hyd_stern[IN_BUFFER_LENGTH];
 
     /* Variables used to indicate error(s) with the signal */
     uint8_t bool_time_error = 0;
@@ -186,7 +186,7 @@ int main(void)
 
         /* (Re)starting DMA */
         if (HAL_ADC_Start_DMA(&hadc1, (uint32_t*) ADC1_converted_values, 
-            NUM_HYDROPHONES * DSP_CONSTANTS::DMA_BUFFER_LENGTH) != HAL_OK){
+            NUM_HYDROPHONES * DMA_BUFFER_LENGTH) != HAL_OK){
           log_error(ERROR_TYPES::ERROR_DMA_START);
           continue;
         }
@@ -556,7 +556,7 @@ static void read_ADC(
    * 2048 % 3 = 2. Reducing the number of datapoints reduces the 
    * accuracy of the analysis, however prevents out-of-range error
    */
-  for(int i = 0; i < DSP_CONSTANTS::DMA_BUFFER_LENGTH - 
+  for(int i = 0; i < DMA_BUFFER_LENGTH - 
         NUM_HYDROPHONES; i++){
     p_data_hyd_port[2 * i] = ADC1_converted_values[3 * i];
     p_data_hyd_port[(2 * i) + 1] = 0;

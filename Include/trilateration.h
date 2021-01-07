@@ -13,7 +13,7 @@
 #include <Eigen/LU> 
 #include <Eigen/Core>
 
-#include "DSP_constants.h"
+#include "parameters.h"
 
 /**
  * @brief Typedef used during trilateration
