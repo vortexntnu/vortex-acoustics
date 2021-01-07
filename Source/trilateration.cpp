@@ -47,6 +47,21 @@ uint8_t TRILATERATION::initialize_trilateration_globals(
 }
 
 
+Matrix_2_3_f initialize_A_matrix(){
+        Matrix_2_3_f A << 0, 0, 0,
+                          0, 0, 0;
+        return A;
+}
+
+
+Vector_2_1_f initialize_B_matrix(){
+        Vector_2_1_f B << 0,
+                          0;
+        return B;
+}
+
+
+
 /**
  * Functions for trilateration, estimation and calculation for
  * the position and angles

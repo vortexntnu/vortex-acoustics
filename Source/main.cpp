@@ -132,17 +132,24 @@ int main(void)
     HYDROPHONES::Hydrophones hyd_starboard(HYDROPHONES::pos_hyd_starboard);
     HYDROPHONES::Hydrophones hyd_stern(HYDROPHONES::pos_hyd_stern);
 
+    /* Initialize the matrices used for trilatiration */
+    Matrix_2_3_f A_matrix = TRILATERATION::initialize_A_matrix();
+    Vector_2_1_f B_matrix = TRILATERATION::initialize_B_vector();
+
     /* Lag from each hydrophone */
     uint32_t lag_hyd_port, lag_hyd_starboard, lag_hyd_stern;
 
     /* Intensity measured for each hydrophone */
-    float32_t intensity_port, intensity_starboard, intensity_stern;
+    //float32_t intensity_port, intensity_starboard, intensity_stern;
 
     /* Range-estimate to the acoustic pinger */
-    float32_t distance_estimate;
+    //float32_t distance_estimate;
 
     /* Angle-estimate to the acoustic pinger */
-    float32_t angle_estimate;
+    //float32_t angle_estimate;
+
+    /* Estimated position of the acoustic pinger */
+    float32_t x_pos_es, y_pos_es;
 
     /* Initializing time-measurement */
     time_t time_initial_startup = time(NULL);
@@ -154,7 +161,7 @@ int main(void)
 
     /* Variables used to indicate error(s) with the signal */
     uint8_t bool_time_error = 0;
-    uint8_t bool_intensity_error = 0;
+    //uint8_t bool_intensity_error = 0;
 
     /* USER CODE END 2 */
 
@@ -227,10 +234,10 @@ int main(void)
         lag_hyd_stern = hyd_stern.get_lag();
         uint32_t lag_array[NUM_HYDROPHONES] = { lag_hyd_port, lag_hyd_starboard, lag_hyd_stern };
 
-        intensity_port = hyd_port.get_intensity();
-        intensity_starboard = hyd_starboard.get_intensity();
-        intensity_stern = hyd_stern.get_intensity();
-        float32_t intensity_array[NUM_HYDROPHONES] = { intensity_port, intensity_starboard, intensity_stern };
+        // intensity_port = hyd_port.get_intensity();
+        // intensity_starboard = hyd_starboard.get_intensity();
+        // intensity_stern = hyd_stern.get_intensity();
+        // float32_t intensity_array[NUM_HYDROPHONES] = { intensity_port, intensity_starboard, intensity_stern };
 
         /**
          * Checking is the measurements are valid. The measurements 
@@ -239,11 +246,11 @@ int main(void)
          * 
          * Take new samples if the data is invalid
          */
-        if(!TRILATERATION::check_valid_signals(lag_array, intensity_array,
-              &bool_time_error, &bool_intensity_error)){
-          check_signal_error(&bool_time_error, &bool_intensity_error);
-          continue;
-        }
+        // if(!TRILATERATION::check_valid_signals(lag_array, intensity_array,
+        //       &bool_time_error, &bool_intensity_error)){
+        //   check_signal_error(&bool_time_error, &bool_intensity_error);
+        //   continue;
+        // }
 
         /** 
          * Calculate estimated position of the acoustic pinger in 
@@ -254,11 +261,18 @@ int main(void)
          * The second function returns an estimate of the distance and
          * the angle to the target  
          */
-        std::pair<float32_t, float32_t> position_es = 
-            TRILATERATION::estimate_pinger_position(lag_array, intensity_array);
+        // std::pair<float32_t, float32_t> position_es = 
+        //     TRILATERATION::estimate_pinger_position(lag_array, intensity_array);
 
-        TRILATERATION::calculate_distance_and_angle(position_es, 
-              &distance_estimate, &angle_estimate);
+        // TRILATERATION::calculate_distance_and_angle(position_es, 
+        //       &distance_estimate, &angle_estimate);
+
+        /**
+         * Triliterate the position of the acoustic pinger
+         * 
+         * The coordinates are given as a reference to the center of the AUV
+         */
+        TRILATERATION::trilaterate_pinger_position(A, B, lag_array, x_pos_es, y_pos_es);
 
         /**
          * TODO@TODO

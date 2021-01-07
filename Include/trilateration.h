@@ -116,20 +116,18 @@ uint8_t initialize_trilateration_globals(
 
 
 /**
- * @brief Initializes the matrices @p A and @p B
+ * @brief Initializes the matrix @p A to a 2x3 0-matrix
  * 
- * The function sets the port hydrophone as it's initial anchor. The other
- * datapoints are therefore calculated based on the position/distance from
- * the port hydrophone
- * 
- * @retval Returns 1 if the A-matrix is invertible
- * Returns 0 if A not invertible 
- * 
- * @param A Matrix containing positions and distance between the hydrophones
+ * @retval Returns a 2x3 matrix with all entries set to 0
  */
-uint8_t initialize_trilateration_matrices(
-            Matrix_2_3_f& A,
-            Vector_2_1_f& B);
+Matrix_2_3_f initialize_A_matrix();
+
+/**
+ * @brief Initializes the vector @p B to a 2x3 0-matrix
+ * 
+ * @retval Returns a 2x1 vector with both entries set to 0
+ */
+Vector_2_1_f initialize_B_matrix();
 
 /**
  * @brief Function to calculate an estimate for the distance
