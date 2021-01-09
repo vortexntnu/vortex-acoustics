@@ -35,7 +35,7 @@
 ADC_HandleTypeDef hadc1;      
 DMA_HandleTypeDef hdma_adc;   
 ETH_HandleTypeDef heth;       
-SPI_HandleTypeDef hspi1;      
+//SPI_HandleTypeDef hspi1;      
 
 /* Errors and errors-detected */
 uint32_t error_idx = 0;
@@ -115,7 +115,7 @@ int main(void)
     MX_DMA_Init();
     MX_ADC1_Init();
     MX_ETH_Init();
-    MX_SPI1_Init();
+    //MX_SPI1_Init();
     
     /* USER CODE BEGIN 2 */
     /** 
