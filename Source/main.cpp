@@ -233,7 +233,7 @@ int main(void)
          * Take new samples if the data is invalid
          */
         if(!TRILATERATION::check_valid_signals(lag_array, bool_time_error)){
-          check_signal_error(bool_time_error);
+          log_error(ERROR_TYPES::ERROR_TIME_SIGNAL);
           continue;
         }
 
