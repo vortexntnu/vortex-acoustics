@@ -39,7 +39,7 @@ SPI_HandleTypeDef hspi1;
 
 /* Errors and errors-detected */
 uint32_t error_idx = 0;
-const uint16_t max_num_errors = std::pow(2, 8);
+const uint16_t max_num_errors = 256;
 volatile ERROR_TYPES errors_occured[max_num_errors];
 
 /* Memory that the DMA will push the data to */
@@ -131,13 +131,13 @@ int main(void)
     }
 
     /* Initialize the class Hydrophone */
-    ANALYZE_DATA::Hydrophones hyd_port();
-    ANALYZE_DATA::Hydrophones hyd_starboard();
-    ANALYZE_DATA::Hydrophones hyd_stern();
+    ANALYZE_DATA::Hydrophones hyd_port;
+    ANALYZE_DATA::Hydrophones hyd_starboard;
+    ANALYZE_DATA::Hydrophones hyd_stern;
 
     /* Initialize the matrices used for trilatiration */
     Matrix_2_3_f A_matrix = TRILATERATION::initialize_A_matrix();
-    Vector_2_1_f B_matrix = TRILATERATION::initialize_B_vector();
+    Vector_2_1_f B_vector = TRILATERATION::initialize_B_vector();
 
     /* Lag from each hydrophone */
     uint32_t lag_hyd_port, lag_hyd_starboard, lag_hyd_stern;
@@ -178,7 +178,6 @@ int main(void)
            * making the code/implementation for the Xavier
            */
         }
-
 
         /* (Re)setting the DMA's state-value */
         bool_DMA_ready = 0;
@@ -243,7 +242,8 @@ int main(void)
          * 
          * The coordinates are given as a reference to the center of the AUV
          */
-        TRILATERATION::trilaterate_pinger_position(A, B, lag_array, x_pos_es, y_pos_es);
+        TRILATERATION::trilaterate_pinger_position(A_matrix, B_vector, 
+            lag_array, x_pos_es, y_pos_es);
 
         /**
          * TODO@TODO

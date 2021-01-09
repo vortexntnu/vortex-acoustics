@@ -103,25 +103,17 @@
 
 /**
  * @brief Enum to hold some of the potential errors that could occur
- * 
- * @warning ERROR_INVALID_SIGNAL is most likely on occuring, as it 
- * is calculated multiple times a second. Must prevent it from 
- * eliminating the RAM/memory
  */
 typedef enum{
   ERROR_ADC_INIT,             /* Error on initializing ADC                          */
   ERROR_ADC_CONFIG,           /* Error on configuring ADC                           */
-  ERROR_DMA_INIT,             /* Error on initializing DMA                          */
-  ERROR_DMA_CONFIG,           /* Error on configuring DMA                           */
   ERROR_DMA_START,            /* Error while starting DMA                           */
   ERROR_DMA_STOP,             /* Error while stopping DMA                           */
-  ERROR_SPI_INIT,             /* Error on initializing SPI                          */
-  ERROR_ETH_INIT,             /* Error on initializing ETH                          */
   ERROR_TRILATERATION_INIT,   /* Error on initializing TRILATERATION                */
   ERROR_TIME_SIGNAL,          /* Error on calculating invalid time of signals       */
-  ERROR_INTENSITY_SIGNAL,     /* Error on calculating invalid intensity of signals  */
-  ERROR_UNIDENTIFIED,         /* Unidentified error. Thrown using Error_handler     */
-  ERROR_MEMORY                /* Out of memory for error_handling                   */
+  ERROR_UNIDENTIFIED,         /* Unidentified error. Thrown using Error_handler()   */
+  ERROR_MEMORY,               /* Out of memory for error_handling                   */
+  ERROR_A_NOT_INVERTIBLE      /* (A^T * A)-matrix not invertible                    */
 }ERROR_TYPES; /* enum ERROR_TYPES */
 
 #ifdef __cplusplus
