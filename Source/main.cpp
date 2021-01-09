@@ -242,8 +242,11 @@ int main(void)
          * 
          * The coordinates are given as a reference to the center of the AUV
          */
-        TRILATERATION::trilaterate_pinger_position(A_matrix, B_vector, 
-            lag_array, x_pos_es, y_pos_es);
+        if(!TRILATERATION::trilaterate_pinger_position(A_matrix, B_vector, 
+            lag_array, x_pos_es, y_pos_es)){
+          log_error(ERROR_TYPES::ERROR_A_NOT_INVERTIBLE);
+          continue;
+        }
 
         /**
          * TODO@TODO
