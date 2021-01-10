@@ -120,6 +120,25 @@ typedef enum{
 extern "C" {
 #endif
 
+/**
+ * @brief Public handlers for 
+ *    ADC
+ *    DMA
+ *    ETH
+ *    SPI
+ */
+extern ADC_HandleTypeDef hadc1;
+extern DMA_HandleTypeDef hdma_adc1;
+extern ETH_HandleTypeDef heth;
+//extern SPI_HandleTypeDef hspi1;
+
+/**
+ * @brief This function is executed in case of error occurrence.
+ * Calls the private function log_error() with parameter 
+ * ERROR_TYPES::ERROR_UNIDENTIFIED
+ * 
+ * Called by standardized init/config-functions for ADC/ETH/DMA/...
+ */
 void Error_Handler(void);
 
 #ifdef __cplusplus

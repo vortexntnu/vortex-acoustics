@@ -33,9 +33,9 @@
 
 /* Handler for the ADC, DMA, ETH and SPI */
 ADC_HandleTypeDef hadc1;      
-DMA_HandleTypeDef hdma_adc;   
+DMA_HandleTypeDef hdma_adc1;
 ETH_HandleTypeDef heth;       
-//SPI_HandleTypeDef hspi1;      
+//SPI_HandleTypeDef hspi1;        
 
 /* Errors and errors-detected */
 uint32_t error_idx = 0;
@@ -636,13 +636,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
 /* USER CODE END 4 */
 
 /**
-  * @brief  This function is executed in case of error occurrence
-  * Calls log_error() with unidentified error
-  * 
-  * Could also add the possibility to take in the line and file, and log these.
-  * Would require some more future work and tighter integration with the Xavier
-  * 
-  * @retval None
+  * @brief  This function is executed in case of an unidentified error occurrence
   */
 void Error_Handler(void){
   log_error(ERROR_TYPES::ERROR_UNIDENTIFIED);
