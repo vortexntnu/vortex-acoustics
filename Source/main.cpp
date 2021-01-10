@@ -71,7 +71,6 @@ static void read_ADC(
 
 /* Functions to log errors */
 static void log_error(ERROR_TYPES error_code);
-static void Error_Handler(void);
 static void check_signal_error(uint8_t& bool_time_error); 
 
 /* Function to coordinate the communication over the ethernet */

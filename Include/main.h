@@ -120,6 +120,8 @@ typedef enum{
 extern "C" {
 #endif
 
+void Error_Handler(void);
+
 #ifdef __cplusplus
 }
 #endif
