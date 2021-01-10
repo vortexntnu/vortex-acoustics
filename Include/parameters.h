@@ -222,7 +222,7 @@
           0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
   };
 
-  const float32_t filter_coefficients[5 * num_stages] = 
+  float32_t filter_coefficients[5 * num_stages] = 
   {
           0.56942484, 0.0, -0.56942484,             /* Numerator filter 1                               */ 
           -1.12551866, 0.46469620,                  /* Denominator filter 1                             */

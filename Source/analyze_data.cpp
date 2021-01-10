@@ -1,7 +1,7 @@
 #include "analyze_data.h"
 
 ANALYZE_DATA::Hydrophones::Hydrophones() : 
-    last_lag{0}, last_intensity{0}
+    last_lag{0}
 {
     /* Initial memory allocation */
     p_data = (float32_t*) malloc(sizeof(float32_t) * IN_BUFFER_LENGTH);
@@ -31,7 +31,7 @@ void ANALYZE_DATA::Hydrophones::analyze_hydrophone_data(float32_t *p_raw_data)
     /* Iterating over the autocorrelation to find the lag */
     float32_t max_val = 0;
     last_lag = 0;
-    for(int i = 0; i < 2 * IN_BUFFER_LENGTH - 1; i++){
+    for(uint i = 0; i < 2 * IN_BUFFER_LENGTH - 1; i++){
         if(p_autocorr_data[i] > max_val){
             max_val = p_autocorr_data[i];
             last_lag = i;

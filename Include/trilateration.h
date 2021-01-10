@@ -72,7 +72,7 @@ Matrix_2_3_f initialize_A_matrix();
  * 
  * @retval Returns a 2x1 vector with both entries set to 0
  */
-Vector_2_1_f initialize_B_matrix();
+Vector_2_1_f initialize_B_vector();
 
 
 /**

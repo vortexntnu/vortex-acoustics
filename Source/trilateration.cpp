@@ -38,27 +38,29 @@ uint8_t TRILATERATION::initialize_trilateration_globals(){
                 (TRILATERATION::max_hydrophone_distance / SOUND_SPEED);
 
         /* Returning if both variables have been set correctly */
-        return check_initalized_globals(); 
+        return TRILATERATION::check_initialized_globals(); 
 }
 
 
-Matrix_2_3_f initialize_A_matrix(){
-        Matrix_2_3_f A << 0, 0, 0,
-                          0, 0, 0;
+Matrix_2_3_f TRILATERATION::initialize_A_matrix(){
+        Matrix_2_3_f A;
+        A << 0, 0, 0,
+             0, 0, 0;
         return A;
 }
 
 
-Vector_2_1_f initialize_B_matrix(){
-        Vector_2_1_f B << 0,
-                          0;
+Vector_2_1_f TRILATERATION::initialize_B_vector(){
+        Vector_2_1_f B;
+        B << 0,
+             0;
         return B;
 }
 
 /**
  * Functions to check if signals/data are valid
  */
-uint8_t check_initialized_globals(){
+uint8_t TRILATERATION::check_initialized_globals(){
        return (TRILATERATION::max_hydrophone_distance != -1 && 
                 TRILATERATION::max_time_diff != 1); 
 }
@@ -97,7 +99,7 @@ uint8_t TRILATERATION::check_valid_signals(
         if(TRILATERATION::valid_time_check(lag_port, lag_starboard) || 
         TRILATERATION::valid_time_check(lag_port, lag_stern) || 
         TRILATERATION::valid_time_check(lag_starboard, lag_stern))
-                p_bool_time_error = 1;
+                bool_time_error = 1;
 
         /**
          * Possible to add other tests here in the future
@@ -106,7 +108,7 @@ uint8_t TRILATERATION::check_valid_signals(
         /**
          * Returning the test-results
          */
-        return !(p_bool_intensity_error);
+        return !(bool_time_error);
 }
 
 
