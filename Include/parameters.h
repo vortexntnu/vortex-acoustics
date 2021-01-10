@@ -44,7 +44,6 @@
   #define IN_BUFFER_LENGTH    4096u                 /* Total number (real + imaginary) measurements   */
                                                     /* per hydrophone                                 */
   #define DMA_BUFFER_LENGTH   IN_BUFFER_LENGTH / 2  /* Number real measurements transferred with DMA  */
-  #define FFT_SIZE            IN_BUFFER_LENGTH      /* Number of data-points to FFT                   */
   #define IIR_SIZE            IN_BUFFER_LENGTH      /* Number of data-points to filter                */
 
 #endif /* DSP_CONSTANTS */

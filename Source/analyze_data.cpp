@@ -52,8 +52,8 @@ void ANALYZE_DATA::Hydrophones::analyze_hydrophone_data(float32_t *p_raw_data)
             p_raw_data, p_data, IIR_SIZE);
 
     /* Taking the autocorrelation of the filtered data */
-    arm_correlate_f32(p_data, FFT_SIZE, p_data, 
-            FFT_SIZE, p_autocorr_data);
+    arm_correlate_f32(p_data, IN_BUFFER_LENGTH, p_data, 
+            IN_BUFFER_LENGTH, p_autocorr_data);
 
     /* Iterating over the autocorrelation to find the lag */
     float32_t max_val = 0;

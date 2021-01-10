@@ -87,7 +87,6 @@ uint8_t TRILATERATION::check_valid_signals(
          * Recovering the values from the arrays
          */
         uint32_t lag_port, lag_starboard, lag_stern;
-        float32_t intensity_port, intensity_starboard, intensity_stern;
 
         lag_port = lag_array[0];
         lag_starboard = lag_array[1];

@@ -215,7 +215,7 @@ int main(void)
          */
         float32_t time_measurement = (float32_t)difftime(time(NULL), time_initial_startup);
 
-        /* Calculating lag and intensity */
+        /* Calculating lag */
         hyd_port.analyze_hydrophone_data(data_hyd_port);
         hyd_starboard.analyze_hydrophone_data(data_hyd_starboard);
         hyd_stern.analyze_hydrophone_data(data_hyd_stern);
