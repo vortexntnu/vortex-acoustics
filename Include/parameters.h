@@ -23,6 +23,8 @@
  * 
  *    FILTER_SETUP
  *        Parameters for the arm_biquad_casd_df1_inst_f32 struct
+ *        Note that the variables are defined in "analyze_data.cpp", and are
+ *          only declared as extern in this headerfile
  */
 #ifndef ACOUSTICS_PARAMETERS_H
 #define ACOUSTICS_PARAMETERS_H
@@ -217,26 +219,12 @@
 
   const uint32_t num_stages = 2;
   
-  float32_t state_coefficients[4 * num_stages] = 
-  {
-          0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
-  };
+  extern float32_t state_coefficients[4 * num_stages];
 
-  float32_t filter_coefficients[5 * num_stages] = 
-  {
-          0.56942484, 0.0, -0.56942484,             /* Numerator filter 1                               */ 
-          -1.12551866, 0.46469620,                  /* Denominator filter 1                             */
-          0.56942484, 0.0, -0.56942484,             /* Numerator filter 2                               */
-          -0.83226204, 0.3694894                    /* Denominator filter 2                             */
-  };
+  extern float32_t filter_coefficients[5 * num_stages];
   
-  const arm_biquad_casd_df1_inst_f32 IIR_FILTER = 
-  {
-      .numStages = num_stages, 
-      .pState = &state_coefficients[0],
-      .pCoeffs = &filter_coefficients[0]
-  };
-
+  extern const arm_biquad_casd_df1_inst_f32 IIR_FILTER;
+  
 #endif /* FILTER_SETUP */
 
 

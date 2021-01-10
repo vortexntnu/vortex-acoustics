@@ -1,5 +1,32 @@
 #include "analyze_data.h"
 
+/**
+ * Initializing the extern filter-variables
+ */
+float32_t state_coefficients[4 * num_stages] = 
+{
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+};
+
+float32_t filter_coefficients[5 * num_stages] =
+{
+        0.56942484, 0.0, -0.56942484,             /* Numerator filter 1                               */
+        -1.12551866, 0.46469620,                  /* Denominator filter 1                             */
+        0.56942484, 0.0, -0.56942484,             /* Numerator filter 2                               */
+        -0.83226204, 0.3694894                    /* Denominator filter 2                             */
+};
+
+const arm_biquad_casd_df1_inst_f32 IIR_FILTER = 
+{
+    .numStages = num_stages, 
+    .pState = &state_coefficients[0],
+    .pCoeffs = &filter_coefficients[0]
+};
+
+
+/**
+ * Class Hydrophones w/ functions
+ */
 ANALYZE_DATA::Hydrophones::Hydrophones() : 
     last_lag{0}
 {
