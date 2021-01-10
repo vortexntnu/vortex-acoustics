@@ -8,6 +8,18 @@
 #ifndef ACOUSTICS_TRILATERATION_H
 #define ACOUSTICS_TRILATERATION_H
 
+/**
+ * @brief Defines used to specify the workflow from the Eigen-library
+ */
+#ifndef EIGEN_DEFINES
+#define EIGEN_DEFINES
+
+  #ifndef EIGEN_NO_STATIC_ASSERT
+    #define EIGEN_NO_STATIC_ASSERT    /* Prevents static assertion                  */  
+  #endif /* EIGEN_NO_STATIC_ASSERT    */
+
+#endif /* EIGEN_DEFINES */
+
 #include <algorithm> 
 #include <Eigen/Dense>
 #include <Eigen/LU> 
