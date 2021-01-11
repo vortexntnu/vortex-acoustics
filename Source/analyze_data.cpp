@@ -1,7 +1,9 @@
 #include "analyze_data.h"
 
 /**
- * Initializing the extern filter-variables
+ * Initializing the extern filter-variables. 
+ * 
+ * See FILTER_SETUP in parameters.h for more information on the variables
  */
 float32_t state_coefficients[4 * num_stages] = 
 {
