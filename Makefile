@@ -37,13 +37,13 @@ vortex_acoustics : $(OBJ) | $(DRIVER_ARCHIVE)
 	$(CXX) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 $(BUILD_DIR) :
-	mkdir -p $@/driver
+	mkdir -p
+
+$(BUILD_DIR)%.o : $(DRIVER_SOURCE)%.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/%.o : $(SOURCE_DIR)/%.cpp | $(BUILD_DIR)
 	$(CXX) $(CFLAGS) -c $< -o $@
-
-$(BUILD_DIR)/driver/%.o : $(SOURCE_DIR)/driver/%.c | $(BUILD_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
 
 $(DRIVER_ARCHIVE) : $(DRIVER_SOURCE:%.c=$(BUILD_DIR)/driver/%.o)
 	ar rcs $@ $^
