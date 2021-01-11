@@ -12,6 +12,9 @@
  *        Hydrophone amplification
  *        Hydrophone position
  * 
+ *    TEST_PARAMETERS:
+ *        Position of fictional sound-source
+ * 
  *    PHYSICAL_CONSTANTS:
  *        Speed of sound in water
  * 
@@ -113,11 +116,11 @@
 #ifndef SYSTEM_MARGINS
 #define SYSTEM_MARGINS
 
-  #define MARGIN_POS_ESTIMATE   0.5f                /* Error tolerable in estimating the position [m] */
-  #define MARGIN_POS_SEARCH     0.25f               /* How much the search will deviate in x      [m] */          
+  #define MARGIN_POS_ESTIMATE 0.5f                  /* Error tolerable in estimating the position [m] */
+  #define MARGIN_POS_SEARCH   0.25f                 /* How much the search will deviate in x      [m] */          
 
-  #define MARGIN_INTENSITY      20                  /* Difference between the intensity-measurements  */       
-  #define MARGIN_TIME_EPSILON   0.1f                /* Determines the difference allowed between the  */
+  #define MARGIN_INTENSITY    20                    /* Difference between the intensity-measurements  */       
+  #define MARGIN_TIME_EPSILON 0.1f                  /* Determines the difference allowed between the  */
                                                     /* detected lags. With LAG_DIFF_EPSILON = 0.1 we  */
                                                     /* allow signals to arrive 1.1 * max_time and     */
                                                     /* still count. max_time is the maximum           */
@@ -126,6 +129,23 @@
 
 
 #endif /* SYSTEM_MARGINS */
+
+
+/**
+ * @brief Defines that indicate which parameters are to be tested 
+ */
+#ifndef TEST_PARAMETERS
+#define TEST_PARAMETERS
+
+  #define CURR_TESTING_BOOL   0u                    /* Bool to indicate if the code is being tested   */
+                                                    /*    Not testing: 0u                             */
+                                                    /*    Testing    : 1u                             */
+
+  #define SOURCE_POS_X        10.0f                 /* x - position of sound-source                   */
+  #define SOURCE_POS_Y        2.0f                  /* y - position of sound-source                   */
+  #define SOURCE_POS_Z        0.0f                  /* z - position of sound-source                   */
+
+#endif /* TEST_PARAMETERS */
 
 
 /**

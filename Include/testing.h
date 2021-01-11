@@ -20,39 +20,47 @@
 
 #include "analyze_data.h"
 
-/**
- * @brief Namespace to hold the testing-functions
- */
-namespace TESTING{
+#if CURR_TESTING_BOOL
 
+  #include <stdio.h>
 
-/**
- * @brief Function to test if there exists any problems with memory
- * leakage. Valgrind should be used in parallell with this function.
- * 
- * The function should run on the code developed for the main-program.
- */
-void test_memory_leakage(void);
+  /**
+   * @brief Namespace to hold the testing-functions
+   */
+  namespace TESTING{
 
+  /**
+   * @brief Function that generates TOA of the sound-signals for the different
+   * hydrophones. Returns the calculated TOA indirectly via @p lag_array
+   * 
+   * The TOA is calculated based on the following parameters:
+   *    @p HYD_xxx_POS   
+   *    @p SOURCE_POS
+   *    @p SOUND_SPEED
+   *    @p SAMPLE_FREQUENCY
+   * all of which are given in "parameters.h"
+   * 
+   * @param lag_array An array giving the time the sound will be detected
+   * by the hydrophones. The array expands to
+   *    @p lag_array = { lag_port, lag_starboard, lag_stern }
+   * 
+   * @param bool_valid_parameters An int describing if the parameters
+   * given in parameters.h are valid.
+   */
+  void calculate_toa_array(
+          uint32_t lag_array[NUM_HYDROPHONES], 
+          uint8_t& bool_valid_parameters);
 
-/**
- * @brief Function to test the filter parameters. The function should 
- * be used alongside GDB to analyze the results being calculated. 
- * The results should then be compared to another filter-software such as
- * a matlab-script to make sure that the results are roughly equal (small
- * errors may be accepted)
- * 
- * NOTE: It may seem strange to test the filter coefficients, however the
- * documentation was ambigous:
- *    1. It didn't specify whether the numerator was before or after the
- *        denominator in the param - list
- *    2. It hinted that some functions swap polarity of the filter's
- *        denominator, however didn't specify what itself did 
- * Both these points must be tested, such that problem could be resolved 
- */
-void test_filter_coefficients(void);
+  /**
+   * @brief Function that checks if the fictional sound-source position is  within 
+   * @p MARGIN_POS_ESTIMATE distance from the estimated position
+   * 
+   * Writes the distance estimated and the actual distance to the terminal
+   */
+  void test_trilateration_algorithm();
 
-} /* namespace TESTING */
+  } /* namespace TESTING */
 
+#endif /* CURR_TESTING_BOOL */
 
 #endif /* ACOUSTICS_TESTING_H */

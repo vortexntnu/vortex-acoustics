@@ -27,6 +27,10 @@
 #include "stm32f7xx_hal.h"
 #include "stm32f7xx_hal_adc.h"
 
+#if CURR_TESTING_BOOL
+  #include "testing.h"
+#endif /* CURR_TESTING_BOOL */ 
+
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -82,6 +86,18 @@ uint8_t ethernet_coordination(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+  /* Checks if the code is used for testing or not */
+  #if CURR_TESTING_BOOL
+  /**
+   * Testing
+   */
+  TESTING::test_trilateration_algorithm();
+
+  #else
+  /**
+   * Normal operations
+   */
+
   /** 
    * Would like the system to try to restart if an error occurs.
    * The system has therefore two infinite loops, and only a power-cut (should)
@@ -256,6 +272,7 @@ int main(void)
          * alongside the time of measurment
          */
     }
+
     /* Stopping the ADC and the DMA */
     if(HAL_ADC_Stop_DMA(&hadc1) != HAL_OK){     
       log_error(ERROR_TYPES::ERROR_DMA_STOP);
@@ -266,10 +283,11 @@ int main(void)
   /**
    * TODO@TODO
    * 
-   * If broken out of the loop by an error
+   * If broken out of the loop by an error and not in testing
    * 
    * Send an error-report to the Xavier
    */
+  #endif /* CURR_TESTING_BOOL */
 
   return 0;
   /* USER CODE END 3 */
