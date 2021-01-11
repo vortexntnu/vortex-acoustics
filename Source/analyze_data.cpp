@@ -12,10 +12,10 @@ float32_t state_coefficients[4 * num_stages] =
 
 float32_t filter_coefficients[5 * num_stages] =
 {
-        0.56942484, 0.0, -0.56942484,             /* Numerator filter 1                               */
-        -1.12551866, 0.46469620,                  /* Denominator filter 1                             */
-        0.56942484, 0.0, -0.56942484,             /* Numerator filter 2                               */
-        -0.83226204, 0.3694894                    /* Denominator filter 2                             */
+        0.56942484, 0.0, -0.56942484,             /* Numerator filter 1   { b10, b11, b12 }           */
+        -1.12551866, 0.46469620,                  /* Denominator filter 1 {      a11, a12 }           */
+        0.56942484, 0.0, -0.56942484,             /* Numerator filter 2   { b20, b21, b22 }           */
+        -0.83226204, 0.3694894                    /* Denominator filter 2 {      a21, a22 }           */
 };
 
 const arm_biquad_casd_df1_inst_f32 IIR_FILTER = 
