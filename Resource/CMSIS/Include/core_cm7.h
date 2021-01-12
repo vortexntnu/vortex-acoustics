@@ -1,3 +1,15 @@
+/**
+ * @warning Stupid workaround to prevent the compiler from crapping itself!
+ * Should only be used for the acoustics using a STM32F767ZI.
+ * If not acoustics or another MCU used, this must be changed!
+ * 
+ * Changed by Ø. Solbø on 09.01.21
+ */
+#ifndef __SOFTFP__
+#define __SOFTFP__
+#endif /* __SOFTFP__ */
+
+
 /**************************************************************************//**
  * @file     core_cm7.h
  * @brief    CMSIS Cortex-M7 Core Peripheral Access Layer Header File

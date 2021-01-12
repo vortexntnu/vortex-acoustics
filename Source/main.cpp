@@ -17,7 +17,9 @@
   ******************************************************************************
   */
 /* USER CODE END Header */
-/* Includes ------------------------------------------------------------------*/
+/* Private includes -----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
+
 #include <stdint.h>
 #include <time.h>
 
@@ -33,7 +35,10 @@
 
 /* USER CODE END Includes */
 
+/* USER CODE END Includes */
+
 /* Private variables ---------------------------------------------------------*/
+/* USER CODE BEGIN PV */
 
 /* Handler for the ADC, DMA, ETH and SPI */
 ADC_HandleTypeDef hadc1;      
