@@ -579,8 +579,7 @@ static void read_ADC(
    * 2048 % 3 = 2. Reducing the number of datapoints reduces the 
    * accuracy of the analysis, however prevents out-of-range error
    */
-  for(uint i = 0; i < DMA_BUFFER_LENGTH - 
-        NUM_HYDROPHONES; i++){
+  for(uint i = 0; i < DMA_BUFFER_LENGTH - NUM_HYDROPHONES; i++){
     p_data_hyd_port[2 * i] = ADC1_converted_values[3 * i];
     p_data_hyd_port[(2 * i) + 1] = 0;
 
