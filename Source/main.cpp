@@ -22,10 +22,14 @@
 #include <time.h>
 
 #include "main.h"
-#include "hydrophones.h"
+#include "analyze_data.h"
 
 #include "stm32f7xx_hal.h"
 #include "stm32f7xx_hal_adc.h"
+
+#if CURR_TESTING_BOOL
+  #include "testing.h"
+#endif /* CURR_TESTING_BOOL */ 
 
 /* USER CODE END Includes */
 
@@ -33,17 +37,17 @@
 
 /* Handler for the ADC, DMA, ETH and SPI */
 ADC_HandleTypeDef hadc1;      
-DMA_HandleTypeDef hdma_adc;   
+DMA_HandleTypeDef hdma_adc1;
 ETH_HandleTypeDef heth;       
-SPI_HandleTypeDef hspi1;      
+//SPI_HandleTypeDef hspi1;        
 
 /* Errors and errors-detected */
 uint32_t error_idx = 0;
-const uint16_t max_num_errors = std::pow(2, 8);
+const uint16_t max_num_errors = 256;
 volatile ERROR_TYPES errors_occured[max_num_errors];
 
 /* Memory that the DMA will push the data to */
-volatile uint32_t ADC1_converted_values[NUM_HYDROPHONES * DSP_CONSTANTS::DMA_BUFFER_LENGTH];
+volatile uint32_t ADC1_converted_values[NUM_HYDROPHONES * DMA_BUFFER_LENGTH];
 
 /* Variable used to indicate if conversion is ready. Changed via cb-function */
 volatile uint8_t bool_DMA_ready = 0;
@@ -64,14 +68,14 @@ static void MX_ETH_Init(void);
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc);
 
 /* Function to access DMA to get data from the hydrophones */
-static void read_ADC(float32_t* p_data_hyd_port, float32_t* p_data_hyd_starboard,
-          float32_t* p_data_hyd_stern);
+static void read_ADC(
+          float32_t data_hyd_port[IN_BUFFER_LENGTH], 
+          float32_t data_hyd_starboard[IN_BUFFER_LENGTH],
+          float32_t data_hyd_stern[IN_BUFFER_LENGTH]);
 
 /* Functions to log errors */
 static void log_error(ERROR_TYPES error_code);
-static void Error_Handler(void);
-static void check_signal_error(uint8_t* p_bool_time_error, 
-          uint8_t* p_bool_intensity_error); 
+static void check_signal_error(uint8_t& bool_time_error); 
 
 /* Function to coordinate the communication over the ethernet */
 uint8_t ethernet_coordination(void);
@@ -82,6 +86,18 @@ uint8_t ethernet_coordination(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+  /* Checks if the code is used for testing or not */
+  #if CURR_TESTING_BOOL
+  /**
+   * Testing
+   */
+  TESTING::test_trilateration_algorithm();
+
+  #else
+  /**
+   * Normal operations
+   */
+
   /** 
    * Would like the system to try to restart if an error occurs.
    * The system has therefore two infinite loops, and only a power-cut (should)
@@ -114,39 +130,32 @@ int main(void)
     MX_DMA_Init();
     MX_ADC1_Init();
     MX_ETH_Init();
-    MX_SPI1_Init();
+    //MX_SPI1_Init();
     
     /* USER CODE BEGIN 2 */
     /** 
      * Initialize variables for trilateration 
      * Log error if invalid
+     * 
+     * If there is an error, this indicates that there is a more serious error
+     * in the code. Breaks out of the while loop and shuts down the system if that is the case
      */
-    if(!TRILATERATION::initialize_trilateration_globals(HYDROPHONES::pos_hyd_port,
-          HYDROPHONES::pos_hyd_starboard, HYDROPHONES::pos_hyd_stern)){
+    if(!TRILATERATION::initialize_trilateration_globals()){
       log_error(ERROR_TYPES::ERROR_TRILATERATION_INIT);
-      continue;
+      break; 
     }
 
     /* Initialize the class Hydrophone */
-    HYDROPHONES::Hydrophones hyd_port(HYDROPHONES::pos_hyd_port);
-    HYDROPHONES::Hydrophones hyd_starboard(HYDROPHONES::pos_hyd_starboard);
-    HYDROPHONES::Hydrophones hyd_stern(HYDROPHONES::pos_hyd_stern);
+    ANALYZE_DATA::Hydrophones hyd_port;
+    ANALYZE_DATA::Hydrophones hyd_starboard;
+    ANALYZE_DATA::Hydrophones hyd_stern;
 
     /* Initialize the matrices used for trilatiration */
     Matrix_2_3_f A_matrix = TRILATERATION::initialize_A_matrix();
-    Vector_2_1_f B_matrix = TRILATERATION::initialize_B_vector();
+    Vector_2_1_f B_vector = TRILATERATION::initialize_B_vector();
 
     /* Lag from each hydrophone */
     uint32_t lag_hyd_port, lag_hyd_starboard, lag_hyd_stern;
-
-    /* Intensity measured for each hydrophone */
-    //float32_t intensity_port, intensity_starboard, intensity_stern;
-
-    /* Range-estimate to the acoustic pinger */
-    //float32_t distance_estimate;
-
-    /* Angle-estimate to the acoustic pinger */
-    //float32_t angle_estimate;
 
     /* Estimated position of the acoustic pinger */
     float32_t x_pos_es, y_pos_es;
@@ -155,13 +164,12 @@ int main(void)
     time_t time_initial_startup = time(NULL);
 
     /* Intializing memory for the raw-data-arrays */
-    float32_t data_hyd_port[DSP_CONSTANTS::IN_BUFFER_LENGTH];
-    float32_t data_hyd_starboard[DSP_CONSTANTS::IN_BUFFER_LENGTH];
-    float32_t data_hyd_stern[DSP_CONSTANTS::IN_BUFFER_LENGTH];
+    float32_t data_hyd_port[IN_BUFFER_LENGTH];
+    float32_t data_hyd_starboard[IN_BUFFER_LENGTH];
+    float32_t data_hyd_stern[IN_BUFFER_LENGTH];
 
     /* Variables used to indicate error(s) with the signal */
     uint8_t bool_time_error = 0;
-    //uint8_t bool_intensity_error = 0;
 
     /* USER CODE END 2 */
 
@@ -186,13 +194,12 @@ int main(void)
            */
         }
 
-
         /* (Re)setting the DMA's state-value */
         bool_DMA_ready = 0;
 
         /* (Re)starting DMA */
         if (HAL_ADC_Start_DMA(&hadc1, (uint32_t*) ADC1_converted_values, 
-            NUM_HYDROPHONES * DSP_CONSTANTS::DMA_BUFFER_LENGTH) != HAL_OK){
+            NUM_HYDROPHONES * DMA_BUFFER_LENGTH) != HAL_OK){
           log_error(ERROR_TYPES::ERROR_DMA_START);
           continue;
         }
@@ -224,73 +231,64 @@ int main(void)
          */
         float32_t time_measurement = (float32_t)difftime(time(NULL), time_initial_startup);
 
-        /* Calculating lag and intensity */
-        hyd_port.analyze_data(data_hyd_port);
-        hyd_starboard.analyze_data(data_hyd_starboard);
-        hyd_stern.analyze_data(data_hyd_stern);
+        /* Calculating lag */
+        hyd_port.analyze_hydrophone_data(data_hyd_port);
+        hyd_starboard.analyze_hydrophone_data(data_hyd_starboard);
+        hyd_stern.analyze_hydrophone_data(data_hyd_stern);
 
-        lag_hyd_port = hyd_port.get_lag();
-        lag_hyd_starboard = hyd_starboard.get_lag();
-        lag_hyd_stern = hyd_stern.get_lag();
+        lag_hyd_port = hyd_port.get_measured_lag();
+        lag_hyd_starboard = hyd_starboard.get_measured_lag();
+        lag_hyd_stern = hyd_stern.get_measured_lag();
         uint32_t lag_array[NUM_HYDROPHONES] = { lag_hyd_port, lag_hyd_starboard, lag_hyd_stern };
-
-        // intensity_port = hyd_port.get_intensity();
-        // intensity_starboard = hyd_starboard.get_intensity();
-        // intensity_stern = hyd_stern.get_intensity();
-        // float32_t intensity_array[NUM_HYDROPHONES] = { intensity_port, intensity_starboard, intensity_stern };
 
         /**
          * Checking is the measurements are valid. The measurements 
-         * are discarded if they deviate too much in either signal
-         * intensity or time lag
+         * are discarded if they deviate too much in either time lag
          * 
          * Take new samples if the data is invalid
          */
-        // if(!TRILATERATION::check_valid_signals(lag_array, intensity_array,
-        //       &bool_time_error, &bool_intensity_error)){
-        //   check_signal_error(&bool_time_error, &bool_intensity_error);
-        //   continue;
-        // }
-
-        /** 
-         * Calculate estimated position of the acoustic pinger in 
-         * relation to the AUV
-         * 
-         * The first function returns a std::pair as (x, y)
-         * 
-         * The second function returns an estimate of the distance and
-         * the angle to the target  
-         */
-        // std::pair<float32_t, float32_t> position_es = 
-        //     TRILATERATION::estimate_pinger_position(lag_array, intensity_array);
-
-        // TRILATERATION::calculate_distance_and_angle(position_es, 
-        //       &distance_estimate, &angle_estimate);
+        if(!TRILATERATION::check_valid_signals(lag_array, bool_time_error)){
+          log_error(ERROR_TYPES::ERROR_TIME_SIGNAL);
+          continue;
+        }
 
         /**
          * Triliterate the position of the acoustic pinger
          * 
          * The coordinates are given as a reference to the center of the AUV
          */
-        TRILATERATION::trilaterate_pinger_position(A, B, lag_array, x_pos_es, y_pos_es);
+        if(!TRILATERATION::trilaterate_pinger_position(A_matrix, B_vector, 
+            lag_array, x_pos_es, y_pos_es)){
+          log_error(ERROR_TYPES::ERROR_A_NOT_INVERTIBLE);
+          continue;
+        }
 
         /**
          * TODO@TODO
          * 
          * Send the data to the Xavier in a predetermined format
          * 
-         * Required to send one of
-         *    1. position-estimate
-         *    2. angle- and distance-estimate
+         * Required to send the estimated position of the acoustic pinger
          * alongside the time of measurment
          */
     }
+
     /* Stopping the ADC and the DMA */
     if(HAL_ADC_Stop_DMA(&hadc1) != HAL_OK){     
       log_error(ERROR_TYPES::ERROR_DMA_STOP);
       continue;
     }
   }
+
+  /**
+   * TODO@TODO
+   * 
+   * If broken out of the loop by an error and not in testing
+   * 
+   * Send an error-report to the Xavier
+   */
+  #endif /* CURR_TESTING_BOOL */
+
   return 0;
   /* USER CODE END 3 */
 }
@@ -567,16 +565,16 @@ static void MX_GPIO_Init(void)
  * a serious bug! 
  */
 static void read_ADC(
-        float32_t* p_data_hyd_port, 
-        float32_t* p_data_hyd_starboard,
-        float32_t* p_data_hyd_stern){
+        float32_t p_data_hyd_port[IN_BUFFER_LENGTH], 
+        float32_t p_data_hyd_starboard[IN_BUFFER_LENGTH],
+        float32_t p_data_hyd_stern[IN_BUFFER_LENGTH]){
 
   /**
    * Reading the data. Dropping the last couple of datapoints, since
    * 2048 % 3 = 2. Reducing the number of datapoints reduces the 
    * accuracy of the analysis, however prevents out-of-range error
    */
-  for(int i = 0; i < DSP_CONSTANTS::DMA_BUFFER_LENGTH - 
+  for(uint i = 0; i < DMA_BUFFER_LENGTH - 
         NUM_HYDROPHONES; i++){
     p_data_hyd_port[2 * i] = ADC1_converted_values[3 * i];
     p_data_hyd_port[(2 * i) + 1] = 0;
@@ -594,21 +592,14 @@ static void read_ADC(
  * @brief Detects if the error was caused by either time or the intensity
  * and logs the correct error
  * 
- * @param p_bool_time_error Pointer to indicate error with the time
+ * Could be updated to detect other errors
  * 
- * @param p_bool_intensity_error Pointer to indicate error with the 
- * intensity
+ * @param bool_time_error Int used to indicate error with the time
  */
-static void check_signal_error(
-          uint8_t* p_bool_time_error, 
-          uint8_t* p_bool_intensity_error){
-  if(*p_bool_time_error){
-    *p_bool_time_error = 0;
+static void check_signal_error(uint8_t& bool_time_error){
+  if(bool_time_error){
+    bool_time_error = 0;
     log_error(ERROR_TYPES::ERROR_TIME_SIGNAL);
-  }
-  if(*p_bool_intensity_error){
-    *p_bool_intensity_error = 0;
-    log_error(ERROR_TYPES::ERROR_INTENSITY_SIGNAL);
   }
 }
 
@@ -663,13 +654,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
 /* USER CODE END 4 */
 
 /**
-  * @brief  This function is executed in case of error occurrence
-  * Calls log_error() with unidentified error
-  * 
-  * Could also add the possibility to take in the line and file, and log these.
-  * Would require some more future work and tighter integration with the Xavier
-  * 
-  * @retval None
+  * @brief  This function is executed in case of an unidentified error occurrence
   */
 void Error_Handler(void){
   log_error(ERROR_TYPES::ERROR_UNIDENTIFIED);

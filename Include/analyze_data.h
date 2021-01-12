@@ -1,54 +1,67 @@
 /**
  * @file
  * 
- * @brief File that contains functions to analyze data.
- * Functions earlier implemented inside HYDROPHONES, however changed to 
- * reduce memory-usage. 
- * 
- * This .h and .cpp changes the code more towards c, by dropping the class
- * Hydrophones   
+ * @brief Small library that implements the 
+ * hydrophones for the AUV for Vortex NTNU
  */
 #ifndef ACOUSTICS_ANALYZE_DATA_H
 #define ACOUSTICS_ANALYZE_DATA_H
 
-#include "triliteration.h"
-#include "DSP_constants.h"
+#include "trilateration.h"
 
 namespace ANALYZE_DATA{
 
-
 /**
- * @brief Function to analyze the data
- * 
- * The raw data is filtered using a fourth-order biquad DF1 IIR filter 
- * to eliminate unwanted frequencies. Thereafter the frequencies 
- * magnitude and autocorrelation are found. The lag, intensity and 
- * distance are thereafter estimated from these measurements.
- * 
- * @retval Returns all values indirectly using pointers
- * 
- * @warning This function is equal to the function given in 
- * HYDROPHONES::Hydrophone::analyze_data(). Transfered as it's own function
- * to reduce the memory-usage from the class. It reduces the readability of
- * the code, and requires more arrays to be initialized beforehand.
- * 
- * @param p_raw_data        Pointer to an array of raw data from the ADC
- * @param p_data            Pointer to an array of filtered data
- * @param p_autocorr_data   Pointer to an array holding the autocorrelation of
- *                            the filtered data
- * @param p_intensity       Pointer indicating the intensity of a measurment
- * @param p_lag             Pointer indicating the index/lag of the strongest 
- *                            signal in @p p_autocorr_data
+ * @brief Class for the hydrophones. This allows us to easier analyze
+ * the data-points, and access the results from each hydrophone.
  */
-void analyze_data(
-            float32_t* p_raw_data, 
-            float32_t* p_data,
-            float32_t* p_autocorr_data, 
-            float32_t* p_intensity,
-            uint32_t* p_lag);
+class Hydrophones{
+private:
+    /**
+    * @brief The lag calculated for the last sample
+    */
+    uint32_t last_lag;
+
+    /**
+    * @brief The dataset for one hydrophone 
+    */
+    float32_t* p_data;
+
+    /**
+     * @brief The autocorrelated data-sequence
+     * 
+     * @warning The length of the autocorrelation will be
+     * 2 * length(p_data) - 1
+     */
+    float32_t* p_autocorr_data;
+     
+public:
+    /**
+    * @brief Constructor and destructor 
+    */
+    Hydrophones();
+    ~Hydrophones();
+    
+    /**
+    * @brief Function to return the last calculated lag 
+    */
+    uint32_t get_measured_lag() const { return last_lag; } 
+
+    /**
+    * @brief Function to analyze the data
+    * 
+    * The raw data is filtered using a second-order biquad DF1 
+    * IIR filter to eliminate unwanted frequencies. Thereafter
+    * the autocorrelation is found and used to calculate the lag, 
+    * intensity and distance are thereafter estimated 
+    * from the filtered data
+    */
+    void analyze_hydrophone_data(float32_t* p_raw_data);
+}; /* class Hydrophones */
 
 } /* namespace ANALYZE_DATA */
 
+#endif // ACOUSTICS_ANALYZE_DATA_H
 
 
-#endif /* ACOUSTICS_ANALYZE_DATA_H */
+
