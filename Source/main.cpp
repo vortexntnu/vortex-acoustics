@@ -576,13 +576,13 @@ static void read_ADC(
    */
   for(uint i = 0; i < DMA_BUFFER_LENGTH - 
         NUM_HYDROPHONES; i++){
-    p_data_hyd_port[2 * i] = ADC1_converted_values[3 * i];
+    p_data_hyd_port[2 * i] = (float32_t)ADC1_converted_values[3 * i];
     p_data_hyd_port[(2 * i) + 1] = 0;
 
-    p_data_hyd_starboard[2 * i] = ADC1_converted_values[(3 * i) + 1];
+    p_data_hyd_starboard[2 * i] = (float32_t)ADC1_converted_values[(3 * i) + 1];
     p_data_hyd_starboard[(2 * i) + 1] = 0;
 
-    p_data_hyd_stern[2 * i] = ADC1_converted_values[(3 * i) + 2];
+    p_data_hyd_stern[2 * i] = (float32_t)ADC1_converted_values[(3 * i) + 2];
     p_data_hyd_stern[(2 * i) + 1] = 0;
   }
 }
