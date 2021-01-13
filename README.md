@@ -11,8 +11,10 @@ Dependencies:
 Important notes:
   The code is compiled on STM32CubeIDE, and the MAKEFILE may not be up to date. The Makefile is kept for the future, in case the system is compiled and run on another platform
 
+  OBS! To prevent the compiler used at STM32CubeIDE to go mental, some defines have been moved into the direct header-files. The compiler couldn't find the defines in the other files where they originally were defined. This can be a problem if the code is used for other projects or other MCUs, and should therefore be used with caution.
+
 # Source files
-The source files for 2020/2021, can be found in the folder "Source" with the header files under Include. Older files are not considered relevant, and is therefore not in this repository.
+The source files for 2020/2021, can be found in the folder "Source" with the header files under Include.
 
 
 Files with a short description:

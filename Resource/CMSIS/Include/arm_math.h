@@ -1,3 +1,13 @@
+/**
+ * @warning Changed by Ø. Solbø on 09.01.21
+ * Should only be used for the acoustics using a STM32F767ZI.
+ * If not acoustics or another MCU used, this must be changed!
+ */
+#ifndef ARM_MATH_CM7
+#define ARM_MATH_CM7
+#endif /* ARM_MATH_CM7 */
+
+
 /* ----------------------------------------------------------------------
 * Copyright (C) 2010-2015 ARM Limited. All rights reserved.
 *
