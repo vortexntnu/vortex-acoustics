@@ -27,16 +27,19 @@
 
 #include "parameters.h"
 
+
 /**
  * @brief Typedef used during trilateration
  */
 typedef Eigen::Matrix<float32_t, 2, 3> Matrix_2_3_f;
 typedef Eigen::Matrix<float32_t, 2, 1> Vector_2_1_f;
 
+
 /**
  * @brief Namespace/wrapper for the trilateration
  */
 namespace TRILATERATION{
+
 
 /**
  * @brief Constants used for the trilaterations 
@@ -49,6 +52,7 @@ namespace TRILATERATION{
  */
 extern float32_t max_hydrophone_distance; 
 extern float32_t max_time_diff;
+
 
 /**
  * @brief Function that calculates the maximum distance
@@ -76,6 +80,7 @@ uint8_t initialize_trilateration_globals();
  */
 Matrix_2_3_f initialize_A_matrix();
 
+
 /**
  * @brief Initializes the vector @p B to a 2x3 0-matrix
  * 
@@ -100,14 +105,16 @@ uint8_t check_initialized_globals();
  * @retval Returns true if the values are valid, and false if not. 
  * If false is returned, @p bool_time_error is set to 1
  * 
- * @param lag_array Array containing the measured lags. 
+ * @param p_lag_array Array containing the measured lags. 
  * @p lag_array expands to 
- *      lag_array = { lag_port, lag_starboard, lag_stern }
+ *      p_lag_array = { *p_lag_port_starboard, 
+ *                      *p_lag_port_stern, 
+ *                      *p_lag_starboard_stern }
  *
  * @param bool_time_error Int used to indicate time-error
  */
 uint8_t check_valid_signals(
-            uint32_t lag_array[NUM_HYDROPHONES],
+            uint32_t* p_lag_array[NUM_HYDROPHONES],
             uint8_t& bool_time_error); 
 
 
@@ -125,6 +132,19 @@ uint8_t check_valid_signals(
 uint8_t valid_time_check(
             const uint32_t& time_lhs, 
             const uint32_t& time_rhs);
+
+
+/**
+ * @brief Helper function. Checks if a given time-difference is valid. 
+ * The time difference between the signals are checked 
+ * against TRILATERATION::maximum_time_diff
+ * 
+ * @retval Returns false/true (0/1) depending on the result of the test
+ * 
+ * @param time_diff One of the time-samples to check against
+ */
+uint8_t valid_time_check(const uint32_t& time_diff);
+
 
 
 /**
@@ -154,9 +174,11 @@ uint8_t valid_time_check(
  * @param B A @c Vector_2_1_f that holds the minimal solutions to the equations. 
  * Size: 4x1
  * 
- * @param lag_array Array containing the measured lags. 
+ * @param p_lag_array Array containing pointers to the cross-correlated lags. 
  * @p lag_array expands to 
- *      lag_array = { lag_port, lag_starboard, lag_stern }
+ *      p_lag_array = { *p_lag_port_starboard, 
+ *                      *p_lag_port_stern, 
+ *                      *p_lag_starboard_stern }
  * 
  * @param x_estimate Reference to the estimated x-position. Used to return
  * the x-position indirectly
@@ -167,10 +189,11 @@ uint8_t valid_time_check(
 uint8_t trilaterate_pinger_position(
             Matrix_2_3_f& A,
             Vector_2_1_f& B,
-            uint32_t lag_array[NUM_HYDROPHONES],
+            uint32_t* p_lag_array[NUM_HYDROPHONES],
             float32_t& x_estimate,
             float32_t& y_estimate); 
-            
+
+
 /**
  * @brief Helper-function that set the matrices @p A and @p B to the desired
  * values specified in @p TDOA_array
@@ -192,7 +215,6 @@ void calculate_tdoa_matrices(
             float32_t TDOA_array[NUM_HYDROPHONES], 
             Matrix_2_3_f& A,
             Vector_2_1_f& B);
-
 
 
 } /* namespace TRILATERATION */

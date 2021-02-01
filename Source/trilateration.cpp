@@ -79,25 +79,35 @@ uint8_t TRILATERATION::valid_time_check(
 }
 
 
+uint8_t TRILATERATION::valid_time_check(
+        const uint32_t& time_diff){
+        
+        /**
+         * Checking if the time_diff exceeds the maximum allowed time for a valid signal
+         */
+        return (std::abs(time_diff) * SAMPLE_TIME) > TRILATERATION::max_time_diff;
+}
+
+
 uint8_t TRILATERATION::check_valid_signals(
-        uint32_t lag_array[NUM_HYDROPHONES],
+        uint32_t* p_lag_array[NUM_HYDROPHONES],
         uint8_t& bool_time_error){
         
         /**
          * Recovering the values from the arrays
          */
-        uint32_t lag_port, lag_starboard, lag_stern;
+        uint32_t* p_lag_port_starboard, p_lag_port_stern, p_lag_starboard_stern;
 
-        lag_port = lag_array[0];
-        lag_starboard = lag_array[1];
-        lag_stern = lag_array[2];
+        p_lag_port_starboard = p_lag_array[0];
+        p_lag_port_stern = p_lag_array[1];
+        p_lag_starboard_stern = p_lag_array[2];
 
         /**
          * Evaluating if the signals are valid in time
          */
-        if(TRILATERATION::valid_time_check(lag_port, lag_starboard) || 
-        TRILATERATION::valid_time_check(lag_port, lag_stern) || 
-        TRILATERATION::valid_time_check(lag_starboard, lag_stern))
+        if(TRILATERATION::valid_time_check(*p_lag_port_starboard) || 
+        TRILATERATION::valid_time_check(*p_lag_port_stern) ||
+        TRILATERATION::valid_time_check(*p_lag_starboard_stern))
                 bool_time_error = 1;
 
         /**
@@ -117,22 +127,22 @@ uint8_t TRILATERATION::check_valid_signals(
 uint8_t TRILATERATION::trilaterate_pinger_position(
         Matrix_2_3_f& A,
         Vector_2_1_f& B,
-        uint32_t lag_array[NUM_HYDROPHONES],
+        uint32_t* p_lag_array[NUM_HYDROPHONES],
         float32_t& x_estimate,
         float32_t& y_estimate){
 
         /* Recovering the lags from the array */
-        uint32_t lag_port = lag_array[0];
-        uint32_t lag_starboard = lag_array[1];
-        uint32_t lag_stern = lag_array[2];
+        uint32_t* p_lag_port_starboard = lag_array[0];
+        uint32_t* p_lag_port_stern = lag_array[1];
+        uint32_t* p_lag_starboard_stern = lag_array[2];
 
         /* Calculating TDOA and creating an array to hold the data */
         float32_t TDOA_port_starboard = (float32_t)
-                SAMPLE_TIME * SOUND_SPEED * (lag_port - lag_starboard);
+                SAMPLE_TIME * SOUND_SPEED * (*p_lag_port_starboard);
         float32_t TDOA_port_stern = (float32_t)
-                SAMPLE_TIME * SOUND_SPEED * (lag_port - lag_stern);
+                SAMPLE_TIME * SOUND_SPEED * (*p_lag_port_stern);
         float32_t TDOA_starboard_stern = (float32_t)
-                SAMPLE_TIME * SOUND_SPEED * (lag_starboard - lag_stern);
+                SAMPLE_TIME * SOUND_SPEED * (*p_lag_starboard_stern);
 
         float32_t TDOA_array[NUM_HYDROPHONES] = 
                 { TDOA_port_starboard, TDOA_port_stern, TDOA_starboard_stern };
