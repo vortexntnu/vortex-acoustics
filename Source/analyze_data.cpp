@@ -121,7 +121,7 @@ void ANALYZE_DATA::calculate_xcorr_lag_array(
             p_filtered_data_stern, IN_BUFFER_LENGTH, 
             cross_corr_starboard_stern);
 
-    /* Calculating TDOA */
+    /* Calculating cross-correlated lag */
     uint32_t lag_port_starboard, lag_port_stern, lag_starboard_stern;
     float32_t max_val_port_starboard, max_val_port_stern, max_val_starboard_stern;
 
@@ -143,13 +143,21 @@ void ANALYZE_DATA::calculate_xcorr_lag_array(
             lag_starboard_stern,
             max_val_starboard_stern);
 
-    /* Inserting calculated cross-correlated lag into array */
-    *(p_TDOA_array[0]) = lag_port_starboard;
-    *(p_TDOA_array[1]) = lag_port_stern;
-    *(p_TDOA_array[2]) = lag_starboard_stern;
+    /**
+     * Linear transformation to the cross-correlated lags to find the
+     * difference in number samples. 
+     * 
+     * When these values are shifted around 0, it is much easier to later
+     * determine which hydrophone measured the signal first
+     */
+    lag_port_starboard - IN_BUFFER_LENGTH;
+    lag_port_stern - IN_BUFFER_LENGTH;
+    lag_starboard_stern - IN_BUFFER_LENGTH;
 
-    /* Estimating the likely time of detection at the given hydrophones */
-    
+    /* Inserting calculated cross-correlated lag into array */
+    *(p_lag_array[0]) = lag_port_starboard;
+    *(p_lag_array[1]) = lag_port_stern;
+    *(p_lag_array[2]) = lag_starboard_stern;
 }
 
 

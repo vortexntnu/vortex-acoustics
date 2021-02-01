@@ -57,11 +57,20 @@ void filter_raw_data(
 
 /**
  * @brief A function that crosscorrelates the filtered data arrays and
- * returns a TDOA_array which indicates the time-difference of arrival
- * between the signals
+ * returns an array which gives the number of samples between the 
+ * measured signals at hyd1, hyd2, hyd3
  * 
- * The function uses crosscorrelation to determine the TDOA, since the
- * autocorrelation is prone to detect external noise as the signal  
+ * @warning The values contained within @p p_lag_array are 
+ * extremely sensitive to the sign. If the sign is negative, the 
+ * hydrophone on the "first"-side measured the signal first.
+ * Example:
+ * 
+ *      Assuming that *p_lag_port_stern = -10 
+ * 
+ *      That means the port hydrophone measured the signal 10 samples
+ *          BEFORE the stern hydrophone
+ * 
+ * 
  * 
  * @param p_filtered_data_array The array containing the 
  * It is assumed that
@@ -71,9 +80,9 @@ void filter_raw_data(
  * 
  * @param p_lag_array The array to hold the cross-correlated lags.
  * It is assumed that
- *      @p p_TDOA_array = {p_lag_port_starboard,
- *                         p_lag_port_stern,
- *                         p_lag_starboard_stern}
+ *      @p p_lag_array = {p_lag_port_starboard,
+ *                        p_lag_port_stern,
+ *                        p_lag_starboard_stern}
  */
 void calculate_xcorr_lag_array(
         float32_t* p_filtered_data_array[NUM_HYDROPHONES],
