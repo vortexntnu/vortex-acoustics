@@ -109,6 +109,7 @@ typedef enum{
   ERROR_ADC_CONFIG,           /* Error on configuring ADC                           */
   ERROR_DMA_START,            /* Error while starting DMA                           */
   ERROR_DMA_STOP,             /* Error while stopping DMA                           */
+  ERROR_DMA_CONV,             /* Error while converting values                      */
   ERROR_TRILATERATION_INIT,   /* Error on initializing TRILATERATION                */
   ERROR_TIME_SIGNAL,          /* Error on calculating invalid time of signals       */
   ERROR_UNIDENTIFIED,         /* Unidentified error. Thrown using Error_handler()   */

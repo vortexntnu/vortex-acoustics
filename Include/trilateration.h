@@ -41,15 +41,12 @@ namespace TRILATERATION{
 /**
  * @brief Constants used for the trilaterations 
  * 
- * @param sound_speed Speed of sound in water in m/s
- * 
  * @param max_hydrophone_distance The maximum distance 
  * measured between the hydrophones. 
  * 
  * @param max_time_diff The maximum time-difference that
  * should be possible between the data signals
  */
-const uint16_t sound_speed          = 1480;
 extern float32_t max_hydrophone_distance; 
 extern float32_t max_time_diff;
 

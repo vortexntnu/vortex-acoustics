@@ -27,45 +27,131 @@ const arm_biquad_casd_df1_inst_f32 IIR_FILTER =
 
 
 /**
- * Class Hydrophones w/ functions
+ * Functions for analyzing the data
  */
-ANALYZE_DATA::Hydrophones::Hydrophones() : 
-    last_lag{0}
-{
-    /* Initial memory allocation */
-    p_data = (float32_t*) malloc(sizeof(float32_t) * IN_BUFFER_LENGTH);
-    p_autocorr_data = (float32_t*) malloc(sizeof(float32_t) * (IN_BUFFER_LENGTH * 2 - 1));
-}
+void ANALYZE_DATA::array_max_value(
+        float32_t* data_array,
+        const uint32_t& array_length,
+        uint32_t& idx,
+        float32_t& max_val){
 
-ANALYZE_DATA::Hydrophones::~Hydrophones()
-{
-    /* Deleting the allocated memory */
-    free(p_data);
-    free(p_autocorr_data);
-}
+    /* Checking if invalid length */
+    if(array_length < 0){
+        idx = -1;
+        max_val = -1;
+        return;
+    }
+    
+    /* Initializing values */
+    idx = 0;
+    max_val = 0;
 
-void ANALYZE_DATA::Hydrophones::analyze_hydrophone_data(float32_t *p_raw_data)
-{
-    /** 
-     * Filters the data using an second-order IIR-filter
-     * p_data is set to the filtered data
-     */ 
-    arm_biquad_cascade_df1_f32(&IIR_FILTER,
-            p_raw_data, p_data, IIR_SIZE);
-
-    /* Taking the autocorrelation of the filtered data */
-    arm_correlate_f32(p_data, IN_BUFFER_LENGTH, p_data, 
-            IN_BUFFER_LENGTH, p_autocorr_data);
-
-    /* Iterating over the autocorrelation to find the lag */
-    float32_t max_val = 0;
-    last_lag = 0;
-    for(uint i = 0; i < 2 * IN_BUFFER_LENGTH - 1; i++){
-        if(p_autocorr_data[i] > max_val){
-            max_val = p_autocorr_data[i];
-            last_lag = i;
+    /* Iterating over the array */
+    for(uint32_t i = 0; i < array_length; i++){
+        if(std::abs(data_array[i]) > max_val){
+            idx = i;
+            max_val = std::abs(data_array[i]);
         }
     }
+}
+
+
+
+void ANALYZE_DATA::filter_raw_data(
+        float32_t* p_raw_data_array[NUM_HYDROPHONES];
+        float32_t* p_filtered_data_array[NUM_HYDROPHONES]){
+    
+    /* Getting the values from the arrays */
+    float32_t* p_raw_data_port = p_filtered_data_array[0];
+    float32_t* p_raw_data_starboard = p_filtered_data_array[1];
+    float32_t* p_raw_data_stern = p_filtered_data_array[2];
+
+    float32_t* p_filtered_data_port = p_filtered_data_array[0];
+    float32_t* p_filtered_data_starboard = p_filtered_data_array[1];
+    float32_t* p_filtered_data_stern = p_filtered_data_array[2];
+
+    /* Filters the data using an fourth-order IIR-filter */
+    arm_biquad_cascade_df1_f32(
+            &IIR_FILTER,
+            p_raw_data_port, 
+            p_filtered_data_port, 
+            IIR_SIZE);
+
+    arm_biquad_cascade_df1_f32(
+            &IIR_FILTER,
+            p_raw_data_starboard, 
+            p_filtered_data_starboard, 
+            IIR_SIZE);
+
+    arm_biquad_cascade_df1_f32(
+            &IIR_FILTER,
+            p_raw_data_stern, 
+            p_filtered_data_stern, 
+            IIR_SIZE);
+}
+
+
+void ANALYZE_DATA::calculate_TDOA_array(
+        float32_t* p_filtered_data_array[NUM_HYDROPHONES],
+        uint32_t TDOA_array[NUM_HYDROPHONES]){
+    
+    /* Getting the values from the arrays */
+    float32_t* p_filtered_data_port = p_filtered_data_array[0];
+    float32_t* p_filtered_data_starboard = p_filtered_data_array[1];
+    float32_t* p_filtered_data_stern = p_filtered_data_array[2];
+
+    /* Creating temporary arrays to hold the result */
+    float32_t cross_corr_port_starboard[2 * IN_BUFFER_LENGTH - 1];
+    float32_t cross_corr_port_stern[2 * IN_BUFFER_LENGTH - 1];
+    float32_t cross_corr_starboard_port[2 * IN_BUFFER_LENGTH - 1];
+
+    /* Crosscorrelating the data */
+    arm_correlate_f32(
+            p_filtered_data_port, IN_BUFFER_LENGTH, 
+            p_filtered_data_starboard, IN_BUFFER_LENGTH, 
+            cross_corr_port_starboard);
+
+    arm_correlate_f32(
+            p_filtered_data_port, IN_BUFFER_LENGTH, 
+            p_filtered_data_stern, IN_BUFFER_LENGTH, 
+            cross_corr_port_stern);
+
+    arm_correlate_f32(
+            p_filtered_data_starboard, IN_BUFFER_LENGTH, 
+            p_filtered_data_stern, IN_BUFFER_LENGTH, 
+            cross_corr_starboard_stern);
+
+    /* Calculating TDOA */
+    uint32_t TDOA_port_starboard;
+    uint32_t TDOA_port_stern;
+    uint32_t TDOA_starboard_stern;
+
+    float32_t max_val_port_starboard;
+    float32_t max_val_port_stern;
+    float32_t max_val_starboard_stern;
+
+    ANALYZE_DATA::array_max_value(
+            cross_corr_port_starboard,
+            2 * IN_BUFFER_LENGTH - 1,
+            TDOA_port_starboard,
+            max_val_port_starboard);
+
+    ANALYZE_DATA::array_max_value(
+            cross_corr_port_stern,
+            2 * IN_BUFFER_LENGTH - 1,
+            TDOA_port_stern,
+            max_val_port_stern);
+
+    ANALYZE_DATA::array_max_value(
+            cross_corr_starboard_stern,
+            2 * IN_BUFFER_LENGTH - 1,
+            TDOA_starboard_stern,
+            max_val_starboard_stern);
+
+    /* Inserting calculated TDOA into array */
+    TDOA_array[0] = TDOA_port_starboard;
+    TDOA_array[1] = TDOA_port_stern;
+    TDOA_array[2] = TDOA_starboard_stern;
 }
 
 

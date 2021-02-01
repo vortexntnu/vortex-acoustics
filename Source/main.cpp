@@ -26,6 +26,7 @@
 #include "main.h"
 #include "analyze_data.h"
 
+#include "stm32f7xx.h"
 #include "stm32f7xx_hal.h"
 #include "stm32f7xx_hal_adc.h"
 
@@ -49,13 +50,16 @@ ETH_HandleTypeDef heth;
 /* Errors and errors-detected */
 uint32_t error_idx = 0;
 const uint16_t max_num_errors = 256;
-volatile ERROR_TYPES errors_occured[max_num_errors];
+static volatile ERROR_TYPES errors_occured[max_num_errors];
 
 /* Memory that the DMA will push the data to */
-volatile uint32_t ADC1_converted_values[NUM_HYDROPHONES * DMA_BUFFER_LENGTH];
+static volatile uint32_t ADC1_converted_values[NUM_HYDROPHONES * DMA_BUFFER_LENGTH];
 
 /* Variable used to indicate if conversion is ready. Changed via cb-function */
-volatile uint8_t bool_DMA_ready = 0;
+static volatile uint8_t bool_DMA_conv_ready = 0;
+
+/* Variable used to indicate if an error occured during convertion. Changed via cb-function */
+static volatile uint8_t bool_DMA_conv_error = 0;
 
 /* USER CODE END PV */
 
@@ -69,11 +73,17 @@ static void MX_ADC1_Init(void);
 static void MX_ETH_Init(void);
 //static void MX_SPI1_Init(void);
 
-/* Overwrite of weak cb-function. Called when DMA is finished. Changes bool_DMA_ready */
+/* Overwrite of weak cb-function. Called when DMA is finished. Changes bool_DMA_conv_ready */
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc);
 
+/* Another function to handle interrupts which should be called when DMA is finished */
+void DMA2_Stream0_IRQHandler(void);
+
+/* Function to start the convertion over DMA */
+static void start_convertion_adc_dma(void);
+
 /* Function to access DMA to get data from the hydrophones */
-static void read_ADC(
+static void read_measurements(
           float32_t data_hyd_port[IN_BUFFER_LENGTH], 
           float32_t data_hyd_starboard[IN_BUFFER_LENGTH],
           float32_t data_hyd_stern[IN_BUFFER_LENGTH]);
@@ -137,6 +147,7 @@ int main(void)
     MX_ETH_Init();
     //MX_SPI1_Init();
     
+
     /* USER CODE BEGIN 2 */
     /** 
      * Initialize variables for trilateration 
@@ -150,32 +161,54 @@ int main(void)
       break; 
     }
 
-    /* Initialize the class Hydrophone */
-    ANALYZE_DATA::Hydrophones hyd_port;
-    ANALYZE_DATA::Hydrophones hyd_starboard;
-    ANALYZE_DATA::Hydrophones hyd_stern;
 
     /* Initialize the matrices used for trilatiration */
     Matrix_2_3_f A_matrix = TRILATERATION::initialize_A_matrix();
     Vector_2_1_f B_vector = TRILATERATION::initialize_B_vector();
 
-    /* Lag from each hydrophone */
-    uint32_t lag_hyd_port, lag_hyd_starboard, lag_hyd_stern;
 
-    /* Estimated position of the acoustic pinger */
-    float32_t x_pos_es, y_pos_es;
+    /* TDOA between the measurements */
+    uint32_t TDOA_port_starboard, TDOA_port_stern, TDOA_starboard_stern;
 
-    /* Initializing time-measurement */
-    time_t time_initial_startup = time(NULL);
+    uint32_t TDOA_array[NUM_HYDROPHONES] = 
+          { TDOA_hyd_port, TDOA_hyd_starboard, lag_hyd_stern };
 
-    /* Intializing memory for the raw-data-arrays */
-    float32_t data_hyd_port[IN_BUFFER_LENGTH];
-    float32_t data_hyd_starboard[IN_BUFFER_LENGTH];
-    float32_t data_hyd_stern[IN_BUFFER_LENGTH];
+
+    /* Intializing the data-arrays */
+    float32_t raw_data_port[IN_BUFFER_LENGTH];
+    float32_t raw_data_starboard[IN_BUFFER_LENGTH];
+    float32_t raw_data_stern[IN_BUFFER_LENGTH];
+
+    float32_t* raw_data_array[NUM_HYDROPHONES] = 
+          { &raw_data_port[0], &raw_data_starboard[0], &raw_data_stern[0] };
+
+    float32_t filtered_data_port[IN_BUFFER_LENGTH];
+    float32_t filtered_data_starboard[IN_BUFFER_LENGTH];
+    float32_t filtered_data_stern[IN_BUFFER_LENGTH];
+
+    float32_t* filtered_data_array[NUM_HYDROPHONES] = 
+          { &filtered_data_port[0], &filtered_data_starboard[0], &filtered_data_stern[0] };
+
 
     /* Variables used to indicate error(s) with the signal */
     uint8_t bool_time_error = 0;
 
+
+    /* Variable indicating the max distance between the hydrophones */
+    static float32_t max_hydrophone_distance = -1.0f;
+
+
+    /* Variable indicating the max allowed time-difference between the signals */
+    static float32_t max_time_diff = -1.0f;
+
+
+    /* Estimated position of the acoustic pinger */
+    float32_t x_pos_es, y_pos_es;
+
+
+    /* Starting com between ADC and DMA */
+    start_convertion_adc_dma();
+    
     /* USER CODE END 2 */
 
     /* Infinite loop */
@@ -199,26 +232,41 @@ int main(void)
            */
         }
 
-        /* (Re)setting the DMA's state-value */
-        bool_DMA_ready = 0;
-
         /* (Re)starting DMA */
-        if (HAL_ADC_Start_DMA(&hadc1, (uint32_t*) ADC1_converted_values, 
-            NUM_HYDROPHONES * DMA_BUFFER_LENGTH) != HAL_OK){
-          log_error(ERROR_TYPES::ERROR_DMA_START);
+        // if (HAL_ADC_Start_DMA(&hadc1, (uint32_t*) ADC1_converted_values, 
+        //     NUM_HYDROPHONES * DMA_BUFFER_LENGTH) != HAL_OK){
+        //   log_error(ERROR_TYPES::ERROR_DMA_START);
+        //   continue;
+        // }
+
+        /** 
+         * Waiting for the DMA to be ready
+         * 
+         * The variables @p bool_DMA_conv_ready and @p bool_DMA_conv_error are 
+         * changed via interrupt/cb-function
+         */
+        while(!bool_DMA_conv_ready && !bool_DMA_conv_error);
+
+        /**
+         * Checking if an error occured during convertion 
+         * 
+         * Restarting the convertion between ADC and memory
+         */
+        if(bool_DMA_conv_error){
+          log_error(ERROR_TYPES::ERROR_DMA_CONV);
+          bool_DMA_conv_error = 0;
+          bool_DMA_conv_ready = 0;
+          start_convertion_adc_dma();
           continue;
         }
-
-        /* Waiting for the DMA to be ready */
-        while(!bool_DMA_ready);
 
         /**
          * Stopping the DMA to prevent overwriting the memory
          */
-        if(HAL_ADC_Stop_DMA(&hadc1) != HAL_OK){     
-          log_error(ERROR_TYPES::ERROR_DMA_STOP);
-          continue;
-        }
+        // if(HAL_ADC_Stop_DMA(&hadc1) != HAL_OK){     
+        //   log_error(ERROR_TYPES::ERROR_DMA_STOP);
+        //   continue;
+        // }
 
         /** 
          * Reading the data from the ADC 
@@ -226,25 +274,29 @@ int main(void)
          * The data should be correct, as the DMA-transfer has stopped. It should
          * therefore be impossible to overwrite the memory
          */
-        read_ADC(data_hyd_port, data_hyd_starboard, data_hyd_stern);
+        read_measurements(data_hyd_port, data_hyd_starboard, data_hyd_stern);
 
-        /** 
+        /**
          * Recording the time of measurement in seconds after startup
-         * 
+         *
          * This should be synchronized with the Xavier, such that the main system
          * knows when the measurements where taken and could act accordingly
          */
-        float32_t time_measurement = (float32_t)difftime(time(NULL), time_initial_startup);
+        //float32_t time_measurement = (float32_t)difftime(time(NULL), time_initial_startup);
 
-        /* Calculating lag */
-        hyd_port.analyze_hydrophone_data(data_hyd_port);
-        hyd_starboard.analyze_hydrophone_data(data_hyd_starboard);
-        hyd_stern.analyze_hydrophone_data(data_hyd_stern);
+        /**
+         * Data is transferred to other memory
+         * 
+         * Restarting reading and transfer again, such that new data is ready almost immediately
+         * when the CPU has processed the old data
+         */
+        start_convertion_adc_dma();
 
-        lag_hyd_port = hyd_port.get_measured_lag();
-        lag_hyd_starboard = hyd_starboard.get_measured_lag();
-        lag_hyd_stern = hyd_stern.get_measured_lag();
-        uint32_t lag_array[NUM_HYDROPHONES] = { lag_hyd_port, lag_hyd_starboard, lag_hyd_stern };
+        /* Filtering the raw data */
+        ANALYZE_DATA::filter_raw_data(raw_data_array, filtered_data_array);
+
+        /* Calulating the TDOA-array */
+        ANALYZE_DATA::calculate_TDOA_array(filtered_data_array, TDOA_array);
 
         /**
          * Checking is the measurements are valid. The measurements 
@@ -252,7 +304,7 @@ int main(void)
          * 
          * Take new samples if the data is invalid
          */
-        if(!TRILATERATION::check_valid_signals(lag_array, bool_time_error)){
+        if(!TRILATERATION::check_valid_signals(TDOA_array, bool_time_error)){
           log_error(ERROR_TYPES::ERROR_TIME_SIGNAL);
           continue;
         }
@@ -278,7 +330,7 @@ int main(void)
          */
     }
 
-    /* Stopping the ADC and the DMA */
+    /* Stopping the ADC and the DMA for safety */
     if(HAL_ADC_Stop_DMA(&hadc1) != HAL_OK){     
       log_error(ERROR_TYPES::ERROR_DMA_STOP);
       continue;
@@ -507,15 +559,54 @@ static void MX_ETH_Init(void)
   */
 static void MX_DMA_Init(void)
 {
-
   /* DMA controller clock enable */
   __HAL_RCC_DMA2_CLK_ENABLE();
 
-  /* DMA interrupt init */
-  /* DMA2_Stream0_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(DMA2_Stream0_IRQn);
+  /* DMA register setup for channel 0. Warning: hardcoded test! */
+  MODIFY_REG(
+    DMA2_Stream0->CR,       /* Control register                       */                                        
+    DMA_SxCR_DIR      |     /* Clear: Direction                       */
+      DMA_SxCR_CIRC   |     /* Clear: Mode                            */
+      DMA_SxCR_PINC   |     /* Clear: Peripheral increment            */
+      DMA_SxCR_MINC   |     /* Clear: Memory increment                */
+      DMA_SxCR_PSIZE  |     /* Clear: Peripheral data align           */
+      DMA_SxCR_MSIZE  |     /* Clear: Memory data align               */
+      DMA_SxCR_PL     |     /* Clear: Priority                        */
+      DMA_SxCR_PFCTRL,      /* Clear: Magic mask bit (!!)             */
+    0x00000000U       |     /* Set: Direction: peripheral to memory   */
+      0x00000001U     |     /* Set: Peripheral: increment             */
+      DMA_SxCR_MINC   |     /* Set: Memory: increment                 */
+      DMA_SxCR_PSIZE  |     /* Set: Peripheral data align: word       */
+      DMA_SxCR_MSIZE  |     /* Set: Memory data align: word           */
+      DMA_SxCR_CIRC   |     /* Set: Mode: circular                    */
+      DMA_SxCR_PL_1);       /* Set: Priority: high                    */
 
+  /* Setting peripheral address */
+  WRITE_REG(DMA2_Stream0->PAR, (uint32_t)&(ADC1->DR));
+
+  /* Setting up memory address */
+  WRITE_REG(DMA2_Stream0->M0AR, (uint32_t)&ADC1_converted_values[0]);
+ 
+  /* Setting total transfer size and number of channels */
+  MODIFY_REG(DMA2_Stream0->NDTR, DMA_SxNDT, DMA_BUFFER_LENGTH * NUM_HYDROPHONES);
+
+  /* DMA interrupt init */
+  /* Set DMA2_Stream0_IRQn interrupt priority */
+  //HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, 0, 0);
+  NVIC_SetPriority(DMA2_Stream0_IRQn, 0);
+
+  /* Enable interrupt for DMA */
+  //HAL_NVIC_EnableIRQ(DMA2_Stream0_IRQn);
+  NVIC_EnableIRQ(DMA2_Stream0_IRQn);
+
+  /* Enable interrupt for transfer complete */
+  //SET_BIT(DMA2_Stream0->CR, DMA_SxCR_TCIE); /* Might be fucked! */
+
+  /* Enable interrupt for error */
+  //SET_BIT(DMA2_Stream0->CR, DMA_SxCR_TEIE); /* Might be fucked */
+
+  /* Enable DMA-transfer */
+  SET_BIT(DMA2_Stream0->CR, DMA_SxCR_EN);
 }
 
 /**
@@ -525,7 +616,6 @@ static void MX_DMA_Init(void)
   */
 static void MX_GPIO_Init(void)
 {
-
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
@@ -569,7 +659,7 @@ static void MX_GPIO_Init(void)
  * the first method. The code assumes this true, however it is potentially 
  * a serious bug! 
  */
-static void read_ADC(
+static void read_measurements(
         float32_t p_data_hyd_port[IN_BUFFER_LENGTH], 
         float32_t p_data_hyd_starboard[IN_BUFFER_LENGTH],
         float32_t p_data_hyd_stern[IN_BUFFER_LENGTH]){
@@ -647,12 +737,56 @@ static void log_error(ERROR_TYPES error){
  * @brief Overwriting a weak CB-function. The function is triggered when the
  * DMA is finished transfering data to ADC1_converted_values
  * 
- * The funtion changes the variable bool_DMA_ready
+ * The funtion changes the variable bool_DMA_conv_ready
  * 
  * @param hadc Pointer to the ADC-handler that uses this CB-function
  */
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
-  bool_DMA_ready = 1;
+  bool_DMA_conv_ready = 1;
+}
+
+
+/**
+ * @brief Interrupt-function that is more hardware-oriented/lower level compared 
+ * to HAL_ADC_ConvCpltCallback(). Both should in theory be triggered, however
+ * experimentation has showed that there is some error in the code
+ */
+void DMA2_Stream0_IRQHandler(void){
+  /* Checking if converting is complete */
+  if(READ_BIT(DMA2->LISR, DMA_LISR_TCIF0)) {
+    /* Clear register */
+    WRITE_REG(DMA2->LIFCR, DMA_LIFCR_CTCIF0);
+
+    /* Setting global state variable */
+    bool_DMA_conv_ready = 1;
+  }
+
+  /* Checking if an error occured during converting */
+  if (READ_BIT(DMA2->LISR, DMA_LISR_TEIF0)) {
+    /* Clear register */
+    WRITE_REG(DMA2->LIFCR, DMA_LIFCR_CTEIF0);
+
+    /* Setting global error variable */
+    bool_DMA_conv_error = 1;
+  }
+}
+
+/**
+ * @brief A function that starts the convertion between the ADC and the DMA
+ * 
+ * According to the manual, to restart the convertion between the ADC and DMA, 
+ * the bit must be cleared by software: 
+ * 
+ * "However the DMA bit is not cleared by hardware. It must be written to 0, 
+ * then to 1 to start a new transfer"
+ */
+static void start_convertion_adc_dma(void){
+  /* Triggering ADC with DMA */
+  CLEAR_BIT(ADC1->CR2, ADC_CR2_DMA);
+  SET_BIT(ADC1->CR2, ADC_CR2_DMA);
+
+  /* Starting ADC-convertion */
+  SET_BIT(ADC1->CR2, ADC_CR2_SWSTART);
 }
 
 /* USER CODE END 4 */
