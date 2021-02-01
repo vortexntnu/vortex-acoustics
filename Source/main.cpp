@@ -301,24 +301,16 @@ int main(void)
         /* Calulating the p_TDOA-array */
         ANALYZE_DATA::calculate_xcorr_lag_array(filtered_data_array, p_lag_array);
 
-        /* Transfering from uint32_t* to uint32_t */
-        uint32_t TDOA_array[NUM_HYDROPHONES] = 
-              { *(p_TDOA_array[0]), *(p_TDOA_array[1]), *(p_TDOA_array[2]) };
-
         /**
          * Checking is the measurements are valid. The measurements 
          * are discarded if they deviate too much in either time lag
          * 
          * Take new samples if the data is invalid
-         * 
-         * @warning Outcommented until the problem with TDOA is fixed.
-         * As of 01.02., the code uses the direct time of arrival and not the
-         * time-difference
          */
-        // if(!TRILATERATION::check_valid_signals(TDOA_array, bool_time_error)){
-        //   log_error(ERROR_TYPES::ERROR_TIME_SIGNAL);
-        //   continue;
-        // }
+        if(!TRILATERATION::check_valid_signals(p_lag_array, bool_time_error)){
+          log_error(ERROR_TYPES::ERROR_TIME_SIGNAL);
+          continue;
+        }
 
         /**
          * Triliterate the position of the acoustic pinger
