@@ -69,16 +69,15 @@ void filter_raw_data(
  *                                  p_filtered_data_starboard,
  *                                  P_filtered_data_stern}
  * 
- * @param TDOA_array The array containing the measured TDOA between
- * the measured signals. 
+ * @param p_TDOA_array The array to hold the calculated TDOA
  * It is assumed that
- *      @p TDOA_array = {TDOA_port_starboard,
- *                       TDOA_port_stern,
- *                       TDOA_starboard_stern}
+ *      @p p_TDOA_array = {p_TDOA_port_starboard,
+ *                         p_TDOA_port_stern,
+ *                         p_TDOA_starboard_stern}
  */
 void calculate_TDOA_array(
         float32_t* p_filtered_data_array[NUM_HYDROPHONES],
-        uint32_t TDOA_array[NUM_HYDROPHONES]);
+        uint32_t* p_TDOA_array[NUM_HYDROPHONES]);
 
 } /* namespace ANALYZE_DATA */
 

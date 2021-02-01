@@ -93,7 +93,7 @@ void ANALYZE_DATA::filter_raw_data(
 
 void ANALYZE_DATA::calculate_TDOA_array(
         float32_t* p_filtered_data_array[NUM_HYDROPHONES],
-        uint32_t TDOA_array[NUM_HYDROPHONES]){
+        uint32_t* p_TDOA_array[NUM_HYDROPHONES]){
     
     /* Getting the values from the arrays */
     float32_t* p_filtered_data_port = p_filtered_data_array[0];
@@ -122,13 +122,8 @@ void ANALYZE_DATA::calculate_TDOA_array(
             cross_corr_starboard_stern);
 
     /* Calculating TDOA */
-    uint32_t TDOA_port_starboard;
-    uint32_t TDOA_port_stern;
-    uint32_t TDOA_starboard_stern;
-
-    float32_t max_val_port_starboard;
-    float32_t max_val_port_stern;
-    float32_t max_val_starboard_stern;
+    uint32_t TDOA_port_starboard, TDOA_port_stern, TDOA_starboard_stern;
+    float32_t max_val_port_starboard, max_val_port_stern, max_val_starboard_stern;
 
     ANALYZE_DATA::array_max_value(
             cross_corr_port_starboard,
@@ -149,9 +144,9 @@ void ANALYZE_DATA::calculate_TDOA_array(
             max_val_starboard_stern);
 
     /* Inserting calculated TDOA into array */
-    TDOA_array[0] = TDOA_port_starboard;
-    TDOA_array[1] = TDOA_port_stern;
-    TDOA_array[2] = TDOA_starboard_stern;
+    *(p_TDOA_array[0]) = TDOA_port_starboard;
+    *(p_TDOA_array[1]) = TDOA_port_stern;
+    *(p_TDOA_array[2]) = TDOA_starboard_stern;
 }
 
 

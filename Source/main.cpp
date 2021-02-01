@@ -170,8 +170,8 @@ int main(void)
     /* TDOA between the measurements */
     uint32_t TDOA_port_starboard, TDOA_port_stern, TDOA_starboard_stern;
 
-    uint32_t TDOA_array[NUM_HYDROPHONES] = 
-          { TDOA_hyd_port, TDOA_hyd_starboard, lag_hyd_stern };
+    uint32_t* p_TDOA_array[NUM_HYDROPHONES] = 
+          { &TDOA_port_starboard, &TDOA_port_stern, &TDOA_starboard_stern };
 
 
     /* Intializing the data-arrays */
@@ -249,13 +249,16 @@ int main(void)
 
         /**
          * Checking if an error occured during convertion 
-         * 
-         * Restarting the convertion between ADC and memory
          */
         if(bool_DMA_conv_error){
+          /* Logging the error */
           log_error(ERROR_TYPES::ERROR_DMA_CONV);
+
+          /* Reset FLAGS */
           bool_DMA_conv_error = 0;
           bool_DMA_conv_ready = 0;
+
+          /* Restart convertion between adc and dma */
           start_convertion_adc_dma();
           continue;
         }
@@ -295,30 +298,42 @@ int main(void)
         /* Filtering the raw data */
         ANALYZE_DATA::filter_raw_data(raw_data_array, filtered_data_array);
 
-        /* Calulating the TDOA-array */
+        /* Calulating the p_TDOA-array */
         ANALYZE_DATA::calculate_TDOA_array(filtered_data_array, TDOA_array);
+
+        /* Transfering from uint32_t* to uint32_t */
+        uint32_t TDOA_array[NUM_HYDROPHONES] = 
+              { *(p_TDOA_array[0]), *(p_TDOA_array[1]), *(p_TDOA_array[2]) };
 
         /**
          * Checking is the measurements are valid. The measurements 
          * are discarded if they deviate too much in either time lag
          * 
          * Take new samples if the data is invalid
+         * 
+         * @warning Outcommented until the problem with TDOA is fixed.
+         * As of 01.02., the code uses the direct time of arrival and not the
+         * time-difference
          */
-        if(!TRILATERATION::check_valid_signals(TDOA_array, bool_time_error)){
-          log_error(ERROR_TYPES::ERROR_TIME_SIGNAL);
-          continue;
-        }
+        // if(!TRILATERATION::check_valid_signals(TDOA_array, bool_time_error)){
+        //   log_error(ERROR_TYPES::ERROR_TIME_SIGNAL);
+        //   continue;
+        // }
 
         /**
          * Triliterate the position of the acoustic pinger
          * 
          * The coordinates are given as a reference to the center of the AUV
+         * 
+         * @warning Outcommented until the problem with TDOA is fixed.
+         * As of 01.02., the code uses the direct time of arrival and not the
+         * time-difference
          */
-        if(!TRILATERATION::trilaterate_pinger_position(A_matrix, B_vector, 
-            lag_array, x_pos_es, y_pos_es)){
-          log_error(ERROR_TYPES::ERROR_A_NOT_INVERTIBLE);
-          continue;
-        }
+        // if(!TRILATERATION::trilaterate_pinger_position(A_matrix, B_vector, 
+        //     TDOA_array, x_pos_es, y_pos_es)){
+        //   log_error(ERROR_TYPES::ERROR_A_NOT_INVERTIBLE);
+        //   continue;
+        // }
 
         /**
          * TODO@TODO
