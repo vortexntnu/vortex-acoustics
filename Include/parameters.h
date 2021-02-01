@@ -82,8 +82,24 @@
  * 
  *                   STERN
  * 
+ *    y
+ *    ^
+ *    |
+ *    |
+ *    |
+ *    |
+ * ----------------------> x
+ *    |
+ *    |
+ * 
+ * 
  * @note The position of the hydrophones are relative
  * to the center of the AUV
+ * 
+ * @warning The axis in the xy-plane are rotated compared 
+ * to the axis that mechanical works with. This implies
+ * that n_HYD_X equals mechanical's y-axis
+ * 
  */
 #ifndef HYDROPHONE_DETAILS
 #define HYDROPHONE_DETAILS
@@ -94,17 +110,17 @@
 
   #define SIGNAL_GAIN         1.0f                  /* Gain of signal (unknown as of 06.01)           */
 
-  #define PORT_HYD_X         -1.0f                  /* x - position of port hydrophone      [m]       */
-  #define PORT_HYD_Y          0.0f                  /* y - position of port hydrophone      [m]       */
-  #define PORT_HYD_Z          0.0f                  /* z - position of port hydrophone      [m]       */
+  #define PORT_HYD_X         -0.11f                 /* x - position of port hydrophone      [m]       */
+  #define PORT_HYD_Y          0.31f                 /* y - position of port hydrophone      [m]       */
+  #define PORT_HYD_Z          0.15f                 /* z - position of port hydrophone      [m]       */
 
-  #define STARBOARD_HYD_X     1.0f                  /* x - position of starboard hydrophone [m]       */
-  #define STARBOARD_HYD_Y     0.0f                  /* y - position of starboard hydrophone [m]       */
-  #define STARBOARD_HYD_Z     0.0f                  /* z - position of starboard hydrophone [m]       */
+  #define STARBOARD_HYD_X     0.11f                 /* x - position of starboard hydrophone [m]       */
+  #define STARBOARD_HYD_Y     0.31f                 /* y - position of starboard hydrophone [m]       */
+  #define STARBOARD_HYD_Z     0.15f                 /* z - position of starboard hydrophone [m]       */
 
   #define STERN_HYD_X         0.0f                  /* x - position of stern hydrophone     [m]       */
-  #define STERN_HYD_Y        -1.0f                  /* y - position of stern hydrophone     [m]       */
-  #define STERN_HYD_Z         0.0f                  /* z - position of stern hydrophone     [m]       */
+  #define STERN_HYD_Y        -0.24f                 /* y - position of stern hydrophone     [m]       */
+  #define STERN_HYD_Z         0.15f                 /* z - position of stern hydrophone     [m]       */
 
 #endif /* HYDROPHONE_DETAILS */
 
