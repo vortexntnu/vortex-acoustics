@@ -134,8 +134,8 @@ uint8_t TRILATERATION::trilaterate_pinger_position(
         float32_t TDOA_starboard_stern = (float32_t)
                 SAMPLE_TIME * SOUND_SPEED * (lag_starboard - lag_stern);
 
-        float32_t TDOA_array[NUM_HYDROPHONES] = { 
-                TDOA_port_starboard, TDOA_port_stern, TDOA_starboard_stern};
+        float32_t TDOA_array[NUM_HYDROPHONES] = 
+                { TDOA_port_starboard, TDOA_port_stern, TDOA_starboard_stern };
         
         /* Calculating the matrices */
         TRILATERATION::calculate_tdoa_matrices(TDOA_array, A, B);

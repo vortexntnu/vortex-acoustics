@@ -91,9 +91,9 @@ void ANALYZE_DATA::filter_raw_data(
 }
 
 
-void ANALYZE_DATA::calculate_TDOA_array(
+void ANALYZE_DATA::calculate_xcorr_lag_array(
         float32_t* p_filtered_data_array[NUM_HYDROPHONES],
-        uint32_t* p_TDOA_array[NUM_HYDROPHONES]){
+        uint32_t* p_lag_array[NUM_HYDROPHONES]){
     
     /* Getting the values from the arrays */
     float32_t* p_filtered_data_port = p_filtered_data_array[0];
@@ -122,31 +122,34 @@ void ANALYZE_DATA::calculate_TDOA_array(
             cross_corr_starboard_stern);
 
     /* Calculating TDOA */
-    uint32_t TDOA_port_starboard, TDOA_port_stern, TDOA_starboard_stern;
+    uint32_t lag_port_starboard, lag_port_stern, lag_starboard_stern;
     float32_t max_val_port_starboard, max_val_port_stern, max_val_starboard_stern;
 
     ANALYZE_DATA::array_max_value(
             cross_corr_port_starboard,
             2 * IN_BUFFER_LENGTH - 1,
-            TDOA_port_starboard,
+            lag_port_starboard,
             max_val_port_starboard);
 
     ANALYZE_DATA::array_max_value(
             cross_corr_port_stern,
             2 * IN_BUFFER_LENGTH - 1,
-            TDOA_port_stern,
+            lag_port_stern,
             max_val_port_stern);
 
     ANALYZE_DATA::array_max_value(
             cross_corr_starboard_stern,
             2 * IN_BUFFER_LENGTH - 1,
-            TDOA_starboard_stern,
+            lag_starboard_stern,
             max_val_starboard_stern);
 
-    /* Inserting calculated TDOA into array */
-    *(p_TDOA_array[0]) = TDOA_port_starboard;
-    *(p_TDOA_array[1]) = TDOA_port_stern;
-    *(p_TDOA_array[2]) = TDOA_starboard_stern;
+    /* Inserting calculated cross-correlated lag into array */
+    *(p_TDOA_array[0]) = lag_port_starboard;
+    *(p_TDOA_array[1]) = lag_port_stern;
+    *(p_TDOA_array[2]) = lag_starboard_stern;
+
+    /* Estimating the likely time of detection at the given hydrophones */
+    
 }
 
 

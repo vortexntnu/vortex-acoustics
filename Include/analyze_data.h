@@ -69,15 +69,15 @@ void filter_raw_data(
  *                                  p_filtered_data_starboard,
  *                                  P_filtered_data_stern}
  * 
- * @param p_TDOA_array The array to hold the calculated TDOA
+ * @param p_lag_array The array to hold the cross-correlated lags.
  * It is assumed that
- *      @p p_TDOA_array = {p_TDOA_port_starboard,
- *                         p_TDOA_port_stern,
- *                         p_TDOA_starboard_stern}
+ *      @p p_TDOA_array = {p_lag_port_starboard,
+ *                         p_lag_port_stern,
+ *                         p_lag_starboard_stern}
  */
-void calculate_TDOA_array(
+void calculate_xcorr_lag_array(
         float32_t* p_filtered_data_array[NUM_HYDROPHONES],
-        uint32_t* p_TDOA_array[NUM_HYDROPHONES]);
+        uint32_t* p_lag_array[NUM_HYDROPHONES]);
 
 } /* namespace ANALYZE_DATA */
 

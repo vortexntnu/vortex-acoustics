@@ -167,11 +167,11 @@ int main(void)
     Vector_2_1_f B_vector = TRILATERATION::initialize_B_vector();
 
 
-    /* TDOA between the measurements */
-    uint32_t TDOA_port_starboard, TDOA_port_stern, TDOA_starboard_stern;
+    /* Cross-correlated lag between the measurements */
+    uint32_t lag_port_starboard, lag_port_stern, lag_starboard_stern;
 
-    uint32_t* p_TDOA_array[NUM_HYDROPHONES] = 
-          { &TDOA_port_starboard, &TDOA_port_stern, &TDOA_starboard_stern };
+    uint32_t* p_lag_array[NUM_HYDROPHONES] = 
+          { &lag_port_starboard, &lag_port_stern, &lag_starboard_stern };
 
 
     /* Intializing the data-arrays */
@@ -299,7 +299,7 @@ int main(void)
         ANALYZE_DATA::filter_raw_data(raw_data_array, filtered_data_array);
 
         /* Calulating the p_TDOA-array */
-        ANALYZE_DATA::calculate_TDOA_array(filtered_data_array, TDOA_array);
+        ANALYZE_DATA::calculate_xcorr_lag_array(filtered_data_array, p_lag_array);
 
         /* Transfering from uint32_t* to uint32_t */
         uint32_t TDOA_array[NUM_HYDROPHONES] = 
