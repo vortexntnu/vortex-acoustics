@@ -188,9 +188,14 @@ void TRILATERATION::calculate_tdoa_matrices(
         float32_t y_01 = PORT_HYD_Y - STARBOARD_HYD_Y;
         float32_t y_02 = PORT_HYD_Y - STERN_HYD_Y;
 
-        /* Calculating the distance between the hydrophones */
-        float32_t d_01 = std::sqrt(std::pow(x_01, 2) + std::pow(y_01, 2));
-        float32_t d_02 = std::sqrt(std::pow(x_02, 2) + std::pow(y_02, 2));
+        /* Extracting the data from the array */
+        float32_t TDOA_port_starboard = TDOA_array[0];
+        float32_t TDOA_port_stern = TDOA_array[1];
+        float32_t TDOA_starboard_stern = TDOA_array[2];
+
+        /* Using TDOA to calculate the distances */
+        float32_t d_01 = SOUND_SPEED * TDOA_port_starboard;
+        float32_t d_02 = SOUND_SPEED * TDOA_port_stern;
 
         /* Setting A */
         A << x_01, y_01, d_01,
