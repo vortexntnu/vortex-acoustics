@@ -92,22 +92,13 @@ uint8_t TRILATERATION::valid_time_check(
 uint8_t TRILATERATION::check_valid_signals(
         uint32_t* p_lag_array[NUM_HYDROPHONES],
         uint8_t& bool_time_error){
-        
-        /**
-         * Recovering the values from the arrays
-         */
-        uint32_t* p_lag_port_starboard, p_lag_port_stern, p_lag_starboard_stern;
-
-        p_lag_port_starboard = p_lag_array[0];
-        p_lag_port_stern = p_lag_array[1];
-        p_lag_starboard_stern = p_lag_array[2];
 
         /**
          * Evaluating if the signals are valid in time
          */
-        if(TRILATERATION::valid_time_check(*p_lag_port_starboard) || 
-        TRILATERATION::valid_time_check(*p_lag_port_stern) ||
-        TRILATERATION::valid_time_check(*p_lag_starboard_stern))
+        if(TRILATERATION::valid_time_check(*p_lag_array[0]) || 
+        TRILATERATION::valid_time_check(*p_lag_array[1]) ||
+        TRILATERATION::valid_time_check(*p_lag_array[2]))
                 bool_time_error = 1;
 
         /**
@@ -132,9 +123,9 @@ uint8_t TRILATERATION::trilaterate_pinger_position(
         float32_t& y_estimate){
 
         /* Recovering the lags from the array */
-        uint32_t* p_lag_port_starboard = lag_array[0];
-        uint32_t* p_lag_port_stern = lag_array[1];
-        uint32_t* p_lag_starboard_stern = lag_array[2];
+        uint32_t* p_lag_port_starboard = p_lag_array[0];
+        uint32_t* p_lag_port_stern = p_lag_array[1];
+        uint32_t* p_lag_starboard_stern = p_lag_array[2];
 
         /* Calculating TDOA and creating an array to hold the data */
         float32_t TDOA_port_starboard = (float32_t)
