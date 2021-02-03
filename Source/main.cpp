@@ -84,9 +84,9 @@ static void start_convertion_adc_dma(void);
 
 /* Function to access DMA to get data from the hydrophones */
 static void read_measurements(
-          float32_t data_hyd_port[IN_BUFFER_LENGTH], 
-          float32_t data_hyd_starboard[IN_BUFFER_LENGTH],
-          float32_t data_hyd_stern[IN_BUFFER_LENGTH]);
+          float32_t raw_data_port[IN_BUFFER_LENGTH], 
+          float32_t raw_data_starboard[IN_BUFFER_LENGTH],
+          float32_t raw_data_stern[IN_BUFFER_LENGTH]);
 
 /* Functions to log errors */
 static void log_error(ERROR_TYPES error_code);
@@ -277,7 +277,7 @@ int main(void)
          * The data should be correct, as the DMA-transfer has stopped. It should
          * therefore be impossible to overwrite the memory
          */
-        read_measurements(data_hyd_port, data_hyd_starboard, data_hyd_stern);
+        read_measurements(raw_data_port, raw_data_starboard, raw_data_stern);
 
         /**
          * Recording the time of measurement in seconds after startup
@@ -641,9 +641,9 @@ static void MX_GPIO_Init(void)
  * are set to 0. This is due to the usage of complex FFT, which requires the
  * imaginary components to be on the odd indeces. 
  * 
- * @param p_data_hyd_port Pointer to the memory for the port hydrophone
- * @param p_data_hyd_starboard Pointer to the starboard hydrophone's memory
- * @param p_data_hyd_stern Pointer to the stern hydrophone's memory
+ * @param raw_data_port Pointer to the memory for the port hydrophone
+ * @param raw_data_starboard Pointer to the starboard hydrophone's memory
+ * @param raw_data_stern Pointer to the stern hydrophone's memory
  * 
  * @warning Unsure if I have read/understood it correctly!
  * Assuming that there exists two possibilities for the DMA to push the
@@ -667,9 +667,9 @@ static void MX_GPIO_Init(void)
  * a serious bug! 
  */
 static void read_measurements(
-        float32_t p_data_hyd_port[IN_BUFFER_LENGTH], 
-        float32_t p_data_hyd_starboard[IN_BUFFER_LENGTH],
-        float32_t p_data_hyd_stern[IN_BUFFER_LENGTH]){
+        float32_t raw_data_port[IN_BUFFER_LENGTH], 
+        float32_t raw_data_starboard[IN_BUFFER_LENGTH],
+        float32_t raw_data_stern[IN_BUFFER_LENGTH]){
 
   /**
    * Reading the data. Dropping the last couple of datapoints, since
@@ -677,14 +677,14 @@ static void read_measurements(
    * accuracy of the analysis, however prevents out-of-range error
    */
   for(uint i = 0; i < DMA_BUFFER_LENGTH - NUM_HYDROPHONES; i++){
-    p_data_hyd_port[2 * i] = ADC1_converted_values[3 * i];
-    p_data_hyd_port[(2 * i) + 1] = 0;
+    raw_data_port[2 * i] = ADC1_converted_values[3 * i];
+    raw_data_port[(2 * i) + 1] = 0;
 
-    p_data_hyd_starboard[2 * i] = (float32_t)ADC1_converted_values[(3 * i) + 1];
-    p_data_hyd_starboard[(2 * i) + 1] = 0;
+    raw_data_starboard[2 * i] = (float32_t)ADC1_converted_values[(3 * i) + 1];
+    raw_data_starboard[(2 * i) + 1] = 0;
 
-    p_data_hyd_stern[2 * i] = (float32_t)ADC1_converted_values[(3 * i) + 2];
-    p_data_hyd_stern[(2 * i) + 1] = 0;
+    raw_data_stern[2 * i] = (float32_t)ADC1_converted_values[(3 * i) + 2];
+    raw_data_stern[(2 * i) + 1] = 0;
   }
 }
 
