@@ -129,7 +129,7 @@ uint8_t check_valid_signals(
  * 
  * @param time_rhs The other time-sample to check 
  */
-uint8_t valid_time_check(
+uint8_t check_valid_time(
             const uint32_t& time_lhs, 
             const uint32_t& time_rhs);
 
@@ -143,7 +143,7 @@ uint8_t valid_time_check(
  * 
  * @param time_diff One of the time-samples to check against
  */
-uint8_t valid_time_check(const uint32_t& time_diff);
+uint8_t check_valid_time(const uint32_t& time_diff);
 
 
 

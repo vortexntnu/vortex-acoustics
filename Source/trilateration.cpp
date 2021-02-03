@@ -66,7 +66,7 @@ uint8_t TRILATERATION::check_initialized_globals(){
 }
 
 
-uint8_t TRILATERATION::valid_time_check(
+uint8_t TRILATERATION::check_valid_time(
         const uint32_t& time_lhs, 
         const uint32_t& time_rhs){
         
@@ -79,7 +79,7 @@ uint8_t TRILATERATION::valid_time_check(
 }
 
 
-uint8_t TRILATERATION::valid_time_check(
+uint8_t TRILATERATION::check_valid_time(
         const uint32_t& time_diff){
         
         /**
@@ -96,9 +96,9 @@ uint8_t TRILATERATION::check_valid_signals(
         /**
          * Evaluating if the signals are valid in time
          */
-        if(TRILATERATION::valid_time_check(*p_lag_array[0]) || 
-        TRILATERATION::valid_time_check(*p_lag_array[1]) ||
-        TRILATERATION::valid_time_check(*p_lag_array[2]))
+        if(TRILATERATION::check_valid_time(*p_lag_array[0]) || 
+        TRILATERATION::check_valid_time(*p_lag_array[1]) ||
+        TRILATERATION::check_valid_time(*p_lag_array[2]))
                 bool_time_error = 1;
 
         /**
