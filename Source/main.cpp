@@ -566,54 +566,69 @@ static void MX_ETH_Init(void)
   */
 static void MX_DMA_Init(void)
 {
+  /**
+   * @warning There is a lot of outcommented code here!
+   * 
+   * This code was tried during the workweek 11-15.01 to get the DMA to
+   * work. 
+   */
+
+  // /* DMA controller clock enable */
+  // __HAL_RCC_DMA2_CLK_ENABLE();
+
+  // /* DMA register setup for channel 0. Warning: hardcoded test! */
+  // MODIFY_REG(
+  //   DMA2_Stream0->CR,       /* Control register                       */                                        
+  //   DMA_SxCR_DIR      |     /* Clear: Direction                       */
+  //     DMA_SxCR_CIRC   |     /* Clear: Mode                            */
+  //     DMA_SxCR_PINC   |     /* Clear: Peripheral increment            */
+  //     DMA_SxCR_MINC   |     /* Clear: Memory increment                */
+  //     DMA_SxCR_PSIZE  |     /* Clear: Peripheral data align           */
+  //     DMA_SxCR_MSIZE  |     /* Clear: Memory data align               */
+  //     DMA_SxCR_PL     |     /* Clear: Priority                        */
+  //     DMA_SxCR_PFCTRL,      /* Clear: Magic mask bit (!!)             */
+  //   0x00000000U       |     /* Set: Direction: peripheral to memory   */
+  //     0x00000001U     |     /* Set: Peripheral: increment             */
+  //     DMA_SxCR_MINC   |     /* Set: Memory: increment                 */
+  //     DMA_SxCR_PSIZE  |     /* Set: Peripheral data align: word       */
+  //     DMA_SxCR_MSIZE  |     /* Set: Memory data align: word           */
+  //     DMA_SxCR_CIRC   |     /* Set: Mode: circular                    */
+  //     DMA_SxCR_PL_1);       /* Set: Priority: high                    */
+
+  // /* Setting peripheral address */
+  // WRITE_REG(DMA2_Stream0->PAR, (uint32_t)&(ADC1->DR));
+
+  // /* Setting up memory address */
+  // WRITE_REG(DMA2_Stream0->M0AR, (uint32_t)&ADC1_converted_values[0]);
+ 
+  // /* Setting total transfer size and number of channels */
+  // MODIFY_REG(DMA2_Stream0->NDTR, DMA_SxNDT, DMA_BUFFER_LENGTH * NUM_HYDROPHONES);
+
+  // /* DMA interrupt init */
+  // /* Set DMA2_Stream0_IRQn interrupt priority */
+  // //HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, 0, 0);
+  // NVIC_SetPriority(DMA2_Stream0_IRQn, 0);
+
+  // /* Enable interrupt for DMA */
+  // //HAL_NVIC_EnableIRQ(DMA2_Stream0_IRQn);
+  // NVIC_EnableIRQ(DMA2_Stream0_IRQn);
+
+  // /* Enable interrupt for transfer complete */
+  // //SET_BIT(DMA2_Stream0->CR, DMA_SxCR_TCIE); /* Might be fucked! */
+
+  // /* Enable interrupt for error */
+  // //SET_BIT(DMA2_Stream0->CR, DMA_SxCR_TEIE); /* Might be fucked */
+
+  // /* Enable DMA-transfer */
+  // SET_BIT(DMA2_Stream0->CR, DMA_SxCR_EN);
+
   /* DMA controller clock enable */
   __HAL_RCC_DMA2_CLK_ENABLE();
 
-  /* DMA register setup for channel 0. Warning: hardcoded test! */
-  MODIFY_REG(
-    DMA2_Stream0->CR,       /* Control register                       */                                        
-    DMA_SxCR_DIR      |     /* Clear: Direction                       */
-      DMA_SxCR_CIRC   |     /* Clear: Mode                            */
-      DMA_SxCR_PINC   |     /* Clear: Peripheral increment            */
-      DMA_SxCR_MINC   |     /* Clear: Memory increment                */
-      DMA_SxCR_PSIZE  |     /* Clear: Peripheral data align           */
-      DMA_SxCR_MSIZE  |     /* Clear: Memory data align               */
-      DMA_SxCR_PL     |     /* Clear: Priority                        */
-      DMA_SxCR_PFCTRL,      /* Clear: Magic mask bit (!!)             */
-    0x00000000U       |     /* Set: Direction: peripheral to memory   */
-      0x00000001U     |     /* Set: Peripheral: increment             */
-      DMA_SxCR_MINC   |     /* Set: Memory: increment                 */
-      DMA_SxCR_PSIZE  |     /* Set: Peripheral data align: word       */
-      DMA_SxCR_MSIZE  |     /* Set: Memory data align: word           */
-      DMA_SxCR_CIRC   |     /* Set: Mode: circular                    */
-      DMA_SxCR_PL_1);       /* Set: Priority: high                    */
-
-  /* Setting peripheral address */
-  WRITE_REG(DMA2_Stream0->PAR, (uint32_t)&(ADC1->DR));
-
-  /* Setting up memory address */
-  WRITE_REG(DMA2_Stream0->M0AR, (uint32_t)&ADC1_converted_values[0]);
- 
-  /* Setting total transfer size and number of channels */
-  MODIFY_REG(DMA2_Stream0->NDTR, DMA_SxNDT, DMA_BUFFER_LENGTH * NUM_HYDROPHONES);
-
   /* DMA interrupt init */
-  /* Set DMA2_Stream0_IRQn interrupt priority */
-  //HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, 0, 0);
-  NVIC_SetPriority(DMA2_Stream0_IRQn, 0);
-
-  /* Enable interrupt for DMA */
-  //HAL_NVIC_EnableIRQ(DMA2_Stream0_IRQn);
-  NVIC_EnableIRQ(DMA2_Stream0_IRQn);
-
-  /* Enable interrupt for transfer complete */
-  //SET_BIT(DMA2_Stream0->CR, DMA_SxCR_TCIE); /* Might be fucked! */
-
-  /* Enable interrupt for error */
-  //SET_BIT(DMA2_Stream0->CR, DMA_SxCR_TEIE); /* Might be fucked */
-
-  /* Enable DMA-transfer */
-  SET_BIT(DMA2_Stream0->CR, DMA_SxCR_EN);
+  /* DMA2_Stream0_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Stream0_IRQn);
 }
 
 /**
