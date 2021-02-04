@@ -66,7 +66,7 @@ uint8_t TRILATERATION::check_initialized_globals(){
 }
 
 
-uint8_t TRILATERATION::valid_time_check(
+uint8_t TRILATERATION::check_valid_time(
         const uint32_t& time_lhs, 
         const uint32_t& time_rhs){
         
@@ -79,25 +79,26 @@ uint8_t TRILATERATION::valid_time_check(
 }
 
 
-uint8_t TRILATERATION::check_valid_signals(
-        uint32_t lag_array[NUM_HYDROPHONES],
-        uint8_t& bool_time_error){
+uint8_t TRILATERATION::check_valid_time(
+        const uint32_t& time_diff){
         
         /**
-         * Recovering the values from the arrays
+         * Checking if the time_diff exceeds the maximum allowed time for a valid signal
          */
-        uint32_t lag_port, lag_starboard, lag_stern;
+        return (std::abs(time_diff) * SAMPLE_TIME) > TRILATERATION::max_time_diff;
+}
 
-        lag_port = lag_array[0];
-        lag_starboard = lag_array[1];
-        lag_stern = lag_array[2];
+
+uint8_t TRILATERATION::check_valid_signals(
+        uint32_t* p_lag_array[NUM_HYDROPHONES],
+        uint8_t& bool_time_error){
 
         /**
          * Evaluating if the signals are valid in time
          */
-        if(TRILATERATION::valid_time_check(lag_port, lag_starboard) || 
-        TRILATERATION::valid_time_check(lag_port, lag_stern) || 
-        TRILATERATION::valid_time_check(lag_starboard, lag_stern))
+        if(TRILATERATION::check_valid_time(*p_lag_array[0]) || 
+        TRILATERATION::check_valid_time(*p_lag_array[1]) ||
+        TRILATERATION::check_valid_time(*p_lag_array[2]))
                 bool_time_error = 1;
 
         /**
@@ -117,25 +118,25 @@ uint8_t TRILATERATION::check_valid_signals(
 uint8_t TRILATERATION::trilaterate_pinger_position(
         Matrix_2_3_f& A,
         Vector_2_1_f& B,
-        uint32_t lag_array[NUM_HYDROPHONES],
+        uint32_t* p_lag_array[NUM_HYDROPHONES],
         float32_t& x_estimate,
         float32_t& y_estimate){
 
         /* Recovering the lags from the array */
-        uint32_t lag_port = lag_array[0];
-        uint32_t lag_starboard = lag_array[1];
-        uint32_t lag_stern = lag_array[2];
+        uint32_t* p_lag_port_starboard = p_lag_array[0];
+        uint32_t* p_lag_port_stern = p_lag_array[1];
+        uint32_t* p_lag_starboard_stern = p_lag_array[2];
 
         /* Calculating TDOA and creating an array to hold the data */
         float32_t TDOA_port_starboard = (float32_t)
-                SAMPLE_TIME * SOUND_SPEED * (lag_port - lag_starboard);
+                SAMPLE_TIME * SOUND_SPEED * (*p_lag_port_starboard);
         float32_t TDOA_port_stern = (float32_t)
-                SAMPLE_TIME * SOUND_SPEED * (lag_port - lag_stern);
+                SAMPLE_TIME * SOUND_SPEED * (*p_lag_port_stern);
         float32_t TDOA_starboard_stern = (float32_t)
-                SAMPLE_TIME * SOUND_SPEED * (lag_starboard - lag_stern);
+                SAMPLE_TIME * SOUND_SPEED * (*p_lag_starboard_stern);
 
-        float32_t TDOA_array[NUM_HYDROPHONES] = { 
-                TDOA_port_starboard, TDOA_port_stern, TDOA_starboard_stern};
+        float32_t TDOA_array[NUM_HYDROPHONES] = 
+                { TDOA_port_starboard, TDOA_port_stern, TDOA_starboard_stern };
         
         /* Calculating the matrices */
         TRILATERATION::calculate_tdoa_matrices(TDOA_array, A, B);
@@ -187,9 +188,14 @@ void TRILATERATION::calculate_tdoa_matrices(
         float32_t y_01 = PORT_HYD_Y - STARBOARD_HYD_Y;
         float32_t y_02 = PORT_HYD_Y - STERN_HYD_Y;
 
-        /* Calculating the distance between the hydrophones */
-        float32_t d_01 = std::sqrt(std::pow(x_01, 2) + std::pow(y_01, 2));
-        float32_t d_02 = std::sqrt(std::pow(x_02, 2) + std::pow(y_02, 2));
+        /* Extracting the data from the array */
+        float32_t TDOA_port_starboard = TDOA_array[0];
+        float32_t TDOA_port_stern = TDOA_array[1];
+        float32_t TDOA_starboard_stern = TDOA_array[2];
+
+        /* Using TDOA to calculate the distances */
+        float32_t d_01 = SOUND_SPEED * TDOA_port_starboard;
+        float32_t d_02 = SOUND_SPEED * TDOA_port_stern;
 
         /* Setting A */
         A << x_01, y_01, d_01,
