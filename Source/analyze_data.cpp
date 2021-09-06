@@ -62,9 +62,9 @@ void ANALYZE_DATA::filter_raw_data(
         float32_t* p_filtered_data_array[NUM_HYDROPHONES]){
     
     /* Getting the values from the arrays */
-    float32_t* p_raw_data_port = p_filtered_data_array[0];
-    float32_t* p_raw_data_starboard = p_filtered_data_array[1];
-    float32_t* p_raw_data_stern = p_filtered_data_array[2];
+    float32_t* p_raw_data_port = p_raw_data_array[0];
+    float32_t* p_raw_data_starboard = p_raw_data_array[1];
+    float32_t* p_raw_data_stern = p_raw_data_array[2];
 
     float32_t* p_filtered_data_port = p_filtered_data_array[0];
     float32_t* p_filtered_data_starboard = p_filtered_data_array[1];
