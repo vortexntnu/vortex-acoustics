@@ -63,6 +63,15 @@ class Pinger:
         self.pulse_length = pulse_length
         self.period = period
 
+        self._sample_period = np.zeros(self.samples_per_period)
+        self._sample_period[0 : self.samples_per_pulse] = np.sin(
+            2
+            * np.pi
+            * self.frequency
+            / self.sampling_frequency
+            * np.arange(self.samples_per_pulse)
+        )
+
     @property
     def samples_per_period(self) -> int:
         """
@@ -81,10 +90,46 @@ class Pinger:
         """
         return int(self.pulse_length * self.sampling_frequency)  # [ms*kHz]
 
+    def get_offset_period(
+        self,
+        offset_in_samples: int,  # number of samples
+    ) -> np.array:
+        """Generates an offset pinger period where the pulse is wrapped around if necessary.
+
+        Providing an offset while generating the pinger output can be used to mimic
+        different times of arrival.
+
+        Args:
+            offset_in_samples: Number of samples the pulse should be offset with.
+
+        Returns:
+            A numpy.array containing one period of the pinger signal, but offset by the
+            provided number of samples.
+        """
+        offset = offset_in_samples % self.samples_per_period
+        offset_period = np.zeros(self.samples_per_period)
+
+        if (offset + self.samples_per_pulse) <= self.samples_per_period:
+            start_index = offset
+            end_index = start_index + self.samples_per_pulse
+            offset_period[start_index:end_index] = self._sample_period[
+                0 : self.samples_per_pulse
+            ]
+        else:
+            # offset and pulse length are larger than period length => wrap around is needed
+            length_end_segment = self.samples_per_period - offset
+            length_start_segment = self.samples_per_pulse - length_end_segment
+            offset_period[offset:] = self._sample_period[0:length_end_segment]
+            offset_period[0:length_start_segment] = self._sample_period[
+                length_end_segment : self.samples_per_pulse
+            ]
+        return offset_period
+
     def generate_signal(
         self,
         amplitude: float = 1.0,
-        length: int = 5000,  # [ms]
+        offset: float = 0.0,  # [ms]
+        length: float = 5000,  # [ms]
     ) -> np.array:
         """Generates an array of the output signal for the given length.
 
@@ -99,16 +144,25 @@ class Pinger:
         samples_per_output = int(length * self.sampling_frequency)  # [ms*kHz]
         output = np.zeros(samples_per_output)
 
+        offset_in_samples = int(offset * self.sampling_frequency)  # [ms*kHz]
+        offset_period = self.get_offset_period(
+            offset_in_samples=offset_in_samples,
+        )
+
         number_of_periods = samples_per_output // self.samples_per_period
         for i in np.arange(number_of_periods + 1):
-            start_pulse = i * self.samples_per_period
-            end_pulse = start_pulse + self.samples_per_pulse - 1
-            length_pulse = self.samples_per_pulse - 1
+            segment_length = self.samples_per_period
 
-            if end_pulse > samples_per_output - 1:
-                end_pulse = samples_per_output - 1
-                length_pulse = samples_per_output - start_pulse - 1
+            output_start = i * segment_length
+            output_end = output_start + segment_length
 
-            output[start_pulse:end_pulse] = np.sin(np.arange(length_pulse))
+            if output_end >= samples_per_output:
+                output_end = samples_per_output
+                segment_length = output_end - output_start
+
+            offset_start = output_start % self.samples_per_period
+            offset_end = offset_start + segment_length
+
+            output[output_start:output_end] = offset_period[offset_start:offset_end]
 
         return amplitude * output

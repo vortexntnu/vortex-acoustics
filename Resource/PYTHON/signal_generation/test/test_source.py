@@ -35,7 +35,7 @@ class TestPinger:
             )
 
     @staticmethod
-    def test_given_frequency_is_half_of_sampling_frequency_when_initialized_then_succes():
+    def test_given_frequency_is_half_of_sampling_frequency_when_initialized_then_success():
         s = source.Pinger(
             frequency=1,
             sampling_frequency=2,
@@ -102,3 +102,43 @@ class TestPinger:
                 last_sample_zero = False
 
         assert number_of_zero_sections == 2
+
+    @staticmethod
+    def test_given_offset_and_pulse_length_larger_than_period_when_generate_signal_then_success():
+        s = source.Pinger(
+            frequency=10,
+            pulse_length=10,
+            period=30,
+        )
+        out = s.generate_signal(
+            offset=25,
+            length=30,
+        )
+
+    @staticmethod
+    def test_given_offset_and_pulse_length_larger_than_period_when_generate_one_period_then_last_samples_not_zero():
+        s = source.Pinger(
+            frequency=10,
+            pulse_length=10,
+            period=20,
+        )
+        out = s.generate_signal(
+            offset=15,
+            length=20,
+        )
+
+        assert any(out[-10:] != 0)
+
+    @staticmethod
+    def test_given_small_offset_when_generate_signal_then_first_samples_zero():
+        s = source.Pinger(
+            frequency=10,
+            pulse_length=10,
+            period=20,
+        )
+        out = s.generate_signal(
+            offset=5,
+            length=20,
+        )
+
+        assert all(out[0:10] == 0)
