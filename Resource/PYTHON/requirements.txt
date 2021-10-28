@@ -1,6 +1,7 @@
 attrs==21.2.0
 black==21.9b0
 click==8.0.3
+dataclasses==0.8; python_version < '3.7'
 iniconfig==1.1.1
 mypy-extensions==0.4.3
 numpy==1.19.5
