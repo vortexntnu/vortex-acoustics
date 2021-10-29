@@ -33,10 +33,10 @@ def initialize_trilateration_globals():
                 math.pow(param.HydrophoneDetails.STERN_HYD_Y - param.HydrophoneDetails.STARBOARD_HYD_Y, 2) +
                 math.pow(param.HydrophoneDetails.STERN_HYD_Z - param.HydrophoneDetails.STARBOARD_HYD_Z, 2)))
 
-        #Finding the maximum distance 
+    #Finding the maximum distance 
     max_hydrophone_distance = max(dist_port_starboard, max(dist_starboard_stern, dist_port_stern))
         
-        #Calculating max time allowed over that distance 
+    #Calculating max time allowed over that distance 
     max_time_diff = (1 + param.SystemMargins.MARGIN_TIME_EPSILON) *(max_hydrophone_distance / param.PhysicalConstants.SOUND_SPEED)
 
         #Returning if both variables have been set correctly 
@@ -99,7 +99,7 @@ def check_valid_signals(p_lag_array: np.array, bool_time_error: np.uint32):
 
 #Functions for trilateration based on TDOA 
 
-def trilaterate_pinger_position(A,B,p_lag_array,x_estimate,y_estimate):
+def trilaterate_pinger_position(A,B,p_lag_array): #obs: originaly x_estimate og y_estimate were taken in as arguments
         """
         arg:
         A is a Matrix_2_3_f
@@ -132,9 +132,10 @@ def trilaterate_pinger_position(A,B,p_lag_array,x_estimate,y_estimate):
         #Calculating the transpose
         A_T = A.transpose() #Matrix_2_3_f 
 
-        #Checking if A * A_T is invertible. Return 0 if not 
-        if(not((A_T * A).determinant())):
-                return 0
+        #will test in test_multilateration instead
+        # Checking if A * A_T is invertible. Return 0 if not 
+        #if(not((A_T * A).determinant())):
+        #       return 0, 0, 0
 
         #Calculating the solution-vector 
         solution_vec = (A_T * A).inverse() * A_T * B #Vector_2_1_f 
@@ -143,7 +144,7 @@ def trilaterate_pinger_position(A,B,p_lag_array,x_estimate,y_estimate):
         x_estimate = solution_vec.coeff(0)
         y_estimate = solution_vec.coeff(1)
 
-        return 1;       
+        return x_estimate, y_estimate       
 
 
 
@@ -197,7 +198,7 @@ def calculate_tdoa_matrices(TDOA_array,A,B):
          * The variables refer to the position (1-indexed) in the vector.
          * 
          * Check the link in the .h file for a better explanation   
-         """
+        """
         b1 = 1 / 2 * (
                 math.pow(d_01, 2) +
                 math.pow(param.HydrophoneDetails.PORT_HYD_X, 2) - math.pow(param.HydrophoneDetails.STARBOARD_HYD_X, 2) +

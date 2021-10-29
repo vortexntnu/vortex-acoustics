@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-
+ 
 # @file
 # @brief Parameters and constants used for the system. 
 # Included parameters:
