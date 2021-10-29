@@ -4,8 +4,8 @@
 
 import numpy as np
 import math
-import parameters from multilateration #as param
-import multilateration as mult
+import multilateration.parameters as param
+import multilateration.multilateration as mult
 
 
 """
