@@ -1,5 +1,5 @@
 from numpy.lib.index_tricks import index_exp
-import parameters as param
+import multilateration.parameters as param
 from scipy import signal
 import numpy as np
 
@@ -38,15 +38,6 @@ def calculate_xcorr_lag_array(data_array):
     cross_corr_starboard_stern = signal.correlate(data_starboard, data_stern, mode="full")
     starboard_stern_lags = signal.correlation_lags(data_starboard.size, data_stern.size, mode="full")
     starboard_stern_lag = starboard_stern_lags[np.argmax(cross_corr_starboard_stern)]
-
-
-    # Linear transformation to the cross-correlated lags to find the
-    # difference in number samples. 
-    # When these values are shifted around 0, it is much easier to later
-    # determine which hydrophone measured the signal first
-    port_starboard_lag -= param.DSPConstants.IN_BUFFER_LENGTH
-    port_stern_lag -= param.DSPConstants.IN_BUFFER_LENGTH
-    starboard_stern_lag -= param.DSPConstants.IN_BUFFER_LENGTH
     
     return port_starboard_lag, port_stern_lag, starboard_stern_lag
 
