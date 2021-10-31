@@ -115,7 +115,7 @@ class SystemMargins:
     MARGIN_POS_ESTIMATE: float = 0.5                # Error tolerable in estimating the position [m]
     MARGIN_POS_SEARCH: float = 0.25                 # How much the search will deviate in x      [m]
 
-    MARGIN_INTENSITY: int = 20                      # Difference between the intensity-
+    MARGIN_INTENSITY: int = 20                      # Difference between the intensity-measurements
     MARGIN_TIME_EPSILON: float = 0.1                # Determines the difference allowed between the
                                                     # detected lags. With LAG_DIFF_EPSILON = 0.1 we
                                                     # allow signals to arrive 1.1 * max_time and
@@ -135,7 +135,7 @@ class TestParameters:
     
     SOURCE_POS_X: float = 10.0                      # x - position of sound-source
     SOURCE_POS_y: float = 2.0                       # y - position of sound-source
-    SOURCE_POS_Z: float = 0.0                        # z - position of sound-source
+    SOURCE_POS_Z: float = 0.0                       # z - position of sound-source
 
 
 # PHYSICAL CONSTANTS
