@@ -1,10 +1,8 @@
-#include "trilateration.h"
-
 import math
-import parameters as param
+
 import numpy as np
 
-
+import multilateration.parameters as param
 
 #Initializing the variables maximum_time_diff and max_hydrophone_distance.
 #These values are updated in the function initialize_trilateration_globals
@@ -199,6 +197,7 @@ def calculate_tdoa_matrices(TDOA_array,A,B):
          * 
          * Check the link in the .h file for a better explanation   
         """
+        
         b1 = 1 / 2 * (
                 math.pow(d_01, 2) +
                 math.pow(param.HydrophoneDetails.PORT_HYD_X, 2) - math.pow(param.HydrophoneDetails.STARBOARD_HYD_X, 2) +
@@ -211,3 +210,7 @@ def calculate_tdoa_matrices(TDOA_array,A,B):
 
         #Setting B 
         B = [b1, b2]
+
+
+
+
