@@ -29,7 +29,7 @@ def test_analyze_data():
     data_stern[2] = 1
     data_array = np.array([data_port, data_starboard, data_stern])
 
-    ref_array = np.array([1,2,1])
+    ref_array = np.array([-1,-2,-1])
 
     results_array = andat.calculate_xcorr_lag_array(data_array)
     

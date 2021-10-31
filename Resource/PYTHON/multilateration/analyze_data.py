@@ -1,7 +1,6 @@
-from numpy.lib.index_tricks import index_exp
-import multilateration.parameters as param
-from scipy import signal
 import numpy as np
+from scipy import signal
+
 
 
 # Functions for analyzing the data
