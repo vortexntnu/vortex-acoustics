@@ -13,7 +13,7 @@ def calculate_xcorr_lag_array(data_array):
         data_array: Array of filtered data from the hydrophones
 
     Returns:
-        A numpy.array containing calculated cross-correlated lag between the hydrophones:
+        An array containing calculated cross-correlated lag between the hydrophones:
         port_starboard_lag, port_stern_lag, starboard_stern_lag.
     """
 
