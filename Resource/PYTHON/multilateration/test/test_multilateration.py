@@ -1,7 +1,4 @@
 
-
-
-
 import numpy as np
 import math
 import multilateration.parameters as param
@@ -47,7 +44,7 @@ import multilateration.multilateration as mult
 """
 #Test-functions for acoustic trilateration
 
-def calculate_toa_array(lag_array: np.array, bool_valid_parameters: np.unit8):  
+def calculate_toa_array(lag_array: np.array, bool_valid_parameters: np.uint8):  
     """
     Arg: 
     in the orginal code is was written: 
@@ -135,9 +132,9 @@ def test_trilateration_algorithm():
             math.pow(x_pos_es - param.TestParameters.SOURCE_POS_X, 2) +
             math.pow(y_pos_es - param.TestParameters.SOURCE_POS_Y, 2)))
 
-    print("\nThe estimated pinger position is at (x,y) = (%f, %f)", x_pos_es, y_pos_es)
-    print("\nThe actual pinger position is at (x,y) = (%f, %f)", param.TestParameters.SOURCE_POS_X, param.TestParameters.SOURCE_POS_Y)
-    print("\nThe difference between the actual position and the estimated position is %f m", distance_diff)
+    print(f"\nThe estimated pinger position is at (x,y) = ({x_pos_es}, {y_pos_es})")
+    print(f"\nThe actual pinger position is at (x,y) = ({param.TestParameters.SOURCE_POS_X}, {param.TestParameters.SOURCE_POS_Y)})")
+    print(f"\nThe difference between the actual position and the estimated position is {distance_diff}} m")
     
 
 
