@@ -1,6 +1,37 @@
 import pytest
+import scipy.signal.windows
 
 import signal_generation.source as source
+
+
+class TestWindowGeneration:
+    @staticmethod
+    def test_given_odd_pulse_length_100_percent_window_then_equal_to_hann():
+        reference = scipy.signal.windows.hann(
+            M=101,
+            sym=True,
+        )
+
+        result = source.generate_pulse_window(
+            pulse_length=101,
+            start_end_percentage=100,
+        )
+
+        assert (result == reference).all()
+
+    @staticmethod
+    def test_given_10_percent_window_then_roughly_90_percent_ones():
+        percentage = 10
+        reference_percentage = 100.0 - percentage
+
+        window = source.generate_pulse_window(
+            pulse_length=10000,
+            start_end_percentage=percentage,
+        )
+
+        result_percentage = sum(window == 1.0) / len(window) * 100
+
+        assert abs(result_percentage - reference_percentage) < 2
 
 
 class TestPinger:

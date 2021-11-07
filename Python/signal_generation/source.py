@@ -17,6 +17,45 @@ import logging
 from dataclasses import dataclass
 
 import numpy as np
+import scipy.signal.windows
+
+
+def generate_pulse_window(
+    pulse_length: int,
+    start_end_percentage: int = 10,
+) -> np.array:
+    """
+    Args:
+        pulse_length: The length of the pulse to generate the window for.
+        start_end_percentage: The amount of the pulse that is affected by
+            the window function in %. E.g. 10% will apply the rising flank of
+            the window on the 5% at the start and falling flank at the 5% at
+            the end, combining to 10%. The maximum value is 100%.
+
+    Returns:
+        A window with length of the pulse, that can be used to smoothen the
+        edges of the pulse.
+    """
+    if start_end_percentage > 100:
+        raise ValueError(
+            f"start_end_percentage of '{start_end_percentage:.2f}' exceeds limit of 100"
+        )
+
+    window_length = pulse_length * start_end_percentage // 100
+    # make window an odd amount of samples for peak in middle
+    is_even = not (window_length % 2)
+    window_length = window_length - 1 if is_even else window_length
+
+    window = scipy.signal.windows.hann(
+        M=window_length,
+        sym=True,
+    )
+
+    pulse_window = np.ones(pulse_length)
+    pulse_window[0 : len(window) // 2] = window[0 : len(window) // 2]
+    pulse_window[-len(window) // 2 :] = window[-len(window) // 2 :]
+
+    return pulse_window
 
 
 class Pinger:
@@ -32,9 +71,9 @@ class Pinger:
         sampling_frequency: float = 100.0,  # [kHz]
         pulse_length: int = 500,  # [ms]
         period: int = 1000,  # [ms]
+        use_window: bool = False,
     ):
         """Initializes Pinger class with given parameters.
-
 
         Args:
             frequency: The frequency of the sine wave generated during the pulse.
@@ -44,6 +83,8 @@ class Pinger:
             pulse_length: Length of the ON-section or pulse during a period
                 of the pinger output in milliseconds/ms.
             period: Length of the period of the pinger output in milliseconds/ms.
+            use_window: If True applies a window function to smoothen out the
+                5% at the start and end of the pulse.
 
         Returns:
             An object of type Pinger initialized with the given parameters. The
@@ -63,14 +104,23 @@ class Pinger:
         self.pulse_length = pulse_length
         self.period = period
 
-        self._sample_period = np.zeros(self.samples_per_period)
-        self._sample_period[0 : self.samples_per_pulse] = np.sin(
+        pulse = np.sin(
             2
             * np.pi
             * self.frequency
             / self.sampling_frequency
             * np.arange(self.samples_per_pulse)
         )
+
+        if use_window is True:
+            pulse_window = generate_pulse_window(
+                pulse_length=self.samples_per_pulse,
+                start_end_percentage=10,
+            )
+            pulse *= pulse_window
+
+        self._sample_period = np.zeros(self.samples_per_period)
+        self._sample_period[0 : self.samples_per_pulse] = pulse
 
     @property
     def samples_per_period(self) -> int:
