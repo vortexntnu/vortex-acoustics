@@ -16,7 +16,7 @@ class HydrophoneArray:
 
     def _calculate_travel_time(
         self,
-        source_position: sg_pos.Position,
+        distances: np.array,
         sound_speed: float = 1500,  # [m/s]
     ) -> List[float]:
         """Calculate the travel time from the source to the hydrophones.
@@ -28,7 +28,6 @@ class HydrophoneArray:
         Returns:
             A numpy.array containing the travel times in milliseconds (ms).
         """
-        distances = np.array([abs(pos - source_position) for pos in self.positions])
         return distances / sound_speed * 10 ** 3
 
     def generate_signals(
@@ -39,6 +38,7 @@ class HydrophoneArray:
         amplitude: float = 1.0,
         output_data_type: type = np.uint32,
         sound_speed: float = 1500.0,
+        geometric_spreading: bool = False,
     ) -> List[np.array]:
         """Generate signals received by the hydrophones placed in the array.
 
@@ -50,13 +50,22 @@ class HydrophoneArray:
             output_data_type: The datatype used for converting from float to integer. Must be
                 a numpy integer type.
             sound_speed: The expected sound speed in the medium in meter per seconds.
+            geometric_spreading: If true uses 1/r loss from spherical spreading on the
+                amplitudes.
 
         Returns:
             A list of numpy.arrays containing the received signal at the hydrophones
             placed in the array.
         """
+        distances = np.array([abs(pos - source_position) for pos in self.positions])
+
+        amplitudes = np.array([amplitude for _ in self.positions])
+        if geometric_spreading:
+            for index, distance in enumerate(distances):
+                amplitudes[index] = 1 / distance * amplitude
+
         travel_times = self._calculate_travel_time(
-            source_position=source_position,
+            distances=distances,
             sound_speed=sound_speed,
         )
 
@@ -68,7 +77,7 @@ class HydrophoneArray:
             converted_signal = sg_conv.convert_to_integer_type(
                 resulting_type=output_data_type,
                 input_signal=source.generate_signal(
-                    amplitude=amplitude,
+                    amplitude=amplitudes[index],
                     offset=time,
                     length=output_length,
                 ),
