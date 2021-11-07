@@ -27,8 +27,11 @@ Files with a short description:
 
 # Resource files
 Resource files are found in the folder "Resource". 
-The folder includes the CMSIS-library, driver for STM32 and a test-script in MATLAB.
+The folder includes the CMSIS-library, driver for STM32.
 
+
+# Matlab
+The Matlab code provided contains the calculations for the digital filter used in the C++ code.
 
 # Future improvements/development
 
