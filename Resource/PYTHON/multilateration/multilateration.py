@@ -5,6 +5,7 @@
 import numpy as np
 
 import multilateration.parameters as param
+from multilateration.parameters import HydrophoneDetails
 
 
 # Initializing the variables maximum_time_diff and max_hydrophone_distance.
@@ -13,43 +14,27 @@ max_hydrophone_distance = None
 max_time_diff = None
 
 
-def calculate_distance(hyd_1_x, hyd_1_y, hyd_1_z, hyd_2_x, hyd_2_y, hyd_2_z):
-    return np.sqrt(
-        (hyd_2_x - hyd_1_x) ** 2 + (hyd_2_y - hyd_1_y) ** 2 + (hyd_2_z - hyd_1_z) ** 2
-    )
+def calculate_distance(x1, y1, z1, x2, y2, z2):
+    return np.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2 + (z2 - z1) ** 2)
 
 
 def initialize_trilateration_globals():
-    dist_port_starboard = calculate_distance(
-        hyd_1_x=param.HydrophoneDetails.STARBOARD_HYD_X,
-        hyd_1_y=param.HydrophoneDetails.STARBOARD_HYD_Y,
-        hyd_1_z=param.HydrophoneDetails.STARBOARD_HYD_Z,
-        hyd_2_x=param.HydrophoneDetails.PORT_HYD_X,
-        hyd_2_y=param.HydrophoneDetails.PORT_HYD_Y,
-        hyd_2_z=param.HydrophoneDetails.PORT_HYD_Z,
-    )
+    N = param.HydrophoneDetails.NUM_HYDROPHONES
+    hydrophone_distances = []
+    for i in range(N - 1):
+        for j in range(N - 1 - i):
+            hydrophone_distances.append(
+                calculate_distance(
+                    x1=param.HydrophoneDetails.HYDROPHONE_POSITIONING_MATRIX[i][0],
+                    y1=param.HydrophoneDetails.HYDROPHONE_POSITIONING_MATRIX[i][1],
+                    z1=param.HydrophoneDetails.HYDROPHONE_POSITIONING_MATRIX[i][2],
+                    x2=param.HydrophoneDetails.HYDROPHONE_POSITIONING_MATRIX[j][0],
+                    y2=param.HydrophoneDetails.HYDROPHONE_POSITIONING_MATRIX[j][1],
+                    z2=param.HydrophoneDetails.HYDROPHONE_POSITIONING_MATRIX[j][2],
+                )
+            )
 
-    dist_port_stern = calculate_distance(
-        hyd_1_x=param.HydrophoneDetails.STERN_HYD_X,
-        hyd_1_y=param.HydrophoneDetails.STERN_HYD_Y,
-        hyd_1_z=param.HydrophoneDetails.STERN_HYD_Z,
-        hyd_2_x=param.HydrophoneDetails.PORT_HYD_X,
-        hyd_2_y=param.HydrophoneDetails.PORT_HYD_Y,
-        hyd_2_z=param.HydrophoneDetails.PORT_HYD_Z,
-    )
-
-    dist_starboard_stern = calculate_distance(
-        hyd_1_x=param.HydrophoneDetails.STERN_HYD_X,
-        hyd_1_y=param.HydrophoneDetails.STERN_HYD_Y,
-        hyd_1_z=param.HydrophoneDetails.STERN_HYD_Z,
-        hyd_2_x=param.HydrophoneDetails.STARBOARD_HYD_X,
-        hyd_2_y=param.HydrophoneDetails.STARBOARD_HYD_Y,
-        hyd_2_z=param.HydrophoneDetails.STARBOARD_HYD_Z,
-    )
-
-    max_hydrophone_distance = max(
-        dist_port_starboard, dist_starboard_stern, dist_port_stern
-    )
+    max_hydrophone_distance = max(hydrophone_distances)
 
     # Calculating max time allowed over that distance
     time_diff_tolerance = 0.1
@@ -64,40 +49,42 @@ def check_initialized_globals():
     return (max_hydrophone_distance is not None) and (max_time_diff is not None)
 
 
-def check_invalid_time(time_diff: np.uint32):
+def check_invalid_time(sample_diff: np.uint32):
     """Checking if the time difference exceeds the maximum allowed time for a valid signal."""
-    return (abs(time_diff) * param.DSPConstants.SAMPLE_TIME) > max_time_diff
+    return (abs(sample_diff) * param.DSPConstants.SAMPLE_TIME) > max_time_diff
 
 
-def check_valid_signals(p_lag_array: np.array) -> bool:
-    if any(
-        [
-            check_invalid_time(p_lag_array[0]),
-            check_invalid_time(p_lag_array[1]),
-            check_invalid_time(p_lag_array[2]),
-        ]
-    ):
-        return False
-    else:
-        return True
+def check_valid_signals(tdoa_sample_array: np.array) -> bool:
+    N = param.HydrophoneDetails.NUM_HYDROPHONES
+    for i in range(N - 1):
+        if check_invalid_time(tdoa_sample_array[i]):
+            return False
+    return True
 
 
-def trilaterate_pinger_position(p_lag_array):
+def trilaterate_pinger_position(tdoa_sample_array):
     """
     Args:
-        p_lag_array: Array of the lag between the hydrophones:
-                     [lag_port_starboard, lag_port_stern, lag_startboard_stern]
+        tdoa_array: Array of the lag between the hydrophones:
+                     [lag_port_starboard, lag_port_stern, lag_starboard_stern]
 
     Returns:
         x_estimate: Estimated x-position of source
-        y_estimate: Estimated y-postition of source
+        y_estimate: Estimated y-postition of source'
     """
 
-    tdoa_port_starboard = param.DSPConstants.SAMPLE_TIME * p_lag_array[0]
-    tdoa_port_stern = param.DSPConstants.SAMPLE_TIME * p_lag_array[1]
-    tdoa_starboard_stern = param.DSPConstants.SAMPLE_TIME * p_lag_array[2]
+    tdoa_sample_array = np.array(tdoa_sample_array)
+    tdoa_array = param.DSPConstants.SAMPLE_TIME * tdoa_sample_array
+
+    """ gammelt
+
+    tdoa_port_starboard = param.DSPConstants.SAMPLE_TIME * tdoa_array[0]
+    tdoa_port_stern = param.DSPConstants.SAMPLE_TIME * tdoa_array[1]
+    tdoa_starboard_stern = param.DSPConstants.SAMPLE_TIME * tdoa_array[2]
 
     tdoa_array = [tdoa_port_starboard, tdoa_port_stern, tdoa_starboard_stern]
+
+    """
 
     A, B = calculate_tdoa_matrices(tdoa_array)
 
@@ -113,8 +100,9 @@ def trilaterate_pinger_position(p_lag_array):
 
     x_estimate = solution_vec[0]
     y_estimate = solution_vec[1]
+    z_estimate = solution_vec[2]
 
-    return x_estimate, y_estimate
+    return x_estimate, y_estimate, z_estimate
 
 
 def calculate_tdoa_matrices(tdoa_array):
@@ -136,11 +124,30 @@ def calculate_tdoa_matrices(tdoa_array):
 
     Args:
         tdoa_array: Array containing time difference of arrival between the hydrophones:
-                    [tdoa_port_starboard, tdoa_port_stern, tdoa_startboard_stern]
+                    [tdoa_port_starboard, tdoa_port_stern, tdoa_starboard_stern]
     Returns:
         A, B: Matrices for use in multilateration algorithm.
     """
+    N = param.HydrophoneDetails.NUM_HYDROPHONES
+    A = []
+    for i in range(N - 1):
+        line = []
+        line.append(
+            param.HydrophoneDetails.HYDROPHONE_POSITIONING_MATRIX[0][0]
+            - param.HydrophoneDetails.HYDROPHONE_POSITIONING_MATRIX[i + 1][0]
+        )
+        line.append(
+            param.HydrophoneDetails.HYDROPHONE_POSITIONING_MATRIX[0][1]
+            - param.HydrophoneDetails.HYDROPHONE_POSITIONING_MATRIX[i + 1][1]
+        )
+        line.append(
+            param.HydrophoneDetails.HYDROPHONE_POSITIONING_MATRIX[0][2]
+            - param.HydrophoneDetails.HYDROPHONE_POSITIONING_MATRIX[i + 1][2]
+        )
+        line.append(tdoa_array[i] * param.PhysicalConstants.SOUND_SPEED)
+        A.append(line)
 
+    """
     x_01 = param.HydrophoneDetails.PORT_HYD_X - param.HydrophoneDetails.STARBOARD_HYD_X
     x_02 = param.HydrophoneDetails.PORT_HYD_X - param.HydrophoneDetails.STERN_HYD_X
     y_01 = param.HydrophoneDetails.PORT_HYD_Y - param.HydrophoneDetails.STARBOARD_HYD_Y
@@ -156,15 +163,35 @@ def calculate_tdoa_matrices(tdoa_array):
 
     A = [[x_01, y_01, d_01], [x_02, y_02, d_02]]
 
+    """
+    B = []
+    for i in range(N - 1):
+        bi = (
+            1
+            / 2
+            * (
+                param.HydrophoneDetails.HYDROPHONE_POSITIONING_MATRIX[0][0] ** 2
+                - param.HydrophoneDetails.HYDROPHONE_POSITIONING_MATRIX[i + 1][0] ** 2
+                + param.HydrophoneDetails.HYDROPHONE_POSITIONING_MATRIX[0][1] ** 2
+                - param.HydrophoneDetails.HYDROPHONE_POSITIONING_MATRIX[i + 1][1] ** 2
+                + param.HydrophoneDetails.HYDROPHONE_POSITIONING_MATRIX[0][2] ** 2
+                - param.HydrophoneDetails.HYDROPHONE_POSITIONING_MATRIX[i + 1][2] ** 2
+                + (tdoa_array[i] * param.PhysicalConstants.SOUND_SPEED) ** 2
+            )
+        )
+        B.append(bi)
+
+    """
+
     b1 = (
         1
         / 2
         * (
             d_01 ** 2
             + param.HydrophoneDetails.PORT_HYD_X ** 2
-            + param.HydrophoneDetails.STARBOARD_HYD_X ** 2
+            - param.HydrophoneDetails.STARBOARD_HYD_X ** 2
             + param.HydrophoneDetails.PORT_HYD_Y ** 2
-            + param.HydrophoneDetails.STARBOARD_HYD_Y ** 2
+            - param.HydrophoneDetails.STARBOARD_HYD_Y ** 2
         )
     )
 
@@ -174,12 +201,12 @@ def calculate_tdoa_matrices(tdoa_array):
         * (
             d_02 ** 2
             + param.HydrophoneDetails.PORT_HYD_X ** 2
-            + param.HydrophoneDetails.STERN_HYD_X ** 2
+            - param.HydrophoneDetails.STERN_HYD_X ** 2
             + param.HydrophoneDetails.PORT_HYD_Y ** 2
-            + param.HydrophoneDetails.STERN_HYD_Y ** 2
+            - param.HydrophoneDetails.STERN_HYD_Y ** 2
         )
     )
-
-    B = [b1, b2]
+    
+    """
 
     return A, B
