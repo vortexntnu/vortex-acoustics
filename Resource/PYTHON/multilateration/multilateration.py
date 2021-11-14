@@ -103,12 +103,12 @@ def trilaterate_pinger_position(p_lag_array):
 
     A_T = np.transpose(A)
 
-    A_dot_A_T = np.matmul(A_T, A)
+    A_T_dot_A = np.matmul(A_T, A)
 
-    A_dot_A_T_inv = np.linalg.inv(A_dot_A_T)
+    A_T_dot_A_inv = np.linalg.inv(A_T_dot_A)
 
     solution_vec = np.matmul(
-        A_dot_A_T_inv, np.matmul(A_T, B)
+        A_T_dot_A_inv, np.matmul(A_T, B)
     )  # (A_T * A).invers() * A_T * B
 
     x_estimate = solution_vec[0]
@@ -162,9 +162,9 @@ def calculate_tdoa_matrices(tdoa_array):
         * (
             d_01 ** 2
             + param.HydrophoneDetails.PORT_HYD_X ** 2
-            + param.HydrophoneDetails.STARBOARD_HYD_X ** 2
+            - param.HydrophoneDetails.STARBOARD_HYD_X ** 2
             + param.HydrophoneDetails.PORT_HYD_Y ** 2
-            + param.HydrophoneDetails.STARBOARD_HYD_Y ** 2
+            - param.HydrophoneDetails.STARBOARD_HYD_Y ** 2
         )
     )
 
@@ -174,9 +174,9 @@ def calculate_tdoa_matrices(tdoa_array):
         * (
             d_02 ** 2
             + param.HydrophoneDetails.PORT_HYD_X ** 2
-            + param.HydrophoneDetails.STERN_HYD_X ** 2
+            - param.HydrophoneDetails.STERN_HYD_X ** 2
             + param.HydrophoneDetails.PORT_HYD_Y ** 2
-            + param.HydrophoneDetails.STERN_HYD_Y ** 2
+            - param.HydrophoneDetails.STERN_HYD_Y ** 2
         )
     )
 
