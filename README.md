@@ -13,7 +13,7 @@ Important notes:
 
   OBS! To prevent the compiler used at STM32CubeIDE to go mental, some defines have been moved into the direct header-files. The compiler couldn't find the defines in the other files where they originally were defined. This can be a problem if the code is used for other projects or other MCUs, and should therefore be used with caution.
 
-# Source files
+## Source files
 The source files for 2020/2021, can be found in the folder "Source" with the header files under Include.
 
 
@@ -25,15 +25,22 @@ Files with a short description:
   ANALYZE_DATA: Defines a class hydrophone which wraps the data-analyzis for each hydrophone
 
 
-# Resource files
+## Resource files
 Resource files are found in the folder "Resource". 
-The folder includes the CMSIS-library, driver for STM32 and a test-script in MATLAB.
+The folder includes the CMSIS-library, driver for STM32.
 
 
-# Future improvements/development
+## Matlab
+The Matlab code provided contains the calculations for the digital filter used in the C++ code.
+
+
+## Python
+The Python folder provides code for analyzing the multilateration algorithm.
+
+
+## Future improvements/development
 
 List of improvements:
   1. Check the correctness of the code. Specialized tests should be written to accomodate this requirement.
   2. Check the RAM-usage to prevent any memory-leaks. This should be done using Valgrind or any other program
-   
 

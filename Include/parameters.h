@@ -236,7 +236,8 @@
  * NOTE: For more information, see 
  * https://arm-software.github.io/CMSIS_5/DSP/html/group__BiquadCascadeDF1__32x64.html
  * 
- * NOTE: The MATLAB-script used to test the filter can be found under Resource/MATLAB
+ * NOTE: The MATLAB-script used to test the filter can be found in the Matlab folder in
+ * in the main directory.
  * 
  * @param num_stages            Number of second order cascade-filters. Determines the
  *                              filter order. Order = 2 * num_stages
