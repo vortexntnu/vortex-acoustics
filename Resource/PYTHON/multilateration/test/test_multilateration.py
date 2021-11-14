@@ -60,9 +60,9 @@ def calculate_toa_array():
 
     lag_port_starboard = samp_port - samp_starboard
     lag_port_stern = samp_port - samp_stern
-    lag_startboard_stern = samp_starboard - samp_stern
+    lag_starboard_stern = samp_starboard - samp_stern
 
-    return [lag_port_starboard, lag_port_stern, lag_startboard_stern]
+    return [lag_port_starboard, lag_port_stern, lag_starboard_stern]
 
 
 def test_trilateration_algorithm():

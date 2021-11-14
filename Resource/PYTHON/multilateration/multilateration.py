@@ -86,7 +86,7 @@ def trilaterate_pinger_position(p_lag_array):
     """
     Args:
         p_lag_array: Array of the lag between the hydrophones:
-                     [lag_port_starboard, lag_port_stern, lag_startboard_stern]
+                     [lag_port_starboard, lag_port_stern, lag_starboard_stern]
 
     Returns:
         x_estimate: Estimated x-position of source
@@ -136,7 +136,7 @@ def calculate_tdoa_matrices(tdoa_array):
 
     Args:
         tdoa_array: Array containing time difference of arrival between the hydrophones:
-                    [tdoa_port_starboard, tdoa_port_stern, tdoa_startboard_stern]
+                    [tdoa_port_starboard, tdoa_port_stern, tdoa_starboard_stern]
     Returns:
         A, B: Matrices for use in multilateration algorithm.
     """
