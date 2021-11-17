@@ -25,6 +25,7 @@ from signal_generation.positioning import Position
 def generate_pulse_window(
     pulse_length: int,
     start_end_percentage: int = 10,
+    start_offset: float = None,
 ) -> np.array:
     """
     Args:
@@ -33,6 +34,7 @@ def generate_pulse_window(
             the window function in %. E.g. 10% will apply the rising flank of
             the window on the 5% at the start and falling flank at the 5% at
             the end, combining to 10%. The maximum value is 100%.
+        start_offset: The offset in samples to shift the window by.
 
     Returns:
         A window with length of the pulse, that can be used to smoothen the
@@ -57,7 +59,37 @@ def generate_pulse_window(
     pulse_window[0 : len(window) // 2] = window[0 : len(window) // 2]
     pulse_window[-len(window) // 2 :] = window[-len(window) // 2 :]
 
+    if start_offset:
+        n_original = np.arange(len(pulse_window), dtype=np.float64)
+        n_offset = n_original + start_offset
+        pulse_window = np.interp(x=n_offset, xp=n_original, fp=pulse_window)
+
     return pulse_window
+
+
+def generate_pulse(
+    frequency: float,  # [kHz]
+    pulse_length: int,
+    sampling_frequency: float,  # [kHz]
+    start_offset: float,  # [Samples]
+) -> np.array:
+    """Generate a pinger pulse of given length.
+
+    Args:
+        frequency: The frequency of the sine used during the pulse.
+        sampling_frequency: The sampling frequency used within the system.
+        pulse_length: The length of the pulse in samples.
+        start_offset: Offset to apply to sine at start. Must be smaller than one,
+            because more is achieved with shifting by samples.
+
+    Returns:
+        A numpy array with (length,) shape containing the ON part off the pinger
+        period, also called pulse.
+    """
+    n = np.arange(pulse_length) + start_offset
+    t = n / sampling_frequency
+
+    return np.sin(2 * np.pi * frequency * t)
 
 
 class Pinger:
@@ -108,25 +140,7 @@ class Pinger:
         self.sampling_frequency = sampling_frequency
         self.pulse_length = pulse_length
         self.period = period
-
-        pulse = np.sin(
-            2
-            * np.pi
-            * self.frequency
-            / self.sampling_frequency
-            * np.arange(self.samples_per_pulse)
-        )
-
-        if use_window is True:
-            pulse_window = generate_pulse_window(
-                pulse_length=self.samples_per_pulse,
-                start_end_percentage=10,
-            )
-            pulse *= pulse_window
-
-        self._sample_period = np.zeros(self.samples_per_period)
-        self._sample_period[0 : self.samples_per_pulse] = pulse
-
+        self.use_window = use_window
         self.position = position
 
     @property
@@ -147,9 +161,9 @@ class Pinger:
         """
         return int(self.pulse_length * self.sampling_frequency)  # [ms*kHz]
 
-    def get_offset_period(
+    def get_pinger_period_with_added_offset(
         self,
-        offset_in_samples: int,  # number of samples
+        offset: float,  # [ms]
     ) -> np.array:
         """Generates an offset pinger period where the pulse is wrapped around if necessary.
 
@@ -157,30 +171,52 @@ class Pinger:
         different times of arrival.
 
         Args:
-            offset_in_samples: Number of samples the pulse should be offset with.
+            offset: The offset in ms with which the pulse is shifted.
 
         Returns:
             A numpy.array containing one period of the pinger signal, but offset by the
             provided number of samples.
         """
-        offset = offset_in_samples % self.samples_per_period
-        offset_period = np.zeros(self.samples_per_period)
+        sample_period = 1 / self.sampling_frequency
+
+        offset_in_samples, offset_modulus = divmod(
+            offset, sample_period
+        )  # [Samples], [ms]
+        offset_modulus_in_samples = (
+            offset_modulus * self.sampling_frequency
+        )  # [Samples]
+
+        offset = int(offset_in_samples) % self.samples_per_period
+        pinger_period_with_offset = np.zeros(self.samples_per_period)
+
+        pulse = generate_pulse(
+            frequency=self.frequency,
+            pulse_length=self.samples_per_pulse,
+            sampling_frequency=self.sampling_frequency,
+            start_offset=offset_modulus_in_samples,
+        )
+
+        if self.use_window:
+            pulse *= generate_pulse_window(
+                pulse_length=self.samples_per_pulse,
+                start_end_percentage=10,
+                start_offset=offset_modulus_in_samples,
+            )
 
         if (offset + self.samples_per_pulse) <= self.samples_per_period:
             start_index = offset
             end_index = start_index + self.samples_per_pulse
-            offset_period[start_index:end_index] = self._sample_period[
-                0 : self.samples_per_pulse
-            ]
+            pinger_period_with_offset[start_index:end_index] = pulse
         else:
             # offset and pulse length are larger than period length => wrap around is needed
             length_end_segment = self.samples_per_period - offset
             length_start_segment = self.samples_per_pulse - length_end_segment
-            offset_period[offset:] = self._sample_period[0:length_end_segment]
-            offset_period[0:length_start_segment] = self._sample_period[
+            pinger_period_with_offset[offset:] = pulse[0:length_end_segment]
+            pinger_period_with_offset[0:length_start_segment] = pulse[
                 length_end_segment : self.samples_per_pulse
             ]
-        return offset_period
+
+        return pinger_period_with_offset
 
     def generate_signal(
         self,
@@ -200,9 +236,8 @@ class Pinger:
         samples_per_output = length
         output = np.zeros(samples_per_output)
 
-        offset_in_samples = int(offset * self.sampling_frequency)  # [ms*kHz]
-        offset_period = self.get_offset_period(
-            offset_in_samples=offset_in_samples,
+        pinger_period_with_offset = self.get_pinger_period_with_added_offset(
+            offset=offset,
         )
 
         number_of_periods = samples_per_output // self.samples_per_period
@@ -219,6 +254,8 @@ class Pinger:
             offset_start = output_start % self.samples_per_period
             offset_end = offset_start + segment_length
 
-            output[output_start:output_end] = offset_period[offset_start:offset_end]
+            output[output_start:output_end] = pinger_period_with_offset[
+                offset_start:offset_end
+            ]
 
         return self.amplitude * output
