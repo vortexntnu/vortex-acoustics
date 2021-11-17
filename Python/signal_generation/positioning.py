@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Iterable
 
 import numpy as np
 
@@ -65,3 +66,28 @@ def find_maximum_distance(
     )
 
     return np.max(distances)
+
+
+def calculate_distances(
+    source_positions: np.array,
+    receiver_positions: np.array,
+    sound_speed: float = 1500,  # [m/s]
+) -> Iterable[float]:
+    """Calculate the distances from the sources to the hydrophones.
+
+    Args:
+        source_positions: Provide the positions for the source.
+        receiver_positions: Provide the positions of the receivers
+
+    Returns:
+        A 2D numpy.array containing the distances in meters [m].
+        Where the first index is used for sources and the second for receivers,
+        so distances[0][2] would give the distance from the zeroth source
+        to the 2nd receiver.
+    """
+    distances = np.empty((len(source_positions), len(receiver_positions)))
+
+    for index, source_position in enumerate(source_positions):
+        distances[index, :] = abs(receiver_positions - source_position)
+
+    return distances
