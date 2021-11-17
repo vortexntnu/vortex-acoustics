@@ -19,6 +19,8 @@ from dataclasses import dataclass
 import numpy as np
 import scipy.signal.windows
 
+from signal_generation.positioning import Position
+
 
 def generate_pulse_window(
     pulse_length: int,
@@ -71,7 +73,9 @@ class Pinger:
         sampling_frequency: float = 100.0,  # [kHz]
         pulse_length: int = 500,  # [ms]
         period: int = 1000,  # [ms]
+        amplitude: float = 1.0,
         use_window: bool = False,
+        position: Position = Position(),
     ):
         """Initializes Pinger class with given parameters.
 
@@ -99,6 +103,7 @@ class Pinger:
                 f"Frequency is not in Nyquist Range: {frequency} > {sampling_frequency}/2"
             )
 
+        self.amplitude = amplitude
         self.frequency = frequency
         self.sampling_frequency = sampling_frequency
         self.pulse_length = pulse_length
@@ -121,6 +126,8 @@ class Pinger:
 
         self._sample_period = np.zeros(self.samples_per_period)
         self._sample_period[0 : self.samples_per_pulse] = pulse
+
+        self.position = position
 
     @property
     def samples_per_period(self) -> int:
@@ -177,21 +184,20 @@ class Pinger:
 
     def generate_signal(
         self,
-        amplitude: float = 1.0,
         offset: float = 0.0,  # [ms]
-        length: float = 5000,  # [ms]
+        length: int = 10000,
     ) -> np.array:
         """Generates an array of the output signal for the given length.
 
         Args:
             amplitude: The amplitude used for scaling the pulse amplitude.
-            length: The length of the output signal in ms.
+            length: The length of the output signal in number of samples.
 
         Returns:
             An numpy.array with type numpy.float64. The output is in the range
             of [-amplitude,amplitude].
         """
-        samples_per_output = int(length * self.sampling_frequency)  # [ms*kHz]
+        samples_per_output = length
         output = np.zeros(samples_per_output)
 
         offset_in_samples = int(offset * self.sampling_frequency)  # [ms*kHz]
@@ -215,4 +221,4 @@ class Pinger:
 
             output[output_start:output_end] = offset_period[offset_start:offset_end]
 
-        return amplitude * output
+        return self.amplitude * output

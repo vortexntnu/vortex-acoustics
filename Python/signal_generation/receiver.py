@@ -1,87 +1,92 @@
-from typing import List
-
 import numpy as np
+from dataclasses import dataclass
 
 import signal_generation.conversion as sg_conv
 import signal_generation.positioning as sg_pos
-import signal_generation.source as sg_source
+import signal_generation.source as sg_src
 
 
+@dataclass
 class HydrophoneArray:
-    def __init__(
-        self,
-        positions: List[sg_pos.Position],
-    ):
-        self.positions = np.array(positions)
+    """Simple container class to hold receiver position."""
 
-    def _calculate_travel_time(
-        self,
-        distances: np.array,
-        sound_speed: float = 1500,  # [m/s]
-    ) -> List[float]:
-        """Calculate the travel time from the source to the hydrophones.
+    positions: np.array
 
-        Args:
-            source_position: Provide a position for the source.
-            sound_speed: The expected sound speed in the medium in meter per seconds.
+    def __len__(self):
+        return len(self.positions)
 
-        Returns:
-            A numpy.array containing the travel times in milliseconds (ms).
-        """
-        return distances / sound_speed * 10 ** 3
 
-    def generate_signals(
-        self,
-        output_length: float,  # [ms]
-        source: sg_source.Pinger,
-        source_position: sg_pos.Position,
-        amplitude: float = 1.0,
-        output_data_type: type = np.uint32,
-        sound_speed: float = 1500.0,
-        geometric_spreading: bool = False,
-    ) -> List[np.array]:
-        """Generate signals received by the hydrophones placed in the array.
+def calculate_transmission_loss_factors(
+    distances: np.array,
+    geometric_spreading: bool = False,
+):
+    """Generates an array of transmission loss factors due to geometrical spreading.
 
-        Args:
-            output_length: The length of the expected output signal in milliseconds (ms).
-            source: Provide an initialized Pinger signal source.
-            source_position: Provide a position for the source.
-            amplitude: The scaling of the amplitudes of the pinger signal.
-            output_data_type: The datatype used for converting from float to integer. Must be
-                a numpy integer type.
-            sound_speed: The expected sound speed in the medium in meter per seconds.
-            geometric_spreading: If true uses 1/r loss from spherical spreading on the
-                amplitudes.
+    Args:
+        distances: An (n,m) np.array that contains the distance from nth source to mth
+            receiver.
+        geometric_spreading: If True this will apply loss from spherical spreading corresponding
+            to 1/r. Because this is only valid for far field for r<1 it will just give a factor
+            of 1. If False all factors will be one.
 
-        Returns:
-            A list of numpy.arrays containing the received signal at the hydrophones
-            placed in the array.
-        """
-        distances = np.array([abs(pos - source_position) for pos in self.positions])
+    Returns:
+        A (n,m) np.array that contains the transmission loss factors for the propagation of
+        the signal from the nth source to the mth receiver.
+    """
+    distances_shape = np.shape(distances)
+    transmission_loss_factors = np.ones(distances_shape)
 
-        amplitudes = np.array([amplitude for _ in self.positions])
-        if geometric_spreading:
-            for index, distance in enumerate(distances):
-                amplitudes[index] = 1 / distance * amplitude
+    if geometric_spreading:
+        for src_index in np.arange(distances_shape[0]):
+            for rec_index in np.arange(distances_shape[1]):
+                distance = distances[src_index, rec_index]
+                if distance > 1:
+                    transmission_loss_factors[src_index, rec_index] = 1 / distance
 
-        travel_times = self._calculate_travel_time(
-            distances=distances,
-            sound_speed=sound_speed,
-        )
+    return transmission_loss_factors
 
-        nr_of_samples = int(output_length * source.sampling_frequency)
 
-        signals = np.empty((len(self.positions), nr_of_samples), dtype=output_data_type)
+def generate_signals(
+    receivers: HydrophoneArray,
+    sources: np.array,
+    output_length: int,
+    sound_speed: float = 1500.0,
+    geometric_spreading: bool = False,
+) -> np.array:
+    """Generate signals received by the hydrophones placed in the array.
 
-        for index, time in enumerate(travel_times):
-            converted_signal = sg_conv.convert_to_integer_type(
-                resulting_type=output_data_type,
-                input_signal=source.generate_signal(
-                    amplitude=amplitudes[index],
-                    offset=time,
-                    length=output_length,
-                ),
+    Args:
+        receivers: HydrophoneArray containing the positions thereof
+        output_length: The length of the expected output signal in number of samples.
+        sources: Provide an iterable of initialized Pinger signal source.
+        sound_speed: The expected sound speed in the medium in meter per seconds.
+        geometric_spreading: If true uses 1/r loss from spherical spreading on the
+            amplitudes.
+
+    Returns:
+        A numpy array containing the received signal at the hydrophones placed in the
+        receiver array.
+    """
+    distances = sg_pos.calculate_distances(
+        source_positions=np.array([source.position for source in sources]),
+        receiver_positions=receivers.positions,
+    )
+
+    transmission_loss_factors = calculate_transmission_loss_factors(
+        distances=distances,
+        geometric_spreading=geometric_spreading,
+    )
+
+    signals = np.zeros((len(receivers), output_length))
+    for rec_index in np.arange(len(receivers)):
+        for src_index in np.arange(len(sources)):
+            distance = distances[src_index, rec_index]
+            factor = transmission_loss_factors[src_index, rec_index]
+            signal = sources[src_index].generate_signal(
+                offset=(distance / sound_speed) * 1000,  # [ms]
+                length=output_length,
             )
-            signals[index] = converted_signal
 
-        return signals
+            signals[rec_index] += signal * factor
+
+    return signals
