@@ -103,7 +103,7 @@ void ANALYZE_DATA::calculate_xcorr_lag_array(
     /* Creating temporary arrays to hold the result */
     float32_t cross_corr_port_starboard[2 * IN_BUFFER_LENGTH - 1];
     float32_t cross_corr_port_stern[2 * IN_BUFFER_LENGTH - 1];
-    float32_t cross_corr_starboard_port[2 * IN_BUFFER_LENGTH - 1];
+    float32_t cross_corr_starboard_stern[2 * IN_BUFFER_LENGTH - 1];
 
     /* Crosscorrelating the data */
     arm_correlate_f32(
