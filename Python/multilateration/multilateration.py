@@ -14,37 +14,6 @@ max_hydrophone_distance = None
 max_time_diff = None
 
 
-def calculate_distance(x1, y1, z1, x2, y2, z2):
-    return np.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2 + (z2 - z1) ** 2)
-
-
-def initialize_trilateration_globals():
-    N = param.HydrophoneDetails.NUM_HYDROPHONES
-    hydrophone_distances = []
-    for i in range(N - 1):
-        for j in range(N - 1 - i):
-            hydrophone_distances.append(
-                calculate_distance(
-                    x1=param.HydrophoneDetails.HYDROPHONE_POSITIONING_MATRIX[i][0],
-                    y1=param.HydrophoneDetails.HYDROPHONE_POSITIONING_MATRIX[i][1],
-                    z1=param.HydrophoneDetails.HYDROPHONE_POSITIONING_MATRIX[i][2],
-                    x2=param.HydrophoneDetails.HYDROPHONE_POSITIONING_MATRIX[j][0],
-                    y2=param.HydrophoneDetails.HYDROPHONE_POSITIONING_MATRIX[j][1],
-                    z2=param.HydrophoneDetails.HYDROPHONE_POSITIONING_MATRIX[j][2],
-                )
-            )
-
-    max_hydrophone_distance = max(hydrophone_distances)
-
-    # Calculating max time allowed over that distance
-    time_diff_tolerance = 0.1
-    max_time_diff = (1 + time_diff_tolerance) * (
-        max_hydrophone_distance / param.PhysicalConstants.SOUND_SPEED
-    )
-
-    return check_initialized_globals()
-
-
 def check_initialized_globals():
     return (max_hydrophone_distance is not None) and (max_time_diff is not None)
 
@@ -62,31 +31,25 @@ def check_valid_signals(tdoa_sample_array: np.array) -> bool:
     return True
 
 
-def trilaterate_pinger_position(tdoa_sample_array):
+def calculate_pinger_position(
+    tdoa_lag_array,
+    hydrophone_positions,
+):
     """
     Args:
-        tdoa_array: Array of the lag between the hydrophones:
-                     [lag_port_starboard, lag_port_stern, lag_starboard_stern]
+        tdoa_lag_array: Array of the lag between the hydrophones
 
     Returns:
         x_estimate: Estimated x-position of source
         y_estimate: Estimated y-postition of source'
     """
 
-    tdoa_sample_array = np.array(tdoa_sample_array)
-    tdoa_array = param.DSPConstants.SAMPLE_TIME * tdoa_sample_array
+    tdoa_array = param.DSPConstants.SAMPLE_TIME * tdoa_lag_array
 
-    """ gammelt
-
-    tdoa_port_starboard = param.DSPConstants.SAMPLE_TIME * tdoa_array[0]
-    tdoa_port_stern = param.DSPConstants.SAMPLE_TIME * tdoa_array[1]
-    tdoa_starboard_stern = param.DSPConstants.SAMPLE_TIME * tdoa_array[2]
-
-    tdoa_array = [tdoa_port_starboard, tdoa_port_stern, tdoa_starboard_stern]
-
-    """
-
-    A, B = calculate_tdoa_matrices(tdoa_array)
+    A, B = calculate_tdoa_matrices(
+        tdoa_array=tdoa_array,
+        hydrophone_positions=hydrophone_positions,
+    )
 
     A_T = np.transpose(A)
 
@@ -105,7 +68,10 @@ def trilaterate_pinger_position(tdoa_sample_array):
     return x_estimate, y_estimate, z_estimate
 
 
-def calculate_tdoa_matrices(tdoa_array):
+def calculate_tdoa_matrices(
+    tdoa_array,
+    hydrophone_positions,
+):
     """Calculates time difference of arrival matrices for multilateration.
 
         Hydrophones are here labeled as a number
@@ -128,85 +94,33 @@ def calculate_tdoa_matrices(tdoa_array):
     Returns:
         A, B: Matrices for use in multilateration algorithm.
     """
-    N = param.HydrophoneDetails.NUM_HYDROPHONES
-    A = []
-    for i in range(N - 1):
-        line = []
-        line.append(
-            param.HydrophoneDetails.HYDROPHONE_POSITIONING_MATRIX[0][0]
-            - param.HydrophoneDetails.HYDROPHONE_POSITIONING_MATRIX[i + 1][0]
-        )
-        line.append(
-            param.HydrophoneDetails.HYDROPHONE_POSITIONING_MATRIX[0][1]
-            - param.HydrophoneDetails.HYDROPHONE_POSITIONING_MATRIX[i + 1][1]
-        )
-        line.append(
-            param.HydrophoneDetails.HYDROPHONE_POSITIONING_MATRIX[0][2]
-            - param.HydrophoneDetails.HYDROPHONE_POSITIONING_MATRIX[i + 1][2]
-        )
-        line.append(tdoa_array[i] * param.PhysicalConstants.SOUND_SPEED)
-        A.append(line)
+    # As one hydrophone is used as the reference position we seperate the reference from the others
+    reference_hydrophone_position = hydrophone_positions[0]
+    rest_hydrophone_positions = hydrophone_positions[1:]
 
-    """
-    x_01 = param.HydrophoneDetails.PORT_HYD_X - param.HydrophoneDetails.STARBOARD_HYD_X
-    x_02 = param.HydrophoneDetails.PORT_HYD_X - param.HydrophoneDetails.STERN_HYD_X
-    y_01 = param.HydrophoneDetails.PORT_HYD_Y - param.HydrophoneDetails.STARBOARD_HYD_Y
-    y_02 = param.HydrophoneDetails.PORT_HYD_Y - param.HydrophoneDetails.STERN_HYD_Y
+    A = np.empty((len(rest_hydrophone_positions), 4))
 
-    tdoa_port_starboard = tdoa_array[0]
-    tdoa_port_stern = tdoa_array[1]
-    # tdoa_starboard_stern = tdoa_array[2]  - not used
+    for i, hydrophone_position in enumerate(rest_hydrophone_positions):
+        A[i, 0] = reference_hydrophone_position.x - hydrophone_position.x
+        A[i, 1] = reference_hydrophone_position.y - hydrophone_position.y
+        A[i, 2] = reference_hydrophone_position.z - hydrophone_position.z
 
-    # Using TDOA to calculate the distances
-    d_01 = param.PhysicalConstants.SOUND_SPEED * tdoa_port_starboard
-    d_02 = param.PhysicalConstants.SOUND_SPEED * tdoa_port_stern
+        A[i, 3] = tdoa_array[i] * param.PhysicalConstants.SOUND_SPEED
 
-    A = [[x_01, y_01, d_01], [x_02, y_02, d_02]]
-
-    """
-    B = []
-    for i in range(N - 1):
-        bi = (
+    B = np.empty((len(rest_hydrophone_positions),))
+    for i, hydrophone_position in enumerate(rest_hydrophone_positions):
+        B[i] = (
             1
             / 2
             * (
-                param.HydrophoneDetails.HYDROPHONE_POSITIONING_MATRIX[0][0] ** 2
-                - param.HydrophoneDetails.HYDROPHONE_POSITIONING_MATRIX[i + 1][0] ** 2
-                + param.HydrophoneDetails.HYDROPHONE_POSITIONING_MATRIX[0][1] ** 2
-                - param.HydrophoneDetails.HYDROPHONE_POSITIONING_MATRIX[i + 1][1] ** 2
-                + param.HydrophoneDetails.HYDROPHONE_POSITIONING_MATRIX[0][2] ** 2
-                - param.HydrophoneDetails.HYDROPHONE_POSITIONING_MATRIX[i + 1][2] ** 2
+                reference_hydrophone_position.x ** 2
+                - hydrophone_position.x ** 2
+                + reference_hydrophone_position.y ** 2
+                - hydrophone_position.y ** 2
+                + reference_hydrophone_position.z ** 2
+                - hydrophone_position.z ** 2
                 + (tdoa_array[i] * param.PhysicalConstants.SOUND_SPEED) ** 2
             )
         )
-        B.append(bi)
-
-    """
-
-    b1 = (
-        1
-        / 2
-        * (
-            d_01 ** 2
-            + param.HydrophoneDetails.PORT_HYD_X ** 2
-            - param.HydrophoneDetails.STARBOARD_HYD_X ** 2
-            + param.HydrophoneDetails.PORT_HYD_Y ** 2
-            - param.HydrophoneDetails.STARBOARD_HYD_Y ** 2
-        )
-    )
-
-    b2 = (
-        1
-        / 2
-        * (
-            d_02 ** 2
-            + param.HydrophoneDetails.PORT_HYD_X ** 2
-            - param.HydrophoneDetails.STERN_HYD_X ** 2
-            + param.HydrophoneDetails.PORT_HYD_Y ** 2
-            - param.HydrophoneDetails.STERN_HYD_Y ** 2
-        )
-    )
-    
-    """
 
     return A, B

@@ -31,7 +31,13 @@ class HydrophoneDetails:
     """
 
     HYDROPHONE_POSITIONING_MATRIX: np.ndarray = np.array(
-        [[-0.11, 0.31, 0.1], [0.11, 0.31, 0.1], [0.0, -0.24, 0.0], [0.5,-0.1,0.4], [0.4,0.0,-0.4]]
+        [
+            [-0.11, 0.31, 0.1],
+            [0.11, 0.31, 0.1],
+            [0.0, -0.24, 0.0],
+            [0.5, -0.1, 0.4],
+            [0.4, 0.0, -0.4],
+        ]
     )
     NUM_HYDROPHONES: int = len(HYDROPHONE_POSITIONING_MATRIX)
 
