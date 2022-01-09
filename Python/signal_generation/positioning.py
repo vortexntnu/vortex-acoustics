@@ -46,3 +46,22 @@ class Position:
             and (abs(difference.y) < self.tol)
             and (abs(difference.z) < self.tol)
         )
+
+
+def find_maximum_distance(
+    positions: np.array,
+):
+    """Finds maximum distance between all positions given in an array.
+
+    Args:
+        positions: Array of positions to determine maximum distance from.
+
+    Returns:
+        The maximum distance between all the given positions.
+    """
+    distances = abs(
+        np.array(len(positions) * [positions])
+        - np.array(len(positions) * [positions]).T
+    )
+
+    return np.max(distances)
