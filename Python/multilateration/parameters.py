@@ -7,21 +7,6 @@ import numpy as np
 
 
 @dataclass
-class DSPConstants:
-    """Constants for digital signal processing.
-
-    Attributes:
-        SAMPLE_FREQUENCY: Float for the ADC sampling frequency [Hz]
-        SAMPLE_TIME: Float for the ADC sample time [s]
-        IN_BUFFER_LENGTH: uintc for total number of (real + imaginary) measurements per hydrophone
-    """
-
-    SAMPLE_FREQUENCY: float = 100000.0
-    SAMPLE_TIME: float = 1 / SAMPLE_FREQUENCY
-    IN_BUFFER_LENGTH: np.uintc = 4096
-
-
-@dataclass
 class HydrophoneDetails:
     """Parameters that indicate the setup of the hydrophones.
 

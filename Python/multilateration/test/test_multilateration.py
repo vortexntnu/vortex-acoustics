@@ -45,8 +45,9 @@ hydrophone_positions = np.array(
 
 
 def generate_tdoa_lag_array(
-    hydrophone_positions,
-    source_position,
+    hydrophone_positions: np.array,
+    source_position: Position,
+    sample_frequency: float,
 ):
     """Generates a complete lag array of all possible combinations. Where
     the indexes lag_array[m][n] correspond to the time difference tnm.
@@ -62,9 +63,7 @@ def generate_tdoa_lag_array(
         np.array(len(time_of_flight) * [time_of_flight])
         - np.array(len(time_of_flight) * [time_of_flight]).T
     )
-    lag_array = np.int32(
-        time_difference_of_arrival * param.DSPConstants.SAMPLE_FREQUENCY
-    )
+    lag_array = np.int32(time_difference_of_arrival * sample_frequency)
 
     return lag_array
 
@@ -72,6 +71,7 @@ def generate_tdoa_lag_array(
 def calculate_tdoa_array(
     hydrophone_positions: np.array,
     source_position: Position,
+    sample_frequency: float,
 ):
     """Generates TOA of the sound-signals for the different hydrophones
     and calculates the lag between them.
@@ -91,9 +91,7 @@ def calculate_tdoa_array(
         )
     distance_array = np.array(distance_array)
     toa_sample_array = np.int32(
-        distance_array
-        * param.DSPConstants.SAMPLE_FREQUENCY
-        / param.PhysicalConstants.SOUND_SPEED
+        distance_array * sample_frequency / param.PhysicalConstants.SOUND_SPEED
     )
 
     """
@@ -116,15 +114,18 @@ def test_trilateration_algorithm():
     Only considering x and y, since we only have three hydrophones.
     """
     tolerance = 3
+    sample_frequency = 100000
 
     tdoa_sample_array = generate_tdoa_lag_array(
         hydrophone_positions=hydrophone_positions,
         source_position=source_position,
+        sample_frequency=sample_frequency,
     )[:, 0][1:]
 
     res_x, res_y, res_z = mult.calculate_pinger_position(
         tdoa_lag_array=tdoa_sample_array,
         hydrophone_positions=hydrophone_positions,
+        sample_frequency=sample_frequency,
     )
 
     res_position = Position(

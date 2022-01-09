@@ -18,15 +18,24 @@ def check_initialized_globals():
     return (max_hydrophone_distance is not None) and (max_time_diff is not None)
 
 
-def check_invalid_time(sample_diff: np.uint32):
+def check_invalid_time(
+    sample_diff: np.uint32,
+    sample_frequency: float,
+):
     """Checking if the time difference exceeds the maximum allowed time for a valid signal."""
-    return (abs(sample_diff) * param.DSPConstants.SAMPLE_TIME) > max_time_diff
+    return (abs(sample_diff) * sample_time) > max_time_diff
 
 
-def check_valid_signals(tdoa_sample_array: np.array) -> bool:
+def check_valid_signals(
+    sample_frequency: float,
+    tdoa_sample_array: np.array,
+) -> bool:
     N = param.HydrophoneDetails.NUM_HYDROPHONES
     for i in range(N - 1):
-        if check_invalid_time(tdoa_sample_array[i]):
+        if check_invalid_time(
+            sample_diff=tdoa_sample_array[i],
+            sample_frequency=sample_frequency,
+        ):
             return False
     return True
 
@@ -34,6 +43,7 @@ def check_valid_signals(tdoa_sample_array: np.array) -> bool:
 def calculate_pinger_position(
     tdoa_lag_array,
     hydrophone_positions,
+    sample_frequency,
 ):
     """
     Args:
@@ -44,7 +54,7 @@ def calculate_pinger_position(
         y_estimate: Estimated y-postition of source'
     """
 
-    tdoa_array = param.DSPConstants.SAMPLE_TIME * tdoa_lag_array
+    tdoa_array = tdoa_lag_array / sample_frequency
 
     A, B = calculate_tdoa_matrices(
         tdoa_array=tdoa_array,
