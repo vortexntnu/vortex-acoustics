@@ -5,36 +5,31 @@
 import numpy as np
 
 import multilateration.parameters as param
-from multilateration.parameters import HydrophoneDetails
-
-
-# Initializing the variables maximum_time_diff and max_hydrophone_distance.
-# These values are updated in the function initialize_trilateration_globals.
-max_hydrophone_distance = None
-max_time_diff = None
-
-
-def check_initialized_globals():
-    return (max_hydrophone_distance is not None) and (max_time_diff is not None)
+from signal_generation.positioning import find_maximum_distance
 
 
 def check_invalid_time(
     sample_diff: np.uint32,
     sample_frequency: float,
+    max_time_difference: float,
 ):
     """Checking if the time difference exceeds the maximum allowed time for a valid signal."""
     return (abs(sample_diff) * sample_time) > max_time_diff
 
 
 def check_valid_signals(
-    sample_frequency: float,
+    hydrophone_positions: np.array,
     tdoa_sample_array: np.array,
+    sample_frequency: float,
 ) -> bool:
-    N = param.HydrophoneDetails.NUM_HYDROPHONES
-    for i in range(N - 1):
+    max_distance = find_maximum_distance(positions=hydrophone_positions)
+    max_time_difference = max_distance / param.PhysicalConstants.SOUND_SPEED
+
+    for sample_diff in tdoa_sample_array:
         if check_invalid_time(
-            sample_diff=tdoa_sample_array[i],
+            sample_diff=sample_diff,
             sample_frequency=sample_frequency,
+            max_time_difference=max_time_difference,
         ):
             return False
     return True
