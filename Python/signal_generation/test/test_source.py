@@ -1,6 +1,37 @@
 import pytest
+import scipy.signal.windows
 
 import signal_generation.source as source
+
+
+class TestWindowGeneration:
+    @staticmethod
+    def test_given_odd_pulse_length_100_percent_window_then_equal_to_hann():
+        reference = scipy.signal.windows.hann(
+            M=101,
+            sym=True,
+        )
+
+        result = source.generate_pulse_window(
+            pulse_length=101,
+            start_end_percentage=100,
+        )
+
+        assert (result == reference).all()
+
+    @staticmethod
+    def test_given_10_percent_window_then_roughly_90_percent_ones():
+        percentage = 10
+        reference_percentage = 100.0 - percentage
+
+        window = source.generate_pulse_window(
+            pulse_length=10000,
+            start_end_percentage=percentage,
+        )
+
+        result_percentage = sum(window == 1.0) / len(window) * 100
+
+        assert abs(result_percentage - reference_percentage) < 2
 
 
 class TestPinger:
@@ -56,23 +87,21 @@ class TestPinger:
 
     @staticmethod
     def test_given_amplitude_when_generate_signal_then_max_smaller_or_equal_to_amplitude():
+        ref_amplitude = 0.3
         s = source.Pinger(
+            amplitude=ref_amplitude,
             frequency=10,
             pulse_length=100,
             period=1000,
         )
 
-        ref_amplitude = 0.3
         out = s.generate_signal(
-            amplitude=ref_amplitude,
             length=2000,
         )
 
-        res_max = max(out)
-        res_min = min(out)
+        res_max = max(abs(out))
 
         assert res_max < ref_amplitude + 1 * 10 ** (-9)
-        assert abs(res_min) < ref_amplitude + 1 * 10 ** (-9)
 
     @staticmethod
     def test_given_length_double_the_period_when_generate_signal_then_two_pulses():
@@ -80,13 +109,15 @@ class TestPinger:
         Take low frequency to only have positive values in pulse and find
         number of sections that are zero.
         """
+        period = 1000
+
         s = source.Pinger(
             frequency=0.01,
             pulse_length=10,
-            period=1000,
+            period=period,
         )
         out = s.generate_signal(
-            length=2000,
+            length=int(2 * period * s.sampling_frequency),
         )
 
         number_of_zero_sections = 0
@@ -105,22 +136,24 @@ class TestPinger:
 
     @staticmethod
     def test_given_offset_and_pulse_length_larger_than_period_when_generate_signal_then_success():
+        period = 30
         s = source.Pinger(
             frequency=10,
             pulse_length=10,
-            period=30,
+            period=period,
         )
         out = s.generate_signal(
             offset=25,
-            length=30,
+            length=int(period * s.sampling_frequency),
         )
 
     @staticmethod
     def test_given_offset_and_pulse_length_larger_than_period_when_generate_one_period_then_last_samples_not_zero():
+        period = 20
         s = source.Pinger(
             frequency=10,
             pulse_length=10,
-            period=20,
+            period=period,
         )
         out = s.generate_signal(
             offset=15,
