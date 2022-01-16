@@ -4,40 +4,94 @@ import multilateration.multilateration as mult
 import multilateration.parameters as param
 
 
-def valid_number_of_hydrophones():
-    return param.HydrophoneDetailes.NUM_HYDROPHONES < 3
+from signal_generation.positioning import Position
 
 
-def calculate_toa_array():
+source_position = Position(
+    x=16.0,
+    y=2.0,
+    z=1.0,
+)
+
+hydrophone_positions = np.array(
+    [
+        Position(
+            x=-0.11,
+            y=0.31,
+            z=0.1,
+        ),
+        Position(
+            x=0.11,
+            y=0.31,
+            z=0.1,
+        ),
+        Position(
+            x=0.0,
+            y=-0.24,
+            z=0.0,
+        ),
+        Position(
+            x=0.5,
+            y=-0.1,
+            z=0.4,
+        ),
+        Position(
+            x=0.4,
+            y=0.0,
+            z=-0.4,
+        ),
+    ]
+)
+
+
+def generate_tdoa_lag_array(
+    hydrophone_positions: np.array,
+    source_position: Position,
+    sample_frequency: float,
+):
+    """Generates a complete lag array of all possible combinations. Where
+    the indexes lag_array[m][n] correspond to the time difference tnm.
+
+    So to get the time (sample) difference t01 the lag array has to be evaluated
+    with lag_array[1][0].
+    """
+    time_of_flight = (
+        abs(hydrophone_positions - source_position)
+        / param.PhysicalConstants.SOUND_SPEED
+    )
+    time_difference_of_arrival = (
+        np.array(len(time_of_flight) * [time_of_flight])
+        - np.array(len(time_of_flight) * [time_of_flight]).T
+    )
+    lag_array = np.int32(time_difference_of_arrival * sample_frequency)
+
+    return lag_array
+
+
+def calculate_tdoa_array(
+    hydrophone_positions: np.array,
+    source_position: Position,
+    sample_frequency: float,
+):
     """Generates TOA of the sound-signals for the different hydrophones
     and calculates the lag between them.
     """
-
-    dist_src_port = mult.calculate_distance(
-        param.TestParameters.SOURCE_POS_X,
-        param.TestParameters.SOURCE_POS_Y,
-        param.TestParameters.SOURCE_POS_Z,
-        param.HydrophoneDetails.PORT_HYD_X,
-        param.HydrophoneDetails.PORT_HYD_Y,
-        param.HydrophoneDetails.PORT_HYD_Z,
-    )
-
-    dist_src_starboard = mult.calculate_distance(
-        param.TestParameters.SOURCE_POS_X,
-        param.TestParameters.SOURCE_POS_Y,
-        param.TestParameters.SOURCE_POS_Z,
-        param.HydrophoneDetails.STARBOARD_HYD_X,
-        param.HydrophoneDetails.STARBOARD_HYD_Y,
-        param.HydrophoneDetails.STARBOARD_HYD_Z,
-    )
-
-    dist_src_stern = mult.calculate_distance(
-        param.TestParameters.SOURCE_POS_X,
-        param.TestParameters.SOURCE_POS_Y,
-        param.TestParameters.SOURCE_POS_Z,
-        param.HydrophoneDetails.STERN_HYD_X,
-        param.HydrophoneDetails.STERN_HYD_Y,
-        param.HydrophoneDetails.STERN_HYD_Z,
+    distance_array = []
+    N = param.HydrophoneDetails.NUM_HYDROPHONES
+    for hydrophone_position in hydrophone_positions:
+        distance_array.append(
+            mult.calculate_distance(
+                x1=source_position.x,
+                y1=source_position.y,
+                z1=source_position.z,
+                x2=hydrophone_position.x,
+                y2=hydrophone_position.y,
+                z2=hydrophone_position.z,
+            )
+        )
+    distance_array = np.array(distance_array)
+    toa_sample_array = np.int32(
+        distance_array * sample_frequency / param.PhysicalConstants.SOUND_SPEED
     )
 
     """
@@ -45,24 +99,11 @@ def calculate_toa_array():
     Since the TOA uses lag (direct measuremend), these values are uint32_t
     converting to int32 works as floor. Should be rounded.
     """
-    samp_port = np.int32(
-        param.DSPConstants.SAMPLE_FREQUENCY
-        * (dist_src_port / param.PhysicalConstants.SOUND_SPEED)
-    )
-    samp_starboard = np.int32(
-        param.DSPConstants.SAMPLE_FREQUENCY
-        * (dist_src_starboard / param.PhysicalConstants.SOUND_SPEED)
-    )
-    samp_stern = np.int32(
-        param.DSPConstants.SAMPLE_FREQUENCY
-        * (dist_src_stern / param.PhysicalConstants.SOUND_SPEED)
-    )
+    tdoa_sample_array = np.empty((N - 1,))
+    for i in range(N - 1):
+        tdoa_sample_array[i] = toa_sample_array[0] - toa_sample_array[i + 1]
 
-    lag_port_starboard = samp_port - samp_starboard
-    lag_port_stern = samp_port - samp_stern
-    lag_startboard_stern = samp_starboard - samp_stern
-
-    return [lag_port_starboard, lag_port_stern, lag_startboard_stern]
+    return tdoa_sample_array
 
 
 def test_trilateration_algorithm():
@@ -72,16 +113,25 @@ def test_trilateration_algorithm():
     actual position to check if within given tolerance value.
     Only considering x and y, since we only have three hydrophones.
     """
+    tolerance = 3
+    sample_frequency = 100000
 
-    lag_array = calculate_toa_array()
+    tdoa_sample_array = generate_tdoa_lag_array(
+        hydrophone_positions=hydrophone_positions,
+        source_position=source_position,
+        sample_frequency=sample_frequency,
+    )[:, 0][1:]
 
-    x_pos_es, y_pos_es = mult.trilaterate_pinger_position(lag_array)
-
-    distance_diff = np.sqrt(
-        (x_pos_es - param.TestParameters.SOURCE_POS_X) ** 2
-        + (y_pos_es - param.TestParameters.SOURCE_POS_Y) ** 2
+    res_x, res_y, res_z = mult.calculate_pinger_position(
+        tdoa_lag_array=tdoa_sample_array,
+        hydrophone_positions=hydrophone_positions,
+        sample_frequency=sample_frequency,
     )
 
-    tolerance = 5
+    res_position = Position(
+        x=res_x,
+        y=res_y,
+        z=res_z,
+    )
 
-    assert distance_diff < tolerance
+    assert abs(source_position - res_position) < tolerance

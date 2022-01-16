@@ -1,3 +1,5 @@
+import numpy as np
+
 import signal_generation.positioning as pos
 
 
@@ -46,3 +48,19 @@ class TestPosition:
         res_distance = abs(position_one - position_two)
 
         assert (res_distance - ref_distance) < pos.Position.tol
+
+
+def test_maximum_distance():
+    positions = np.array(
+        [
+            pos.Position(),
+            pos.Position(x=10.0),
+            pos.Position(x=2.0),
+            pos.Position(x=30.0),
+        ]
+    )
+    ref_distance = 30.0
+
+    res_distance = pos.find_maximum_distance(positions=positions)
+
+    assert res_distance == ref_distance
