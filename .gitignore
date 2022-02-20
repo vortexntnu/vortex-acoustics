@@ -205,3 +205,10 @@ build/
 .history
 .ionide
 
+### PlatformIO ###
+.pioenvs
+.piolibdeps
+.clang_complete
+.gcc-flags.json
+.pio
+
