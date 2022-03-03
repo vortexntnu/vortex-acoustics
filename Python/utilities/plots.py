@@ -244,6 +244,7 @@ def plot_estimates_along_path(
 def plot_hyperboles(
     source_positions,
     hydrophone_positions,
+    max_range: float = 20,
 ):
     fig = plt.figure()
 
@@ -268,29 +269,31 @@ def plot_hyperboles(
 
         distance_of_arrival = tdoa_lag_array / sample_frequency * parameters.PhysicalConstants.SOUND_SPEED
 
-        x_one, y_one = hyperboles.generate_hyperbole_points(
+        pos_hyperbole_one, neg_hyperbole_one = hyperboles.generate_hyperbole_points(
             distance_difference=distance_of_arrival[0],
             receiver_positions=(
                 hydrophone_positions[0],
                 hydrophone_positions[1],
             ),
+            max_range=max_range,
         )
-        x_two, y_two = hyperboles.generate_hyperbole_points(
+        pos_hyperbole_two, neg_hyperbole_two = hyperboles.generate_hyperbole_points(
             distance_difference=distance_of_arrival[1],
             receiver_positions=(
                 hydrophone_positions[0],
                 hydrophone_positions[2],
             ),
+            max_range=max_range,
         )
 
         # plot hyperboles
         color = colors[index % len(colors)]
         logging.debug(f"hyperbole color: {color}")
 
-        plt.plot(x_one[0], y_one[0], f"{color}-")
-        plt.plot(x_one[1], y_one[1], f"{color}-")
-        plt.plot(x_two[0], y_two[0], f"{color}-")
-        plt.plot(x_two[1], y_two[1], f"{color}-")
+        plt.plot(pos_hyperbole_one[0], pos_hyperbole_one[1], f"{color}-")
+        plt.plot(neg_hyperbole_one[0], neg_hyperbole_one[1], f"{color}-")
+        plt.plot(pos_hyperbole_two[0], pos_hyperbole_two[1], f"{color}-")
+        plt.plot(neg_hyperbole_two[0], neg_hyperbole_two[1], f"{color}-")
 
         # plot receivers and source
         for position in hydrophone_positions:
@@ -299,6 +302,8 @@ def plot_hyperboles(
 
     # plot settings
     plt.grid()
+    plt.xlim((-1) * max_range, max_range)
+    plt.ylim((-1) * max_range, max_range)
     plt.set_loglevel("info")
     plt.show()
 

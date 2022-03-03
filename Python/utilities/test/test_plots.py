@@ -87,7 +87,7 @@ def test_plot_estimates():
 @pytest.mark.plot
 def test_plot_hyperboles():
     radius = 5.0
-    number_of_sources = 6
+    number_of_sources = 2
 
     hydrophone_positions = np.array(
         [
