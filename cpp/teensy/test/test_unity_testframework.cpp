@@ -1,4 +1,3 @@
-//#include "Arduino.h"
 #include "unity.h"
 #include "unity_testframework.h"
 
