@@ -1,12 +1,13 @@
 //#include "Arduino.h"
 #include "unity.h"
-#include "correlation.h"
+#include "unity_testframework.h"
 
 
 
 int main(int argc, char **argv) {
 
     UNITY_BEGIN(); 
-    TEST_ASSERT_EQUAL_INT(3, nimportequoi(3)); 
+    RUN_TEST(test_summation); 
+    RUN_TEST(test_return_true); 
     UNITY_END(); 
 }
