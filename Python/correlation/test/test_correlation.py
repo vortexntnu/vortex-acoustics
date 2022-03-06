@@ -2,6 +2,7 @@
 Provides test to visualize results, and check how accurate the result is when varying
 sample frequency, pulse length, position of hydrophones and pinger, and window length.
 """
+from unittest import signals
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
@@ -147,3 +148,16 @@ def test_accuracy_tdoa_array():
     )
 
     assert tdoa_is_correct
+
+def test_compare_with_result_from_teensy():
+    arr1 = [3.0, 5.2, 5.2, 6.7, 8.9, 2.0, 6.7, 6.7, 5.7, 0.0, 0.0] 
+    arr2 = [0.0, 0.0, 3.0, 5.2, 5.2, 6.7, 8.9, 2.0, 6.7, 6.7, 5.7]
+
+    signals = [arr1, arr2]
+
+    correlation_matrix, lag_matrix = correl.calculate_correlation_matrix(signals)
+
+    print(correlation_matrix[0])
+
+    assert True
+
