@@ -1,9 +1,7 @@
 // #include <Arduino.h>
+#include "arm_math.h"
 
-void setup() {
-  // put your setup code here, to run once:
-}
-
-void loop() {
-  // put your main code here, to run repeatedly:
+int mainn(void) {
+    while(true) {}
+    return 0;
 }
