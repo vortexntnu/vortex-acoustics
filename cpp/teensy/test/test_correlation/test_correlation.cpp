@@ -3,15 +3,11 @@
 #include "stdio.h"
 #include "Arduino.h"
 
-//be consistent. Either you care about differnt lengths or you dont
-
-
-/***** just checking that I can use the arm_math.h lib" ********/
 
 void test_arm_lib(){
-    float_t exprected_val = -1.0; 
+    float_t expected_val = -1.0; 
     float_t cos_output = arm_cos_f32(3.14); 
-    TEST_ASSERT_EQUAL_FLOAT(exprected_val, cos_output); 
+    TEST_ASSERT_EQUAL_FLOAT(expected_val, cos_output); 
 }
 
 void test_correlation_with_simple_arrays(){
@@ -32,12 +28,11 @@ void test_correlation_with_simple_arrays(){
 void test_find_lag(){
     float32_t arr1[] = {3.0, 5.2, 5.2, 6.7, 8.9, 2.0, 6.7, 6.7, 5.7, 0.0, 0.0}; 
     float32_t arr2[] = {0.0, 0.0, 3.0, 5.2, 5.2, 6.7, 8.9, 2.0, 6.7, 6.7, 5.7}; 
-    uint32_t length_arr1 = sizeof(arr1)/sizeof(arr1[0]); 
-    uint32_t length_arr2 = sizeof(arr2)/sizeof(arr2[0]);
+    uint32_t signal_length = sizeof(arr1)/sizeof(arr1[0]); 
     int offset = 2; 
 
-    int computed_lag = find_lag(arr1, length_arr1, arr2, length_arr2); 
-    TEST_ASSERT_EQUAL_INT32((length_arr1-1-offset), computed_lag);
+    int computed_lag = find_lag(arr1, arr2, signal_length); 
+    TEST_ASSERT_EQUAL_INT32((signal_length-1-offset), computed_lag);
 
 }
 
