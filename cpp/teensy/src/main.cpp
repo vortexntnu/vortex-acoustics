@@ -2,9 +2,9 @@
 #include "arm_math.h"
 #include "stdio.h"
 #include "algorithm"
+//#include "correlation.h"
 
-
-int main(void) {
+void demo_correlation(){
     Serial.begin(9660);
     while (!Serial){} 
     Serial.println("Serial connected"); 
@@ -27,6 +27,29 @@ int main(void) {
         Serial.printf("%.3f, ", result_from_teensy[i]);
     }
     Serial.println("");
+
+
+    while(true){
+        Serial.printf("Loop"); 
+        delay(1000); 
+    }  
+}
+
+
+
+void print_array(float32_t sig1[], uint32_t length_sig1){
+    Serial.print("Array: "); 
+    for (int i = 0; i < length_sig1; i++){
+        Serial.printf("%.1f ,", sig1[i]); 
+    }
+    Serial.println(""); Serial.println("");
+}
+
+
+int main(void) {
+    Serial.begin(9660);
+    while (!Serial){} 
+    Serial.println("Serial connected"); 
 
 
     while(true){

@@ -3,12 +3,14 @@
 #include "stdio.h"
 #include "Arduino.h"
 
+//be consistent. Either you care about differnt lengths or you dont
+
 
 /***** just checking that I can use the arm_math.h lib" ********/
 
-void test_cosinus(){
+void test_arm_lib(){
     float_t exprected_val = -1.0; 
-    float_t cos_output = cosinus(3.14); 
+    float_t cos_output = arm_cos_f32(3.14); 
     TEST_ASSERT_EQUAL_FLOAT(exprected_val, cos_output); 
 }
 
@@ -39,11 +41,32 @@ void test_find_lag(){
 
 }
 
+void test_compute_tdoa_array(){
+    float32_t arr1[] = {3.0, 5.2, 5.2, 6.7, 8.9, 2.0, 6.7, 6.7, 5.7, 0.0, 0.0, 0.0, 0.0};
+    float32_t arr2[] = {0.0, 3.0, 5.2, 5.2, 6.7, 8.9, 2.0, 6.7, 6.7, 5.7, 0.0, 0.0, 0.0};
+    float32_t arr3[] = {0.0, 0.0, 3.0, 5.2, 5.2, 6.7, 8.9, 2.0, 6.7, 6.7, 5.7, 0.0, 0.0};
+    float32_t arr4[] = {0.0, 0.0, 0.0, 3.0, 5.2, 5.2, 6.7, 8.9, 2.0, 6.7, 6.7, 5.7, 0.0};
+
+    uint32_t number_of_signals = 4; 
+    uint32_t signal_length = sizeof(arr1)/sizeof(arr1[0]); 
+
+    float32_t* signals[]= {arr1, arr2, arr3, arr4}; 
+
+    int32_t tdoa_array[number_of_signals-1]; 
+    compute_tdoa_array(signals, number_of_signals, signal_length, tdoa_array); 
+
+    int32_t expected_tdoa_vaules[] = {(signal_length-1-1),(signal_length-1-2),(signal_length-1-3)}; 
+
+    TEST_ASSERT_EQUAL_INT32_ARRAY(expected_tdoa_vaules, tdoa_array, 3); 
+
+}
+
 int main(int argc, char **argv) {
     UNITY_BEGIN(); 
-    RUN_TEST(test_cosinus); 
+    RUN_TEST(test_arm_lib); 
     RUN_TEST(test_correlation_with_simple_arrays); 
     RUN_TEST(test_find_lag); 
+    RUN_TEST(test_compute_tdoa_array); 
     UNITY_END(); 
 }
 

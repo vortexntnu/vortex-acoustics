@@ -1,8 +1,6 @@
 #include "arm_math.h"
 #include <unity.h>
 
-float32_t cosinus(float32_t argument); 
-
 int find_lag(
     float32_t sig1[], 
     uint32_t length_sig1, 
@@ -11,3 +9,4 @@ int find_lag(
     ); 
 
 
+void compute_tdoa_array(float32_t** signals, uint32_t number_of_signals, uint32_t signal_length, int32_t* p_tdoa_array); 
