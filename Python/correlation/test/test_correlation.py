@@ -6,6 +6,7 @@ from unittest import signals
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
+import sys
 
 import correlation.correlation as correl
 import correlation.tdoa as tdoa
@@ -15,7 +16,7 @@ import signal_generation.positioning as sg_pos
 import signal_generation.receiver as sg_rec
 import signal_generation.source as sg_src
 
-@pytest.mark.plot
+#@pytest.mark.plot
 def test_plot_correlation():
     # Set variables:
     sample_frequency = 500.0  # [kHz]
@@ -160,4 +161,5 @@ def test_compare_with_result_from_teensy():
     print(correlation_matrix[0])
 
     assert True
+
 
