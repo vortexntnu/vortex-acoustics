@@ -2,7 +2,7 @@
 Provides test to visualize results, and check how accurate the result is when varying
 sample frequency, pulse length, position of hydrophones and pinger, and window length.
 """
-from unittest import signals
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
