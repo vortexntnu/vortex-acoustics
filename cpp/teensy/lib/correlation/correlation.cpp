@@ -1,26 +1,26 @@
 #include "correlation.h"
 
-int32_t find_lag(float32_t sig1[], float32_t sig2[], uint32_t signal_length){
-    uint32_t output_size = 2*signal_length-1; //assuming signal always will have the same length
+int32_t findLag(float32_t sig1[], float32_t sig2[], uint32_t signalLength){
+    uint32_t outputSize = 2*signalLength-1; //assuming signal always will have the same length
 
-    float32_t result_from_teensy[output_size]; 
-    arm_correlate_f32(sig1, signal_length, sig2, signal_length, result_from_teensy); 
+    float32_t resultFromTeensy[outputSize]; 
+    arm_correlate_f32(sig1, signalLength, sig2, signalLength, resultFromTeensy); 
 
-    float32_t max_val; 
-    uint32_t max_val_index; 
-    arm_max_f32(result_from_teensy, output_size, &max_val, &max_val_index); 
+    float32_t maxVal; 
+    uint32_t maxValIndex; 
+    arm_max_f32(resultFromTeensy, outputSize, &maxVal, &maxValIndex); 
     
-    return max_val_index; 
+    return maxValIndex; 
 }
 
-void compute_tdoa_array(
+void computeTdoaArray(
     float32_t** signals, 
-    uint32_t number_of_signals, 
-    uint32_t signal_length,
-    int32_t* p_tdoa_array
+    uint32_t numberOfSignals, 
+    uint32_t signalLength,
+    int32_t* p_tdoaArray
     ){
   
-    for (uint32_t i = 0; i < number_of_signals-1; i++){ 
-        p_tdoa_array[i] = find_lag(signals[0], signals[i+1], signal_length);
+    for (uint32_t i = 0; i < numberOfSignals-1; i++){ 
+        p_tdoaArray[i] = findLag(signals[0], signals[i+1], signalLength);
     }
 }

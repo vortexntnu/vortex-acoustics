@@ -1,15 +1,15 @@
 #include "arm_math.h"
 #include <unity.h>
 
-int32_t find_lag(
+int32_t findLag(
     float32_t sig1[],  
     float32_t sig2[], 
-    uint32_t signal_length
+    uint32_t signalLength
     ); 
 
 
-void compute_tdoa_array(
+void computeTdoaArray(
     float32_t** signals, 
-    uint32_t number_of_signals, 
-    uint32_t signal_length, 
-    int32_t* p_tdoa_array); 
+    uint32_t numberOfSignals, 
+    uint32_t signalLength, 
+    int32_t* p_tdoaArray); 
