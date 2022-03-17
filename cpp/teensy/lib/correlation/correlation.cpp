@@ -1,6 +1,6 @@
 #include "correlation.h"
 
-int find_lag(float32_t sig1[], float32_t sig2[], uint32_t signal_length){
+int32_t find_lag(float32_t sig1[], float32_t sig2[], uint32_t signal_length){
     uint32_t output_size = 2*signal_length-1; //assuming signal always will have the same length
 
     float32_t result_from_teensy[output_size]; 

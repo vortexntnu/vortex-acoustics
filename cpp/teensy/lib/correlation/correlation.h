@@ -1,7 +1,7 @@
 #include "arm_math.h"
 #include <unity.h>
 
-int find_lag(
+int32_t find_lag(
     float32_t sig1[],  
     float32_t sig2[], 
     uint32_t signal_length
