@@ -6,7 +6,6 @@ sample frequency, pulse length, position of hydrophones and pinger, and window l
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-import sys
 
 import correlation.correlation as correl
 import correlation.tdoa as tdoa
