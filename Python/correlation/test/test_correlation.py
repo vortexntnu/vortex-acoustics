@@ -160,6 +160,6 @@ def test_compare_with_result_from_teensy():
 
     print(correlation_matrix[0])
 
-    assert True
+   
 
 
