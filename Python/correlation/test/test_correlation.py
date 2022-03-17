@@ -16,7 +16,7 @@ import signal_generation.positioning as sg_pos
 import signal_generation.receiver as sg_rec
 import signal_generation.source as sg_src
 
-#@pytest.mark.plot
+@pytest.mark.plot
 def test_plot_correlation():
     # Set variables:
     sample_frequency = 500.0  # [kHz]
