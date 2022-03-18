@@ -2,14 +2,11 @@ import logging
 
 import matplotlib.pyplot as plt
 import numpy as np
-
 import signal_generation.positioning as sg_pos
 from multilateration import multilateration as ml
 from multilateration import parameters
-from utilities import hyperboles
-from utilities import tdoa
+from utilities import hyperboles, tdoa
 from utilities.drone import Drone
-
 
 XKCD_COLORS = [
     "xkcd:purple",

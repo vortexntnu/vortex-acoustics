@@ -1,5 +1,4 @@
 import numpy as np
-
 from multilateration import parameters
 from signal_generation.positioning import Position
 

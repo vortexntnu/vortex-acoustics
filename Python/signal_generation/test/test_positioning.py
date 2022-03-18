@@ -1,5 +1,4 @@
 import numpy as np
-
 import signal_generation.positioning as sg_pos
 
 

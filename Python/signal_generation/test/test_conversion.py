@@ -1,6 +1,5 @@
 import numpy as np
 import pytest
-
 import signal_generation.conversion as conv
 
 

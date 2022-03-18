@@ -2,12 +2,10 @@
 Provides the possibility to change frames.
 Plot the signals together with the correlated signals, and find the accuracy of the result.
 """
+import correlation.correlation as correl
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-
-import correlation.correlation as correl
-
 import signal_generation.positioning as sg_pos
 import signal_generation.receiver as sg_rec
 import signal_generation.source as sg_src

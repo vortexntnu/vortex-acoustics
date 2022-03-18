@@ -1,10 +1,8 @@
 import numpy as np
 import pytest
-
 from multilateration import multilateration as ml
 from signal_generation.positioning import Position
-from utilities import tdoa
-from utilities import plots
+from utilities import plots, tdoa
 
 
 @pytest.mark.plot
@@ -104,7 +102,7 @@ def test_plot_hyperboles():
     )
 
     xs = np.linspace(-radius + 0.1, radius, number_of_sources)
-    ys = np.sqrt(radius ** 2 - xs ** 2)
+    ys = np.sqrt(radius**2 - xs**2)
 
     source_positions = [(xs[i], ys[i]) for i, x in enumerate(xs)]
 

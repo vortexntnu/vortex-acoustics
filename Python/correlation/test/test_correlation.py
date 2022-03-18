@@ -3,13 +3,11 @@ Provides test to visualize results, and check how accurate the result is when va
 sample frequency, pulse length, position of hydrophones and pinger, and window length.
 """
 
+import correlation.correlation as correl
+import correlation.tdoa as tdoa
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-
-import correlation.correlation as correl
-import correlation.tdoa as tdoa
-
 import signal_generation.noise as sg_noise
 import signal_generation.positioning as sg_pos
 import signal_generation.receiver as sg_rec

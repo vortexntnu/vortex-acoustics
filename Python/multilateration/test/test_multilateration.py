@@ -1,11 +1,7 @@
-import numpy as np
-
 import multilateration.multilateration as mult
 import multilateration.parameters as param
-
-
+import numpy as np
 from signal_generation.positioning import Position
-
 
 source_position = Position(
     x=16.0,

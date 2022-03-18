@@ -1,16 +1,18 @@
 import argparse
 import logging
 
-from utilities.plot_cli_helpers import plot_estimates
-from utilities.plot_cli_helpers import plot_grid
-from utilities.plot_cli_helpers import plot_hyperboles
-from utilities.plot_cli_helpers import plot_path
-
+from utilities.plot_cli_helpers import (
+    plot_estimates,
+    plot_grid,
+    plot_hyperboles,
+    plot_path,
+)
 
 # parent parser for shared arguments
 parent = argparse.ArgumentParser(add_help=False)
 parent.add_argument(
-    "-d", "--debug",
+    "-d",
+    "--debug",
     action="store_true",
     dest="debug_mode",
 )
@@ -19,7 +21,9 @@ main_parser = argparse.ArgumentParser(description="", parents=[parent])
 main_subparsers = main_parser.add_subparsers()
 
 # plot options for CLI
-plot_parsers = main_subparsers.add_parser("plot", help="Use this option for plotting utilities")
+plot_parsers = main_subparsers.add_parser(
+    "plot", help="Use this option for plotting utilities"
+)
 plot_subparsers = plot_parsers.add_subparsers()
 
 position_parser = plot_subparsers.add_parser(
@@ -28,28 +32,20 @@ position_parser = plot_subparsers.add_parser(
     parents=[parent],
 )
 position_parser.add_argument(
-    "-s", "--sample-frequency",
+    "-s",
+    "--sample-frequency",
     type=int,
     default=100000,
     help="The sampling frequency to be used for the calculations",
 )
 position_parser.add_argument(
-    "-x",
-    type=float,
-    default=0.0,
-    help="x-coordinate for the source"
+    "-x", type=float, default=0.0, help="x-coordinate for the source"
 )
 position_parser.add_argument(
-    "-y",
-    type=float,
-    default=0.0,
-    help="y-coordinate for the source"
+    "-y", type=float, default=0.0, help="y-coordinate for the source"
 )
 position_parser.add_argument(
-    "-z",
-    type=float,
-    default=0.0,
-    help="z-coordinate for the source"
+    "-z", type=float, default=0.0, help="z-coordinate for the source"
 )
 position_parser.set_defaults(func=plot_estimates)
 
@@ -59,14 +55,16 @@ hyperbole_parser = plot_subparsers.add_parser(
     parents=[parent],
 )
 hyperbole_parser.add_argument(
-    "-r", "--radius",
+    "-r",
+    "--radius",
     type=float,
     dest="radius",
     default=5.0,
     help="The radius on which to place sources on",
 )
 hyperbole_parser.add_argument(
-    "-n", "--number-of-sources",
+    "-n",
+    "--number-of-sources",
     type=int,
     dest="n",
     default=6,
@@ -80,29 +78,21 @@ grid_parser = plot_subparsers.add_parser(
     parents=[parent],
 )
 grid_parser.add_argument(
-    "-s", "--sample-frequency",
+    "-s",
+    "--sample-frequency",
     dest="sample_frequency",
     type=float,
     default=100000,
     help="The sampling frequency to be used for the calculations",
 )
 grid_parser.add_argument(
-    "-x",
-    type=float,
-    default=20.0,
-    help="x-coordinate for the source"
+    "-x", type=float, default=20.0, help="x-coordinate for the source"
 )
 grid_parser.add_argument(
-    "-y",
-    type=float,
-    default=20.0,
-    help="y-coordinate for the source"
+    "-y", type=float, default=20.0, help="y-coordinate for the source"
 )
 grid_parser.add_argument(
-    "-z",
-    type=float,
-    default=20.0,
-    help="z-coordinate for the source"
+    "-z", type=float, default=20.0, help="z-coordinate for the source"
 )
 grid_parser.set_defaults(func=plot_grid)
 
@@ -112,29 +102,21 @@ path_parser = plot_subparsers.add_parser(
     parents=[parent],
 )
 path_parser.add_argument(
-    "-s", "--sample-frequency",
+    "-s",
+    "--sample-frequency",
     dest="sample_frequency",
     type=float,
     default=100000,
     help="The sampling frequency to be used for the calculations",
 )
 path_parser.add_argument(
-    "-x",
-    type=float,
-    default=20.0,
-    help="x-coordinate for the source"
+    "-x", type=float, default=20.0, help="x-coordinate for the source"
 )
 path_parser.add_argument(
-    "-y",
-    type=float,
-    default=20.0,
-    help="y-coordinate for the source"
+    "-y", type=float, default=20.0, help="y-coordinate for the source"
 )
 path_parser.add_argument(
-    "-z",
-    type=float,
-    default=20.0,
-    help="z-coordinate for the source"
+    "-z", type=float, default=20.0, help="z-coordinate for the source"
 )
 path_parser.set_defaults(func=plot_path)
 

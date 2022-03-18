@@ -1,7 +1,6 @@
 import numpy as np
-
-import signal_generation.receiver as sg_rec
 import signal_generation.positioning as sg_pos
+import signal_generation.receiver as sg_rec
 import signal_generation.source as sg_src
 
 

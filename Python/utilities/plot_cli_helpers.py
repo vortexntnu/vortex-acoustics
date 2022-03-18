@@ -1,9 +1,7 @@
 import numpy as np
-
 from multilateration import multilateration as ml
 from signal_generation.positioning import Position
-from utilities import tdoa
-from utilities import plots
+from utilities import plots, tdoa
 
 
 def plot_estimates(args):
@@ -60,13 +58,17 @@ def plot_estimates(args):
             sample_frequency=frequency,
         )
 
-        result_positions.append(Position(
-            x=res_x,
-            y=res_y,
-            z=res_z,
-        ))
+        result_positions.append(
+            Position(
+                x=res_x,
+                y=res_y,
+                z=res_z,
+            )
+        )
 
-        result_labels.append(f"fs={frequency/1000} kHz, pos=({res_x:.1f},{res_y:.1f},{res_z:.1f})")
+        result_labels.append(
+            f"fs={frequency/1000} kHz, pos=({res_x:.1f},{res_y:.1f},{res_z:.1f})"
+        )
 
     plots.plot_positions(
         hydrophone_positions=hydrophone_positions,
@@ -80,23 +82,25 @@ def plot_hyperboles(args):
     radius = args.radius
     number_of_sources = args.n
 
-    hydrophone_positions = np.array([
-        Position(
-            x=1.0,
-            y=0,
-            z=0,
-        ),
-        Position(
-            x=-1.0,
-            y=0,
-            z=0,
-        ),
-        Position(
-            x=1.0,
-            y=2.2,
-            z=0,
-        ),
-    ])
+    hydrophone_positions = np.array(
+        [
+            Position(
+                x=1.0,
+                y=0,
+                z=0,
+            ),
+            Position(
+                x=-1.0,
+                y=0,
+                z=0,
+            ),
+            Position(
+                x=1.0,
+                y=2.2,
+                z=0,
+            ),
+        ]
+    )
 
     xs = np.linspace(-radius + 0.1, radius, number_of_sources)
     ys = np.sqrt(radius**2 - xs**2)

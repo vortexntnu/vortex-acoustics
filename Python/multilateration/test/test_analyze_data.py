@@ -1,6 +1,5 @@
-import numpy as np
-
 import multilateration.analyze_data as andat
+import numpy as np
 
 
 def test_given_equal_input_when_calculate_lags_then_all_zero():

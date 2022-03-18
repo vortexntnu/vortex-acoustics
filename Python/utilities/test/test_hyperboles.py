@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 import pytest
-
 from signal_generation.positioning import Position
 from utilities import hyperboles
 

@@ -1,6 +1,5 @@
 import pytest
 import scipy.signal.windows
-
 import signal_generation.source as source
 
 

@@ -1,6 +1,6 @@
-import numpy as np
 from dataclasses import dataclass
 
+import numpy as np
 import signal_generation.positioning as sg_pos
 
 
