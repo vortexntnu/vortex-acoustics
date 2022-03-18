@@ -32,5 +32,5 @@ jobs:
       - name: Run Pytest
         run: |
             source ./venv/bin/activate
-            python -m pytest ${{ env.PYTHON_DIR }}
+            python -m pytest ${{ env.PYTHON_DIR }} --verbose
 
