@@ -4,7 +4,7 @@ import numpy as np
 from signal_generation.positioning import Position
 
 source_position = Position(
-    x=16.0,
+    x=12.0,
     y=2.0,
     z=1.0,
 )
@@ -110,7 +110,7 @@ def test_trilateration_algorithm():
     Only considering x and y, since we only have three hydrophones.
     """
     tolerance = 3
-    sample_frequency = 100000
+    sample_frequency = 300000
 
     tdoa_sample_array = generate_tdoa_lag_array(
         hydrophone_positions=hydrophone_positions,
