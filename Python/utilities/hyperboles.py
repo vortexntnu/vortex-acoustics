@@ -138,8 +138,8 @@ def rotate_coordinates(
     theta: float,  # [rad]
 ):
     x, y = coordinate
-    x_new = x*np.cos(theta) + y*np.sin(theta)
-    y_new = y*np.cos(theta) - x*np.sin(theta)
+    x_new = x * np.cos(theta) + y * np.sin(theta)
+    y_new = y * np.cos(theta) - x * np.sin(theta)
 
     return x_new, y_new
 

@@ -4,7 +4,7 @@ import signal_generation.noise as noise
 class TestGaussianNoise:
     @staticmethod
     def test_when_generate_gaussian_noise_then_no_error():
-        gaussian = noise.generate_gaussian_noise(
+        noise.generate_gaussian_noise(
             length=100,
             variance=0.5,
             maximum_allowed_value=None,
@@ -40,7 +40,7 @@ class TestGaussianNoise:
 class TestUniformNoise:
     @staticmethod
     def test_when_generate_uniform_noise_then_no_error():
-        uniform = noise.generate_uniform_noise(
+        noise.generate_uniform_noise(
             length=100,
             maximum_allowed_value=1.0,
         )

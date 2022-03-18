@@ -58,7 +58,7 @@ class TestPinger:
     @staticmethod
     def test_given_frequency_greater_than_half_sampling_frequency_when_initialized_then_error():
         with pytest.raises(ValueError):
-            s = source.Pinger(
+            source.Pinger(
                 frequency=1.0001,
                 sampling_frequency=2,
                 pulse_length=10,
@@ -67,7 +67,7 @@ class TestPinger:
 
     @staticmethod
     def test_given_frequency_is_half_of_sampling_frequency_when_initialized_then_success():
-        s = source.Pinger(
+        source.Pinger(
             frequency=1,
             sampling_frequency=2,
             pulse_length=10,
@@ -81,7 +81,7 @@ class TestPinger:
             pulse_length=100,
             period=1000,
         )
-        out = s.generate_signal(
+        s.generate_signal(
             length=2000,
         )
 
@@ -126,10 +126,10 @@ class TestPinger:
             if i == 0:
                 continue
 
-            if last_sample_zero == False and current_sample == 0:
+            if last_sample_zero is False and current_sample == 0:
                 last_sample_zero = True
                 number_of_zero_sections += 1
-            elif last_sample_zero == True and current_sample != 0:
+            elif last_sample_zero is True and current_sample != 0:
                 last_sample_zero = False
 
         assert number_of_zero_sections == 2
@@ -142,7 +142,7 @@ class TestPinger:
             pulse_length=10,
             period=period,
         )
-        out = s.generate_signal(
+        s.generate_signal(
             offset=25,
             length=int(period * s.sampling_frequency),
         )

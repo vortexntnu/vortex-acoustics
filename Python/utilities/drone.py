@@ -3,7 +3,7 @@ import numpy as np
 import signal_generation.conversion as sg_conv
 import signal_generation.noise as sg_noise
 import signal_generation.positioning as sg_pos
-import signal_generation.source as sg_src
+import signal_generation.receiver as sg_rec
 
 
 class Drone:

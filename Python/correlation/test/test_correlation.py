@@ -15,13 +15,13 @@ import signal_generation.positioning as sg_pos
 import signal_generation.receiver as sg_rec
 import signal_generation.source as sg_src
 
+
 @pytest.mark.plot
 def test_plot_correlation():
     # Set variables:
     sample_frequency = 500.0  # [kHz]
     pulse_lenth = 5  # [ms]
     signal_length = 10000  # [samples]
-
 
     positions = np.array(
         [
@@ -59,24 +59,29 @@ def test_plot_correlation():
         sound_speed=1500.0,
     )
 
-
     for i in range(len(resulting_signals)):
         resulting_signals[i] += sg_noise.generate_gaussian_noise(
-            length=signal_length,
-            variance=pinger.amplitude*0.25)
+            length=signal_length, variance=pinger.amplitude * 0.25
+        )
 
-    correlation_matrix, lag_matrix = correl.calculate_correlation_matrix(resulting_signals)
+    correlation_matrix, lag_matrix = correl.calculate_correlation_matrix(
+        resulting_signals
+    )
 
     fig, axs = plt.subplots(len(hydro_array), 1)
     fig.tight_layout()
 
     for index, result in enumerate(resulting_signals):
         axs[0].plot(result, label=f"Hydrophone {index}")
-        axs[0].legend(loc='upper right')
+        axs[0].legend(loc="upper right")
 
     for index in range(len(correlation_matrix)):
-        axs[index + 1].plot(lag_matrix[index], correlation_matrix[index], label=f"Hydrophone 0 and {index + 1}")
-        axs[index + 1].legend(loc='upper right')
+        axs[index + 1].plot(
+            lag_matrix[index],
+            correlation_matrix[index],
+            label=f"Hydrophone 0 and {index + 1}",
+        )
+        axs[index + 1].legend(loc="upper right")
 
     plt.show()
 
@@ -132,8 +137,8 @@ def test_accuracy_tdoa_array():
 
     for i in range(len(result)):
         result[i] += sg_noise.generate_gaussian_noise(
-            length=signal_length,
-            variance=pinger.amplitude*0)
+            length=signal_length, variance=pinger.amplitude * 0
+        )
 
     correlation_matrix, lag_matrix = correl.calculate_correlation_matrix(result)
     tdoa_array = tdoa.calculate_tdoa_array(correlation_matrix, lag_matrix)
@@ -149,8 +154,9 @@ def test_accuracy_tdoa_array():
 
     assert tdoa_is_correct
 
+
 def test_compare_with_result_from_teensy():
-    arr1 = [3.0, 5.2, 5.2, 6.7, 8.9, 2.0, 6.7, 6.7, 5.7, 0.0, 0.0] 
+    arr1 = [3.0, 5.2, 5.2, 6.7, 8.9, 2.0, 6.7, 6.7, 5.7, 0.0, 0.0]
     arr2 = [0.0, 0.0, 3.0, 5.2, 5.2, 6.7, 8.9, 2.0, 6.7, 6.7, 5.7]
 
     signals = [arr1, arr2]
@@ -158,7 +164,3 @@ def test_compare_with_result_from_teensy():
     correlation_matrix, lag_matrix = correl.calculate_correlation_matrix(signals)
 
     print(correlation_matrix[0])
-
-   
-
-

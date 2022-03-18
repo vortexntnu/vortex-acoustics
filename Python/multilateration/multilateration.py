@@ -14,7 +14,7 @@ def check_invalid_time(
     max_time_difference: float,
 ):
     """Checking if the time difference exceeds the maximum allowed time for a valid signal."""
-    return (abs(sample_diff) * sample_time) > max_time_diff
+    return (abs(sample_diff) * 1 / sample_frequency) > max_time_difference
 
 
 def check_valid_signals(

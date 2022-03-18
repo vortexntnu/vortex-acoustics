@@ -13,18 +13,18 @@ def calculate_correlation_matrix(
     A matrix containing the signals from the receivers.
 
     Return:
-    A matrix containing the correlation indexes between one signal and al the others.  
-    A matrix containing the lags.   
+    A matrix containing the correlation indexes between one signal and al the others.
+    A matrix containing the lags.
     """
 
     correlation_matrix = []
     lag_matrix = []
-    for i in range(len(signals)-1):
+    for i in range(len(signals) - 1):
         correlation_matrix.append(
-            signal.correlate(signals[0], signals[i+1], mode='full', method='direct')
+            signal.correlate(signals[0], signals[i + 1], mode="full", method="direct")
         )
         lag_matrix.append(
-            signal.correlation_lags(len(signals[0]), len(signals[i+1]), mode='full')
+            signal.correlation_lags(len(signals[0]), len(signals[i + 1]), mode="full")
         )
     return correlation_matrix, lag_matrix
 

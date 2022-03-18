@@ -7,7 +7,7 @@ import signal_generation.conversion as conv
 class TestConversionToIntegerType:
     @staticmethod
     def test_given_correct_arguments_then_succes():
-        converted_signal = conv.convert_to_integer_type(
+        conv.convert_to_integer_type(
             resulting_type=np.int32,
             input_signal=np.sin(np.linspace(start=0, stop=2 * np.pi, num=1000)),
             pre_offset=0.0,

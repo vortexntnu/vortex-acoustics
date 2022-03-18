@@ -1,13 +1,7 @@
-import logging
-
-import matplotlib.pyplot as plt
 import numpy as np
 
-import signal_generation as sg
 from multilateration import multilateration as ml
-from multilateration import parameters as params
 from signal_generation.positioning import Position
-from utilities import hyperboles
 from utilities import tdoa
 from utilities import plots
 
@@ -49,7 +43,7 @@ def plot_estimates(args):
         ]
     )
 
-    sample_frequencies = [ 100000 * i for i in range(1,10)]
+    sample_frequencies = [100000 * i for i in range(1, 10)]
 
     result_positions = []
     result_labels = []
@@ -158,10 +152,6 @@ def plot_grid(args):
 
 
 def plot_path(args):
-    xs = np.linspace(0,27,10)
-    ys = np.linspace(0,23,10)
-    zs = np.linspace(0,30,10)
-
     hydrophone_positions = np.array(
         [
             Position(
@@ -227,11 +217,10 @@ def plot_path(args):
         y=args.y,
         z=args.z,
     )
-    
+
     plots.plot_estimates_along_path(
         source_position=source_position,
         hydrophone_positions=hydrophone_positions,
         path_positions=path_positions,
         sample_frequency=args.sample_frequency,
     )
-

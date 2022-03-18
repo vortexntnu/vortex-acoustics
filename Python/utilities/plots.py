@@ -167,7 +167,7 @@ def plot_estimates_along_path(
     source_position: sg_pos.Position,
     hydrophone_positions: np.array,
     path_positions: np.array,
-    sample_frequency: float=100000,
+    sample_frequency: float = 100000,
 ):
     drone = Drone(
         hydrophone_positions=hydrophone_positions,
@@ -182,7 +182,7 @@ def plot_estimates_along_path(
         [source_position.y],
         [source_position.z],
         "rx",
-        label=f"Source",
+        label="Source",
     )
 
     for index, position in enumerate(path_positions):
@@ -246,8 +246,6 @@ def plot_hyperboles(
     hydrophone_positions,
     max_range: float = 20,
 ):
-    fig = plt.figure()
-
     colors = ["b", "c", "m", "y", "k"]
 
     sample_frequency = 1000000
@@ -267,7 +265,9 @@ def plot_hyperboles(
             sample_frequency=sample_frequency,
         )[:, 0][1:]
 
-        distance_of_arrival = tdoa_lag_array / sample_frequency * parameters.PhysicalConstants.SOUND_SPEED
+        distance_of_arrival = (
+            tdoa_lag_array / sample_frequency * parameters.PhysicalConstants.SOUND_SPEED
+        )
 
         pos_hyperbole_one, neg_hyperbole_one = hyperboles.generate_hyperbole_points(
             distance_difference=distance_of_arrival[0],
@@ -297,8 +297,8 @@ def plot_hyperboles(
 
         # plot receivers and source
         for position in hydrophone_positions:
-            plt.plot(position.x, position.y, 'gx')
-        plt.plot(source_position.x, source_position.y, f"rx")
+            plt.plot(position.x, position.y, "gx")
+        plt.plot(source_position.x, source_position.y, "rx")
 
     # plot settings
     plt.grid()
@@ -306,4 +306,3 @@ def plot_hyperboles(
     plt.ylim((-1) * max_range, max_range)
     plt.set_loglevel("info")
     plt.show()
-

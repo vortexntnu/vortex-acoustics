@@ -42,7 +42,7 @@ def calculate_distance(
     """
     distance = np.empty(len(hydro_array_positions))
     for index, position in enumerate(hydro_array_positions):
-        distance[index] = (abs(pinger_position - position))
+        distance[index] = abs(pinger_position - position)
 
     return distance
 
@@ -68,14 +68,16 @@ def check_tdoa_array_is_valid(
     """
 
     distances = calculate_distance(pinger_position, hydro_array.positions)
-    distance_diff_array = np.empty(len(hydro_array)-1)
-    for i in range(len(hydro_array)-1):
-        distance_diff_array[i] = distances[0]-distances[i+1]
+    distance_diff_array = np.empty(len(hydro_array) - 1)
+    for i in range(len(hydro_array) - 1):
+        distance_diff_array[i] = distances[0] - distances[i + 1]
 
-    correct_tdoa_array = distance_diff_array / 1500 * sampling_frequency*1000  # [samples]
+    correct_tdoa_array = (
+        distance_diff_array / 1500 * sampling_frequency * 1000
+    )  # [samples]
 
-    for i in range(len(hydro_array)-1):
-        diff = abs(correct_tdoa_array[i]-tdoa_array[i])
+    for i in range(len(hydro_array) - 1):
+        diff = abs(correct_tdoa_array[i] - tdoa_array[i])
         if diff > tol:
             return False
 
@@ -100,11 +102,13 @@ def find_diff_between_tdoa_array(
         An array containing the difference (in samples) between calculated result and theoretically correct result.
     """
     distances = calculate_distance(pinger_position, hydro_array.positions)
-    distance_diff_array = np.empty(len(hydro_array)-1)
-    for i in range(len(hydro_array)-1):
-        distance_diff_array[i] = distances[0]-distances[i+1]
+    distance_diff_array = np.empty(len(hydro_array) - 1)
+    for i in range(len(hydro_array) - 1):
+        distance_diff_array[i] = distances[0] - distances[i + 1]
 
-    correct_tdoa_array = distance_diff_array / 1500 * sampling_frequency*1000  # [samples]
+    correct_tdoa_array = (
+        distance_diff_array / 1500 * sampling_frequency * 1000
+    )  # [samples]
 
     diff_array = np.empty(len(tdoa_array))
     for index in range(len(tdoa_array)):
