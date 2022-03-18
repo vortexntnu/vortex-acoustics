@@ -1,0 +1,33 @@
+name: Build PlatformIO project
+
+on:
+  push:
+    branches:
+      - 'master'
+      - 'releases/**'
+  pull_request:
+
+env:
+  PLATFORMIO_PROJECT_DIR: './cpp/teensy/'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Setup PlatformIO
+        run: |
+          python3 -c "$(curl -fsSL https://raw.githubusercontent.com/platformio/platformio/master/scripts/get-platformio.py)"
+
+      - name: Checkout Git repository
+        uses: actions/checkout@v3
+
+      - name: Build project
+        run: $HOME/.platformio/penv/bin/platformio run
+        working-directory: ${{ env.PLATFORMIO_PROJECT_DIR }}
+
