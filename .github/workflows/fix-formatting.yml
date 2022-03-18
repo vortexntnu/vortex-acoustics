@@ -27,7 +27,7 @@ jobs:
       
       - name: Format Teensy C/C++ code
         run: |
-            find ./ -type f -regextype egrep -regex '${{ env.TEENSY_DIR }}\/(src|include|lib)\/.*\.(cpp|cxx|c|hpp|hxx|h)' |
+            find ${{ env.TEENSY_DIR }} -type f -regextype egrep -regex '\.\/(src|include|lib)\/.*\.(cpp|cxx|c|hpp|hxx|h)' |
             xargs clang-format -i
 
       - name: Run Python import sorting
