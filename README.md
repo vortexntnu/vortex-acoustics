@@ -24,6 +24,12 @@ Files with a short description:
 
   ANALYZE_DATA: Defines a class hydrophone which wraps the data-analyzis for each hydrophone
 
+### Teensy
+The source code used for the multilateration running on the Teensy 4.1 is placed in `cpp/teensy/`.
+
+#### Build Status
+[![Build PlatformIO project](https://github.com/vortexntnu/acoustics/actions/workflows/build-platformio.yml/badge.svg)](https://github.com/vortexntnu/acoustics/actions/workflows/build-platformio.yml)
+
 
 ## Resource files
 Resource files are found in the folder "Resource". 
