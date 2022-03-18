@@ -33,9 +33,6 @@ jobs:
       - name: Run Python import sorting
         run: python3 -m isort ${{ env.PYTHON_DIR}}
 
-      - name: Run Python flake8 check
-        run: python3 -m flake8 ${{ env.PYTHON_DIR}} --max-line-length=120 --select=F,W
-
       - name: Run Python black formatting 
         run: python3 -m black ${{ env.PYTHON_DIR}}
 
@@ -45,3 +42,7 @@ jobs:
           author_name: github-actions
           author_email: github-actions@github.com
           message: 'Fix formatting'
+
+      - name: Run Python flake8 check
+        run: python3 -m flake8 ${{ env.PYTHON_DIR}} --max-line-length=120 --select=F,W,E --ignore=W503,E203
+
