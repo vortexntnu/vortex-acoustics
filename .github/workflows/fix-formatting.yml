@@ -8,7 +8,6 @@ env:
 
 jobs:
   run-formatting:
-    name: Run formatting
     runs-on: ubuntu-latest
 
     steps:
