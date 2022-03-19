@@ -43,6 +43,9 @@ The Matlab code provided contains the calculations for the digital filter used i
 ## Python
 The Python folder provides code for analyzing the multilateration algorithm.
 
+### Pytest Status
+[![Run Python tests](https://github.com/vortexntnu/acoustics/actions/workflows/run-pytest.yml/badge.svg)](https://github.com/vortexntnu/acoustics/actions/workflows/run-pytest.yml)
+
 
 ## Future improvements/development
 
