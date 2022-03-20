@@ -1,10 +1,14 @@
+#pragma once
 
 #include "arm_math.h"
+#include <Arduino.h>
+#include <cassert>
 
 #ifndef HYDROPHONE_DETAILES
 #define HYDROPHONE_DETAILES
 
     #define NUM_HYDROPHONES 5
+    #define NUM_DIMENTIONS 4
 
     #define HYD_0_X_POS -0.11
     #define HYD_0_Y_POS 0.31
@@ -43,13 +47,22 @@
 
 #endif
 
-float32_t calculatePingerPosition(int32_t tdoaArray[]); 
+void calculatePingerPosition(
+    int32_t tdoaArray[], 
+    const arm_matrix_instance_f32* p_A, 
+    const arm_matrix_instance_f32* p_B,
+    arm_matrix_instance_f32* result); 
 
-float32_t** init_A_matrix(); 
+arm_matrix_instance_f32 init_A_matrix(); 
+arm_matrix_instance_f32 init_B_matrix(); 
 
-float32_t* init_B_matrix(); 
-
-void compute_A(int32_t tdoaArray[], float32_t** A); 
+void compute_A(int32_t tdoaArray[], float32_t* A); 
 void compute_B(int32_t tdoaArray[], float32_t* B); 
 
-//mabye an init func                                                                      
+arm_matrix_instance_f32 test_func(
+    int32_t tdoaArray[], 
+    const arm_matrix_instance_f32* p_A, 
+    const arm_matrix_instance_f32* p_B); 
+
+
+                                                                    
