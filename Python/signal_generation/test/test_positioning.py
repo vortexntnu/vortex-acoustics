@@ -1,14 +1,11 @@
 import numpy as np
-
-import pytest
-
 import signal_generation.positioning as sg_pos
 
 
 class TestPosition:
     @staticmethod
     def test_when_initialized_then_success():
-        position = sg_pos.Position()
+        sg_pos.Position()
 
     @staticmethod
     def test_given_close_to_equal_position_when_test_equality_then_equal():

@@ -3,7 +3,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-
 import signal_generation.conversion as sg_conv
 import signal_generation.noise as sg_noise
 import signal_generation.positioning as sg_pos

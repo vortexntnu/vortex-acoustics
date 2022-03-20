@@ -1,15 +1,7 @@
-import logging
-
-import matplotlib.pyplot as plt
 import numpy as np
-
-import signal_generation as sg
 from multilateration import multilateration as ml
-from multilateration import parameters as params
 from signal_generation.positioning import Position
-from utilities import hyperboles
-from utilities import tdoa
-from utilities import plots
+from utilities import plots, tdoa
 
 
 def plot_estimates(args):
@@ -49,7 +41,7 @@ def plot_estimates(args):
         ]
     )
 
-    sample_frequencies = [ 100000 * i for i in range(1,10)]
+    sample_frequencies = [100000 * i for i in range(1, 10)]
 
     result_positions = []
     result_labels = []
@@ -66,13 +58,17 @@ def plot_estimates(args):
             sample_frequency=frequency,
         )
 
-        result_positions.append(Position(
-            x=res_x,
-            y=res_y,
-            z=res_z,
-        ))
+        result_positions.append(
+            Position(
+                x=res_x,
+                y=res_y,
+                z=res_z,
+            )
+        )
 
-        result_labels.append(f"fs={frequency/1000} kHz, pos=({res_x:.1f},{res_y:.1f},{res_z:.1f})")
+        result_labels.append(
+            f"fs={frequency/1000} kHz, pos=({res_x:.1f},{res_y:.1f},{res_z:.1f})"
+        )
 
     plots.plot_positions(
         hydrophone_positions=hydrophone_positions,
@@ -86,23 +82,25 @@ def plot_hyperboles(args):
     radius = args.radius
     number_of_sources = args.n
 
-    hydrophone_positions = np.array([
-        Position(
-            x=1.0,
-            y=0,
-            z=0,
-        ),
-        Position(
-            x=-1.0,
-            y=0,
-            z=0,
-        ),
-        Position(
-            x=1.0,
-            y=2.2,
-            z=0,
-        ),
-    ])
+    hydrophone_positions = np.array(
+        [
+            Position(
+                x=1.0,
+                y=0,
+                z=0,
+            ),
+            Position(
+                x=-1.0,
+                y=0,
+                z=0,
+            ),
+            Position(
+                x=1.0,
+                y=2.2,
+                z=0,
+            ),
+        ]
+    )
 
     xs = np.linspace(-radius + 0.1, radius, number_of_sources)
     ys = np.sqrt(radius**2 - xs**2)
@@ -158,10 +156,6 @@ def plot_grid(args):
 
 
 def plot_path(args):
-    xs = np.linspace(0,27,10)
-    ys = np.linspace(0,23,10)
-    zs = np.linspace(0,30,10)
-
     hydrophone_positions = np.array(
         [
             Position(
@@ -227,11 +221,10 @@ def plot_path(args):
         y=args.y,
         z=args.z,
     )
-    
+
     plots.plot_estimates_along_path(
         source_position=source_position,
         hydrophone_positions=hydrophone_positions,
         path_positions=path_positions,
         sample_frequency=args.sample_frequency,
     )
-

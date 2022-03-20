@@ -1,0 +1,47 @@
+name: Run automated formatting
+
+on: [pull_request]
+
+env:
+  PYTHON_DIR: './Python/'
+  TEENSY_DIR: './cpp/teensy/'
+
+jobs:
+  run-formatting:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Install dependencies
+        run: pip install black flake8 isort
+
+      - name: Checkout Git repository
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref }}
+      
+      - name: Format Teensy C/C++ code
+        run: |
+            find ${{ env.TEENSY_DIR }} -type f -regextype egrep -regex '.*\.(cpp|cxx|c|hpp|hxx|h)' |
+            xargs clang-format -i
+
+      - name: Run Python import sorting
+        run: python3 -m isort ${{ env.PYTHON_DIR}}
+
+      - name: Run Python black formatting 
+        run: python3 -m black ${{ env.PYTHON_DIR}}
+
+      - name: Commit fixed formatting
+        uses: Endbug/add-and-commit@v9
+        with:
+          author_name: github-actions
+          author_email: github-actions@github.com
+          message: 'Fix formatting'
+
+      - name: Run Python flake8 check
+        run: python3 -m flake8 ${{ env.PYTHON_DIR}} --max-line-length=120 --select=F,W,E --ignore=W503,E203
+

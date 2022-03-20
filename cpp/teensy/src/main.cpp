@@ -1,9 +1,9 @@
-#include <Arduino.h>
+#include "algorithm"
 #include "arm_math.h"
 #include "stdio.h"
-#include "algorithm"
-
+#include <Arduino.h>
 
 int main(void) {
-    while(true){}
+    while (true) {
+    }
 }

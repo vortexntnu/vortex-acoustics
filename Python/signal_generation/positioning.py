@@ -35,7 +35,7 @@ class Position:
     def __abs__(
         self,
     ):
-        return np.sqrt(self.x ** 2 + self.y ** 2 + self.z ** 2)
+        return np.sqrt(self.x**2 + self.y**2 + self.z**2)
 
     def __eq__(
         self,

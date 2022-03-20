@@ -1,16 +1,8 @@
-import logging
-
-import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-
-import signal_generation as sg
 from multilateration import multilateration as ml
-from multilateration import parameters as params
 from signal_generation.positioning import Position
-from utilities import hyperboles
-from utilities import tdoa
-from utilities import plots
+from utilities import plots, tdoa
 
 
 @pytest.mark.plot
@@ -110,7 +102,7 @@ def test_plot_hyperboles():
     )
 
     xs = np.linspace(-radius + 0.1, radius, number_of_sources)
-    ys = np.sqrt(radius ** 2 - xs ** 2)
+    ys = np.sqrt(radius**2 - xs**2)
 
     source_positions = [(xs[i], ys[i]) for i, x in enumerate(xs)]
 
@@ -174,10 +166,6 @@ def test_plot_path():
         z=10,
     )
     sample_frequency = 300000
-
-    xs = np.linspace(0, 27, 10)
-    ys = np.linspace(0, 23, 10)
-    zs = np.linspace(0, 30, 10)
 
     hydrophone_positions = np.array(
         [

@@ -14,7 +14,6 @@ import re
 
 import numpy as np
 
-
 _SIGNED_INTEGER_TYPES = {
     "int8": np.int8,
     "int16": np.int16,

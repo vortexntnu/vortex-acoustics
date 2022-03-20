@@ -13,12 +13,8 @@
             length=5000,
         )
 """
-import logging
-from dataclasses import dataclass
-
 import numpy as np
 import scipy.signal.windows
-
 from signal_generation.positioning import Position
 
 

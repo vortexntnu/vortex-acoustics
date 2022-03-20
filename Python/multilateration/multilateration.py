@@ -2,9 +2,8 @@
 """
 
 
-import numpy as np
-
 import multilateration.parameters as param
+import numpy as np
 from signal_generation.positioning import find_maximum_distance
 
 
@@ -14,7 +13,7 @@ def check_invalid_time(
     max_time_difference: float,
 ):
     """Checking if the time difference exceeds the maximum allowed time for a valid signal."""
-    return (abs(sample_diff) * sample_time) > max_time_diff
+    return (abs(sample_diff) * 1 / sample_frequency) > max_time_difference
 
 
 def check_valid_signals(
@@ -118,12 +117,12 @@ def calculate_tdoa_matrices(
             1
             / 2
             * (
-                reference_hydrophone_position.x ** 2
-                - hydrophone_position.x ** 2
-                + reference_hydrophone_position.y ** 2
-                - hydrophone_position.y ** 2
-                + reference_hydrophone_position.z ** 2
-                - hydrophone_position.z ** 2
+                reference_hydrophone_position.x**2
+                - hydrophone_position.x**2
+                + reference_hydrophone_position.y**2
+                - hydrophone_position.y**2
+                + reference_hydrophone_position.z**2
+                - hydrophone_position.z**2
                 + (tdoa_array[i] * param.PhysicalConstants.SOUND_SPEED) ** 2
             )
         )

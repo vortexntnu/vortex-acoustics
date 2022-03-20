@@ -1,0 +1,36 @@
+name: Run Python tests
+
+on:
+  push:
+    branches:
+      - 'master'
+      - 'releases/**'
+  pull_request:
+
+env:
+  PYTHON_DIR: './Python/'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Checkout Git repository
+        uses: actions/checkout@v3
+
+      - name: Setup virtualenv
+        run: |
+            python3 -m venv venv
+            source ./venv/bin/activate
+            python -m pip install -r '${{ env.PYTHON_DIR }}/requirements.txt'
+      
+      - name: Run Pytest
+        run: |
+            source ./venv/bin/activate
+            python -m pytest ${{ env.PYTHON_DIR }} --verbose
+

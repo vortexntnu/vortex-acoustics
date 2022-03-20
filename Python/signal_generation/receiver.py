@@ -1,9 +1,7 @@
-import numpy as np
 from dataclasses import dataclass
 
-import signal_generation.conversion as sg_conv
+import numpy as np
 import signal_generation.positioning as sg_pos
-import signal_generation.source as sg_src
 
 
 @dataclass

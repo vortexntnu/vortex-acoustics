@@ -2,13 +2,10 @@
 Provides the possibility to change frames.
 Plot the signals together with the correlated signals, and find the accuracy of the result.
 """
+import correlation.correlation as correl
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-
-import correlation.correlation as correl
-import correlation.tdoa as tdoa
-
 import signal_generation.positioning as sg_pos
 import signal_generation.receiver as sg_rec
 import signal_generation.source as sg_src
@@ -59,24 +56,19 @@ def test_plot_of_signals_and_correlation_signal():
 
     correlation_matrix, lag_matrix = correl.calculate_correlation_matrix(cut_result)
 
-    #  Not necessary for test, but nice for debugging.
-    tdoa_array = tdoa.calculate_tdoa_array(correlation_matrix, lag_matrix)
-    differance_tdoa_array = tdoa.find_diff_between_tdoa_array(
-        hydro_array=hydro_array,
-        tdoa_array=tdoa_array,
-        pinger_position=pinger.position,
-        sampling_frequency=pinger.sampling_frequency,
-    )
-
     fig, axs = plt.subplots(len(hydro_array), 1)
     fig.tight_layout()
 
     for index, result in enumerate(cut_result):
         axs[0].plot(result, label=f"Hydrophone {index}")
-        axs[0].legend(loc='upper left')
+        axs[0].legend(loc="upper left")
 
     for index in range(len(correlation_matrix)):
-        axs[index + 1].plot(lag_matrix[index], correlation_matrix[index], label=f"Hydrophone 0 and {index + 1}")
-        axs[index + 1].legend(loc='upper left')
+        axs[index + 1].plot(
+            lag_matrix[index],
+            correlation_matrix[index],
+            label=f"Hydrophone 0 and {index + 1}",
+        )
+        axs[index + 1].legend(loc="upper left")
 
     plt.show()

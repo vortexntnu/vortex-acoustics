@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 import pytest
-
 from signal_generation.positioning import Position
 from utilities import hyperboles
 
@@ -45,17 +44,24 @@ def test_generate_hyperbole():
         ),
     )
 
-    plt.plot(position_one.x, position_one.y, color="red", marker="o", label="Position 1")
-    plt.plot(position_two.x, position_two.y, color="orange", marker="o", label="Position 2")
-    plt.plot(position_three.x, position_three.y, color="magenta", marker="o", label="Position 3")
+    plt.plot(
+        position_one.x, position_one.y, color="red", marker="o", label="Position 1"
+    )
+    plt.plot(
+        position_two.x, position_two.y, color="orange", marker="o", label="Position 2"
+    )
+    plt.plot(
+        position_three.x,
+        position_three.y,
+        color="magenta",
+        marker="o",
+        label="Position 3",
+    )
 
-    plt.plot(pos_12[0], pos_12[1], color='blue', label="pos_12")
-    plt.plot(neg_12[0], neg_12[1], color='blue', label="neg_12")
-    plt.plot(pos_13[0], pos_13[1], color='green', label="pos_13")
-    plt.plot(neg_13[0], neg_13[1], color='green', label="neg_13")
+    plt.plot(pos_12[0], pos_12[1], color="blue", label="pos_12")
+    plt.plot(neg_12[0], neg_12[1], color="blue", label="neg_12")
+    plt.plot(pos_13[0], pos_13[1], color="green", label="pos_13")
+    plt.plot(neg_13[0], neg_13[1], color="green", label="neg_13")
     plt.grid()
     plt.legend()
     plt.show()
-
-
-
