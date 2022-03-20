@@ -31,14 +31,14 @@
 #ifndef PHYSICAL_CONSTANTS
 #define PHYSICAL_CONSTANTS
 
-  #define SOUND_SPEED         1480.0f          
+  #define SOUND_SPEED         1480.0         
 
 #endif
 
 #ifndef DSP_CONSTANTS
 #define DSP_CONSTANTS
 
-  #define SAMPLING_FREQ         300 //[kHz]
+  #define SAMPLING_FREQ         300000 //[Hz]
   #define SIGNAL_LENGTH         40*SAMPLING_FREQ //[sampels]      
 
 #endif
@@ -48,5 +48,8 @@ float32_t calculatePingerPosition(int32_t tdoaArray[]);
 float32_t** init_A_matrix(); 
 
 float32_t* init_B_matrix(); 
+
+void compute_A(int32_t tdoaArray[], float32_t** A); 
+void compute_B(int32_t tdoaArray[], float32_t* B); 
 
 //mabye an init func                                                                      
