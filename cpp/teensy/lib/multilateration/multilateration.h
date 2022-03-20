@@ -47,22 +47,31 @@
 
 #endif
 
+struct HydrophonePositions {
+  float32_t pos_x; 
+  float32_t pos_y; 
+  float32_t pos_z; 
+}; 
+
 void calculatePingerPosition(
     int32_t tdoaArray[], 
-    const arm_matrix_instance_f32* p_A, 
-    const arm_matrix_instance_f32* p_B,
+    const arm_matrix_instance_f32* pA, 
+    const arm_matrix_instance_f32* pB,
     arm_matrix_instance_f32* result); 
 
-arm_matrix_instance_f32 init_A_matrix(); 
-arm_matrix_instance_f32 init_B_matrix(); 
+void initialComputationA(float32_t* AData);  
+void compute_A(int32_t tdoaArray[], float32_t* AData); 
+void compute_B(int32_t tdoaArray[], float32_t* BData); 
 
-void compute_A(int32_t tdoaArray[], float32_t* A); 
-void compute_B(int32_t tdoaArray[], float32_t* B); 
+void LSE(
+    const arm_matrix_instance_f32* pA, 
+    const arm_matrix_instance_f32* pB, 
+    arm_matrix_instance_f32* pResult
+); 
 
-arm_matrix_instance_f32 test_func(
-    int32_t tdoaArray[], 
-    const arm_matrix_instance_f32* p_A, 
-    const arm_matrix_instance_f32* p_B); 
+void initHydrophonePositions(HydrophonePositions* hydrophonePositions); 
+
+
 
 
                                                                     

@@ -37,25 +37,20 @@ void print_B(float32_t* B){
 int main(void) {
     Serial.begin(9600); 
     while(!Serial){}
-    Serial.println("Serial connected"); 
+    Serial.println("Serial connected"); //HydrophonePositions* pHydrophonePositions = &hydrophonePositions;
 
-    int32_t tdoa_array[NUM_HYDROPHONES] = {3,4,5,6};
-    
-    arm_matrix_instance_f32 A = init_A_matrix();
-    const arm_matrix_instance_f32* pA = &A; 
-    arm_matrix_instance_f32 B = init_B_matrix();
-    const arm_matrix_instance_f32* pB = &B; 
+    HydrophonePositions* hydrophonePositions = new HydrophonePositions[NUM_HYDROPHONES]; 
+    initHydrophonePositions(hydrophonePositions); 
+
+    arm_matrix_instance_f32 A = {NUM_HYDROPHONES, NUM_DIMENTIONS+1, new float32_t [NUM_HYDROPHONES * (NUM_DIMENTIONS+1)]}; 
+    arm_matrix_instance_f32 B = {NUM_HYDROPHONES, 1, new float32_t[NUM_HYDROPHONES]}; 
     arm_matrix_instance_f32 Result = {NUM_HYDROPHONES, 1, new float32_t[NUM_HYDROPHONES]}; 
 
-    test_func(tdoa_array, pA, pB); 
-
-    calculatePingerPosition(tdoa_array, pA, pB, &Result); 
-
-    Serial.println("Printing matrices");
-    print_matrix(A.pData, NUM_HYDROPHONES, NUM_DIMENTIONS+1);  
 
     delete[] A.pData; 
     delete[] B.pData; 
+    delete[] Result.pData;
+    delete[] hydrophonePositions;  
     
     while(true){}
 }
