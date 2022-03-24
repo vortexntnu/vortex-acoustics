@@ -141,6 +141,8 @@ def test_accuracy_tdoa_array():
     correlation_matrix, lag_matrix = correl.calculate_correlation_matrix(result)
     tdoa_array = tdoa.calculate_tdoa_array(correlation_matrix, lag_matrix)
 
+    print(tdoa_array)
+
     required_accuracy = 10  # [samples]
     tdoa_is_correct = tdoa.check_tdoa_array_is_valid(
         required_accuracy,
