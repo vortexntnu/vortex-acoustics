@@ -66,26 +66,13 @@ void LSE(
 
 
 
-void initialComputationA(float32_t* AData){ 
-    *(AData + 0*4 + 0)= HYD_0_X_POS-HYD_1_X_POS; 
-    *(AData + 0*4 + 1)= HYD_0_Y_POS-HYD_1_Y_POS; 
-    *(AData + 0*4 + 2)= HYD_0_Z_POS-HYD_1_Z_POS; 
-    *(AData + 0*4 + 3)= 0.0; 
-
-    *(AData + 1*4 + 0) = HYD_0_X_POS-HYD_2_X_POS; 
-    *(AData + 1*4 + 1) = HYD_0_Y_POS-HYD_2_Y_POS; 
-    *(AData + 1*4 + 2) = HYD_0_Z_POS-HYD_2_Z_POS; 
-    *(AData + 1*4 + 3) = 0.0; 
-
-    *(AData + 2*4 + 0) = HYD_0_X_POS-HYD_3_X_POS; 
-    *(AData + 2*4 + 1) = HYD_0_Y_POS-HYD_3_Y_POS; 
-    *(AData + 2*4 + 2) = HYD_0_Z_POS-HYD_3_Z_POS; 
-    *(AData + 2*4 + 3) = 0.0; 
-
-    *(AData + 3*4 + 0) = HYD_0_X_POS-HYD_4_X_POS; 
-    *(AData + 3*4 + 1) = HYD_0_Y_POS-HYD_4_Y_POS; 
-    *(AData + 3*4 + 2)= HYD_0_Z_POS-HYD_4_Z_POS; 
-    *(AData + 3*4 + 3) = 0.0; 
+void initialComputationA(float32_t* AData, HydrophonePositions hydrophonePositions[]){ 
+    for (int i = 0; i< (NUM_HYDROPHONES-1); i++){
+        *(AData + i*NUM_HYDROPHONES + 0) = hydrophonePositions[0].pos_x - hydrophonePositions[i].pos_x; 
+        *(AData + i*NUM_HYDROPHONES + 1) = hydrophonePositions[0].pos_y - hydrophonePositions[i].pos_y; 
+        *(AData + i*NUM_HYDROPHONES + 2) = hydrophonePositions[0].pos_z - hydrophonePositions[i].pos_z; 
+        *(AData + i*NUM_HYDROPHONES + 3) = 0.0; 
+    }
 }
 
 void compute_A(int32_t tdoaArray[], float32_t* AData){
