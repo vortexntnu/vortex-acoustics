@@ -5,8 +5,7 @@ from pathlib import Path
 import numpy as np
 from jinja2 import Environment, FileSystemLoader
 
-
-FILE_PATH = os.path.abspath(os.path.dirname(__file__)) 
+FILE_PATH = os.path.abspath(os.path.dirname(__file__))
 TEMPLATES_DIR = Path(FILE_PATH) / "templates"
 
 TYPE_TABLE = {
@@ -78,13 +77,14 @@ def generate_header(
     result_data = convert_to_compatible_type(result_data)
 
     with open(output_path, "w") as output_file:
-        output_file.write(TEMPLATE.render(
-            namespace=namespace,
-            input_type="{data_type}_t".format(data_type=str(input_data.dtype)),
-            input_dimensions=convert_shape_to_c_dimension(input_data),
-            input_data=input_data.flatten(),
-            result_type="{data_type}_t".format(data_type=str(result_data.dtype)),
-            result_dimensions=convert_shape_to_c_dimension(result_data),
-            result_data=result_data.flatten(),
-        ))
-
+        output_file.write(
+            TEMPLATE.render(
+                namespace=namespace,
+                input_type="{data_type}_t".format(data_type=str(input_data.dtype)),
+                input_dimensions=convert_shape_to_c_dimension(input_data),
+                input_data=input_data.flatten(),
+                result_type="{data_type}_t".format(data_type=str(result_data.dtype)),
+                result_dimensions=convert_shape_to_c_dimension(result_data),
+                result_data=result_data.flatten(),
+            )
+        )
