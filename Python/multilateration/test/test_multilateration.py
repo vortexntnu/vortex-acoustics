@@ -1,3 +1,4 @@
+from random import sample
 import numpy as np
 
 import multilateration.multilateration as mult
@@ -113,8 +114,8 @@ def test_trilateration_algorithm():
     actual position to check if within given tolerance value.
     Only considering x and y, since we only have three hydrophones.
     """
-    tolerance = 3
-    sample_frequency = 100000
+    tolerance = 4
+    sample_frequency = 300000
 
     tdoa_sample_array = generate_tdoa_lag_array(
         hydrophone_positions=hydrophone_positions,
@@ -135,3 +136,25 @@ def test_trilateration_algorithm():
     )
 
     assert abs(source_position - res_position) < tolerance
+
+
+def test_compare_with_teensy():
+
+    tdoa_sample_array = np.empty(4, int)
+    tdoa_sample_array[0] = 610
+    tdoa_sample_array[1] = -67
+    tdoa_sample_array[2] = 549
+    tdoa_sample_array[3] = 290
+
+    sample_frequency = 300
+
+    res_x, res_y, res_z = mult.calculate_pinger_position(
+    tdoa_lag_array=tdoa_sample_array,
+    hydrophone_positions=hydrophone_positions,
+    sample_frequency=sample_frequency,
+    )
+
+    print(f"x: {res_x}, y: {res_y}, z: {res_z} ") 
+
+
+
