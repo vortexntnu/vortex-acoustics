@@ -8,7 +8,7 @@
 #define HYDROPHONE_DETAILES
 
     #define NUM_HYDROPHONES 5
-    #define NUM_DIMENTIONS 4
+    #define NUM_DIMENTIONS 3
 
     #define HYD_0_X_POS -0.11
     #define HYD_0_Y_POS 0.31
