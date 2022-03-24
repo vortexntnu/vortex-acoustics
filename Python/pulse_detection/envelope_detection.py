@@ -15,8 +15,8 @@ def asynchronous_full_wave(
     )
 
     signal = scipy.signal.lfilter(b, a, np.abs(signal))
-    return signal
 
+    return signal
 
 def asynchronous_hilbert_complex(
     signal,
