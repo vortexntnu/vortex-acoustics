@@ -59,7 +59,7 @@ void calculatePingerPosition(
     const arm_matrix_instance_f32* pB,
     arm_matrix_instance_f32* result); 
 
-void initialComputationA(float32_t* AData);  
+void initialComputationA(float32_t* AData, HydrophonePositions hydrophonePositions[]);  
 void compute_A(int32_t tdoaArray[], float32_t* AData); 
 void compute_B(int32_t tdoaArray[], float32_t* BData); 
 
