@@ -6,45 +6,69 @@ import scipy.signal
 import pulse_detection.envelope_detection as pd_ed
 
 
-def envelope_based_detection(
-    signal,
+def detect_pulse_by_envelope_and_mean_variance(
+    envelope,
     carrier_frequency,
-    pulse_length: float = 30,  # [ms]
+    frame_length: int = 10,
+    sampling_frequency: float = 500,  # [kHz]
+    threshold: float = None,
 ):
     """ Uses the signal envelope and threshold generated from mean and
     variance to detect pulses.
     """
-    sampling_frequency = 500  # [kHz]
+    # calculate threshold:
+    # the idea is that given a pulse length of a few micro seconds and
+    # period of 2s, calculating the historic mean and variance will align
+    # with the noise mean and variance
+    historic_mean = np.mean(envelope)
+    historic_variance = np.var(envelope)
+    logging.debug(f"Historic Mean: {historic_mean:.3f}")
+    logging.debug(f"Historic Variance: {historic_variance:.3f}")
 
+    pulse_detected = np.zeros(len(envelope) - frame_length, dtype=np.bool_)
+
+    if threshold is None:
+        threshold = historic_mean + 3*historic_variance
+        logging.debug(f"Threshold set at: {threshold:.2f}")
+
+    for index in range(0, len(envelope) - frame_length):
+        frame = envelope[index:(index+frame_length)]
+        above_treshold = frame > threshold
+        pulse_detected[index] = np.all(above_treshold)
+
+    return pulse_detected
+
+
+def detect_pulse_by_envelope_and_differentiation(
+    signal,
+    carrier_frequency,
+    downsampling_factor: int = 300,
+    sampling_frequency: float = 500,  # [kHz]
+):
     envelope = pd_ed.asynchronous_full_wave(
         signal=signal,
         carrier_frequency=carrier_frequency,
         sampling_frequency=sampling_frequency,
     )
 
-    # calculate threshold:
-    # the idea is that given a pulse length of a few micro seconds and
-    # period of 2s, calculating the historic mean and variance will align
-    # with the noise mean and variance
-    frame_length = 200
-    logging.debug(f"Frame Length: {frame_length}")
+    frame_length = downsampling_factor
+    envelope_means = np.zeros(len(envelope) // frame_length)
+    for index in range(0, len(envelope_means)):
+        env_index = index * frame_length
+        envelope_means[index] = np.mean(envelope[env_index:env_index+frame_length])
 
-    historic_mean = np.mean(envelope)
-    historic_variance = np.var(envelope)
-    means = np.zeros(len(envelope) - frame_length)
-    variances = np.zeros(len(means))
+    differentiated_means = scipy.signal.lfilter(
+        [1, -1],
+        [1],
+        envelope_means,
+    )
+    diff_mean = np.mean(differentiated_means)
+    diff_var = np.var(differentiated_means)
+    logging.debug(f"Mean: {diff_mean}")
+    logging.debug(f"Variance: {diff_var}")
 
-    for index in range(0, len(means)):
-        frame = envelope[index:(index+frame_length)]
-        means[index] = np.mean(frame)
-        variances[index] = np.var(frame)
+    threshold = diff_mean + 3 * diff_var
 
-    logging.debug(f"Min Index: {np.argmin(means)}")
-    logging.debug(f"Max Index: {np.argmax(means)}")
-    threshold = np.mean(means) + 3*np.var(envelope)
+    transition_detected = differentiated_means > threshold
 
-    logging.debug(f"Threshold set at: {threshold:.2f}")
-
-    # find transition of threshold
-    pulse_detected = means > threshold
-    return pulse_detected
+    return transition_detected, differentiated_means
