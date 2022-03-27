@@ -28,7 +28,7 @@
 
     #define HYD_4_X_POS 0.4
     #define HYD_4_Y_POS 0.0
-    #define HYD_4_Z_POS 0.4
+    #define HYD_4_Z_POS -0.4
 
 #endif
 

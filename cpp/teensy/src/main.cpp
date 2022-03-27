@@ -22,7 +22,7 @@ int main(void) {
     while(!Serial){}
     Serial.println("Serial connected"); 
 
-    int32_t tdoaArray[NUM_HYDROPHONES-1] = {2,3,4,5}; 
+    int32_t tdoaArray[NUM_HYDROPHONES-1] = {610, -67, 549, 290}; 
 
     HydrophonePositions* hydrophonePositions = new HydrophonePositions[NUM_HYDROPHONES]; 
     initHydrophonePositions(hydrophonePositions); 
@@ -31,11 +31,17 @@ int main(void) {
     arm_matrix_instance_f32 B = {NUM_HYDROPHONES-1, 1, new float32_t[NUM_HYDROPHONES-1]}; 
     arm_matrix_instance_f32 Result = {NUM_HYDROPHONES-1, 1, new float32_t[NUM_HYDROPHONES-1]}; 
 
-    initialComputationA(A.pData, hydrophonePositions);  
+    initialComputationA(A.pData, hydrophonePositions); 
+    print_matrix(A.pData, NUM_HYDROPHONES, NUM_DIMENTIONS+1);  
     compute_A(tdoaArray, A.pData);
     Serial.println("A computed.");  
     compute_B(tdoaArray, B.pData); 
     Serial.println("B computed."); 
+
+    print_matrix(A.pData, NUM_HYDROPHONES, NUM_DIMENTIONS+1); 
+    /*
+    Compared to python result: all elem in last column are wrong, 
+    */
 
     calculatePingerPosition(tdoaArray, &A, &B, &Result);
 
@@ -49,7 +55,6 @@ int main(void) {
     Serial.println("Mem deallocated");  
     
     while(true){
-        Serial.println("Loopoing"); 
         delay(1000); 
     }
 }

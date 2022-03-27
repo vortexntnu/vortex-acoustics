@@ -146,15 +146,69 @@ def test_compare_with_teensy():
     tdoa_sample_array[2] = 549
     tdoa_sample_array[3] = 290
 
-    sample_frequency = 300
+    sample_frequency = 300000 #or 300 000 ? 
 
-    res_x, res_y, res_z = mult.calculate_pinger_position(
-    tdoa_lag_array=tdoa_sample_array,
-    hydrophone_positions=hydrophone_positions,
-    sample_frequency=sample_frequency,
+    hydrophone_positions = np.array(
+    [
+        Position(
+            x=-0.11,
+            y=0.31,
+            z=0.1,
+        ),
+        Position(
+            x=0.11,
+            y=0.31,
+            z=0.1,
+        ),
+        Position(
+            x=0.0,
+            y=-0.24,
+            z=0.0,
+        ),
+        Position(
+            x=0.5,
+            y=-0.1,
+            z=0.4,
+        ),
+        Position(
+            x=0.4,
+            y=0.0,
+            z=-0.4,
+        ),
+    ]
     )
 
-    print(f"x: {res_x}, y: {res_y}, z: {res_z} ") 
+    #x_estimate, y_estimate, z_estimate = mult.calculate_pinger_position(
+    #tdoa_lag_array=tdoa_sample_array,
+    #hydrophone_positions=hydrophone_positions,
+    #sample_frequency=sample_frequency,)
+
+    tdoa_array = tdoa_sample_array / sample_frequency
+
+    A, B = mult.calculate_tdoa_matrices(
+        tdoa_array=tdoa_array,
+        hydrophone_positions=hydrophone_positions,
+    )
+
+    print("\n")
+    print(A)
+
+    A_T = np.transpose(A)
+
+    A_dot_A_T = np.matmul(A_T, A)
+
+    A_dot_A_T_inv = np.linalg.inv(A_dot_A_T)
+
+    solution_vec = np.matmul(
+        A_dot_A_T_inv, np.matmul(A_T, B)
+    )  # (A_T * A).invers() * A_T * B
+
+    x_estimate = solution_vec[0]
+    y_estimate = solution_vec[1]
+    z_estimate = solution_vec[2]
+    
+
+    print(f"x: {x_estimate}, y: {y_estimate}, z: {z_estimate} ") 
 
 
 
