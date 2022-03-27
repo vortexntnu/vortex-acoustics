@@ -2,19 +2,23 @@
 
 /*
 TODO: 
-- compare results to those from python
+- check naming 
+- clean comute B
+- clean python test mabye
+- acceptance test for matrisies
 
 */
 
 
 void calculatePingerPosition(
     int32_t tdoaArray[], 
+    HydrophonePositions hydrophonePositions[],
     const arm_matrix_instance_f32* pA, 
     const arm_matrix_instance_f32* pB, 
     arm_matrix_instance_f32* pResult
     ){
         compute_A(tdoaArray, pA->pData); 
-        compute_B(tdoaArray, pB->pData); 
+        compute_B(tdoaArray, hydrophonePositions ,pB->pData); 
         LSE(pA, pB, pResult); 
     }
 
@@ -81,30 +85,14 @@ void compute_A(int32_t tdoaArray[], float32_t* AData){
     } 
 }
 
-void compute_B(int32_t tdoaArray[], float32_t* Bdata){ //fiks denne
-    Bdata[0] = 0.5*(
-    pow(HYD_0_X_POS, 2)-pow(HYD_1_X_POS,2)
-    +pow(HYD_0_Y_POS, 2)-pow(HYD_1_Y_POS, 2)
-    +pow(HYD_0_Z_POS, 2)-pow(HYD_1_Z_POS, 2)
-    +pow(tdoaArray[0]*SOUND_SPEED/SAMPLING_FREQ, 2)); 
-
-    Bdata[1] = 0.5*(
-    pow(HYD_0_X_POS, 2)-pow(HYD_2_X_POS,2)
-    +pow(HYD_0_Y_POS, 2)-pow(HYD_2_Y_POS, 2)
-    +pow(HYD_0_Z_POS, 2)-pow(HYD_2_Z_POS, 2)
-    +pow(tdoaArray[1]*SOUND_SPEED/SAMPLING_FREQ, 2));
-
-    Bdata[2] = 0.5*(
-    pow(HYD_0_X_POS, 2)-pow(HYD_3_X_POS,2)
-    +pow(HYD_0_Y_POS, 2)-pow(HYD_3_Y_POS, 2)
-    +pow(HYD_0_Z_POS, 2)-pow(HYD_3_Z_POS, 2)
-    +pow(tdoaArray[2]*SOUND_SPEED/SAMPLING_FREQ, 2));
-
-    Bdata[3] = 0.5*(
-    pow(HYD_0_X_POS, 2)-pow(HYD_4_X_POS,2)
-    +pow(HYD_0_Y_POS, 2)-pow(HYD_4_Y_POS, 2)
-    +pow(HYD_0_Z_POS, 2)-pow(HYD_4_Z_POS, 2)
-    +pow(tdoaArray[3]*SOUND_SPEED/SAMPLING_FREQ, 2));
+void compute_B(int32_t tdoaArray[], HydrophonePositions hydrophonePositions[], float32_t* Bdata){ 
+    for (int i = 0; i < (NUM_HYDROPHONES-1); i++){
+        *(Bdata +i) = 0.5*(
+            pow(hydrophonePositions[0].pos_x, 2)-pow(hydrophonePositions[i+1].pos_x,2)
+            +pow(hydrophonePositions[0].pos_y, 2)-pow(hydrophonePositions[i+1].pos_y, 2)
+            +pow(hydrophonePositions[0].pos_z, 2)-pow(hydrophonePositions[i+1].pos_z, 2)
+            +pow(tdoaArray[i]*SOUND_SPEED/SAMPLING_FREQ, 2)); 
+    }
 }
 
 void initHydrophonePositions(HydrophonePositions* hydrophonePositions){

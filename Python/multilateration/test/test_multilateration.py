@@ -137,10 +137,10 @@ def test_trilateration_algorithm():
 def test_compare_with_teensy():
 
     tdoa_sample_array = np.empty(4, int)
-    tdoa_sample_array[0] = 610
-    tdoa_sample_array[1] = -67
-    tdoa_sample_array[2] = 549
-    tdoa_sample_array[3] = 290
+    tdoa_sample_array[0] = 1
+    tdoa_sample_array[1] = 0
+    tdoa_sample_array[2] = 2
+    tdoa_sample_array[3] = 0
 
     sample_frequency = 300000 #or 300 000 ? 
 
