@@ -142,7 +142,7 @@ def test_compare_with_teensy():
     tdoa_sample_array[2] = 2
     tdoa_sample_array[3] = 0
 
-    sample_frequency = 300000 #or 300 000 ? 
+    sample_frequency = 300000
 
     hydrophone_positions = np.array(
     [
@@ -174,34 +174,10 @@ def test_compare_with_teensy():
     ]
     )
 
-    #x_estimate, y_estimate, z_estimate = mult.calculate_pinger_position(
-    #tdoa_lag_array=tdoa_sample_array,
-    #hydrophone_positions=hydrophone_positions,
-    #sample_frequency=sample_frequency,)
-
-    tdoa_array = tdoa_sample_array / sample_frequency
-
-    A, B = mult.calculate_tdoa_matrices(
-        tdoa_array=tdoa_array,
-        hydrophone_positions=hydrophone_positions,
-    )
-
-    print("\n")
-    print(A)
-
-    A_T = np.transpose(A)
-
-    A_dot_A_T = np.matmul(A_T, A)
-
-    A_dot_A_T_inv = np.linalg.inv(A_dot_A_T)
-
-    solution_vec = np.matmul(
-        A_dot_A_T_inv, np.matmul(A_T, B)
-    )  # (A_T * A).invers() * A_T * B
-
-    x_estimate = solution_vec[0]
-    y_estimate = solution_vec[1]
-    z_estimate = solution_vec[2]
+    x_estimate, y_estimate, z_estimate = mult.calculate_pinger_position(
+    tdoa_lag_array=tdoa_sample_array,
+    hydrophone_positions=hydrophone_positions,
+    sample_frequency=sample_frequency,)
     
 
     print(f"x: {x_estimate}, y: {y_estimate}, z: {z_estimate} ") 

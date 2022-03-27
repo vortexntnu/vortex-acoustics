@@ -53,7 +53,7 @@ struct HydrophonePositions {
   float32_t pos_z; 
 }; 
 
-void calculatePingerPosition(
+arm_status calculatePingerPosition(
     int32_t tdoaArray[], 
     HydrophonePositions hydrophonePositions[],
     const arm_matrix_instance_f32* pA, 
@@ -64,7 +64,7 @@ void initialComputationA(float32_t* AData, HydrophonePositions hydrophonePositio
 void compute_A(int32_t tdoaArray[], float32_t* AData); 
 void compute_B(int32_t tdoaArray[], HydrophonePositions hydrophonePositions[], float32_t* BData); 
 
-void LSE(
+arm_status LSE(
     const arm_matrix_instance_f32* pA, 
     const arm_matrix_instance_f32* pB, 
     arm_matrix_instance_f32* pResult
