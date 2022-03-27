@@ -67,9 +67,31 @@ void test_with_small_values_for_tdoa(){
 
 }
 
+void test_tdoa_with_zero_values(){
+    int32_t tdoaAray[NUM_HYDROPHONES-1] = {0,0,0,0}; 
+
+    HydrophonePositions* hydrophonePositions = new HydrophonePositions[NUM_HYDROPHONES]; 
+    initHydrophonePositions(hydrophonePositions); 
+
+    arm_matrix_instance_f32 A = {NUM_HYDROPHONES-1, NUM_DIMENTIONS+1, new float32_t [NUM_HYDROPHONES * (NUM_DIMENTIONS+1)]}; 
+    arm_matrix_instance_f32 B = {NUM_HYDROPHONES-1, 1, new float32_t[NUM_HYDROPHONES]}; 
+    arm_matrix_instance_f32 Result = {NUM_HYDROPHONES-1, 1, new float32_t[NUM_HYDROPHONES]}; 
+
+    initialComputationA(A.pData, hydrophonePositions); 
+    arm_status status = calculatePingerPosition(tdoaAray, hydrophonePositions, &A, &B, &Result);
+    TEST_ASSERT_FALSE(status == ARM_MATH_SUCCESS); 
+
+    delete[] A.pData; 
+    delete[] B.pData; 
+    delete[] Result.pData;
+    delete[] hydrophonePositions; 
+
+}
+
 int main(int argc, char **argv) {
     UNITY_BEGIN(); 
     RUN_TEST(test_calculate_pinger_position); 
     RUN_TEST(test_with_small_values_for_tdoa); 
+    RUN_TEST(test_tdoa_with_zero_values); 
     UNITY_END(); 
 }
