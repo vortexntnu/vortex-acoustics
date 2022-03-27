@@ -76,8 +76,8 @@ void initialComputationA(float32_t* AData, HydrophonePositions hydrophonePositio
 }
 
 void compute_A(int32_t tdoaArray[], float32_t* AData){
-    for (int i = 0; i< NUM_HYDROPHONES-1; i++){
-        *(AData +i*4 + 3) = tdoaArray[i]*SOUND_SPEED/SAMPLING_FREQ;
+    for (int i = 0; i< (NUM_HYDROPHONES-1); i++){
+        *(AData + i*(NUM_HYDROPHONES-1) + 3) = tdoaArray[i]*SOUND_SPEED/SAMPLING_FREQ;
     } 
 }
 
