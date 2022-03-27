@@ -14,7 +14,8 @@ void test_calculate_pinger_position(){
     arm_matrix_instance_f32 Result = {NUM_HYDROPHONES-1, 1, new float32_t[NUM_HYDROPHONES]}; 
 
     initialComputationA(A.pData, hydrophonePositions); 
-    calculatePingerPosition(tdoaAray, hydrophonePositions, &A, &B, &Result);
+    arm_status status = calculatePingerPosition(tdoaAray, hydrophonePositions, &A, &B, &Result);
+    TEST_ASSERT_TRUE(status == ARM_MATH_SUCCESS); 
 
 
     float32_t expectedResult[NUM_DIMENTIONS] = {3.909, 2.123, -0.607};
@@ -46,8 +47,8 @@ void test_with_small_values_for_tdoa(){
     arm_matrix_instance_f32 Result = {NUM_HYDROPHONES-1, 1, new float32_t[NUM_HYDROPHONES]}; 
 
     initialComputationA(A.pData, hydrophonePositions); 
-    calculatePingerPosition(tdoaAray, hydrophonePositions, &A, &B, &Result);
-
+    arm_status status = calculatePingerPosition(tdoaAray, hydrophonePositions, &A, &B, &Result);
+    TEST_ASSERT_TRUE(status == ARM_MATH_SUCCESS); 
 
     float32_t expectedResult[NUM_DIMENTIONS] = {0.587, 0.113, 0.326};
     float32_t acctualResult[NUM_DIMENTIONS]; 

@@ -3,14 +3,18 @@
 /*
 TODO: 
 - check naming 
-- clean comute B
-- clean python test mabye
-- acceptance test for matrisies
+- clean up main (delete all)
+- acceptance test for matrisies. Rm asserts
+    create enum for status - can jusr use arm_status
+    return enum and change the estimates via pointers in stead
+    figureout what to check and how
+        all statuses from arm lib
+    what to do when status not good?
 
 */
 
 
-void calculatePingerPosition(
+arm_status calculatePingerPosition(
     int32_t tdoaArray[], 
     HydrophonePositions hydrophonePositions[],
     const arm_matrix_instance_f32* pA, 
@@ -19,10 +23,11 @@ void calculatePingerPosition(
     ){
         compute_A(tdoaArray, pA->pData); 
         compute_B(tdoaArray, hydrophonePositions ,pB->pData); 
-        LSE(pA, pB, pResult); 
+        arm_status status = LSE(pA, pB, pResult); 
+        return status; 
     }
 
-void LSE(
+arm_status LSE(
     const arm_matrix_instance_f32* pA, 
     const arm_matrix_instance_f32* pB, 
     arm_matrix_instance_f32* pResult
@@ -32,7 +37,9 @@ void LSE(
     Atrans.numRows = NUM_DIMENTIONS+1; 
     Atrans.pData = new float32_t[(NUM_HYDROPHONES-1)*(NUM_DIMENTIONS+1)];
     arm_status status = arm_mat_trans_f32(pA, &Atrans); 
-    assert(status == ARM_MATH_SUCCESS); 
+    if (status != ARM_MATH_SUCCESS){
+        return status; 
+    } 
 
     arm_matrix_instance_f32 AtransXA; 
     AtransXA.numCols = NUM_HYDROPHONES-1; 
@@ -40,7 +47,9 @@ void LSE(
     AtransXA.pData = new float32_t[(NUM_HYDROPHONES-1)*(NUM_HYDROPHONES-1)];
     const arm_matrix_instance_f32* pAtrans = &Atrans;
     status = arm_mat_mult_f32(pAtrans, pA, &AtransXA);
-    assert(status == ARM_MATH_SUCCESS); 
+    if (status != ARM_MATH_SUCCESS){
+        return status; 
+    }  
 
     arm_matrix_instance_f32 AtransXAinv; 
     AtransXAinv.numCols = NUM_HYDROPHONES-1; 
@@ -48,7 +57,9 @@ void LSE(
     AtransXAinv.pData = new float32_t[(NUM_HYDROPHONES-1)*(NUM_HYDROPHONES-1)]; 
     const arm_matrix_instance_f32* pAtransXA = &AtransXA; 
     status = arm_mat_inverse_f32(pAtransXA, &AtransXAinv);
-    assert(status== ARM_MATH_SUCCESS);  
+    if (status != ARM_MATH_SUCCESS){
+        return status; 
+    }   
 
     arm_matrix_instance_f32 AtransXAinvXAtrans; 
     AtransXAinvXAtrans.numCols = NUM_HYDROPHONES-1; 
@@ -56,16 +67,22 @@ void LSE(
     AtransXAinvXAtrans.pData = new float32_t[(NUM_HYDROPHONES-1)*(NUM_HYDROPHONES-1)]; 
     const arm_matrix_instance_f32* pAtransAinv = &AtransXAinv;
     status = arm_mat_mult_f32(pAtransAinv, pAtrans, &AtransXAinvXAtrans);
-    assert(status== ARM_MATH_SUCCESS);
+    if (status != ARM_MATH_SUCCESS){
+        return status; 
+    } 
 
     const arm_matrix_instance_f32* pAtransXAinvXAtrans = &AtransXAinvXAtrans;  
     status = arm_mat_mult_f32(pAtransXAinvXAtrans, pB, pResult); 
-    assert(status == ARM_MATH_SUCCESS); 
+    if (status != ARM_MATH_SUCCESS){
+        return status; 
+    }  
 
     delete[] Atrans.pData;
     delete[] AtransXA.pData;
     delete[] AtransXAinv.pData;
     delete[] AtransXAinvXAtrans.pData;
+
+    return status; 
 }
 
 
