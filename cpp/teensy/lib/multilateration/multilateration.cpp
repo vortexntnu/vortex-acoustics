@@ -24,32 +24,32 @@ void LSE(
     arm_matrix_instance_f32* pResult
 ){
     arm_matrix_instance_f32 Atrans; 
-    Atrans.numCols = NUM_DIMENTIONS+1; 
-    Atrans.numRows = NUM_HYDROPHONES; 
-    Atrans.pData = new float32_t[NUM_HYDROPHONES*(NUM_DIMENTIONS+1)];
+    Atrans.numCols = NUM_HYDROPHONES-1; 
+    Atrans.numRows = NUM_DIMENTIONS+1; 
+    Atrans.pData = new float32_t[(NUM_HYDROPHONES-1)*(NUM_DIMENTIONS+1)];
     arm_status status = arm_mat_trans_f32(pA, &Atrans); 
     assert(status == ARM_MATH_SUCCESS); 
 
     arm_matrix_instance_f32 AtransXA; 
-    AtransXA.numCols = NUM_HYDROPHONES; 
-    AtransXA.numRows = NUM_HYDROPHONES; 
-    AtransXA.pData = new float32_t[NUM_HYDROPHONES*NUM_HYDROPHONES];
+    AtransXA.numCols = NUM_HYDROPHONES-1; 
+    AtransXA.numRows = NUM_HYDROPHONES-1; 
+    AtransXA.pData = new float32_t[(NUM_HYDROPHONES-1)*(NUM_HYDROPHONES-1)];
     const arm_matrix_instance_f32* pAtrans = &Atrans;
     status = arm_mat_mult_f32(pAtrans, pA, &AtransXA);
     assert(status == ARM_MATH_SUCCESS); 
 
     arm_matrix_instance_f32 AtransXAinv; 
-    AtransXAinv.numCols = NUM_HYDROPHONES; 
-    AtransXAinv.numRows = NUM_HYDROPHONES; 
-    AtransXAinv.pData = new float32_t[NUM_HYDROPHONES*NUM_HYDROPHONES]; 
+    AtransXAinv.numCols = NUM_HYDROPHONES-1; 
+    AtransXAinv.numRows = NUM_HYDROPHONES-1; 
+    AtransXAinv.pData = new float32_t[(NUM_HYDROPHONES-1)*(NUM_HYDROPHONES-1)]; 
     const arm_matrix_instance_f32* pAtransXA = &AtransXA; 
     status = arm_mat_inverse_f32(pAtransXA, &AtransXAinv);
     assert(status== ARM_MATH_SUCCESS);  
 
     arm_matrix_instance_f32 AtransXAinvXAtrans; 
-    AtransXAinvXAtrans.numCols = NUM_HYDROPHONES; 
-    AtransXAinvXAtrans.numRows = NUM_HYDROPHONES; 
-    AtransXAinvXAtrans.pData = new float32_t[NUM_HYDROPHONES*NUM_HYDROPHONES]; 
+    AtransXAinvXAtrans.numCols = NUM_HYDROPHONES-1; 
+    AtransXAinvXAtrans.numRows = NUM_HYDROPHONES-1; 
+    AtransXAinvXAtrans.pData = new float32_t[(NUM_HYDROPHONES-1)*(NUM_HYDROPHONES-1)]; 
     const arm_matrix_instance_f32* pAtransAinv = &AtransXAinv;
     status = arm_mat_mult_f32(pAtransAinv, pAtrans, &AtransXAinvXAtrans);
     assert(status== ARM_MATH_SUCCESS);
