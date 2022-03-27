@@ -35,7 +35,7 @@
 #ifndef PHYSICAL_CONSTANTS
 #define PHYSICAL_CONSTANTS
 
-  #define SOUND_SPEED         1480.0         
+  #define SOUND_SPEED         1480.0 //[m/s]    
 
 #endif
 
@@ -48,21 +48,21 @@
 #endif
 
 struct HydrophonePositions {
-  float32_t pos_x; 
-  float32_t pos_y; 
-  float32_t pos_z; 
+  float32_t PosX; 
+  float32_t PosY; 
+  float32_t PosZ; 
 }; 
 
 arm_status calculatePingerPosition(
-    int32_t tdoaArray[], 
-    HydrophonePositions hydrophonePositions[],
+    int32_t TdoaArray[], 
+    HydrophonePositions HydrophonePositions[],
     const arm_matrix_instance_f32* pA, 
     const arm_matrix_instance_f32* pB,
-    arm_matrix_instance_f32* result); 
+    arm_matrix_instance_f32* pResult); 
 
-void initialComputationA(float32_t* AData, HydrophonePositions hydrophonePositions[]);  
-void compute_A(int32_t tdoaArray[], float32_t* AData); 
-void compute_B(int32_t tdoaArray[], HydrophonePositions hydrophonePositions[], float32_t* BData); 
+void initialComputationA(float32_t* AData, HydrophonePositions HydrophonePositions[]);  
+void compute_A(int32_t TdoaArray[], float32_t* AData); 
+void compute_B(int32_t TdoaArray[], HydrophonePositions HydrophonePositions[], float32_t* BData); 
 
 arm_status LSE(
     const arm_matrix_instance_f32* pA, 
@@ -70,7 +70,7 @@ arm_status LSE(
     arm_matrix_instance_f32* pResult
 ); 
 
-void initHydrophonePositions(HydrophonePositions* hydrophonePositions); 
+void initHydrophonePositions(HydrophonePositions* HydrophonePositions); 
 
 
 

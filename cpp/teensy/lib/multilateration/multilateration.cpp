@@ -2,29 +2,22 @@
 
 /*
 TODO: 
-- check naming 
 - clean up main (delete all)
-- acceptance test for matrisies. Rm asserts
-    create enum for status - can jusr use arm_status
-    return enum and change the estimates via pointers in stead
-    figureout what to check and how
-        all statuses from arm lib
-    what to do when status not good?
 
 */
 
 
 arm_status calculatePingerPosition(
-    int32_t tdoaArray[], 
-    HydrophonePositions hydrophonePositions[],
+    int32_t TdoaArray[], 
+    HydrophonePositions HydrophonePositions[],
     const arm_matrix_instance_f32* pA, 
     const arm_matrix_instance_f32* pB, 
     arm_matrix_instance_f32* pResult
     ){
-        compute_A(tdoaArray, pA->pData); 
-        compute_B(tdoaArray, hydrophonePositions ,pB->pData); 
-        arm_status status = LSE(pA, pB, pResult); 
-        return status; 
+        compute_A(TdoaArray, pA->pData); 
+        compute_B(TdoaArray, HydrophonePositions ,pB->pData); 
+        arm_status Status = LSE(pA, pB, pResult); 
+        return Status; 
     }
 
 arm_status LSE(
@@ -36,9 +29,9 @@ arm_status LSE(
     Atrans.numCols = NUM_HYDROPHONES-1; 
     Atrans.numRows = NUM_DIMENTIONS+1; 
     Atrans.pData = new float32_t[(NUM_HYDROPHONES-1)*(NUM_DIMENTIONS+1)];
-    arm_status status = arm_mat_trans_f32(pA, &Atrans); 
-    if (status != ARM_MATH_SUCCESS){
-        return status; 
+    arm_status Status = arm_mat_trans_f32(pA, &Atrans); 
+    if (Status != ARM_MATH_SUCCESS){
+        return Status; 
     } 
 
     arm_matrix_instance_f32 AtransXA; 
@@ -46,9 +39,9 @@ arm_status LSE(
     AtransXA.numRows = NUM_HYDROPHONES-1; 
     AtransXA.pData = new float32_t[(NUM_HYDROPHONES-1)*(NUM_HYDROPHONES-1)];
     const arm_matrix_instance_f32* pAtrans = &Atrans;
-    status = arm_mat_mult_f32(pAtrans, pA, &AtransXA);
-    if (status != ARM_MATH_SUCCESS){
-        return status; 
+    Status = arm_mat_mult_f32(pAtrans, pA, &AtransXA);
+    if (Status != ARM_MATH_SUCCESS){
+        return Status; 
     }  
 
     arm_matrix_instance_f32 AtransXAinv; 
@@ -56,9 +49,9 @@ arm_status LSE(
     AtransXAinv.numRows = NUM_HYDROPHONES-1; 
     AtransXAinv.pData = new float32_t[(NUM_HYDROPHONES-1)*(NUM_HYDROPHONES-1)]; 
     const arm_matrix_instance_f32* pAtransXA = &AtransXA; 
-    status = arm_mat_inverse_f32(pAtransXA, &AtransXAinv);
-    if (status != ARM_MATH_SUCCESS){
-        return status; 
+    Status = arm_mat_inverse_f32(pAtransXA, &AtransXAinv);
+    if (Status != ARM_MATH_SUCCESS){
+        return Status; 
     }   
 
     arm_matrix_instance_f32 AtransXAinvXAtrans; 
@@ -66,15 +59,15 @@ arm_status LSE(
     AtransXAinvXAtrans.numRows = NUM_HYDROPHONES-1; 
     AtransXAinvXAtrans.pData = new float32_t[(NUM_HYDROPHONES-1)*(NUM_HYDROPHONES-1)]; 
     const arm_matrix_instance_f32* pAtransAinv = &AtransXAinv;
-    status = arm_mat_mult_f32(pAtransAinv, pAtrans, &AtransXAinvXAtrans);
-    if (status != ARM_MATH_SUCCESS){
-        return status; 
+    Status = arm_mat_mult_f32(pAtransAinv, pAtrans, &AtransXAinvXAtrans);
+    if (Status != ARM_MATH_SUCCESS){
+        return Status; 
     } 
 
     const arm_matrix_instance_f32* pAtransXAinvXAtrans = &AtransXAinvXAtrans;  
-    status = arm_mat_mult_f32(pAtransXAinvXAtrans, pB, pResult); 
-    if (status != ARM_MATH_SUCCESS){
-        return status; 
+    Status = arm_mat_mult_f32(pAtransXAinvXAtrans, pB, pResult); 
+    if (Status != ARM_MATH_SUCCESS){
+        return Status; 
     }  
 
     delete[] Atrans.pData;
@@ -82,33 +75,33 @@ arm_status LSE(
     delete[] AtransXAinv.pData;
     delete[] AtransXAinvXAtrans.pData;
 
-    return status; 
+    return Status; 
 }
 
 
 
-void initialComputationA(float32_t* AData, HydrophonePositions hydrophonePositions[]){ 
+void initialComputationA(float32_t* AData, HydrophonePositions HydrophonePositions[]){ 
     for (int i = 0; i< (NUM_HYDROPHONES-1); i++){
-        *(AData + i*(NUM_HYDROPHONES-1) + 0) = hydrophonePositions[0].pos_x - hydrophonePositions[i+1].pos_x; 
-        *(AData + i*(NUM_HYDROPHONES-1) + 1) = hydrophonePositions[0].pos_y - hydrophonePositions[i+1].pos_y; 
-        *(AData + i*(NUM_HYDROPHONES-1) + 2) = hydrophonePositions[0].pos_z - hydrophonePositions[i+1].pos_z; 
+        *(AData + i*(NUM_HYDROPHONES-1) + 0) = HydrophonePositions[0].PosX - HydrophonePositions[i+1].PosX; 
+        *(AData + i*(NUM_HYDROPHONES-1) + 1) = HydrophonePositions[0].PosY - HydrophonePositions[i+1].PosY; 
+        *(AData + i*(NUM_HYDROPHONES-1) + 2) = HydrophonePositions[0].PosZ - HydrophonePositions[i+1].PosZ; 
         *(AData + i*(NUM_HYDROPHONES-1) + 3) = 0.0; 
     }
 }
 
-void compute_A(int32_t tdoaArray[], float32_t* AData){
+void compute_A(int32_t TdoaArray[], float32_t* AData){
     for (int i = 0; i< (NUM_HYDROPHONES-1); i++){
-        *(AData + i*(NUM_HYDROPHONES-1) + 3) = tdoaArray[i]*SOUND_SPEED/SAMPLING_FREQ;
+        *(AData + i*(NUM_HYDROPHONES-1) + 3) = TdoaArray[i]*SOUND_SPEED/SAMPLING_FREQ;
     } 
 }
 
-void compute_B(int32_t tdoaArray[], HydrophonePositions hydrophonePositions[], float32_t* Bdata){ 
+void compute_B(int32_t TdoaArray[], HydrophonePositions HydrophonePositions[], float32_t* Bdata){ 
     for (int i = 0; i < (NUM_HYDROPHONES-1); i++){
         *(Bdata +i) = 0.5*(
-            pow(hydrophonePositions[0].pos_x, 2)-pow(hydrophonePositions[i+1].pos_x,2)
-            +pow(hydrophonePositions[0].pos_y, 2)-pow(hydrophonePositions[i+1].pos_y, 2)
-            +pow(hydrophonePositions[0].pos_z, 2)-pow(hydrophonePositions[i+1].pos_z, 2)
-            +pow(tdoaArray[i]*SOUND_SPEED/SAMPLING_FREQ, 2)); 
+            pow(HydrophonePositions[0].PosX, 2)-pow(HydrophonePositions[i+1].PosX,2)
+            +pow(HydrophonePositions[0].PosY, 2)-pow(HydrophonePositions[i+1].PosY, 2)
+            +pow(HydrophonePositions[0].PosZ, 2)-pow(HydrophonePositions[i+1].PosZ, 2)
+            +pow(TdoaArray[i]*SOUND_SPEED/SAMPLING_FREQ, 2)); 
     }
 }
 
@@ -123,7 +116,6 @@ void initHydrophonePositions(HydrophonePositions* hydrophonePositions){
     hydrophonePositions[1] = Hyd1; 
     hydrophonePositions[2] = Hyd2; 
     hydrophonePositions[3] = Hyd3; 
-    hydrophonePositions[4] = Hyd4; 
-       
+    hydrophonePositions[4] = Hyd4;      
 }
 
