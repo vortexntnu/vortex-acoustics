@@ -68,10 +68,10 @@ void LSE(
 
 void initialComputationA(float32_t* AData, HydrophonePositions hydrophonePositions[]){ 
     for (int i = 0; i< (NUM_HYDROPHONES-1); i++){
-        *(AData + i*NUM_HYDROPHONES + 0) = hydrophonePositions[0].pos_x - hydrophonePositions[i].pos_x; 
-        *(AData + i*NUM_HYDROPHONES + 1) = hydrophonePositions[0].pos_y - hydrophonePositions[i].pos_y; 
-        *(AData + i*NUM_HYDROPHONES + 2) = hydrophonePositions[0].pos_z - hydrophonePositions[i].pos_z; 
-        *(AData + i*NUM_HYDROPHONES + 3) = 0.0; 
+        *(AData + i*(NUM_HYDROPHONES-1) + 0) = hydrophonePositions[0].pos_x - hydrophonePositions[i+1].pos_x; 
+        *(AData + i*(NUM_HYDROPHONES-1) + 1) = hydrophonePositions[0].pos_y - hydrophonePositions[i+1].pos_y; 
+        *(AData + i*(NUM_HYDROPHONES-1) + 2) = hydrophonePositions[0].pos_z - hydrophonePositions[i+1].pos_z; 
+        *(AData + i*(NUM_HYDROPHONES-1) + 3) = 0.0; 
     }
 }
 
@@ -81,7 +81,7 @@ void compute_A(int32_t tdoaArray[], float32_t* AData){
     } 
 }
 
-void compute_B(int32_t tdoaArray[], float32_t* Bdata){
+void compute_B(int32_t tdoaArray[], float32_t* Bdata){ //fiks denne
     Bdata[0] = 0.5*(
     pow(HYD_0_X_POS, 2)-pow(HYD_1_X_POS,2)
     +pow(HYD_0_Y_POS, 2)-pow(HYD_1_Y_POS, 2)
