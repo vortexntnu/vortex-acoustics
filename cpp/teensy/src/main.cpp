@@ -4,9 +4,7 @@
 
 #include "algorithm"
 
-
 int main(void) {
-    while(true){
-
+    while (true) {
     }
 }
