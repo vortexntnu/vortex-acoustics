@@ -35,15 +35,12 @@ int main(void) {
     print_matrix(A.pData, NUM_HYDROPHONES, NUM_DIMENTIONS+1);  
     compute_A(tdoaArray, A.pData);
     Serial.println("A computed.");  
-    compute_B(tdoaArray, B.pData); 
+    compute_B(tdoaArray, hydrophonePositions, B.pData); 
     Serial.println("B computed."); 
 
     print_matrix(A.pData, NUM_HYDROPHONES, NUM_DIMENTIONS+1); 
-    /*
-    Compared to python result: all elem in last column are wrong, 
-    */
 
-    calculatePingerPosition(tdoaArray, &A, &B, &Result);
+    calculatePingerPosition(tdoaArray, hydrophonePositions, &A, &B, &Result);
 
     Serial.println("Pinger pos calculated."); 
 
