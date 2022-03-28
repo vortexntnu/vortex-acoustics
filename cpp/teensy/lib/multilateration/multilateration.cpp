@@ -10,16 +10,16 @@ arm_status calculatePingerPosition(int32_t TdoaArray[],
     computeB(TdoaArray, hydrophonePositions, pB->pData);
     arm_status Status = leastSquareEstimation(pA, pB, pResult);
 
-    sourcePosition->X = *(pResult->pData); 
-    sourcePosition->Y = *(pResult->pData +1);
-    sourcePosition->Z = *(pResult->pData +2);
+    sourcePosition->X = *(pResult->pData);
+    sourcePosition->Y = *(pResult->pData + 1);
+    sourcePosition->Z = *(pResult->pData + 2);
 
     return Status;
 }
 
 arm_status leastSquareEstimation(const arm_matrix_instance_f32* pA,
-               const arm_matrix_instance_f32* pB,
-               arm_matrix_instance_f32* pResult) {
+                                 const arm_matrix_instance_f32* pB,
+                                 arm_matrix_instance_f32* pResult) {
     arm_matrix_instance_f32 Atrans;
     Atrans.numCols = NUM_HYDROPHONES - 1;
     Atrans.numRows = NUM_DIMENSIONS + 1;
@@ -76,8 +76,7 @@ arm_status leastSquareEstimation(const arm_matrix_instance_f32* pA,
     return Status;
 }
 
-void initialComputationA(float32_t* AData,
-                         Positions hydrophonePositions[]) {
+void initialComputationA(float32_t* AData, Positions hydrophonePositions[]) {
     for (int i = 0; i < (NUM_HYDROPHONES - 1); i++) {
         *(AData + i * (NUM_HYDROPHONES - 1) + 0) =
             hydrophonePositions[0].X - hydrophonePositions[i + 1].X;
@@ -91,8 +90,8 @@ void initialComputationA(float32_t* AData,
 
 void computeA(int32_t TdoaArray[], float32_t* AData) {
     /*
-    This function only updates the last columns of the matrix. 
-    The rest of the columns remain constant after initialComputationA() is run. 
+    This function only updates the last columns of the matrix.
+    The rest of the columns remain constant after initialComputationA() is run.
     */
     for (int i = 0; i < (NUM_HYDROPHONES - 1); i++) {
         *(AData + i * (NUM_HYDROPHONES - 1) + 3) =
@@ -101,7 +100,7 @@ void computeA(int32_t TdoaArray[], float32_t* AData) {
 }
 
 void computeB(int32_t TdoaArray[], Positions hydrophonePositions[],
-               float32_t* Bdata) {
+              float32_t* Bdata) {
     for (int i = 0; i < (NUM_HYDROPHONES - 1); i++) {
         *(Bdata + i) =
             0.5 * (pow(hydrophonePositions[0].X, 2) -
