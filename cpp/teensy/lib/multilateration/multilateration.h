@@ -6,43 +6,42 @@
 #ifndef HYDROPHONE_DETAILS
 #define HYDROPHONE_DETAILS
 
-#define NUM_HYDROPHONES 5
-#define NUM_DIMENSIONS 3
+const int32_t NUM_HYDROPHONES  = 5; 
+const int32_t NUM_DIMENSIONS  = 3; 
 
-#define HYD_0_X_POS -0.11
-#define HYD_0_Y_POS 0.31
-#define HYD_0_Z_POS 0.10
+const float32_t HYD_0_X_POS = -0.11; 
+const float32_t HYD_0_Y_POS = 0.31; 
+const float32_t HYD_0_Z_POS = 0.10; 
 
-#define HYD_1_X_POS 0.11
-#define HYD_1_Y_POS 0.31
-#define HYD_1_Z_POS 0.10
+const float32_t HYD_1_X_POS = 0.11; 
+const float32_t HYD_1_Y_POS = 0.31; 
+const float32_t HYD_1_Z_POS = 0.10; 
 
-#define HYD_2_X_POS 0.0
-#define HYD_2_Y_POS -0.24
-#define HYD_2_Z_POS 0.0
+const float32_t HYD_2_X_POS = 0.0; 
+const float32_t HYD_2_Y_POS = -0.24; 
+const float32_t HYD_2_Z_POS = 0.0; 
 
-#define HYD_3_X_POS 0.5
-#define HYD_3_Y_POS -0.1
-#define HYD_3_Z_POS 0.4
+const float32_t HYD_3_X_POS = 0.5; 
+const float32_t HYD_3_Y_POS = -0.1; 
+const float32_t HYD_3_Z_POS = 0.4; 
 
-#define HYD_4_X_POS 0.4
-#define HYD_4_Y_POS 0.0
-#define HYD_4_Z_POS -0.4
+const float32_t HYD_4_X_POS = 0.4; 
+const float32_t HYD_4_Y_POS = 0.0; 
+const float32_t HYD_4_Z_POS = -0.4; 
 
 #endif
 
 #ifndef PHYSICAL_CONSTANTS
 #define PHYSICAL_CONSTANTS
 
-#define SOUND_SPEED 1480.0 //[m/s]
+const float32_t SOUND_SPEED = 1480.0;  //[m/s]
 
 #endif
 
 #ifndef DSP_CONSTANTS
 #define DSP_CONSTANTS
 
-#define SAMPLING_FREQ 300000             //[Hz]
-#define SIGNAL_LENGTH 40 * SAMPLING_FREQ //[sampels]
+const int SAMPLING_FREQ = 300000;             //[Hz]
 
 #endif
 
