@@ -136,7 +136,7 @@ def test_trilateration_algorithm():
 
 def test_compare_with_teensy():
     """Provides a reference for the code on the Teensy to compare against.
-    
+
     The estimates that are generated within this test should be the same if run on the Teensy.
     """
 
