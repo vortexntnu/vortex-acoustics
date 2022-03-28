@@ -1,6 +1,5 @@
 #include "Arduino.h"
 #include "multilateration.h"
-#include "stdio.h"
 #include "unity.h"
 
 void test_calculate_pinger_position() {
