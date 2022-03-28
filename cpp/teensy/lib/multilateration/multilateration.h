@@ -60,7 +60,7 @@ arm_status calculatePingerPosition(int32_t TdoaArray[],
 
 void initialComputationA(float32_t* AData,
                          HydrophonePositions HydrophonePositions[]);
-void compute_A(int32_t TdoaArray[], float32_t* AData);
+void computeA(int32_t TdoaArray[], float32_t* AData);
 void compute_B(int32_t TdoaArray[], HydrophonePositions HydrophonePositions[],
                float32_t* BData);
 
