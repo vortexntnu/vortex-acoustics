@@ -2,13 +2,12 @@
 
 #include "arm_math.h"
 #include <Arduino.h>
-#include <cassert>
 
 #ifndef HYDROPHONE_DETAILES
 #define HYDROPHONE_DETAILES
 
 #define NUM_HYDROPHONES 5
-#define NUM_DIMENTIONS 3
+#define NUM_DIMENSIONS 3
 
 #define HYD_0_X_POS -0.11
 #define HYD_0_Y_POS 0.31
@@ -65,7 +64,7 @@ void compute_A(int32_t TdoaArray[], float32_t* AData);
 void compute_B(int32_t TdoaArray[], HydrophonePositions HydrophonePositions[],
                float32_t* BData);
 
-arm_status LSE(const arm_matrix_instance_f32* pA,
+arm_status leastSquareEstimation(const arm_matrix_instance_f32* pA,
                const arm_matrix_instance_f32* pB,
                arm_matrix_instance_f32* pResult);
 

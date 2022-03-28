@@ -11,8 +11,8 @@ void test_calculate_pinger_position() {
     initHydrophonePositions(hydrophonePositions);
 
     arm_matrix_instance_f32 A = {
-        NUM_HYDROPHONES - 1, NUM_DIMENTIONS + 1,
-        new float32_t[NUM_HYDROPHONES * (NUM_DIMENTIONS + 1)]};
+        NUM_HYDROPHONES - 1, NUM_DIMENSIONS + 1,
+        new float32_t[NUM_HYDROPHONES * (NUM_DIMENSIONS + 1)]};
     arm_matrix_instance_f32 B = {NUM_HYDROPHONES - 1, 1,
                                  new float32_t[NUM_HYDROPHONES]};
     arm_matrix_instance_f32 Result = {NUM_HYDROPHONES - 1, 1,
@@ -23,13 +23,13 @@ void test_calculate_pinger_position() {
         calculatePingerPosition(tdoaAray, hydrophonePositions, &A, &B, &Result);
     TEST_ASSERT_TRUE(status == ARM_MATH_SUCCESS);
 
-    float32_t expectedResult[NUM_DIMENTIONS] = {3.909, 2.123, -0.607};
-    float32_t acctualResult[NUM_DIMENTIONS];
-    for (int i = 0; i < NUM_DIMENTIONS; i++) {
+    float32_t expectedResult[NUM_DIMENSIONS] = {3.909, 2.123, -0.607};
+    float32_t acctualResult[NUM_DIMENSIONS];
+    for (int i = 0; i < NUM_DIMENSIONS; i++) {
         acctualResult[i] = *(Result.pData + i);
     }
 
-    for (int i = 0; i < NUM_DIMENTIONS; i++) {
+    for (int i = 0; i < NUM_DIMENSIONS; i++) {
         TEST_ASSERT_FLOAT_WITHIN(0.01, expectedResult[i], acctualResult[i]);
     }
 
@@ -48,8 +48,8 @@ void test_with_small_values_for_tdoa() {
     initHydrophonePositions(hydrophonePositions);
 
     arm_matrix_instance_f32 A = {
-        NUM_HYDROPHONES - 1, NUM_DIMENTIONS + 1,
-        new float32_t[NUM_HYDROPHONES * (NUM_DIMENTIONS + 1)]};
+        NUM_HYDROPHONES - 1, NUM_DIMENSIONS + 1,
+        new float32_t[NUM_HYDROPHONES * (NUM_DIMENSIONS + 1)]};
     arm_matrix_instance_f32 B = {NUM_HYDROPHONES - 1, 1,
                                  new float32_t[NUM_HYDROPHONES]};
     arm_matrix_instance_f32 Result = {NUM_HYDROPHONES - 1, 1,
@@ -60,13 +60,13 @@ void test_with_small_values_for_tdoa() {
         calculatePingerPosition(tdoaAray, hydrophonePositions, &A, &B, &Result);
     TEST_ASSERT_TRUE(status == ARM_MATH_SUCCESS);
 
-    float32_t expectedResult[NUM_DIMENTIONS] = {0.587, 0.113, 0.326};
-    float32_t acctualResult[NUM_DIMENTIONS];
-    for (int i = 0; i < NUM_DIMENTIONS; i++) {
+    float32_t expectedResult[NUM_DIMENSIONS] = {0.587, 0.113, 0.326};
+    float32_t acctualResult[NUM_DIMENSIONS];
+    for (int i = 0; i < NUM_DIMENSIONS; i++) {
         acctualResult[i] = *(Result.pData + i);
     }
 
-    for (int i = 0; i < NUM_DIMENTIONS; i++) {
+    for (int i = 0; i < NUM_DIMENSIONS; i++) {
         TEST_ASSERT_FLOAT_WITHIN(toleranse, expectedResult[i],
                                  acctualResult[i]);
     }
@@ -85,8 +85,8 @@ void test_tdoa_with_zero_values() {
     initHydrophonePositions(hydrophonePositions);
 
     arm_matrix_instance_f32 A = {
-        NUM_HYDROPHONES - 1, NUM_DIMENTIONS + 1,
-        new float32_t[NUM_HYDROPHONES * (NUM_DIMENTIONS + 1)]};
+        NUM_HYDROPHONES - 1, NUM_DIMENSIONS + 1,
+        new float32_t[NUM_HYDROPHONES * (NUM_DIMENSIONS + 1)]};
     arm_matrix_instance_f32 B = {NUM_HYDROPHONES - 1, 1,
                                  new float32_t[NUM_HYDROPHONES]};
     arm_matrix_instance_f32 Result = {NUM_HYDROPHONES - 1, 1,
