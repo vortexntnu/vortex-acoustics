@@ -5,8 +5,8 @@ arm_status calculatePingerPosition(int32_t TdoaArray[],
                                    const arm_matrix_instance_f32* pA,
                                    const arm_matrix_instance_f32* pB,
                                    arm_matrix_instance_f32* pResult) {
-    compute_A(TdoaArray, pA->pData);
-    compute_B(TdoaArray, HydrophonePositions, pB->pData);
+    computeA(TdoaArray, pA->pData);
+    computeB(TdoaArray, HydrophonePositions, pB->pData);
     arm_status Status = leastSquareEstimation(pA, pB, pResult);
     return Status;
 }
@@ -83,14 +83,18 @@ void initialComputationA(float32_t* AData,
     }
 }
 
-void compute_A(int32_t TdoaArray[], float32_t* AData) {
+void computeA(int32_t TdoaArray[], float32_t* AData) {
+    /*
+    This function only updates the last columns of the matrix. 
+    The rest of the columns remain constant after initialComputationA() is run. 
+    */
     for (int i = 0; i < (NUM_HYDROPHONES - 1); i++) {
         *(AData + i * (NUM_HYDROPHONES - 1) + 3) =
             TdoaArray[i] * SOUND_SPEED / SAMPLING_FREQ;
     }
 }
 
-void compute_B(int32_t TdoaArray[], HydrophonePositions HydrophonePositions[],
+void computeB(int32_t TdoaArray[], HydrophonePositions HydrophonePositions[],
                float32_t* Bdata) {
     for (int i = 0; i < (NUM_HYDROPHONES - 1); i++) {
         *(Bdata + i) =

@@ -3,8 +3,8 @@
 #include "arm_math.h"
 #include <Arduino.h>
 
-#ifndef HYDROPHONE_DETAILES
-#define HYDROPHONE_DETAILES
+#ifndef HYDROPHONE_DETAILS
+#define HYDROPHONE_DETAILS
 
 #define NUM_HYDROPHONES 5
 #define NUM_DIMENSIONS 3
@@ -61,7 +61,7 @@ arm_status calculatePingerPosition(int32_t TdoaArray[],
 void initialComputationA(float32_t* AData,
                          HydrophonePositions HydrophonePositions[]);
 void computeA(int32_t TdoaArray[], float32_t* AData);
-void compute_B(int32_t TdoaArray[], HydrophonePositions HydrophonePositions[],
+void computeB(int32_t TdoaArray[], HydrophonePositions HydrophonePositions[],
                float32_t* BData);
 
 arm_status leastSquareEstimation(const arm_matrix_instance_f32* pA,
