@@ -47,7 +47,6 @@ arm_status calculatePingerPosition(int32_t TdoaArray[],
                                    const Positions hydrophonePositions[],
                                    const arm_matrix_instance_f32* pA,
                                    const arm_matrix_instance_f32* pB,
-                                   arm_matrix_instance_f32* pResult,
                                    Positions* sourcePosition);
 
 void initialComputationA(float32_t* AData, const Positions hydrophonePositions[]);
