@@ -6,8 +6,8 @@ void test_calculate_pinger_position() {
     float32_t toleranse = 0.01;
     int32_t tdoaAray[NUM_HYDROPHONES - 1] = {610, -67, 549, 290};
 
-    Positions* hydrophonePositions = new Positions[NUM_HYDROPHONES];
-    initHydrophonePositions(hydrophonePositions);
+    //Positions* hydrophonePositions = new Positions[NUM_HYDROPHONES];
+    //initHydrophonePositions(hydrophonePositions);
 
     arm_matrix_instance_f32 A = {
         NUM_HYDROPHONES - 1, NUM_DIMENSIONS + 1,

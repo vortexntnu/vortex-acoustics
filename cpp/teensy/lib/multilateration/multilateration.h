@@ -51,16 +51,24 @@ struct Positions {
     float32_t Z;
 };
 
+const Positions hydrophonePositions[NUM_HYDROPHONES] ={
+    {HYD_0_X_POS, HYD_0_Y_POS, HYD_0_Z_POS}, 
+    {HYD_1_X_POS, HYD_1_Y_POS, HYD_1_Z_POS},
+    {HYD_2_X_POS, HYD_2_Y_POS, HYD_2_Z_POS},
+    {HYD_3_X_POS, HYD_3_Y_POS, HYD_3_Z_POS},
+    {HYD_4_X_POS, HYD_4_Y_POS, HYD_4_Z_POS}
+    }; 
+
 arm_status calculatePingerPosition(int32_t TdoaArray[],
-                                   Positions hydrophonePositions[],
+                                   const Positions hydrophonePositions[],
                                    const arm_matrix_instance_f32* pA,
                                    const arm_matrix_instance_f32* pB,
                                    arm_matrix_instance_f32* pResult,
                                    Positions* sourcePosition);
 
-void initialComputationA(float32_t* AData, Positions hydrophonePositions[]);
+void initialComputationA(float32_t* AData, const Positions hydrophonePositions[]);
 void computeA(int32_t TdoaArray[], float32_t* AData);
-void computeB(int32_t TdoaArray[], Positions hydrophonePositions[],
+void computeB(int32_t TdoaArray[], const Positions hydrophonePositions[],
               float32_t* BData);
 
 arm_status leastSquareEstimation(const arm_matrix_instance_f32* pA,

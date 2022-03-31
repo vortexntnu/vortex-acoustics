@@ -1,7 +1,7 @@
 #include "multilateration.h"
 
 arm_status calculatePingerPosition(int32_t TdoaArray[],
-                                   Positions hydrophonePositions[],
+                                   const Positions hydrophonePositions[],
                                    const arm_matrix_instance_f32* pA,
                                    const arm_matrix_instance_f32* pB,
                                    arm_matrix_instance_f32* pResult,
@@ -76,7 +76,7 @@ arm_status leastSquareEstimation(const arm_matrix_instance_f32* pA,
     return Status;
 }
 
-void initialComputationA(float32_t* AData, Positions hydrophonePositions[]) {
+void initialComputationA(float32_t* AData, const Positions hydrophonePositions[]) {
     for (int i = 0; i < (NUM_HYDROPHONES - 1); i++) {
         *(AData + i * (NUM_HYDROPHONES - 1) + 0) =
             hydrophonePositions[0].X - hydrophonePositions[i + 1].X;
@@ -99,7 +99,7 @@ void computeA(int32_t TdoaArray[], float32_t* AData) {
     }
 }
 
-void computeB(int32_t TdoaArray[], Positions hydrophonePositions[],
+void computeB(int32_t TdoaArray[], const Positions hydrophonePositions[],
               float32_t* Bdata) {
     for (int i = 0; i < (NUM_HYDROPHONES - 1); i++) {
         *(Bdata + i) =
