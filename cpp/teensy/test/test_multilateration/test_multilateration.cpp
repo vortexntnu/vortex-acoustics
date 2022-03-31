@@ -6,9 +6,6 @@ void test_calculate_pinger_position() {
     float32_t toleranse = 0.01;
     int32_t tdoaAray[NUM_HYDROPHONES - 1] = {610, -67, 549, 290};
 
-    //Positions* hydrophonePositions = new Positions[NUM_HYDROPHONES];
-    //initHydrophonePositions(hydrophonePositions);
-
     arm_matrix_instance_f32 A = {
         NUM_HYDROPHONES - 1, NUM_DIMENSIONS + 1,
         new float32_t[NUM_HYDROPHONES * (NUM_DIMENSIONS + 1)]};
@@ -36,15 +33,11 @@ void test_calculate_pinger_position() {
     delete[] A.pData;
     delete[] B.pData;
     delete[] Result.pData;
-    delete[] hydrophonePositions;
 }
 
 void test_with_small_values_for_tdoa() {
     float32_t toleranse = 0.01;
     int32_t tdoaAray[NUM_HYDROPHONES - 1] = {1, 0, 2, 0};
-
-    Positions* hydrophonePositions = new Positions[NUM_HYDROPHONES];
-    initHydrophonePositions(hydrophonePositions);
 
     arm_matrix_instance_f32 A = {
         NUM_HYDROPHONES - 1, NUM_DIMENSIONS + 1,
@@ -72,14 +65,10 @@ void test_with_small_values_for_tdoa() {
     delete[] A.pData;
     delete[] B.pData;
     delete[] Result.pData;
-    delete[] hydrophonePositions;
 }
 
 void test_tdoa_with_zero_values() {
     int32_t tdoaAray[NUM_HYDROPHONES - 1] = {0, 0, 0, 0};
-
-    Positions* hydrophonePositions = new Positions[NUM_HYDROPHONES];
-    initHydrophonePositions(hydrophonePositions);
 
     arm_matrix_instance_f32 A = {
         NUM_HYDROPHONES - 1, NUM_DIMENSIONS + 1,
@@ -98,13 +87,12 @@ void test_tdoa_with_zero_values() {
     delete[] A.pData;
     delete[] B.pData;
     delete[] Result.pData;
-    delete[] hydrophonePositions;
 }
 
 int main(int argc, char** argv) {
     UNITY_BEGIN();
-    RUN_TEST(test_calculate_pinger_position);
     RUN_TEST(test_with_small_values_for_tdoa);
     RUN_TEST(test_tdoa_with_zero_values);
+    RUN_TEST(test_calculate_pinger_position);
     UNITY_END();
 }

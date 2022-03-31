@@ -75,4 +75,4 @@ arm_status leastSquareEstimation(const arm_matrix_instance_f32* pA,
                                  const arm_matrix_instance_f32* pB,
                                  arm_matrix_instance_f32* pResult);
 
-void initHydrophonePositions(Positions* hydrophonePositions);
+

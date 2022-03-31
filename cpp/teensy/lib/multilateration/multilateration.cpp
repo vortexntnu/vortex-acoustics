@@ -113,16 +113,4 @@ void computeB(int32_t TdoaArray[], const Positions hydrophonePositions[],
     }
 }
 
-void initHydrophonePositions(Positions* hydrophonePositions) {
-    Positions Hyd0 = {HYD_0_X_POS, HYD_0_Y_POS, HYD_0_Z_POS};
-    Positions Hyd1 = {HYD_1_X_POS, HYD_1_Y_POS, HYD_1_Z_POS};
-    Positions Hyd2 = {HYD_2_X_POS, HYD_2_Y_POS, HYD_2_Z_POS};
-    Positions Hyd3 = {HYD_3_X_POS, HYD_3_Y_POS, HYD_3_Z_POS};
-    Positions Hyd4 = {HYD_4_X_POS, HYD_4_Y_POS, HYD_4_Z_POS};
 
-    hydrophonePositions[0] = Hyd0;
-    hydrophonePositions[1] = Hyd1;
-    hydrophonePositions[2] = Hyd2;
-    hydrophonePositions[3] = Hyd3;
-    hydrophonePositions[4] = Hyd4;
-}
