@@ -29,13 +29,13 @@ const float32_t HYD_4_Z_POS = -0.4;
 const float32_t SOUND_SPEED = 1480.0; //[m/s]
 const int SAMPLING_FREQ = 300000; //[Hz]
 
-struct Positions {
+struct Position {
     float32_t X;
     float32_t Y;
     float32_t Z;
 };
 
-const Positions hydrophonePositions[NUM_HYDROPHONES] ={
+const Position hydrophonePositions[NUM_HYDROPHONES] ={
     {HYD_0_X_POS, HYD_0_Y_POS, HYD_0_Z_POS}, 
     {HYD_1_X_POS, HYD_1_Y_POS, HYD_1_Z_POS},
     {HYD_2_X_POS, HYD_2_Y_POS, HYD_2_Z_POS},
@@ -44,14 +44,14 @@ const Positions hydrophonePositions[NUM_HYDROPHONES] ={
     }; 
 
 arm_status calculatePingerPosition(int32_t TdoaArray[],
-                                   const Positions hydrophonePositions[],
+                                   const Position hydrophonePositions[],
                                    const arm_matrix_instance_f32* pA,
                                    const arm_matrix_instance_f32* pB,
-                                   Positions* sourcePosition);
+                                   Position* sourcePosition);
 
-void initialComputationA(float32_t* AData, const Positions hydrophonePositions[]);
+void initialComputationA(float32_t* AData, const Position hydrophonePositions[]);
 void computeA(int32_t TdoaArray[], float32_t* AData);
-void computeB(int32_t TdoaArray[], const Positions hydrophonePositions[],
+void computeB(int32_t TdoaArray[], const Position hydrophonePositions[],
               float32_t* BData);
 
 arm_status leastSquareEstimation(const arm_matrix_instance_f32* pA,
