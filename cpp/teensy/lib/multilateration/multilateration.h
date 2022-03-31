@@ -3,9 +3,6 @@
 #include "arm_math.h"
 #include <Arduino.h>
 
-#ifndef HYDROPHONE_DETAILS
-#define HYDROPHONE_DETAILS
-
 const int32_t NUM_HYDROPHONES = 5;
 const int32_t NUM_DIMENSIONS = 3;
 
@@ -29,21 +26,8 @@ const float32_t HYD_4_X_POS = 0.4;
 const float32_t HYD_4_Y_POS = 0.0;
 const float32_t HYD_4_Z_POS = -0.4;
 
-#endif
-
-#ifndef PHYSICAL_CONSTANTS
-#define PHYSICAL_CONSTANTS
-
 const float32_t SOUND_SPEED = 1480.0; //[m/s]
-
-#endif
-
-#ifndef DSP_CONSTANTS
-#define DSP_CONSTANTS
-
 const int SAMPLING_FREQ = 300000; //[Hz]
-
-#endif
 
 struct Positions {
     float32_t X;
