@@ -1,7 +1,9 @@
+
 import pulse_detection.pulse_determination as pd_pdeter
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pytest
 
 from signal_generation import positioning as sg_pos
 from signal_generation import receiver as sg_rec
@@ -101,17 +103,38 @@ def test_determine_signal_frequncy():
     print("\nThe computed carrier frequnecy is: ", carrier_frequnecy)
     print("\nThe frequency bins are: \n ", frequency_bins)
 
+
 def test_find_optimal_sampling_frequency():
 
     pulse_length = 4
     fft_size = 128
-    sample_frequency =  pd_pdeter.find_optimal_sampling_frequency(fft_size)
+    sample_frequency, frequency_bins =  pd_pdeter.find_optimal_sampling_frequency(fft_size)
 
-    signal = generate_cosine_wave(
-    pulse_length, 
-    CARRIER_FREQUENCY, 
-    SAMPLING_FREQUENCY
+    print("\nFIND OPTIMAL SAMPLING FREQUENCY\n")
+    print("\nThe sampling frequency is: ", sample_frequency)
+    print("\nThe frequency bins are: \n ", frequency_bins)
+
+
+
+#@pytest.mark.plot
+def test_determine_signal_frequncy_with_window(plt):
+    sample_frequency = SAMPLING_FREQUENCY
+    fft_size = 128
+    pulse_length = 4
+
+    original_signal = generate_cosine_wave(
+        pulse_length, 
+        CARRIER_FREQUENCY, 
+        SAMPLING_FREQUENCY
     )
+
+    original_signal = pd_pdeter.adjust_signal_length(original_signal, fft_size)
+
+    fft = np.fft.rfft(original_signal)
+
+    signal = pd_pdeter.apply_hanning_window(original_signal)
+
+    fft_with_window = np.fft.rfft(signal)
 
     carrier_frequnecy, frequency_bins= pd_pdeter.determine_signal_frequency( #, frequency_bins
         signal, 
@@ -119,7 +142,17 @@ def test_find_optimal_sampling_frequency():
         fft_size,
     )
 
-    print("\nFIND OPTIMAL SAMPLING FREQUENCY\n")
-    print("\nThe sampling frequency is: ", sample_frequency)
-    print("\nThe computed carrier frequnecy is: ", carrier_frequnecy)
-    print("\nThe frequency bins are: \n ", frequency_bins)
+
+    fig, axs = plt.subplots(4,1)
+
+
+    axs[0] = plt.plot(original_signal, label="Original signal")
+    axs[1] = plt.plot(signal, label="Windowed signal")
+    axs[2] = plt.plot(frequency_bins, fft)
+    axs[3] = plt.plot(frequency_bins, fft_with_window)
+
+    plt.show()
+    assert True
+
+
+
