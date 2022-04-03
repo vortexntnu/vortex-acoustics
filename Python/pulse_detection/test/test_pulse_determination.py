@@ -78,7 +78,7 @@ def test_hanning_window(plt): #not working
 
 
 def test_determine_signal_frequncy():
-    """
+
     signal_frequency_incremetns = 5
     pulse_length = 4
     noise_amplitude = 0.1
@@ -90,8 +90,6 @@ def test_determine_signal_frequncy():
         SAMPLING_FREQUENCY, 
         noise_amplitude
     )
-
-
 
     computed_carrier_frequnecy, frequency_bins, fft= pd_pdeter.determine_signal_frequency( #, frequency_bins
         signal, 
@@ -108,7 +106,7 @@ def test_determine_signal_frequncy():
     print("\nThe computed carrier frequnecy is: ", computed_carrier_frequnecy)
     print("\nThe frequency bins are: \n ", frequency_bins)
 
-    """
+    
 
 
 def test_find_optimal_sampling_frequency():
@@ -171,16 +169,16 @@ def generate_cosine_wave(
     carrier_frequency: float, 
     sampling_frequency: float, 
     noise_amplitude: float
-):
+)->np.array:
 
     dt = 1 / sampling_frequency
     secondary_frequency = 62
     time = np.arange(0, pulse_length, dt)
-    signal = \
-        np.cos(time * np.pi * 2 * carrier_frequency ) + \
-        noise_amplitude*np.cos(time * np.pi * 2 * secondary_frequency )
+    signal = np.cos(time * np.pi * 2 * carrier_frequency ) + noise_amplitude*np.cos(time * np.pi * 2 * secondary_frequency )
+    signal = np.asarray(signal)
+    signal = signal.flatten()
 
-    return signal, time
+    return signal
 
 
 
