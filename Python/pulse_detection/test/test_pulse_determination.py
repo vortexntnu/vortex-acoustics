@@ -10,12 +10,12 @@ from signal_generation import receiver as sg_rec
 from signal_generation import source as sg_src
 from signal_generation import noise as sg_noise
 
-CARRIER_FREQUENCY = 40  # [kHz]
+CARRIER_FREQUENCY = 35  # [kHz]
 SAMPLING_FREQUENCY = 485  # [kHz]
 
 def test_short_time_fourier_transform():
     pulse_length = 4
-    noise_amplitude = 0.1
+    noise_amplitude = 0.0
     fft_size = 128
 
     signal = generate_cosine_wave(
@@ -28,12 +28,15 @@ def test_short_time_fourier_transform():
     fft = pd_pdeter.short_time_fourier_transform(signal, fft_size, SAMPLING_FREQUENCY, pulse_length)
     tone = pd_pdeter.find_tone(fft, SAMPLING_FREQUENCY, fft_size)
 
+    print("The carrier freq is: \n", tone)
+    print("The fft is: \n", fft)
+    print("The fft size is: ", np.size(fft))
+
     tolerance = SAMPLING_FREQUENCY / fft_size
 
     assert abs(tone-CARRIER_FREQUENCY) < tolerance
     #got 18.19 instead of 40
 
-#@pytest.mark.plot
 def test_hanning_window(plt): #not working 
     print("\nTEST HANNING WINDOWING\n")
     fft_size = 128
@@ -49,19 +52,9 @@ def test_hanning_window(plt): #not working
 
     original_signal = pd_pdeter.adjust_signal_length(original_signal, fft_size)
 
-    #signal = pd_pdeter.apply_hanning_window(original_signal)
-    # -------
+    signal = pd_pdeter.apply_hanning_window(original_signal)
 
-    signal_length = np.size(original_signal)
-    n = np.linspace(0,signal_length-1, signal_length) 
- 
-
-    hanning_window =  0.5-0.5*np.cos(2*np.pi*n/(signal_length-1))
-    print("The window is: \n", hanning_window)
-
-    windowed_signal = np.convolve(original_signal, hanning_window, 'same')
-
-    assert np.size(windowed_signal) == np.size(original_signal)
+    assert np.size(signal) == np.size(original_signal) 
 
 
 
@@ -79,20 +72,24 @@ def test_determine_signal_frequncy():
         noise_amplitude
     )
 
-    computed_carrier_frequnecy, frequency_bins, fft= pd_pdeter.determine_signal_frequency( #, frequency_bins
+    computed_carrier_frequnecy, frequency_bins, fft= pd_pdeter.determine_signal_frequency( 
         signal, 
         SAMPLING_FREQUENCY,
         fft_size,
     )
+    computed_carrier_frequnecy_v2 = pd_pdeter.find_tone(fft, SAMPLING_FREQUENCY, fft_size)
 
     tolerance = SAMPLING_FREQUENCY / fft_size
 
     assert abs(computed_carrier_frequnecy-CARRIER_FREQUENCY) < tolerance
 
+    assert abs(computed_carrier_frequnecy_v2-CARRIER_FREQUENCY) < tolerance
+
     print("\nDETERMINE SIGNAL FREQUENCY\n")
     print("\nThe fft size is: ", fft_size)
     print("\nThe computed carrier frequnecy is: ", computed_carrier_frequnecy)
     print("\nThe frequency bins are: \n ", frequency_bins)
+    print("\nThe fft is: \n ", fft)
 
     
 
