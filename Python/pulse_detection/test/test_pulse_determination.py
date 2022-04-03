@@ -59,13 +59,12 @@ def test_hanning_window(plt): #not working
     hanning_window =  0.5-0.5*np.cos(2*np.pi*n/(signal_length-1))
     print("The window is: \n", hanning_window)
 
-
-    """
     windowed_signal = np.convolve(original_signal, hanning_window, 'same')
 
     assert np.size(windowed_signal) == np.size(original_signal)
 
     # ----- 
+    """
 
     fig, axs = plt.subplots(2)
 
