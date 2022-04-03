@@ -3,12 +3,12 @@ import numpy as np
 import scipy.signal
 
 """
-Find required frequency bins. -> find order of fft. 
-Decide what frquency. 
-
-Same problem as with pdoa?!
-Fft order 
-
+TODO:
+- Find a sampling frequency that works for 25, 30, 35 and 45 kHz pinger freq.
+- Apply windowing before find the fft
+- Repeate the prses for multiple segmetns of the pulse
+    how to deal with this giving different results? 
+    perhaps it accually merges to the same result -> google
 
 """
 
@@ -30,15 +30,15 @@ def compute_fft_size(
 def adjust_signal_length(
     signal: np.array,
     fft_size: int,
-)-> np.np.array:
-    if len(signal) == fft_size:
+)-> np.array:
+    if signal.size == fft_size:
         return signal
-    elif len(signal) > fft_size:
+    elif signal.size > fft_size:
         return signal[:fft_size]
     else:
-        diff = fft_size -len(signal)
-        zero_padding = np.empty(diff)
-        signal = np.concatenate(signal, zero_padding)
+        diff = fft_size -signal.size
+        for i in range (diff):
+            np.append(signal, 0.0)
         return signal
 
 
@@ -46,11 +46,11 @@ def determine_signal_frequency(
     signal: np.array, 
     sampling_frequency: float,
     fft_size: int,
-) -> float:
-    signal = adjust_signal_length(signal)
+): # -> float, np.array
+    signal = adjust_signal_length(signal, fft_size)
     fourier = np.fft.rfft(signal)
     corresponding_freq = np.fft.rfftfreq(len(signal), 1 / sampling_frequency)
     freq_index = np.argmax(fourier)
     dominating_freq = corresponding_freq[freq_index]
 
-    return dominating_freq
+    return dominating_freq , corresponding_freq
