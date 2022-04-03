@@ -107,13 +107,12 @@ def adjust_signal_length(
     signal: np.array,
     fft_size: int,
 )-> np.array:
-    if np.size(signal) == fft_size:
+    if signal.size == fft_size:
         return signal
-    elif np.size(signal) > fft_size:
-
-        return signal[0:fft_size]
+    elif signal.size > fft_size:
+        return signal[:fft_size]
     else:
-        diff = fft_size - np.size(signal)
+        diff = fft_size -signal.size
         for i in range (diff):
             np.append(signal, 0.0)
         return signal
