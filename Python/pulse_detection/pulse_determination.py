@@ -6,14 +6,10 @@ import scipy.signal
 
 """
 TODO:
-- Apply windowing before finding the fft
-    - Test with signal generation 
-- Repeate the proses for multiple segmetns of the pulse
-    how to deal with this giving different results? 
-    perhaps it accually merges to the same result 
-- Find a sampling frequency that works for 25, 30, 35 and 45 kHz pinger freq.
-    make a cost function
-        mabye use weighted costs
+- Test
+    - windowing
+    - short time fourier transform
+    - with signal generation 
 
 """
 
@@ -49,11 +45,14 @@ def find_tone(
     return tone
 
 
-def apply_hanning_window( #write with cos
+def apply_hanning_window( 
     signal: np.array
 ):
-    window = np.hanning(np.size(signal)) 
-    windowed_signal = np.convolve(signal, window, 'same')
+    signal_length = np.size(signal)
+    n = np.linspace(0,signal_length-1, signal_length) 
+
+    hanning_window =  0.5-0.5*np.cos(2*np.pi*n/(signal_length-1))
+    windowed_signal = np.convolve(signal, hanning_window, 'same')
 
     assert np.size(windowed_signal) == np.size(signal)
 
