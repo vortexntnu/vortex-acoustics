@@ -11,6 +11,9 @@ TODO:
     - short time fourier transform
     - with signal generation 
 
+- convolution giving error
+- determine sig length stopped working?!
+
 """
 
 def short_time_fourier_transform(
@@ -18,7 +21,7 @@ def short_time_fourier_transform(
     fft_size: int, 
     sampling_frequency: float, # [kHz]
     pulse_length: int, # [ms]
-):
+)-> np.array:
     """
     segment the signal into M N-point segments
     do windowing and ftt on each segment
@@ -30,8 +33,12 @@ def short_time_fourier_transform(
         windowed_signal_segment = \
             apply_hanning_window(signal[i*fft_size:(i+1)*fft_size-1])
         fft = np.fft.rfft(windowed_signal_segment)
+        #fft = np.fft.rfft(signal[i*fft_size:(i+1)*fft_size-1])
+
         for fft_component in fft:
             MN_point_fft[i] += fft_component
+
+    return MN_point_fft
 
 
 def find_tone( 
@@ -100,12 +107,13 @@ def adjust_signal_length(
     signal: np.array,
     fft_size: int,
 )-> np.array:
-    if signal.size == fft_size:
+    if np.size(signal) == fft_size:
         return signal
-    elif signal.size > fft_size:
-        return signal[:fft_size]
+    elif np.size(signal) > fft_size:
+
+        return signal[0:fft_size]
     else:
-        diff = fft_size -signal.size
+        diff = fft_size - np.size(signal)
         for i in range (diff):
             np.append(signal, 0.0)
         return signal
@@ -115,13 +123,13 @@ def determine_signal_frequency(
     sampling_frequency: float,
     fft_size: int,
 ): # -> float, np.array
-    signal = adjust_signal_length(signal, fft_size)
-    fourier = np.fft.rfft(signal)
-    corresponding_freq = np.fft.rfftfreq(len(signal), 1 / sampling_frequency)
+    adj_signal = adjust_signal_length(signal, fft_size)
+    fourier = np.fft.rfft(adj_signal)
+    corresponding_freq = np.fft.rfftfreq(fft_size, 1 / sampling_frequency)
     freq_index = np.argmax(fourier)
     dominating_freq = corresponding_freq[freq_index]
 
-    return dominating_freq , corresponding_freq
+    return dominating_freq , corresponding_freq, fourier
 
 
 
