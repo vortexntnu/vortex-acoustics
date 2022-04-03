@@ -12,12 +12,11 @@ void test_calculate_pinger_position() {
     arm_matrix_instance_f32 B = {NUM_HYDROPHONES - 1, 1,
                                  new float32_t[NUM_HYDROPHONES]};
 
-
     Position* sourcePosition = new Position;
 
     initialComputationA(A.pData, hydrophonePositions);
-    arm_status status = calculatePingerPosition(
-        tdoaAray, hydrophonePositions, &A, &B, sourcePosition);
+    arm_status status = calculatePingerPosition(tdoaAray, hydrophonePositions,
+                                                &A, &B, sourcePosition);
     TEST_ASSERT_TRUE(status == ARM_MATH_SUCCESS);
 
     Position expectedSourcePosition = {3.909, 2.123, -0.607};
@@ -46,8 +45,8 @@ void test_with_small_values_for_tdoa() {
     Position* sourcePosition = new Position;
 
     initialComputationA(A.pData, hydrophonePositions);
-    arm_status status = calculatePingerPosition(
-        tdoaAray, hydrophonePositions, &A, &B, sourcePosition);
+    arm_status status = calculatePingerPosition(tdoaAray, hydrophonePositions,
+                                                &A, &B, sourcePosition);
     TEST_ASSERT_TRUE(status == ARM_MATH_SUCCESS);
 
     Position expectedSourcePosition = {0.587, 0.113, 0.326};
@@ -74,8 +73,8 @@ void test_tdoa_with_zero_values() {
     Position* sourcePosition = new Position;
 
     initialComputationA(A.pData, hydrophonePositions);
-    arm_status status = calculatePingerPosition(
-        tdoaAray, hydrophonePositions, &A, &B, sourcePosition);
+    arm_status status = calculatePingerPosition(tdoaAray, hydrophonePositions,
+                                                &A, &B, sourcePosition);
     TEST_ASSERT_FALSE(status == ARM_MATH_SUCCESS);
 
     delete[] A.pData;

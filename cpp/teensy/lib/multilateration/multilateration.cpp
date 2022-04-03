@@ -80,7 +80,8 @@ arm_status leastSquareEstimation(const arm_matrix_instance_f32* pA,
     return Status;
 }
 
-void initialComputationA(float32_t* AData, const Position hydrophonePositions[]) {
+void initialComputationA(float32_t* AData,
+                         const Position hydrophonePositions[]) {
     for (int i = 0; i < (NUM_HYDROPHONES - 1); i++) {
         *(AData + i * (NUM_HYDROPHONES - 1) + 0) =
             hydrophonePositions[0].X - hydrophonePositions[i + 1].X;
@@ -116,5 +117,3 @@ void computeB(int32_t TdoaArray[], const Position hydrophonePositions[],
                    pow(TdoaArray[i] * SOUND_SPEED / SAMPLING_FREQ, 2));
     }
 }
-
-
