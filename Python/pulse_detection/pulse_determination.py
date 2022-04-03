@@ -36,7 +36,8 @@ def short_time_fourier_transform(
         #fft = np.fft.rfft(signal[i*fft_size:(i+1)*fft_size-1])
 
         for fft_component in fft:
-            MN_point_fft[i] += fft_component
+            MN_point_fft[i] += fft_component #ComplexWarning: Casting complex values to real discards the imaginary part
+
 
     return MN_point_fft
 
