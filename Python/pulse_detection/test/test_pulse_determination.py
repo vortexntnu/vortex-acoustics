@@ -40,7 +40,7 @@ def test_hanning_window(plt): #not working
     pulse_length = 4
     noise_amplitude = 0.2
 
-    original_signal, time = generate_cosine_wave(
+    original_signal= generate_cosine_wave(
         pulse_length, 
         CARRIER_FREQUENCY, 
         SAMPLING_FREQUENCY, 
@@ -62,17 +62,6 @@ def test_hanning_window(plt): #not working
     windowed_signal = np.convolve(original_signal, hanning_window, 'same')
 
     assert np.size(windowed_signal) == np.size(original_signal)
-
-    # ----- 
-    """
-
-    fig, axs = plt.subplots(2)
-
-    axs[0].plot(time, original_signal)
-    axs[1].plt.plot(windowed_signal, label="Windowed signal")
-
-    plt.show()
-    """
 
 
 
@@ -168,14 +157,12 @@ def generate_cosine_wave(
     carrier_frequency: float, 
     sampling_frequency: float, 
     noise_amplitude: float
-)->np.array:
+)-> np.array:
 
     dt = 1 / sampling_frequency
     secondary_frequency = 62
     time = np.arange(0, pulse_length, dt)
     signal = np.cos(time * np.pi * 2 * carrier_frequency ) + noise_amplitude*np.cos(time * np.pi * 2 * secondary_frequency )
-    signal = np.asarray(signal)
-    signal = signal.flatten()
 
     return signal
 
