@@ -10,8 +10,116 @@ from signal_generation import receiver as sg_rec
 from signal_generation import source as sg_src
 from signal_generation import noise as sg_noise
 
-CARRIER_FREQUENCY = 25  # [kHz]
+CARRIER_FREQUENCY = 40  # [kHz]
 SAMPLING_FREQUENCY = 485  # [kHz]
+
+def test_short_time_fourier_transform():
+    pulse_length = 4
+    noise_amplitude = 0.1
+    fft_size = 128
+
+    signal = generate_cosine_wave(
+        pulse_length, 
+        CARRIER_FREQUENCY, 
+        SAMPLING_FREQUENCY, 
+        noise_amplitude
+    )
+
+    fft = pd_pdeter.short_time_fourier_transform(signal, fft_size, SAMPLING_FREQUENCY, pulse_length)
+    tone = pd_pdeter.find_tone(fft, SAMPLING_FREQUENCY, fft_size)
+
+    tolerance = SAMPLING_FREQUENCY / fft_size
+
+    assert abs(tone-CARRIER_FREQUENCY) < tolerance
+    #got 30.31 instead of 25 ?!
+
+#@pytest.mark.plot
+def test_hanning_window(plt): #not working 
+    print("\nTEST HANNING WINDOWING\n")
+    fft_size = 128
+    pulse_length = 4
+    noise_amplitude = 0.2
+
+    original_signal, time = generate_cosine_wave(
+        pulse_length, 
+        CARRIER_FREQUENCY, 
+        SAMPLING_FREQUENCY, 
+        noise_amplitude
+    )
+
+    original_signal = pd_pdeter.adjust_signal_length(original_signal, fft_size)
+
+    #signal = pd_pdeter.apply_hanning_window(original_signal)
+    # -------
+
+    signal_length = np.size(original_signal)
+    n = np.linspace(0,signal_length-1, signal_length) 
+ 
+
+    hanning_window =  0.5-0.5*np.cos(2*np.pi*n/(signal_length-1))
+    print("The window is: \n", hanning_window)
+
+
+    """
+    windowed_signal = np.convolve(original_signal, hanning_window, 'same')
+
+    assert np.size(windowed_signal) == np.size(original_signal)
+
+    # ----- 
+
+    fig, axs = plt.subplots(2)
+
+    axs[0].plot(time, original_signal)
+    axs[1].plt.plot(windowed_signal, label="Windowed signal")
+
+    plt.show()
+    """
+
+
+
+def test_determine_signal_frequncy():
+    """
+    signal_frequency_incremetns = 5
+    pulse_length = 4
+    noise_amplitude = 0.1
+    fft_size = 128
+
+    signal = generate_cosine_wave(
+        pulse_length, 
+        CARRIER_FREQUENCY, 
+        SAMPLING_FREQUENCY, 
+        noise_amplitude
+    )
+
+
+
+    computed_carrier_frequnecy, frequency_bins, fft= pd_pdeter.determine_signal_frequency( #, frequency_bins
+        signal, 
+        SAMPLING_FREQUENCY,
+        fft_size,
+    )
+
+    tolerance = SAMPLING_FREQUENCY / fft_size
+
+    assert abs(computed_carrier_frequnecy-CARRIER_FREQUENCY) < tolerance
+
+    print("\nDETERMINE SIGNAL FREQUENCY\n")
+    print("\nThe fft size is: ", fft_size)
+    print("\nThe computed carrier frequnecy is: ", computed_carrier_frequnecy)
+    print("\nThe frequency bins are: \n ", frequency_bins)
+
+    """
+
+
+def test_find_optimal_sampling_frequency():
+
+    fft_size = 128
+    sample_frequency, frequency_bins =  pd_pdeter.find_optimal_sampling_frequency(fft_size)
+
+    print("\nFIND OPTIMAL SAMPLING FREQUENCY\n")
+    print("\nThe optimal sampling frequency is: ", sample_frequency)
+    print("\nThe frequency bins are: \n ", frequency_bins)
+
 
 def generate_noisy_pulses(
     source_position: sg_pos.Position = sg_pos.Position(10, 10, 10),
@@ -61,98 +169,18 @@ def generate_noisy_pulses(
 def generate_cosine_wave(
     pulse_length: int,
     carrier_frequency: float, 
-    sampling_frequency: float
+    sampling_frequency: float, 
+    noise_amplitude: float
 ):
 
     dt = 1 / sampling_frequency
     secondary_frequency = 62
     time = np.arange(0, pulse_length, dt)
-    signal = np.cos(time * np.pi * 2 * carrier_frequency ) + 0.6*np.cos(time * np.pi * 2 * secondary_frequency )
+    signal = \
+        np.cos(time * np.pi * 2 * carrier_frequency ) + \
+        noise_amplitude*np.cos(time * np.pi * 2 * secondary_frequency )
 
-    return signal
- 
-
-
-def test_determine_signal_frequncy():
-    sample_frequency = SAMPLING_FREQUENCY
-    signal_frequency_incremetns = 5
-    pulse_length = 4
-
-    signal = generate_cosine_wave(
-        pulse_length, 
-        CARRIER_FREQUENCY, 
-        SAMPLING_FREQUENCY
-    )
-
-    fft_size = pd_pdeter.compute_fft_size(
-        sample_frequency, 
-        signal_frequency_incremetns, 
-        pulse_length
-    )
-
-    carrier_frequnecy, frequency_bins= pd_pdeter.determine_signal_frequency( #, frequency_bins
-        signal, 
-        sample_frequency,
-        fft_size,
-    )
-
-    #add assert
-
-    print("\nDETERMINE SIGNAL FREQUENCY\n")
-    print("\nThe fft size is: ", fft_size)
-    print("\nThe computed carrier frequnecy is: ", carrier_frequnecy)
-    print("\nThe frequency bins are: \n ", frequency_bins)
-
-
-def test_find_optimal_sampling_frequency():
-
-    pulse_length = 4
-    fft_size = 128
-    sample_frequency, frequency_bins =  pd_pdeter.find_optimal_sampling_frequency(fft_size)
-
-    print("\nFIND OPTIMAL SAMPLING FREQUENCY\n")
-    print("\nThe sampling frequency is: ", sample_frequency)
-    print("\nThe frequency bins are: \n ", frequency_bins)
-
-
-
-#@pytest.mark.plot
-def test_determine_signal_frequncy_with_window(plt):
-    sample_frequency = SAMPLING_FREQUENCY
-    fft_size = 128
-    pulse_length = 4
-
-    original_signal = generate_cosine_wave(
-        pulse_length, 
-        CARRIER_FREQUENCY, 
-        SAMPLING_FREQUENCY
-    )
-
-    original_signal = pd_pdeter.adjust_signal_length(original_signal, fft_size)
-
-    fft = np.fft.rfft(original_signal)
-
-    signal = pd_pdeter.apply_hanning_window(original_signal)
-
-    fft_with_window = np.fft.rfft(signal)
-
-    carrier_frequnecy, frequency_bins= pd_pdeter.determine_signal_frequency( #, frequency_bins
-        signal, 
-        sample_frequency,
-        fft_size,
-    )
-
-
-    fig, axs = plt.subplots(4,1)
-
-
-    axs[0] = plt.plot(original_signal, label="Original signal")
-    axs[1] = plt.plot(signal, label="Windowed signal")
-    axs[2] = plt.plot(frequency_bins, fft)
-    axs[3] = plt.plot(frequency_bins, fft_with_window)
-
-    plt.show()
-    assert True
+    return signal, time
 
 
 
