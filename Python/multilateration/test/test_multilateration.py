@@ -109,7 +109,8 @@ def test_trilateration_algorithm():
     actual position to check if within given tolerance value.
     Only considering x and y, since we only have three hydrophones.
     """
-    tolerance = 3
+
+    tolerance = 4
     sample_frequency = 300000
 
     tdoa_sample_array = generate_tdoa_lag_array(
@@ -131,3 +132,56 @@ def test_trilateration_algorithm():
     )
 
     assert abs(source_position - res_position) < tolerance
+
+
+def test_compare_with_teensy():
+    """Provides a reference for the code on the Teensy to compare against.
+
+    The estimates that are generated within this test should be the same if run on the Teensy.
+    """
+
+    tdoa_sample_array = np.empty(4, int)
+    tdoa_sample_array[0] = 1
+    tdoa_sample_array[1] = 0
+    tdoa_sample_array[2] = 2
+    tdoa_sample_array[3] = 0
+
+    sample_frequency = 300000
+
+    hydrophone_positions = np.array(
+        [
+            Position(
+                x=-0.11,
+                y=0.31,
+                z=0.1,
+            ),
+            Position(
+                x=0.11,
+                y=0.31,
+                z=0.1,
+            ),
+            Position(
+                x=0.0,
+                y=-0.24,
+                z=0.0,
+            ),
+            Position(
+                x=0.5,
+                y=-0.1,
+                z=0.4,
+            ),
+            Position(
+                x=0.4,
+                y=0.0,
+                z=-0.4,
+            ),
+        ]
+    )
+
+    x_estimate, y_estimate, z_estimate = mult.calculate_pinger_position(
+        tdoa_lag_array=tdoa_sample_array,
+        hydrophone_positions=hydrophone_positions,
+        sample_frequency=sample_frequency,
+    )
+
+    print(f"x: {x_estimate}, y: {y_estimate}, z: {z_estimate} ")
