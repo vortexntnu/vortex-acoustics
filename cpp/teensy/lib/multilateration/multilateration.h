@@ -6,26 +6,6 @@
 const int32_t NUM_HYDROPHONES = 5;
 const int32_t NUM_DIMENSIONS = 3;
 
-const float32_t HYD_0_X_POS = -0.11;
-const float32_t HYD_0_Y_POS = 0.31;
-const float32_t HYD_0_Z_POS = 0.10;
-
-const float32_t HYD_1_X_POS = 0.11;
-const float32_t HYD_1_Y_POS = 0.31;
-const float32_t HYD_1_Z_POS = 0.10;
-
-const float32_t HYD_2_X_POS = 0.0;
-const float32_t HYD_2_Y_POS = -0.24;
-const float32_t HYD_2_Z_POS = 0.0;
-
-const float32_t HYD_3_X_POS = 0.5;
-const float32_t HYD_3_Y_POS = -0.1;
-const float32_t HYD_3_Z_POS = 0.4;
-
-const float32_t HYD_4_X_POS = 0.4;
-const float32_t HYD_4_Y_POS = 0.0;
-const float32_t HYD_4_Z_POS = -0.4;
-
 const float32_t SOUND_SPEED = 1480.0; //[m/s]
 const int SAMPLING_FREQ = 300000; //[Hz]
 
@@ -35,12 +15,13 @@ struct Position {
     float32_t Z;
 };
 
+//OBS: use same x, y, z system as autonomous 
 const Position hydrophonePositions[NUM_HYDROPHONES] ={
-    {HYD_0_X_POS, HYD_0_Y_POS, HYD_0_Z_POS}, 
-    {HYD_1_X_POS, HYD_1_Y_POS, HYD_1_Z_POS},
-    {HYD_2_X_POS, HYD_2_Y_POS, HYD_2_Z_POS},
-    {HYD_3_X_POS, HYD_3_Y_POS, HYD_3_Z_POS},
-    {HYD_4_X_POS, HYD_4_Y_POS, HYD_4_Z_POS}
+    {-0.11, 0.31, 0.10}, //Hyd0 {x,y,z}
+    {0.11, 0.31, 0.10}, //Hyd1 {x,y,z}
+    {0.0, -0.24, 0.0}, //Hyd2 {x,y,z}
+    {0.5, -0.1, 0.4}, //Hyd3 {x,y,z}
+    {0.4, 0.0, -0.4}  //Hyd4 {x,y,z}
     }; 
 
 arm_status calculatePingerPosition(int32_t TdoaArray[],
