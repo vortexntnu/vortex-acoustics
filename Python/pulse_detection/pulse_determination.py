@@ -76,7 +76,18 @@ def find_optimal_sampling_frequency( fft_size: int):
             min_cost = cost
             optimal_sampling_freq = sampling_freq
 
-    return optimal_sampling_freq
+    return optimal_sampling_freq, np.fft.rfftfreq(fft_size, 1/optimal_sampling_freq)
+
+
+def apply_hanning_window(
+    signal: np.array
+):
+    window = np.hanning(np.size(signal)) 
+    windowed_signal = np.convolve(signal, window, 'same')
+
+    assert np.size(windowed_signal) == np.size(signal)
+
+    return windowed_signal
 
     
 
