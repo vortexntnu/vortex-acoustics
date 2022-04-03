@@ -31,7 +31,7 @@ def test_short_time_fourier_transform():
     tolerance = SAMPLING_FREQUENCY / fft_size
 
     assert abs(tone-CARRIER_FREQUENCY) < tolerance
-    #got 30.31 instead of 25 ?!
+    #got 18.19 instead of 40
 
 #@pytest.mark.plot
 def test_hanning_window(plt): #not working 

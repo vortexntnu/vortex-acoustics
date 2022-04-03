@@ -11,8 +11,6 @@ TODO:
     - short time fourier transform
     - with signal generation 
 
-- convolution giving error
-- determine sig length stopped working?!
 
 """
 
