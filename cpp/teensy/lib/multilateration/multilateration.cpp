@@ -4,27 +4,18 @@ arm_status calculatePingerPosition(int32_t TdoaArray[],
                                    const Position hydrophonePositions[],
                                    const arm_matrix_instance_f32* pA,
                                    const arm_matrix_instance_f32* pB,
-                                   Position* sourcePosition) {
+                                   Position* pSourcePosition) {
     computeA(TdoaArray, pA->pData);
     computeB(TdoaArray, hydrophonePositions, pB->pData);
 
-    arm_matrix_instance_f32 Result = {NUM_HYDROPHONES - 1, 1,
-                                      new float32_t[NUM_HYDROPHONES]};
-
-    arm_status Status = leastSquareEstimation(pA, pB, &Result);
-
-    sourcePosition->X = *(Result.pData);
-    sourcePosition->Y = *(Result.pData + 1);
-    sourcePosition->Z = *(Result.pData + 2);
-
-    delete[] Result.pData; 
+    arm_status Status = leastSquareEstimation(pA, pB, pSourcePosition);
 
     return Status;
 }
 
 arm_status leastSquareEstimation(const arm_matrix_instance_f32* pA,
                                  const arm_matrix_instance_f32* pB,
-                                 arm_matrix_instance_f32* pResult) {
+                                 Position* pSourcePosition) {
     arm_matrix_instance_f32 Atrans;
     Atrans.numCols = NUM_HYDROPHONES - 1;
     Atrans.numRows = NUM_DIMENSIONS + 1;
@@ -67,16 +58,24 @@ arm_status leastSquareEstimation(const arm_matrix_instance_f32* pA,
         return Status;
     }
 
+    arm_matrix_instance_f32 Result = {NUM_HYDROPHONES - 1, 1,
+                                      new float32_t[NUM_HYDROPHONES]};
+
     const arm_matrix_instance_f32* pAtransXAinvXAtrans = &AtransXAinvXAtrans;
-    Status = arm_mat_mult_f32(pAtransXAinvXAtrans, pB, pResult);
+    Status = arm_mat_mult_f32(pAtransXAinvXAtrans, pB, &Result);
     if (Status != ARM_MATH_SUCCESS) {
         return Status;
     }
+
+    pSourcePosition->X = *(Result.pData);
+    pSourcePosition->Y = *(Result.pData + 1);
+    pSourcePosition->Z = *(Result.pData + 2);
 
     delete[] Atrans.pData;
     delete[] AtransXA.pData;
     delete[] AtransXAinv.pData;
     delete[] AtransXAinvXAtrans.pData;
+    delete[] Result.pData;
 
     return Status;
 }

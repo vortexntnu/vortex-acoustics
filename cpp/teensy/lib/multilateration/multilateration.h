@@ -28,7 +28,7 @@ arm_status calculatePingerPosition(int32_t TdoaArray[],
                                    const Position hydrophonePositions[],
                                    const arm_matrix_instance_f32* pA,
                                    const arm_matrix_instance_f32* pB,
-                                   Position* sourcePosition);
+                                   Position* pSourcePosition);
 
 void initialComputationA(float32_t* AData, const Position hydrophonePositions[]);
 void computeA(int32_t TdoaArray[], float32_t* AData);
@@ -37,6 +37,6 @@ void computeB(int32_t TdoaArray[], const Position hydrophonePositions[],
 
 arm_status leastSquareEstimation(const arm_matrix_instance_f32* pA,
                                  const arm_matrix_instance_f32* pB,
-                                 arm_matrix_instance_f32* pResult);
+                                 Position* pSourcePosition);
 
 
