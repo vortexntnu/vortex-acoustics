@@ -96,6 +96,32 @@ def test_determine_signal_frequncy():
 
     #add assert
 
+    print("\nDETERMINE SIGNAL FREQUENCY\n")
     print("\nThe fft size is: ", fft_size)
+    print("\nThe computed carrier frequnecy is: ", carrier_frequnecy)
+    print("\nThe frequency bins are: \n ", frequency_bins)
+
+def test_find_optimal_sampling_frequency():
+
+    pulse_length = 4
+    fft_size = 128
+    sample_frequency =  pd_pdeter.find_optimal_sampling_frequency(fft_size)
+
+    signal = generate_cosine_wave(
+    pulse_length, 
+    CARRIER_FREQUENCY, 
+    SAMPLING_FREQUENCY
+    )
+
+    carrier_frequnecy, frequency_bins= pd_pdeter.determine_signal_frequency( #, frequency_bins
+        signal, 
+        sample_frequency,
+        fft_size,
+    )
+
+    #add assert
+
+    print("\nFIND OPTIMAL SAMPLING FREQUENCY\n")
+    print("\nThe sampling frequency is: ", sample_frequency)
     print("\nThe computed carrier frequnecy is: ", carrier_frequnecy)
     print("\nThe frequency bins are: \n ", frequency_bins)
