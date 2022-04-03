@@ -9,7 +9,7 @@ from signal_generation import source as sg_src
 from signal_generation import noise as sg_noise
 
 CARRIER_FREQUENCY = 25  # [kHz]
-SAMPLING_FREQUENCY = 512  # [kHz]
+SAMPLING_FREQUENCY = 485  # [kHz]
 
 def generate_noisy_pulses(
     source_position: sg_pos.Position = sg_pos.Position(10, 10, 10),
@@ -65,7 +65,7 @@ def generate_cosine_wave(
     dt = 1 / sampling_frequency
     secondary_frequency = 62
     time = np.arange(0, pulse_length, dt)
-    signal = np.cos(time * np.pi * 2 * carrier_frequency ) + 0.1*np.cos(time * np.pi * 2 * secondary_frequency )
+    signal = np.cos(time * np.pi * 2 * carrier_frequency ) + 0.6*np.cos(time * np.pi * 2 * secondary_frequency )
 
     return signal
  
@@ -118,8 +118,6 @@ def test_find_optimal_sampling_frequency():
         sample_frequency,
         fft_size,
     )
-
-    #add assert
 
     print("\nFIND OPTIMAL SAMPLING FREQUENCY\n")
     print("\nThe sampling frequency is: ", sample_frequency)
