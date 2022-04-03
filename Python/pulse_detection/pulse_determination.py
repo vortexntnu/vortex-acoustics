@@ -10,8 +10,8 @@ TODO:
     how to deal with this giving different results? 
     perhaps it accually merges to the same result 
 - Find a sampling frequency that works for 25, 30, 35 and 45 kHz pinger freq.
-    write a script, or just test
-        can use some type of cost function, and iterate over all possible sampling frequencies
+    make a cost function
+        mabye use weighted costs
 
 """
 
@@ -60,7 +60,7 @@ def determine_signal_frequency(
 
 def find_optimal_sampling_frequency( fft_size: int):
     pinger_frequencies = {25.0, 30.0, 35.0, 40.0}
-    min_cost = 500000 
+    min_cost = 5000000
     optimal_sampling_freq = -1
     for sampling_freq in range (300, 500):
         cost = 0
@@ -71,7 +71,7 @@ def find_optimal_sampling_frequency( fft_size: int):
             for center_freq in frequency_bins:
                 if abs(pinger_freq - center_freq) < diff:
                     closest_center_freq = center_freq
-            cost += abs(closest_center_freq - pinger_freq)
+            cost += abs(closest_center_freq - pinger_freq)**3 #gives same reuslt for **1, **2, **3
         if cost < min_cost:
             min_cost = cost
             optimal_sampling_freq = sampling_freq
