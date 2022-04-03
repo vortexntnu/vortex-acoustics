@@ -1,41 +1,39 @@
 from signal import signal
 from socket import SOCK_DGRAM
 import numpy as np
+from scipy.fft import fft
 from scipy.fftpack import fft2
 import scipy.signal
 
 """
 TODO:
 - Test
-    - windowing
+    - windowing - it runs, but dont know how to see if it is correct
     - short time fourier transform
     - with signal generation 
 
 
 """
 
+#try without hanning window. 
 def short_time_fourier_transform(
     signal: np.array, 
     fft_size: int, 
     sampling_frequency: float, # [kHz]
     pulse_length: int, # [ms]
 )-> np.array:
-    """
-    segment the signal into M N-point segments
-    do windowing and ftt on each segment
-    sum up al the compoents
-    """
-    MN_point_fft = np.empty(fft_size)
-    n_segments = (pulse_length * sampling_frequency) // fft_size
-    for i in range(n_segments):
+
+    MN_point_fft = np.zeros(fft_size, dtype=np.complex) 
+    M = (pulse_length * sampling_frequency) // fft_size
+    for i in range(M):
         windowed_signal_segment = \
-            apply_hanning_window(signal[i*fft_size:(i+1)*fft_size-1])
-        fft = np.fft.rfft(windowed_signal_segment)
-        #fft = np.fft.rfft(signal[i*fft_size:(i+1)*fft_size-1])
+            apply_hanning_window(signal[i*fft_size:(i+1)*fft_size])
+        print("\n window size is: ", np.size(windowed_signal_segment)) #lik 128
+        N_point_fft = np.fft.rfft(windowed_signal_segment)
+        print("\n fft size of segment is; ", np.size(N_point_fft)) #lik 65! but why? 
 
-        for fft_component in fft:
-            MN_point_fft[i] += fft_component #ComplexWarning: Casting complex values to real discards the imaginary part
-
+        for index in range(np.size(N_point_fft)): # not equal to fft size !!
+            MN_point_fft[index] += N_point_fft[index]
 
     return MN_point_fft
 
@@ -122,8 +120,11 @@ def determine_signal_frequency(
     fft_size: int,
 ): # -> float, np.array
     adj_signal = adjust_signal_length(signal, fft_size)
+    print("Size of adj singal is: ", np.size(adj_signal)) #128
     fourier = np.fft.rfft(adj_signal)
+    print("Size of fft is: ", np.size(fourier)) #65
     corresponding_freq = np.fft.rfftfreq(fft_size, 1 / sampling_frequency)
+    print("Size of fft freq is: ", np.size(corresponding_freq)) #65
     freq_index = np.argmax(fourier)
     dominating_freq = corresponding_freq[freq_index]
 
