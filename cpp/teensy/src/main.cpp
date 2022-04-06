@@ -4,6 +4,8 @@
 
 #include "algorithm"
 
+#include "../pulse_detection/pulse_determination.h"
+
 int main(void) {
     while (true) {
     }

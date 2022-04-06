@@ -1,3 +1,4 @@
+from curses import window
 from signal import signal
 from socket import SOCK_DGRAM
 
@@ -64,8 +65,8 @@ def apply_bratlett_window(signal: np.array):
 
     bratlett_window = np.bartlett(
         signal_length
-    )  # 0.54-0.46*np.cos(2*np.pi*n/(signal_length-1)) #np.hanning(signal_length)
-    windowed_signal = np.convolve(signal, bratlett_window, "same")
+    )  
+    windowed_signal = np.convolve(signal, bratlett_window, 'full')[signal_length//2:signal_length + signal_length//2]
 
     return windowed_signal
 
