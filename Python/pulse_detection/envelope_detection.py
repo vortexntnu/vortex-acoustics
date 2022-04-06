@@ -18,9 +18,9 @@ def asynchronous_full_wave(
 
     return signal
 
+
 def asynchronous_hilbert_complex(
     signal,
 ):
     hil_signal = scipy.signal.hilbert(signal)
     return np.abs(hil_signal)
-

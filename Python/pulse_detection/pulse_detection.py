@@ -1,9 +1,8 @@
 import logging
 
 import numpy as np
-import scipy.signal
-
 import pulse_detection.envelope_detection as pd_ed
+import scipy.signal
 
 
 def detect_pulse_by_envelope_and_mean_variance(
@@ -13,7 +12,7 @@ def detect_pulse_by_envelope_and_mean_variance(
     sampling_frequency: float = 500,  # [kHz]
     threshold: float = None,
 ):
-    """ Uses the signal envelope and threshold generated from mean and
+    """Uses the signal envelope and threshold generated from mean and
     variance to detect pulses.
     """
     # calculate threshold:
@@ -28,11 +27,11 @@ def detect_pulse_by_envelope_and_mean_variance(
     pulse_detected = np.zeros(len(envelope) - frame_length, dtype=np.bool_)
 
     if threshold is None:
-        threshold = historic_mean + 3*historic_variance
+        threshold = historic_mean + 3 * historic_variance
         logging.debug(f"Threshold set at: {threshold:.2f}")
 
     for index in range(0, len(envelope) - frame_length):
-        frame = envelope[index:(index+frame_length)]
+        frame = envelope[index : (index + frame_length)]
         above_treshold = frame > threshold
         pulse_detected[index] = np.all(above_treshold)
 
@@ -55,7 +54,7 @@ def detect_pulse_by_envelope_and_differentiation(
     envelope_means = np.zeros(len(envelope) // frame_length)
     for index in range(0, len(envelope_means)):
         env_index = index * frame_length
-        envelope_means[index] = np.mean(envelope[env_index:env_index+frame_length])
+        envelope_means[index] = np.mean(envelope[env_index : env_index + frame_length])
 
     differentiated_means = scipy.signal.lfilter(
         [1, -1],
