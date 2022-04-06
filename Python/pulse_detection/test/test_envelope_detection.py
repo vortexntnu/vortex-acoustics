@@ -2,14 +2,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 import scipy.signal
-
-from pulse_detection.envelope_detection import asynchronous_full_wave
-from pulse_detection.envelope_detection import asynchronous_hilbert_complex
+from pulse_detection.envelope_detection import (
+    asynchronous_full_wave,
+    asynchronous_hilbert_complex,
+)
+from signal_generation import noise as sg_noise
 from signal_generation import positioning as sg_pos
 from signal_generation import receiver as sg_rec
 from signal_generation import source as sg_src
-from signal_generation import noise as sg_noise
-
 
 CARRIER_FREQUENCY = 25  # [kHz]
 SAMPLING_FREQUENCY = 500  # [kHz]
