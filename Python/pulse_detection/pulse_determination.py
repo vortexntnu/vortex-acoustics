@@ -14,6 +14,7 @@ TODO:
     - with signal generation 
 
 - not able to distinguish 35 and 40
+    with fft size 256 its good
 
 
 """
@@ -29,8 +30,8 @@ def short_time_fourier_transform(
     MN_point_fft = np.zeros(fft_size//2 +1, dtype=np.complex) 
     M = (pulse_length * sampling_frequency) // fft_size
     for i in range(M):
-        #windowed_signal_segment = \
-        #  apply_hanning_window(signal[i*fft_size:(i+1)*fft_size])
+        windowed_signal_segment = \
+            apply_hanning_window(signal[i*fft_size:(i+1)*fft_size])
         N_point_fft = np.fft.rfft(signal[i*fft_size:(i+1)*fft_size]) 
         for index in range(np.size(N_point_fft)): 
             MN_point_fft[index] += N_point_fft[index]
