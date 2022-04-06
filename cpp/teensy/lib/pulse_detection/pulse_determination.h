@@ -5,6 +5,6 @@
 #define FFT_SIZE 256
 #define PULSE_LENGTH 4 //[ms]
 
-void shortTimeFourierTransform(float32_t* pulse,  float32* dstFft); 
+void shortTimeFourierTransform(float32_t* pulse,  float32_t* dstFft); 
 float32_t computeTone(float32_t* fft); //remeber here you must find the exact freq after using argmax
-void applyBartlettWindow(float32t* pulse, float32* dstWindowedPulse); 
+void makeBartlettWindow(float32_t* array, uint32_t arrayLength, float32_t* dstWindowedPulse); 
