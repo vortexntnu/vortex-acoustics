@@ -10,13 +10,14 @@ from signal_generation import receiver as sg_rec
 from signal_generation import source as sg_src
 from signal_generation import noise as sg_noise
 
-CARRIER_FREQUENCY = 35  # [kHz]
-SAMPLING_FREQUENCY = 485  # [kHz]
+CARRIER_FREQUENCY = 40  # [kHz]
+SAMPLING_FREQUENCY = 427  # [kHz]
+FFT_SIZE = 256
 
 def test_short_time_fourier_transform():
     pulse_length = 4
-    noise_amplitude = 0.0
-    fft_size = 128
+    noise_amplitude = 0.9
+    fft_size = FFT_SIZE
 
     signal = generate_cosine_wave(
         pulse_length, 
@@ -28,18 +29,19 @@ def test_short_time_fourier_transform():
     fft = pd_pdeter.short_time_fourier_transform(signal, fft_size, SAMPLING_FREQUENCY, pulse_length)
     tone = pd_pdeter.find_tone(fft, SAMPLING_FREQUENCY, fft_size)
 
-    print("The carrier freq is: \n", tone)
-    print("The fft is: \n", fft)
-    print("The fft size is: ", np.size(fft))
+    print("\nTEST STFT\n")
+    print("\nThe carrier freq is: ", tone)
+    #print("The fft is: \n", fft)
+    print("\nThe fft size is: ", np.size(fft))
 
     tolerance = SAMPLING_FREQUENCY / fft_size
 
     assert abs(tone-CARRIER_FREQUENCY) < tolerance
-    #got 18.19 instead of 40
 
-def test_hanning_window(plt): #not working 
+
+def test_hanning_window(plt):  
     print("\nTEST HANNING WINDOWING\n")
-    fft_size = 128
+    fft_size = FFT_SIZE
     pulse_length = 4
     noise_amplitude = 0.2
 
@@ -54,16 +56,18 @@ def test_hanning_window(plt): #not working
 
     signal = pd_pdeter.apply_hanning_window(original_signal)
 
+    #print("\nOriginal signal: ", original_signal)
+    #print("\nSignal: ", signal)
+
     assert np.size(signal) == np.size(original_signal) 
 
 
 
 def test_determine_signal_frequncy():
 
-    signal_frequency_incremetns = 5
     pulse_length = 4
     noise_amplitude = 0.1
-    fft_size = 128
+    fft_size = FFT_SIZE
 
     signal = generate_cosine_wave(
         pulse_length, 
@@ -89,19 +93,19 @@ def test_determine_signal_frequncy():
     print("\nThe fft size is: ", fft_size)
     print("\nThe computed carrier frequnecy is: ", computed_carrier_frequnecy)
     print("\nThe frequency bins are: \n ", frequency_bins)
-    print("\nThe fft is: \n ", fft)
+
 
     
 
 
 def test_find_optimal_sampling_frequency():
 
-    fft_size = 128
+    fft_size = FFT_SIZE
     sample_frequency, frequency_bins =  pd_pdeter.find_optimal_sampling_frequency(fft_size)
 
     print("\nFIND OPTIMAL SAMPLING FREQUENCY\n")
     print("\nThe optimal sampling frequency is: ", sample_frequency)
-    print("\nThe frequency bins are: \n ", frequency_bins)
+    #print("\nThe frequency bins are: \n ", frequency_bins)
 
 
 def generate_noisy_pulses(

@@ -8,9 +8,12 @@ import scipy.signal
 """
 TODO:
 - Test
-    - windowing - it runs, but dont know how to see if it is correct
+    - windowing - not sure how to see if it is correct
     - short time fourier transform
+        - works without windowing
     - with signal generation 
+
+- not able to distinguish 35 and 40
 
 
 """
@@ -23,16 +26,13 @@ def short_time_fourier_transform(
     pulse_length: int, # [ms]
 )-> np.array:
 
-    MN_point_fft = np.zeros(fft_size, dtype=np.complex) 
+    MN_point_fft = np.zeros(fft_size//2 +1, dtype=np.complex) 
     M = (pulse_length * sampling_frequency) // fft_size
     for i in range(M):
-        windowed_signal_segment = \
-            apply_hanning_window(signal[i*fft_size:(i+1)*fft_size])
-        print("\n window size is: ", np.size(windowed_signal_segment)) #lik 128
-        N_point_fft = np.fft.rfft(windowed_signal_segment)
-        print("\n fft size of segment is; ", np.size(N_point_fft)) #lik 65! but why? 
-
-        for index in range(np.size(N_point_fft)): # not equal to fft size !!
+        #windowed_signal_segment = \
+        #  apply_hanning_window(signal[i*fft_size:(i+1)*fft_size])
+        N_point_fft = np.fft.rfft(signal[i*fft_size:(i+1)*fft_size]) 
+        for index in range(np.size(N_point_fft)): 
             MN_point_fft[index] += N_point_fft[index]
 
     return MN_point_fft
@@ -57,8 +57,6 @@ def apply_hanning_window(
 
     hanning_window =  0.5-0.5*np.cos(2*np.pi*n/(signal_length-1))
     windowed_signal = np.convolve(signal, hanning_window, 'same')
-
-    assert np.size(windowed_signal) == np.size(signal)
 
     return windowed_signal
 
@@ -85,6 +83,7 @@ def find_optimal_sampling_frequency( fft_size: int):
 
 # ------- only used for debugging/testing ------------
 
+#obs - not using this result 
 def compute_fft_size(
     sample_frequncy: float, # [kHz]
     signal_frequncy_increments: float, # [kHz]
@@ -99,20 +98,6 @@ def compute_fft_size(
     assert n < pulse_length*sample_frequncy
          
     return n
-
-def adjust_signal_length(
-    signal: np.array,
-    fft_size: int,
-)-> np.array:
-    if signal.size == fft_size:
-        return signal
-    elif signal.size > fft_size:
-        return signal[:fft_size]
-    else:
-        diff = fft_size -signal.size
-        for i in range (diff):
-            np.append(signal, 0.0)
-        return signal
 
 def determine_signal_frequency( 
     signal: np.array, 
@@ -130,6 +115,19 @@ def determine_signal_frequency(
 
     return dominating_freq , corresponding_freq, fourier
 
+def adjust_signal_length(
+    signal: np.array,
+    fft_size: int,
+)-> np.array:
+    if signal.size == fft_size:
+        return signal
+    elif signal.size > fft_size:
+        return signal[:fft_size]
+    else:
+        diff = fft_size -signal.size
+        for i in range (diff):
+            np.append(signal, 0.0)
+        return signal
 
 
     
