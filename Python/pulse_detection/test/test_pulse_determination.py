@@ -10,13 +10,13 @@ from signal_generation import receiver as sg_rec
 from signal_generation import source as sg_src
 from signal_generation import noise as sg_noise
 
-CARRIER_FREQUENCY = 40  # [kHz]
+CARRIER_FREQUENCY = 25  # [kHz]
 SAMPLING_FREQUENCY = 427  # [kHz]
 FFT_SIZE = 256
 
 def test_short_time_fourier_transform():
     pulse_length = 4
-    noise_amplitude = 0.9
+    noise_amplitude = 0.7
     fft_size = FFT_SIZE
 
     signal = generate_cosine_wave(
@@ -29,9 +29,9 @@ def test_short_time_fourier_transform():
     fft = pd_pdeter.short_time_fourier_transform(signal, fft_size, SAMPLING_FREQUENCY, pulse_length)
     tone = pd_pdeter.find_tone(fft, SAMPLING_FREQUENCY, fft_size)
 
-    print("\nTEST STFT\n")
+    print("\nTEST STFT WITH WINDOWING\n")
     print("\nThe carrier freq is: ", tone)
-    print("The fft is: \n", fft)
+    #print("The fft is: \n", fft)
     print("\nThe fft size is: ", np.size(fft))
 
     tolerance = SAMPLING_FREQUENCY / fft_size
@@ -39,7 +39,7 @@ def test_short_time_fourier_transform():
     assert abs(tone-CARRIER_FREQUENCY) < tolerance
 
 
-def test_hanning_window(plt):  
+def test_bratlett_window(plt):  
     fft_size = FFT_SIZE
     pulse_length = 4
     noise_amplitude = 0.2
@@ -53,11 +53,11 @@ def test_hanning_window(plt):
 
     original_signal = pd_pdeter.adjust_signal_length(original_signal, fft_size)
 
-    signal = pd_pdeter.apply_hanning_window(original_signal)
+    signal = pd_pdeter.apply_bratlett_window(original_signal)
 
-    print("\nTEST HANNING WINDOWING\n")
-    print("\nOriginal signal: ", original_signal)
-    print("\nSignal: ", signal)
+    print("\nTEST bratlett WINDOWING\n")
+    #print("\nOriginal signal: ", original_signal)
+    #print("\nSignal: ", signal)
 
     assert np.size(signal) == np.size(original_signal) 
 
@@ -83,16 +83,16 @@ def test_determine_signal_frequncy():
     )
     computed_carrier_frequnecy_v2 = pd_pdeter.find_tone(fft, SAMPLING_FREQUENCY, fft_size)
 
-    tolerance = SAMPLING_FREQUENCY / fft_size
+    tolerance = 2*SAMPLING_FREQUENCY / fft_size
 
     assert abs(computed_carrier_frequnecy-CARRIER_FREQUENCY) < tolerance
 
     assert abs(computed_carrier_frequnecy_v2-CARRIER_FREQUENCY) < tolerance
 
-    print("\nDETERMINE SIGNAL FREQUENCY\n")
+    print("\nTEST FFT WITHOUT WINDOWING\n")
     print("\nThe fft size is: ", fft_size)
     print("\nThe computed carrier frequnecy is: ", computed_carrier_frequnecy)
-    #print("\nThe frequency bins are: \n ", frequency_bins)
+    print("\nThe frequency bins are: \n ", frequency_bins)
   
 
 def test_find_optimal_sampling_frequency():

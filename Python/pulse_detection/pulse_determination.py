@@ -8,10 +8,12 @@ from scipy.fft import fft
 """
 TODO:
 - Test
-    - windowing - not sure how to see if it is correct
-    - short time fourier transform
-        - works without windowing
     - with signal generation 
+
+- windowing 
+    - bratlett gives the best result
+    - hamming gives okey results, but worse than no window at all
+    - hanning results in carrier freq = 0.0
 
 - not able to distinguish 35 and 40 with fft size 128
     with fft size 256 its good -> bin width = 1 kHz
@@ -30,9 +32,9 @@ def short_time_fourier_transform(
     MN_point_fft = np.zeros(fft_size//2 +1, dtype=np.complex) 
     M = (pulse_length * sampling_frequency) // fft_size
     for i in range(M):
-        #windowed_signal_segment = \
-        #    apply_hanning_window(signal[i*fft_size:(i+1)*fft_size])
-        N_point_fft = np.fft.rfft(signal[i*fft_size:(i+1)*fft_size]) # np.fft.rfft(windowed_signal_segment) 
+        windowed_signal_segment = \
+            apply_bratlett_window(signal[i*fft_size:(i+1)*fft_size])
+        N_point_fft = np.fft.rfft(windowed_signal_segment)## np.fft.rfft(signal[i*fft_size:(i+1)*fft_size]) # np.fft.rfft(windowed_signal_segment) 
         for index in range(np.size(N_point_fft)): 
             MN_point_fft[index] += N_point_fft[index]
 
@@ -50,14 +52,14 @@ def find_tone(
     return tone
 
 
-def apply_hanning_window( 
+def apply_bratlett_window( 
     signal: np.array
 ):
     signal_length = np.size(signal)
     n = np.linspace(0,signal_length-1, signal_length) 
 
-    hanning_window = 0.5-0.5*np.cos(2*np.pi*n/(signal_length-1)) #np.hanning(signal_length) 
-    windowed_signal = np.convolve(signal, hanning_window, 'same')
+    bratlett_window = np.bartlett(signal_length)  #0.54-0.46*np.cos(2*np.pi*n/(signal_length-1)) #np.hanning(signal_length) 
+    windowed_signal = np.convolve(signal, bratlett_window, 'same')
 
     return windowed_signal
 
