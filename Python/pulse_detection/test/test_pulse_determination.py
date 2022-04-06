@@ -31,7 +31,7 @@ def test_short_time_fourier_transform():
 
     print("\nTEST STFT\n")
     print("\nThe carrier freq is: ", tone)
-    #print("The fft is: \n", fft)
+    print("The fft is: \n", fft)
     print("\nThe fft size is: ", np.size(fft))
 
     tolerance = SAMPLING_FREQUENCY / fft_size
@@ -40,7 +40,6 @@ def test_short_time_fourier_transform():
 
 
 def test_hanning_window(plt):  
-    print("\nTEST HANNING WINDOWING\n")
     fft_size = FFT_SIZE
     pulse_length = 4
     noise_amplitude = 0.2
@@ -56,8 +55,9 @@ def test_hanning_window(plt):
 
     signal = pd_pdeter.apply_hanning_window(original_signal)
 
-    #print("\nOriginal signal: ", original_signal)
-    #print("\nSignal: ", signal)
+    print("\nTEST HANNING WINDOWING\n")
+    print("\nOriginal signal: ", original_signal)
+    print("\nSignal: ", signal)
 
     assert np.size(signal) == np.size(original_signal) 
 
@@ -92,11 +92,8 @@ def test_determine_signal_frequncy():
     print("\nDETERMINE SIGNAL FREQUENCY\n")
     print("\nThe fft size is: ", fft_size)
     print("\nThe computed carrier frequnecy is: ", computed_carrier_frequnecy)
-    print("\nThe frequency bins are: \n ", frequency_bins)
-
-
-    
-
+    #print("\nThe frequency bins are: \n ", frequency_bins)
+  
 
 def test_find_optimal_sampling_frequency():
 
