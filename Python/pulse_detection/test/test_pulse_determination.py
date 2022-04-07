@@ -47,7 +47,7 @@ def test_bratlett_window(plt):
 
     original_signal = pd_pdeter.adjust_signal_length(original_signal, fft_size)
 
-    signal = pd_pdeter.apply_bratlett_window(original_signal)
+    signal = pd_pdeter.apply_hamming_window(original_signal)
 
     print("\nTEST bratlett WINDOWING\n")
     # print("\nOriginal signal: ", original_signal)

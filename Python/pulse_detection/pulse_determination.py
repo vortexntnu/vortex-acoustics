@@ -36,12 +36,9 @@ def short_time_fourier_transform(
     MN_point_fft = np.zeros(fft_size // 2 + 1, dtype=np.complex)
     M = (pulse_length * sampling_frequency) // fft_size
     for i in range(M):
-        windowed_signal_segment = apply_bratlett_window(
-            signal[i * fft_size : (i + 1) * fft_size]
-        )
         N_point_fft = np.fft.rfft(
-            windowed_signal_segment
-        )  ## np.fft.rfft(signal[i*fft_size:(i+1)*fft_size]) # np.fft.rfft(windowed_signal_segment)
+            signal[i * fft_size : (i + 1) * fft_size]
+        )  
         for index in range(np.size(N_point_fft)):
             MN_point_fft[index] += N_point_fft[index]
 
@@ -59,14 +56,14 @@ def find_tone(
     return tone
 
 
-def apply_bratlett_window(signal: np.array):
+def apply_hamming_window(signal: np.array):
     signal_length = np.size(signal)
     n = np.linspace(0, signal_length - 1, signal_length)
 
-    bratlett_window = np.bartlett(
+    bratlett_window = np.hamming(
         signal_length
     )  
-    windowed_signal = np.convolve(signal, bratlett_window, 'full')[signal_length//2:signal_length + signal_length//2]
+    windowed_signal = np.multiply(signal, bratlett_window)
 
     return windowed_signal
 
