@@ -1,11 +1,13 @@
-#include "algorithm"
-#include "arm_math.h"
-#include "stdio.h"
 #include "Arduino.h"
+#include "pulse_determination.h"
+#include "unity.h"
 
-#include "algorithm"
+/*
+TODO: 
+- add white noise to signal
+- test compute tone 
 
-#include "../pulse_detection/pulse_determination.h"
+*/
 
 void generate_pulse(
     uint32_t pulseLength,
@@ -16,10 +18,7 @@ void generate_pulse(
     }
 }
 
-int main(void) {
-    Serial.begin(9600); 
-    while (!Serial){}
-    
+void test_short_time_fourier_transform(){
     float32_t* window = new float32_t[FFT_SIZE]; 
     makeBartlettWindow(FFT_SIZE, window); 
 
@@ -28,19 +27,18 @@ int main(void) {
     generate_pulse(pulseLength, pulse); 
 
     float32_t* fft = new float32_t[FFT_SIZE]; 
-    bool status = shortTimeFourierTransform(pulse, pulseLength, window, fft); 
-    if (!status){
-        Serial.print("Short time fourier transform went wrong, \n"); 
-    }
-
-    float32_t tone = computeTone(fft); 
-    Serial.printf("The carrier frequency is: ", tone); 
-
+    bool  status = shortTimeFourierTransform(pulse, pulseLength, window, fft); 
+    TEST_ASSERT_TRUE(status); 
 
 
     delete[] window; 
     delete[] pulse; 
     delete[] fft; 
-    while (true) {
-    }
+
+}
+
+int main(int argc, char** argv) {
+    UNITY_BEGIN();
+    RUN_TEST(test_short_time_fourier_transform);
+    UNITY_END();
 }

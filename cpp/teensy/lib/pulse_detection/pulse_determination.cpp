@@ -1,7 +1,6 @@
 #include "pulse_determination.h"
 
-
-void shortTimeFourierTransform(
+bool shortTimeFourierTransform(
     float32_t* pulse, 
     uint32_t pulseLength, 
     float32_t* window,
@@ -12,10 +11,11 @@ void shortTimeFourierTransform(
 
     arm_rfft_fast_instance_f32* fftStructure = new arm_rfft_fast_instance_f32; 
     arm_status initStatus = arm_rfft_fast_init_f32(fftStructure, FFT_SIZE); //check if it should be FFT SIZE / 2
+    arm_status convolutionStatus; 
     
     int M = (pulseLength * SAMPLING_FREQUENCY) / FFT_SIZE; 
     for (int i = 0; i < M; i++){
-        arm_status convolutionStatus = arm_conv_partial_f32(
+        convolutionStatus = arm_conv_partial_f32(
             (pulse+i*pulseLength), pulseLength, //dobbel check if this is correct 
             window, pulseLength, windowed_pulse, pulseLength/2, pulseLength); 
         
@@ -29,6 +29,9 @@ void shortTimeFourierTransform(
     delete[] windowed_pulse; 
     delete[] nPointFft; 
     delete fftStructure; 
+
+    return ((initStatus == ARM_MATH_SUCCESS) && (convolutionStatus == ARM_MATH_SUCCESS)); 
+
 }
 
 float32_t computeTone(float32_t* fft){
@@ -37,7 +40,7 @@ float32_t computeTone(float32_t* fft){
 
     float32_t max = 0; 
     uint32_t argmax; 
-    for (int i = FFT_SIZE/2; i < FFT_SIZE; i++){
+    for (uint32_t i = FFT_SIZE/2; i < FFT_SIZE; i++){
         if (max < fft_abs[i]){
             argmax = i; 
         }
@@ -51,13 +54,13 @@ float32_t computeTone(float32_t* fft){
     return tone; 
 } 
 
-void makeBartlettWindow(float32_t* array, uint32_t arrayLength, float32_t* dstWindowedPulse){ 
+void makeBartlettWindow(uint32_t arrayLength, float32_t* dstWindow){ 
     for (int n = 0; n < arrayLength; n++){
-        dstWindowedPulse[n] = (2/(arrayLength-1))*(((arrayLength-1)/2)-abs(n-(arrayLength-1)/2)); 
+        dstWindow[n] = (2/(arrayLength-1))*(((arrayLength-1)/2)-abss(n-(arrayLength-1)/2)); 
     }
 }
 
-int abs(int x){
+int abss(int x){
     if (x < 0){
         return -x; 
     }
