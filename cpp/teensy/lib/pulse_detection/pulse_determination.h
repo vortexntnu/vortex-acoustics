@@ -8,7 +8,6 @@
 bool shortTimeFourierTransform(
     float32_t* pulse, 
     uint32_t pulseLength, 
-    float32_t* window,
     float32_t* dstFft); 
     
 float32_t computeTone(float32_t* fft); //remeber here you must find the exact freq after using argmax

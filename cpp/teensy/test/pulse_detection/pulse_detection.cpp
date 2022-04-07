@@ -19,15 +19,13 @@ void generate_pulse(
 }
 
 void test_short_time_fourier_transform(){
-    float32_t* window = new float32_t[FFT_SIZE]; 
-    makeBartlettWindow(FFT_SIZE, window); 
 
     uint32_t pulseLength = 4; // [ms]
     float32_t* pulse = new float32_t[pulseLength*SAMPLING_FREQUENCY]; 
     generate_pulse(pulseLength, pulse); 
 
     float32_t* fft = new float32_t[FFT_SIZE]; 
-    bool  status = shortTimeFourierTransform(pulse, pulseLength, window, fft); 
+    bool  status = shortTimeFourierTransform(pulse, pulseLength, fft); 
     TEST_ASSERT_TRUE(status); 
 
 

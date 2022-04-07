@@ -3,7 +3,6 @@
 bool shortTimeFourierTransform(
     float32_t* pulse, 
     uint32_t pulseLength, 
-    float32_t* window,
     float32_t* dstFft
     ){
     float32_t* windowed_pulse = new float32_t[pulseLength]; 
@@ -14,12 +13,9 @@ bool shortTimeFourierTransform(
     arm_status convolutionStatus; 
     
     int M = (pulseLength * SAMPLING_FREQUENCY) / FFT_SIZE; 
-    for (int i = 0; i < M; i++){
-        convolutionStatus = arm_conv_partial_f32(
-            (pulse+i*pulseLength), pulseLength, //dobbel check if this is correct 
-            window, pulseLength, windowed_pulse, pulseLength/2, pulseLength); 
-        
-        arm_rfft_fast_f32(fftStructure, windowed_pulse, nPointFft, 0); 
+    for (int i = 0; i < M; i ++){
+
+        arm_rfft_fast_f32(fftStructure, (pulse + i*FFT_SIZE), nPointFft, 0); 
 
         for (int j = 0; j < FFT_SIZE; j++){
             dstFft[j] += nPointFft[j]; 
@@ -30,7 +26,7 @@ bool shortTimeFourierTransform(
     delete[] nPointFft; 
     delete fftStructure; 
 
-    return ((initStatus == ARM_MATH_SUCCESS) && (convolutionStatus == ARM_MATH_SUCCESS)); 
+    return (initStatus == ARM_MATH_SUCCESS); 
 
 }
 
