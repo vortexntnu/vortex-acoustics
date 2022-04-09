@@ -1,4 +1,8 @@
 #include "arm_math.h"
+#include "Arduino.h"
+#include "pulse_determination.h"
+#include "unity.h"
+
 
 /*
 Cosine wave generated from Python/pulse_detction/test/pulse_determination.py
@@ -11,7 +15,7 @@ Parameters:
     noise amplitude = 0.9
     noise variance = 5
 */
-
+namespace pulse_determination {
 float32_t COSINE_WAVE[1708] = {
     0.7020062,     2.7188883,    0.6845851,     -1.0477405,    -1.824456,
     1.4874636,     1.1812806,    -2.7206507,    -3.6606524,    -2.313306,
@@ -357,3 +361,26 @@ float32_t COSINE_WAVE[1708] = {
     0.1372898,     -1.179711,    2.320037,
 };
 float32_t EXPECTED_CARRIER_FREQ = 25.019531;
+
+void test_short_time_fourier_transform() {
+    uint32_t pulseLength = 4; // [ms]
+
+    float32_t* pulse = new float32_t[pulseLength * SAMPLING_FREQUENCY];
+    for (uint32_t i = 0; i < pulseLength * SAMPLING_FREQUENCY; i++) {
+        pulse[i] = COSINE_WAVE[i];
+    }
+
+    float32_t* fft = new float32_t[FFT_SIZE];
+    arm_status status = shortTimeFourierTransform(pulse, pulseLength, fft);
+    TEST_ASSERT_TRUE(status == ARM_MATH_SUCCESS);
+
+    float32_t computedCarrierFrequency = computeCarrierFrequency(fft);
+
+    float32_t tolerance = static_cast<float32_t>(SAMPLING_FREQUENCY) / FFT_SIZE;
+    TEST_ASSERT_FLOAT_WITHIN(tolerance, EXPECTED_CARRIER_FREQ,
+                             computedCarrierFrequency);
+
+    delete[] pulse;
+    delete[] fft;
+}
+}
