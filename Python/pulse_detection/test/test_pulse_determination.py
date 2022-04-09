@@ -33,6 +33,7 @@ def test_short_time_fourier_transform():
     tolerance = SAMPLING_FREQUENCY / fft_size
 
     assert abs(tone - CARRIER_FREQUENCY) < tolerance
+    return tone
 
 
 def test_find_optimal_sampling_frequency():
