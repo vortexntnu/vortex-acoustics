@@ -1,8 +1,7 @@
-#include "arm_math.h"
 #include "Arduino.h"
+#include "arm_math.h"
 #include "pulse_determination.h"
 #include "unity.h"
-
 
 /*
 Cosine wave generated from Python/pulse_detction/test/pulse_determination.py
@@ -383,4 +382,4 @@ void test_short_time_fourier_transform() {
     delete[] pulse;
     delete[] fft;
 }
-}
+} // namespace pulse_determination
