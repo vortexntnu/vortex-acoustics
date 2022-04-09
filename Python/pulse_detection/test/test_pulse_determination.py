@@ -25,18 +25,9 @@ def test_short_time_fourier_transform():
     )
     tone = pd_pdeter.find_tone(fft, SAMPLING_FREQUENCY, fft_size)
 
-    """
-    print("\nTEST STFT WITH WINDOWING\n")
-    print("\nThe carrier freq is: ", tone)
-    print("\nArgmax: ", np.argmax(fft))
-    print("The fft is: \n", fft)
-    print("\nThe fft size is: ", np.size(fft))
-    """
-
     tolerance = SAMPLING_FREQUENCY / fft_size
 
     assert abs(tone - CARRIER_FREQUENCY) < tolerance
-    return tone
 
 
 def test_find_optimal_sampling_frequency():
@@ -46,11 +37,9 @@ def test_find_optimal_sampling_frequency():
         fft_size
     )
 
-    """
-    print("\nFIND OPTIMAL SAMPLING FREQUENCY\n")
-    print("\nThe optimal sampling frequency is: ", sample_frequency)
-    print("\nThe frequency bins are: \n ", frequency_bins)
-    """
+    # print("\nFIND OPTIMAL SAMPLING FREQUENCY\n")
+    # print("\nThe optimal sampling frequency is: ", sample_frequency)
+    # print("\nThe frequency bins are: \n ", frequency_bins)
 
 
 def generate_cosine_wave(
