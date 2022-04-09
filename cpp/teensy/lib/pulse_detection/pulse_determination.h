@@ -1,8 +1,8 @@
 #include "arm_math.h"
 
-#define SAMPLING_FREQUENCY 427 // [kHz]
-#define FFT_SIZE 256
-#define PULSE_LENGTH 4 //[ms]
+const uint32_t SAMPLING_FREQUENCY = 427; // [kHz]
+const uint32_t FFT_SIZE = 256;
+const uint32_t PULSE_LENGTH = 4; //[ms]
 
 arm_status shortTimeFourierTransform(float32_t* pulse, uint32_t pulseLength,
                                      float32_t* dstFft);
