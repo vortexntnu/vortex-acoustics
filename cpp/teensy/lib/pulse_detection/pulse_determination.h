@@ -1,3 +1,5 @@
+#pragma once
+
 #include "arm_math.h"
 
 const uint32_t SAMPLING_FREQUENCY = 427; // [kHz]
