@@ -1,11 +1,5 @@
-import matplotlib.pyplot as plt
 import numpy as np
 import pulse_detection.pulse_determination as pd_pdeter
-import pytest
-from signal_generation import noise as sg_noise
-from signal_generation import positioning as sg_pos
-from signal_generation import receiver as sg_rec
-from signal_generation import source as sg_src
 
 CARRIER_FREQUENCY = 25  # [kHz]
 SAMPLING_FREQUENCY = 427  # [kHz]

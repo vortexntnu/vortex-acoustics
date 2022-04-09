@@ -1,18 +1,5 @@
-from curses import window
-from signal import signal
-from socket import SOCK_DGRAM
-
 import numpy as np
 from scipy.fft import fft
-
-
-"""
-TODO:
-- Test
-    - with signal generation 
-
-"""
-
 
 def short_time_fourier_transform(
     signal: np.array,
@@ -32,7 +19,6 @@ def short_time_fourier_transform(
 
     return MN_point_fft
 
-
 def find_tone(
     fft: np.array,
     sampling_frequency: float,
@@ -43,7 +29,6 @@ def find_tone(
 
     return tone
 
-
 def apply_hamming_window(signal: np.array):
     signal_length = np.size(signal)
 
@@ -53,7 +38,6 @@ def apply_hamming_window(signal: np.array):
     windowed_signal = np.multiply(signal, bratlett_window)
 
     return windowed_signal
-
 
 def find_optimal_sampling_frequency(fft_size: int):
     pinger_frequencies = {25.0, 30.0, 35.0, 40.0}
