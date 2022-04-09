@@ -10,7 +10,6 @@ bool shortTimeFourierTransform(
 
     arm_rfft_fast_instance_f32* fftStructure = new arm_rfft_fast_instance_f32; 
     arm_status initStatus = arm_rfft_fast_init_f32(fftStructure, FFT_SIZE); //check if it should be FFT SIZE / 2
-    arm_status convolutionStatus; 
     
     int M = (pulseLength * SAMPLING_FREQUENCY) / FFT_SIZE; 
     for (int i = 0; i < M; i ++){
@@ -35,14 +34,15 @@ float32_t computeTone(float32_t* fft){
     arm_abs_f32(fft, fft_abs, FFT_SIZE); 
 
     float32_t max = 0; 
-    uint32_t argmax; 
-    for (uint32_t i = FFT_SIZE/2; i < FFT_SIZE; i++){
+    uint32_t argmax = 0; 
+    for (uint32_t i = 0; i < FFT_SIZE; i++){ //(uint32_t i = FFT_SIZE/2
         if (max < fft_abs[i]){
             argmax = i; 
+            max = fft_abs[i]; 
         }
     }
 
-    float32_t binWidth = SAMPLING_FREQUENCY / FFT_SIZE; 
+    float32_t binWidth = static_cast<float32_t>(SAMPLING_FREQUENCY) / FFT_SIZE; 
     float32_t tone = binWidth*argmax; 
 
     delete[] fft_abs; 
@@ -51,7 +51,7 @@ float32_t computeTone(float32_t* fft){
 } 
 
 void makeBartlettWindow(uint32_t arrayLength, float32_t* dstWindow){ 
-    for (int n = 0; n < arrayLength; n++){
+    for (uint32_t n = 0; n < arrayLength; n++){
         dstWindow[n] = (2/(arrayLength-1))*(((arrayLength-1)/2)-abss(n-(arrayLength-1)/2)); 
     }
 }

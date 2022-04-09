@@ -6,6 +6,7 @@
 TODO: 
 - add white noise to signal
 - test compute tone 
+- unreliable uploading to teensy
 
 */
 
@@ -27,9 +28,7 @@ void test_short_time_fourier_transform(){
     float32_t* fft = new float32_t[FFT_SIZE]; 
     bool  status = shortTimeFourierTransform(pulse, pulseLength, fft); 
     TEST_ASSERT_TRUE(status); 
-
-
-    delete[] window; 
+ 
     delete[] pulse; 
     delete[] fft; 
 
