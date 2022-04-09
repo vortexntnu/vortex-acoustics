@@ -8,7 +8,7 @@ FFT_SIZE = 256
 
 def test_short_time_fourier_transform():
     pulse_length = 4
-    noise_amplitude = 0.9
+    noise_amplitude = 0.7
     noise_variance = 5
     fft_size = FFT_SIZE
 
