@@ -1,9 +1,10 @@
 #include "arm_math.h"
 
 /*
-Cosine wave generated from Python/pulse_detction/test/pulse_determination.py generate_cosine_wave().
+Cosine wave generated from Python/pulse_detction/test/pulse_determination.py
+generate_cosine_wave().
 
-Parameters: 
+Parameters:
     pulse length = 4 ms
     carrier frequency = 25 kHz
     sampling frequency = 427 kHz

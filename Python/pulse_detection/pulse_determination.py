@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.fft import fft
 
+
 def short_time_fourier_transform(
     signal: np.array,
     fft_size: int,
@@ -11,14 +12,13 @@ def short_time_fourier_transform(
     MN_point_fft = np.zeros(fft_size // 2 + 1, dtype=np.complex)
     M = (pulse_length * sampling_frequency) // fft_size
     for i in range(M):
-        N_point_fft = np.fft.rfft(
-            signal[i * fft_size : (i + 1) * fft_size]
-        )  
+        N_point_fft = np.fft.rfft(signal[i * fft_size : (i + 1) * fft_size])
 
         for index in range(np.size(N_point_fft)):
             MN_point_fft[index] += N_point_fft[index]
 
     return MN_point_fft
+
 
 def find_tone(
     fft: np.array,
@@ -30,12 +30,11 @@ def find_tone(
 
     return tone
 
+
 def apply_hamming_window(signal: np.array):
     signal_length = np.size(signal)
 
-    bratlett_window = np.hamming(
-        signal_length
-    )  
+    bratlett_window = np.hamming(signal_length)
     windowed_signal = np.multiply(signal, bratlett_window)
 
     return windowed_signal
@@ -62,7 +61,3 @@ def find_optimal_sampling_frequency(fft_size: int):
             optimal_sampling_freq = sampling_freq
 
     return optimal_sampling_freq, np.fft.rfftfreq(fft_size, 1 / optimal_sampling_freq)
-
-
-
-
