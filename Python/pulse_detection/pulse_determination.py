@@ -44,18 +44,11 @@ def find_optimal_sampling_frequency(fft_size: int):
     pinger_frequencies = {25.0, 30.0, 35.0, 40.0}
     min_cost = 5000000
     optimal_sampling_freq = -1
-    for sampling_freq in range(300, 500):
+    for sampling_freq in range(350, 500):
         cost = 0
         frequency_bins = np.fft.rfftfreq(fft_size, 1 / sampling_freq)
         for pinger_freq in pinger_frequencies:
-            diff = 100
-            closest_center_freq = 0
-            for center_freq in frequency_bins:
-                if abs(pinger_freq - center_freq) < diff:
-                    closest_center_freq = center_freq
-            cost += (
-                abs(closest_center_freq - pinger_freq) ** 3
-            )  # gives same reuslt for **1, **2, **3
+            cost += np.min(np.abs(frequency_bins - pinger_freq)) ** 2
         if cost < min_cost:
             min_cost = cost
             optimal_sampling_freq = sampling_freq
