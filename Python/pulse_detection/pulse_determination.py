@@ -31,15 +31,6 @@ def find_tone(
     return tone
 
 
-def apply_hamming_window(signal: np.array):
-    signal_length = np.size(signal)
-
-    bratlett_window = np.hamming(signal_length)
-    windowed_signal = np.multiply(signal, bratlett_window)
-
-    return windowed_signal
-
-
 def find_optimal_sampling_frequency(fft_size: int):
     pinger_frequencies = {25.0, 30.0, 35.0, 40.0}
     min_cost = 5000000
