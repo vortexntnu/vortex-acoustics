@@ -12,8 +12,8 @@ void test_short_time_fourier_transform() {
     }
 
     float32_t* fft = new float32_t[FFT_SIZE];
-    bool status = shortTimeFourierTransform(pulse, pulseLength, fft);
-    TEST_ASSERT_TRUE(status);
+    arm_status status = shortTimeFourierTransform(pulse, pulseLength, fft);
+    TEST_ASSERT_TRUE(status == ARM_MATH_SUCCESS);
 
     float32_t computedCarrierFrequency = computeCarrierFrequency(fft);
 

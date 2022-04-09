@@ -1,12 +1,15 @@
 #include "pulse_determination.h"
 
-bool shortTimeFourierTransform(float32_t* pulse, uint32_t pulseLength,
+arm_status shortTimeFourierTransform(float32_t* pulse, uint32_t pulseLength,
                                float32_t* mnPointFft) {
 
     float32_t* nPointFft = new float32_t[FFT_SIZE];
 
     arm_rfft_fast_instance_f32* fftStructure = new arm_rfft_fast_instance_f32;
     arm_status initStatus = arm_rfft_fast_init_f32(fftStructure, FFT_SIZE);
+
+    if (initStatus != ARM_MATH_SUCCESS)
+        return initStatus;
 
     int M = (pulseLength * SAMPLING_FREQUENCY) / FFT_SIZE;
     for (int i = 0; i < M; i++) {
@@ -21,7 +24,7 @@ bool shortTimeFourierTransform(float32_t* pulse, uint32_t pulseLength,
     delete[] nPointFft;
     delete fftStructure;
 
-    return (initStatus == ARM_MATH_SUCCESS);
+    return ARM_MATH_SUCCESS;
 }
 
 float32_t computeCarrierFrequency(float32_t* fft) {
