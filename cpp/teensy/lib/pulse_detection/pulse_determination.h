@@ -1,4 +1,3 @@
-//#include <unity.h>
 #include "arm_math.h"
 
 #define SAMPLING_FREQUENCY 427 // [kHz]
@@ -10,7 +9,4 @@ bool shortTimeFourierTransform(
     uint32_t pulseLength, 
     float32_t* dstFft); 
     
-float32_t computeTone(float32_t* fft); //remeber here you must find the exact freq after using argmax
-void makeBartlettWindow(uint32_t arrayLength, float32_t* dstWindow); 
-
-int abss(int x); 
+float32_t computeCarrierFrequency(float32_t* fft); 
