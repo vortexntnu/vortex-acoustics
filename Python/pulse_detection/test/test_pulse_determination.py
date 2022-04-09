@@ -30,10 +30,12 @@ def test_short_time_fourier_transform():
     print("\nThe fft size is: ", np.size(fft))
     """
 
+
     tolerance = SAMPLING_FREQUENCY / fft_size
 
     assert abs(tone - CARRIER_FREQUENCY) < tolerance
     return tone
+
 
 
 def test_find_optimal_sampling_frequency():
@@ -49,6 +51,7 @@ def test_find_optimal_sampling_frequency():
     print("\nThe frequency bins are: \n ", frequency_bins)
     """
     
+
 
 def generate_cosine_wave(
     pulse_length: int,
@@ -67,3 +70,4 @@ def generate_cosine_wave(
     noise = amplitude_of_secondary_freq*np.random.normal(0, np.sqrt(noise_variance), pulse_length*SAMPLING_FREQUENCY)
 
     return signal+secondary_signal+noise
+
