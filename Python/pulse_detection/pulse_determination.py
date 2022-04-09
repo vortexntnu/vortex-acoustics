@@ -5,23 +5,11 @@ from socket import SOCK_DGRAM
 import numpy as np
 from scipy.fft import fft
 
-# from scipy.fftpack import fft2
-
 
 """
 TODO:
 - Test
     - with signal generation 
-
-- windowing 
-    - bratlett gives the best result
-    - hamming gives okey results, but worse than no window at all
-    - hanning results in carrier freq = 0.0
-
-- not able to distinguish 35 and 40 with fft size 128
-    with fft size 256 its good -> bin width = 1 kHz
-
-- port to cpp
 
 """
 
@@ -58,7 +46,6 @@ def find_tone(
 
 def apply_hamming_window(signal: np.array):
     signal_length = np.size(signal)
-    n = np.linspace(0, signal_length - 1, signal_length)
 
     bratlett_window = np.hamming(
         signal_length
@@ -91,49 +78,6 @@ def find_optimal_sampling_frequency(fft_size: int):
     return optimal_sampling_freq, np.fft.rfftfreq(fft_size, 1 / optimal_sampling_freq)
 
 
-# ------- only used for debugging/testing ------------
-
-# obs - not using this result
-def compute_fft_size(
-    sample_frequncy: float,  # [kHz]
-    signal_frequncy_increments: float,  # [kHz]
-    pulse_length: float,  # [ms]
-) -> int:
-    n = sample_frequncy // signal_frequncy_increments
-    exponent = 3
-    while n > 2**exponent:
-        exponent += 1
-    n = 2**exponent
-
-    assert n < pulse_length * sample_frequncy
-
-    return n
 
 
-def determine_signal_frequency(
-    signal: np.array,
-    sampling_frequency: float,
-    fft_size: int,
-):  # -> float, np.array
-    adj_signal = adjust_signal_length(signal, fft_size)
-    fourier = np.fft.rfft(adj_signal)
-    corresponding_freq = np.fft.rfftfreq(fft_size, 1 / sampling_frequency)
-    freq_index = np.argmax(fourier)
-    dominating_freq = corresponding_freq[freq_index]
 
-    return dominating_freq, corresponding_freq, fourier
-
-
-def adjust_signal_length(
-    signal: np.array,
-    fft_size: int,
-) -> np.array:
-    if signal.size == fft_size:
-        return signal
-    elif signal.size > fft_size:
-        return signal[:fft_size]
-    else:
-        diff = fft_size - signal.size
-        for i in range(diff):
-            np.append(signal, 0.0)
-        return signal
