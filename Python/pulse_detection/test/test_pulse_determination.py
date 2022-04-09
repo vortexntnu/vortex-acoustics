@@ -14,7 +14,7 @@ FFT_SIZE = 256
 
 def test_short_time_fourier_transform():
     pulse_length = 4
-    noise_amplitude = 0.7
+    noise_amplitude = 0.0
     fft_size = FFT_SIZE
 
     signal = generate_cosine_wave(
@@ -28,7 +28,8 @@ def test_short_time_fourier_transform():
 
     print("\nTEST STFT WITH WINDOWING\n")
     print("\nThe carrier freq is: ", tone)
-    # print("The fft is: \n", fft)
+    print("\nArgmax: ", np.argmax(fft))
+    print("The fft is: \n", fft)
     print("\nThe fft size is: ", np.size(fft))
 
     tolerance = SAMPLING_FREQUENCY / fft_size
