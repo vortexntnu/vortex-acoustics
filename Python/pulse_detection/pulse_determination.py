@@ -1,36 +1,6 @@
-<<<<<<< HEAD
 import numpy as np
 from scipy.fft import fft
 
-=======
-from signal import signal
-from socket import SOCK_DGRAM
-
-import numpy as np
-from scipy.fft import fft
-
-# from scipy.fftpack import fft2
-
-
-"""
-TODO:
-- Test
-    - with signal generation 
-
-- windowing 
-    - bratlett gives the best result
-    - hamming gives okey results, but worse than no window at all
-    - hanning results in carrier freq = 0.0
-
-- not able to distinguish 35 and 40 with fft size 128
-    with fft size 256 its good -> bin width = 1 kHz
-
-- port to cpp
-
-"""
-
-
->>>>>>> 26c3e28e2f8d26ff3a4c33569625fe3ac9da21d3
 def short_time_fourier_transform(
     signal: np.array,
     fft_size: int,
@@ -41,27 +11,15 @@ def short_time_fourier_transform(
     MN_point_fft = np.zeros(fft_size // 2 + 1, dtype=np.complex)
     M = (pulse_length * sampling_frequency) // fft_size
     for i in range(M):
-<<<<<<< HEAD
         N_point_fft = np.fft.rfft(
             signal[i * fft_size : (i + 1) * fft_size]
         )  
-=======
-        windowed_signal_segment = apply_bratlett_window(
-            signal[i * fft_size : (i + 1) * fft_size]
-        )
-        N_point_fft = np.fft.rfft(
-            windowed_signal_segment
-        )  ## np.fft.rfft(signal[i*fft_size:(i+1)*fft_size]) # np.fft.rfft(windowed_signal_segment)
->>>>>>> 26c3e28e2f8d26ff3a4c33569625fe3ac9da21d3
+
         for index in range(np.size(N_point_fft)):
             MN_point_fft[index] += N_point_fft[index]
 
     return MN_point_fft
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 26c3e28e2f8d26ff3a4c33569625fe3ac9da21d3
 def find_tone(
     fft: np.array,
     sampling_frequency: float,
@@ -72,7 +30,6 @@ def find_tone(
 
     return tone
 
-<<<<<<< HEAD
 def apply_hamming_window(signal: np.array):
     signal_length = np.size(signal)
 
@@ -83,21 +40,7 @@ def apply_hamming_window(signal: np.array):
 
     return windowed_signal
 
-=======
 
-def apply_bratlett_window(signal: np.array):
-    signal_length = np.size(signal)
-    n = np.linspace(0, signal_length - 1, signal_length)
-
-    bratlett_window = np.bartlett(
-        signal_length
-    )  # 0.54-0.46*np.cos(2*np.pi*n/(signal_length-1)) #np.hanning(signal_length)
-    windowed_signal = np.convolve(signal, bratlett_window, "same")
-
-    return windowed_signal
-
-
->>>>>>> 26c3e28e2f8d26ff3a4c33569625fe3ac9da21d3
 def find_optimal_sampling_frequency(fft_size: int):
     pinger_frequencies = {25.0, 30.0, 35.0, 40.0}
     min_cost = 5000000
@@ -121,55 +64,5 @@ def find_optimal_sampling_frequency(fft_size: int):
     return optimal_sampling_freq, np.fft.rfftfreq(fft_size, 1 / optimal_sampling_freq)
 
 
-<<<<<<< HEAD
 
 
-
-=======
-# ------- only used for debugging/testing ------------
-
-# obs - not using this result
-def compute_fft_size(
-    sample_frequncy: float,  # [kHz]
-    signal_frequncy_increments: float,  # [kHz]
-    pulse_length: float,  # [ms]
-) -> int:
-    n = sample_frequncy // signal_frequncy_increments
-    exponent = 3
-    while n > 2**exponent:
-        exponent += 1
-    n = 2**exponent
-
-    assert n < pulse_length * sample_frequncy
-
-    return n
-
-
-def determine_signal_frequency(
-    signal: np.array,
-    sampling_frequency: float,
-    fft_size: int,
-):  # -> float, np.array
-    adj_signal = adjust_signal_length(signal, fft_size)
-    fourier = np.fft.rfft(adj_signal)
-    corresponding_freq = np.fft.rfftfreq(fft_size, 1 / sampling_frequency)
-    freq_index = np.argmax(fourier)
-    dominating_freq = corresponding_freq[freq_index]
-
-    return dominating_freq, corresponding_freq, fourier
-
-
-def adjust_signal_length(
-    signal: np.array,
-    fft_size: int,
-) -> np.array:
-    if signal.size == fft_size:
-        return signal
-    elif signal.size > fft_size:
-        return signal[:fft_size]
-    else:
-        diff = fft_size - signal.size
-        for i in range(diff):
-            np.append(signal, 0.0)
-        return signal
->>>>>>> 26c3e28e2f8d26ff3a4c33569625fe3ac9da21d3
