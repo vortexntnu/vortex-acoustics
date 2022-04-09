@@ -1,5 +1,4 @@
 import numpy as np
-from scipy.fft import fft
 
 
 def short_time_fourier_transform(

@@ -238,7 +238,7 @@ def test_given_noisy_signal_when_asynchronous_hilbert_complex(
     ax[0].set_title(f"signal with noise variance = {noise_variance}")
     ax[0].plot(signal, label="signal")
 
-    ax[1].set_title(f"envelope")
+    ax[1].set_title("envelope")
     ax[1].plot(result, label="envelope")
 
     plt.tight_layout()
