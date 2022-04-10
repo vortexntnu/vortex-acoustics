@@ -1,16 +1,22 @@
 """
 TODO: 
-    - make functions for prettier look
-    - detect change in pinger position
-    - test
+    - store measurments
+        - np array with fixed size equal worst case
+        - use python list 
+    - Detect change in pinger position
+    - Test
+        - mean corresponds to initial position
+        - var decreases with many itterations
+        - sampling frequency equals 320, 427
+        - decrease tolerance
+
 """
 
-from itertools import count
-from numpy import NaN
 from dataclasses import dataclass
+import numpy as np
 
-#Redefining Position in order not be reliant on other modules
-@dataclass #could just be a tuple
+
+@dataclass 
 class Position:
     x: float = 0
     y: float = 0
@@ -20,43 +26,25 @@ class Position:
 class PositionEstimate: 
     mean = Position(0,0,0)
     variance = Position(0,0,0)
-    sample_variance = Position(0,0,0)
-    M2 = Position(0,0,0)
-    count = 0
-
-    def __welford_update(self, new_measurement: Position):
-        self.count += 1
-
-        #can perhaps make a function that takes in a coordinate as arg
-        diff_prev_mean = new_measurement.x - self.mean.x 
-        self.mean.x += diff_prev_mean / self.count
-        diff_mean = new_measurement.x - self.mean.x
-        self.M2.x += diff_prev_mean*diff_mean
-
-        diff_prev_mean = new_measurement.y - self.mean.y
-        self.mean.y += diff_prev_mean / self.count
-        diff_mean = new_measurement.y - self.mean.y
-        self.M2.y += diff_prev_mean*diff_mean
-
-        diff_prev_mean = new_measurement.z - self.mean.z
-        self.mean.z += diff_prev_mean / self.count
-        diff_mean = new_measurement.z - self.mean.z
-        self.M2.z += diff_prev_mean*diff_mean
+    measurements = [[],[],[]]
 
 
-    def __welford_finalize(self):
-        if self.count >= 2:
-            self.variance.x = self.M2.x / self.count
-            self.sample_variance.x = self.M2.x / (self.count-1)
+    def integrate_new_measurement(self, measurment: list):
+        for i in range (3):
+            self.measurements[i].append(measurment[i])
+ 
 
-            self.variance.y = self.M2.y / self.count
-            self.sample_variance.y = self.M2.y / (self.count-1)
+        n = len(self.measurements[0])
 
-            self.variance.z = self.M2.z / self.count
-            self.sample_variance.x = self.M2.x / (self.count-1)
+        self.mean.x = sum(self.measurements[0])/n
+        self.mean.y = sum(self.measurements[1])/n
+        self.mean.z = sum(self.measurements[2])/n
 
-    def integrate_new_position(self, position : Position):
-        self.__welford_update(position)
-        self.__welford_finalize()
+        self.variance.x = sum((x-self.mean.x)**2 for x in self.measurements[0]) / n
+        self.variance.y = sum((y-self.mean.y)**2 for y in self.measurements[1]) / n
+        self.variance.z = sum((z-self.mean.z)**2 for z in self.measurements[2]) / n
+
+        
+
 
 
