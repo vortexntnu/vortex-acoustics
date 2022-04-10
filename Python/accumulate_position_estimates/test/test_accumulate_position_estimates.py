@@ -114,7 +114,9 @@ def test_detect_change_in_pinger_pos():
     distance_threshold = acc.Position(8, 3.0, 0)
 
     sampling_frequency = 320 * 10e3  # [Hz]
-    m_last_elemetns = 30  # Lower the numer increases the chance of false alarm. Higher number the time it takes to detect change in position.
+    # Lowering m_last_elements increases the chance of false alarm. 
+    # Increaing m_last_elements increases the time it takes to detect change in position.
+    m_last_elemetns = 30  
     computed_pinger_position = acc.PositionEstimate(m_last_elemetns, distance_threshold)
 
     first_estimates = generate_estimates(
