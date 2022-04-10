@@ -11,11 +11,14 @@ from utilities.drone import Drone
 
 import accumulate_position_estimates as acc
 
+def print_pos(position: acc.Position):
+    print("x: ", position.x, "y: ", position.y, "z: ", position.z, "\n")
+
 
 def generate_estimates(
     source_position: sg_pos.Position,
     hydrophone_positions: np.array,
-    sample_frequency: float = 100000,
+    sample_frequency: float = 100000, #[kHz] og [Hz] ? 
 ):
     """
     Args:
@@ -52,12 +55,7 @@ def generate_estimates(
                     sample_frequency=sample_frequency,
                 )
 
-                estimate = acc.Position(
-                    x=res_x,
-                    y=res_y,
-                    z=res_z,
-                )
-
+                estimate = [res_x, res_y, res_z]
                 estimates.append(estimate)
 
     return estimates
@@ -66,7 +64,7 @@ def generate_estimates(
 
 def test_integrate_new_measurement(): 
 
-    source_position = sg_pos.Position(10, 10, 10)
+    source_position = sg_pos.Position(2,5,5)
 
     hydrophone_positions = np.array(
     [
@@ -96,7 +94,8 @@ def test_integrate_new_measurement():
             z=-0.4,
         ),
     ])
-    sampling_frequency = 320
+
+    sampling_frequency = 10000
 
     estimates = generate_estimates(source_position, hydrophone_positions, sampling_frequency)
 
@@ -105,10 +104,17 @@ def test_integrate_new_measurement():
     for estimate in estimates:
         computed_pinger_position.integrate_new_measurement(estimate)
 
-    tolerance = 0.5
+    tol_x = np.sqrt(computed_pinger_position.variance.x)*1
+    tol_y = np.sqrt(computed_pinger_position.variance.y)*1
+    tol_z = np.sqrt(computed_pinger_position.variance.z)*1
 
-    assert tolerance < abs(source_position.x - computed_pinger_position.mean.x)
-    assert tolerance < abs(source_position.y - computed_pinger_position.mean.y)
-    assert tolerance < abs(source_position.z - computed_pinger_position.mean.z)
+    print("Mean: ")
+    print_pos(computed_pinger_position.mean)
+    print("Variance: ")
+    print_pos(computed_pinger_position.variance)
+
+    assert tol_x > abs(source_position.x - computed_pinger_position.mean.x)
+    assert tol_y > abs(source_position.y - computed_pinger_position.mean.y)
+    assert tol_z > abs(source_position.z - computed_pinger_position.mean.z)
 
 
