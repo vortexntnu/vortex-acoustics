@@ -1,77 +1,96 @@
 import numpy as np
 """
-- check what features are available in the CMSIS lib befreo you start implementing the alg
-
-- questions to implementation
-    - decide length of input signals
-        assumeing the length of x is equal the lengtth of y and h
+Q
+    - decide val of input
+        input signals? 
         start with L1 = 25, L2 = 20 (just because it is what they did)
         same for P = 5
-    - how to init h2_0?
-        -assume we can init with ones - check if this makes sense
-        -assume h underscore 4, means the sum of h from 0 to 4. (ref equation 10)
     - what is delta (first step in iteration) 
 
 TODO 
-- lage en classe yeees
+- check what features are available in the CMSIS lib befreo you start implementing the alg
 - compute y2_underscore as a func of y(k) and h2_underscore
 - compute R2_underscore as a func of y(k) and h2_underscore
 """
 
-D = 5 #find acctual number
+class Kronecker:
 
-def compute_H2(L1, L2, h):
-    H2 = np.zeros([L1*L2, L1])
-    for i in range (L1):
-        for j in range (L1):
-            if i == j:
-                for k in range (L2):
-                    H2[i+ k*L1][j] = 1*h[k]
+    def __init__(
+        self, 
+        x: np.array,
+        y: np.array
+        ):
 
-    return H2
+        self.D = 5 #find acctual number
+        self.L1 = 25
+        self.L2 = 20
+        self.P = 5
 
-def compute_y2_underscore(L1, L2, P, y, h):
-    y2_underscore_trans = np.zeros([L1*L2, P*L1]) 
-    H2 = compute_H2(L1, L2, h)
-    for i in range (P):
-        for j in range (L1*L2):
-            y2_underscore_trans[j][i*L1:(i+1)*L1] = y*H2[j]
-    y2_underscore = np.transpose(y2_underscore_trans)
+        self.h2_u = np.ones([self.P*self.L2, 1])
+        self.h1_u = np.ones([self.P*self.L1, 1])
+        self.H2 = np.zeros([self.L1*self.L2, self.L1])
+        self.H1 = np.zeros([self.L1*self.L2, self.L2])
+        self.y2_u = None
+        self.y1_u = None
+        self.R2 = np.zeros([self.P*self.L1, self.P*self.L1])
+        self.R1 = np.zeros([self.P*self.L2, self.P*self.L2])
+        self.r2 = np.zeros([self.P*self.L1, self.L1*self.L2])
+        self.r1 = np.zeros([self.P*self.L2, self.L1*self.L2])
 
-    return y2_underscore
-
-def compute_R2_and_r2(L1, L2, P, h, y, x):
-
-    R2_vals = np.zeros([P*L1, P*L1, len(y)])
-    r2_vals = np.zeros(P*L1, len(y))
-
-    for k, y_k in enumerate(y):
-        y2_underscore = compute_y2_underscore(L1, L2, P, y_k, h)
-
-        y2_underscore_trans = np.transpose(y2_underscore)
-        R2_vals_k = np.matmul(y2_underscore, y2_underscore_trans)
-        for i in range(P*L1):
-            for j in range(P*L1):
-                R2_vals[i][j][k] = R2_vals_k[i][j] 
-
-        r2_vals[k] =  np.matmul(y2_underscore, x[k-D]) #hmmm
-
-    R2 = np.zeros([P*L1, P*L1])
-    for i in range(P*L1):
-        for j in range(P*L1):
-            R2[i][j] = np.mean(R2_vals[i][j])
-
-    r2 = np.zeros(P*L1)
-    for i in range(P*L1):
-        r2[i] = np.mean(r2_vals)
-
-    return R2, r2
+        self.compute_R2_and_r2(x, y)
 
 
+    def compute_R2_and_r2(self, x: np.array , y: np.array):
 
-def initialize(L1, L2, P, y, x):
-    h2_underscore = np.ones([P*L1, 1])
-    R2, r2= compute_R2_and_r2(L1, L2, P, h2_underscore, y, x)
+        R2_vals = np.zeros([self.P*self.L1, self.P*self.L1, len(y)])
+        r2_vals = np.zeros([self.P*self.L1, self.L1*self.L2, len(y)])
+
+        for k, y_k in enumerate(y):
+            self.compute_y2_u(y_k)
+
+            y2_u_trans = np.transpose(self.y2_u)
+            R2_vals_k = np.matmul(self.y2_u, y2_u_trans)
+            for i in range(self.P*self.L1):
+                for j in range(self.P*self.L1):
+                    R2_vals[i][j][k] = R2_vals_k[i][j] 
+
+            if k < self.D:
+                r2_vals_k = self.y2_u * 0                   #assuming x = 0 for t < 0 
+            else:   
+                r2_vals_k = self.y2_u * x[k-self.D] 
+            for i in range(self.P*self.L1):
+                for j in range(self.L1*self.L2):
+                    r2_vals[i][j][k] = r2_vals_k[i][j]  
+ 
+        for i in range(self.P*self.L1):
+            for j in range(self.P*self.L1):
+                self.R2[i][j] = np.mean(R2_vals[i][j])
+
+        for i in range(self.P*self.L1):
+            for j in range(self.L1*self.L2):
+                self.r2[i][j] = np.mean(r2_vals[i][j])
+
+
+    def compute_H2(self):
+        for i in range (self.L1):
+            for j in range (self.L1):
+                if i == j:
+                    for k in range (self.L2):
+                        self.H2[i+ k*self.L1][j] = 1*self.h2_u[k]
+
+
+    def compute_y2_u(self, y_k: float):
+        y2_u_trans = np.zeros([self.L1*self.L2, self.P*self.L1]) 
+        self.compute_H2()
+        for i in range (self.P):
+            for j in range (self.L1*self.L2):
+                y2_u_trans[j][i*self.L1:(i+1)*self.L1] = y_k*self.H2[j]
+        self.y2_u = np.transpose(y2_u_trans)
+
+
+
+
+
 
 
 

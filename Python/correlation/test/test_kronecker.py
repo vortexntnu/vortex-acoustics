@@ -1,26 +1,15 @@
 import correlation.kronecker as kr
 import numpy as np
 
-def test_init_H2():
-    L1 = 3
-    L2 = 4
-    h = np.array([2,3,4,5])
-    H2 = kr.compute_H2(L1, L2, h)
 
-    print("\n", H2)
-
-"""
 
 def test_initialize():
-    L1 = 4
-    L2 = 5
-    P = 2
-    y_0 = 6
+    arr1 = [3.0, 5.2, 5.2, 6.7, 8.9, 2.0, 6.7, 6.7, 5.7, 0.0, 0.0]
+    arr2 = [0.0, 0.0, 3.0, 5.2, 5.2, 6.7, 8.9, 2.0, 6.7, 6.7, 5.7]
 
-    h, y = kr.initialize(L1, L2, P, y_0)
+    kr.Kronecker(arr1, arr2)
 
-    print("\n h: \n", h, "\n y \n", y)
-    """
+    
 
 
 
