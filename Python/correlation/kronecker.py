@@ -3,10 +3,7 @@ import numpy as np
 """
 TODO 
 - wired things
-    - ignoring the expectance value
-    - the result is only dependent on one value of x
-- find D
-- set L1 and L2 based on signal length. L2 < L1. L1 * L2 = L. L1 and L2 should be as close as possible. P << L2
+    - h, r are periodic after n iterations. I dont see how they can become non periodic. 
 - test
 - port to cpp
 """
@@ -20,30 +17,31 @@ class Kronecker:
         ):
 
         self.P = 5
-        self.D = 1 
-        self.n_iterations = 30
-        self.regulation_constant = 0.1 
-
-        self.x = x
-        self.x_D = x[len(y) - self.D] 
-        self.y = y
+        self.D = 3 
+        self.n_iterations = 10
+        self.regulation_constant = 0.1  
 
         self.L1, self.L2 = compute_L1_L2(len(y))
+        assert self.P <= self.L2 <= self.L1
 
-        self.h2_u = np.zeros(self.P*self.L2)
-        self.h1_u = np.zeros(self.P*self.L1)
+        self.y = y[0:self.L1*self.L2]
+        self.x_D = x[len(self.y) - self.D]
+        assert self.x_D != 0
+
+        self.h2_u = np.zeros([self.P*self.L2, 1])
+        self.h1_u = np.zeros([self.P*self.L1, 1])
 
         self.H2_p = np.zeros([self.L1*self.L2, self.L1])
-        self.H1_p = np.zeros([self.L1*self.L2, self.L2])
+        self.H1_p = np.zeros([self.L1*self.L2, self.L2]) 
 
-        self.y2_u = np.zeros(self.P*self.L1)
-        self.y1_u = np.zeros(self.P*self.L2)
+        self.y2_u = np.zeros([self.P*self.L1, 1])
+        self.y1_u = np.zeros([self.P*self.L2, 1])
 
         self.R2 = np.zeros([self.P*self.L1, self.P*self.L1])
         self.R1 = np.zeros([self.P*self.L2, self.P*self.L2])
 
-        self.r2 = np.zeros(self.P*self.L1)
-        self.r1 = np.zeros(self.P*self.L2)
+        self.r2 = np.zeros([self.P*self.L1, 1])
+        self.r1 = np.zeros([self.P*self.L2, 1])
 
         self.initialize()
 
@@ -56,8 +54,10 @@ class Kronecker:
         self.compute_R2()
         self.compute_r2()
 
+
     def iteration(self):
-        for i in range (self.n_iterations):
+        for n in range (self.n_iterations):
+            
             self.compute_h1()
             self.compute_y1_u()
             self.compute_R1()
@@ -68,10 +68,17 @@ class Kronecker:
             self.compute_R2()
             self.compute_r2() 
 
-    def final_computation(self):
-        realtive_impulse_response = np.empty(self.L1*self.L2)
+        #print("R2 : \n", self.R2)
+        #print("R1 : \n", self.R1)
+        #print("r2 : \n", self.r2)
+        #print("r1 : \n", self.r1)
+        #print("h2 : \n", self.h2_u)
+        #print("h1 : \n", self.h1_u)
+
+    def final_computation(self): 
+        realtive_impulse_response = np.zeros([self.L1*self.L2, 1])
         for p in range (self.P):
-            realtive_impulse_response_p = np.empty(self.L1*self.L2)
+            realtive_impulse_response_p = np.zeros([self.L1*self.L2, 1])
             h2_p = self.h2_u[p*self.L2 : (p+1)*self.L2]
             h1_p = self.h1_u[p*self.L1 : (p+1)*self.L1]
 
@@ -99,18 +106,21 @@ class Kronecker:
         for p in range (self.P):
             self.compute_H2_p(p)
             y2_p = np.matmul(np.transpose(self.H2_p), self.y)
-            self.y2_u[p*self.L1:(p+1)*self.L1] = y2_p
+            y2_p_mat = np.reshape(y2_p, (self.L1, 1))
+            self.y2_u[p*self.L1:(p+1)*self.L1] = y2_p_mat
 
     def compute_y1_u(self):
         for p in range (self.P):
             self.compute_H1_p(p)
             y1_p = np.matmul(np.transpose(self.H1_p), self.y)
-            self.y1_u[p*self.L2:(p+1)*self.L2] = y1_p
+            y1_p_mat = np.reshape(y1_p, (self.L2, 1))
+            self.y1_u[p*self.L2:(p+1)*self.L2] = y1_p_mat
 
     def compute_H2_p(self, p):  
-        for i in range (self.L1):
-            for k in range (0, self.L2, self.L1):
-                self.H2_p[i+k][i] = self.h2_u[p*self.L2 + k] 
+        for k in range (self.L1):
+            for i in range (self.L2):
+                self.H2_p[i*self.L1 +k][k] = self.h2_u[p*self.L2 + i] 
+
 
     def compute_H1_p(self, p):
         for i in range (self.L2):
@@ -124,11 +134,18 @@ class Kronecker:
         self.h1_u = np.matmul(np.linalg.inv(self.R2 + self.regulation_constant*np.identity(self.P*self.L1)), self.r2)
 
 def compute_L1_L2(L):
+    """
+    Requirements:
+     - L2 < L1 
+     - L1 * L2 = L 
+     - L1 and L2 should be as close as possible
+     - P << L2
+    """
     L2 = 1
     while (True):
         L2 += 1
         L1 = L // L2
-        if (L2 + 1) > L1: #use do while in cpp
+        if (L2 + 1) >= L1: 
             break
 
     return L1, L2
