@@ -19,8 +19,6 @@ class Kronecker:
         y: np.array
         ):
 
-        self.L1 = 6
-        self.L2 = 7
         self.P = 5
         self.D = 1 
         self.n_iterations = 30
@@ -30,7 +28,7 @@ class Kronecker:
         self.x_D = x[len(y) - self.D] 
         self.y = y
 
-        assert  len(y) == self.L1*self.L2 
+        self.L1, self.L2 = compute_L1_L2(len(y))
 
         self.h2_u = np.zeros(self.P*self.L2)
         self.h1_u = np.zeros(self.P*self.L1)
@@ -68,22 +66,7 @@ class Kronecker:
             self.compute_h2()
             self.compute_y2_u()
             self.compute_R2()
-            self.compute_r2()
-
-    def final_computation(self):
-        realtive_impulse_response = np.empty(self.L1*self.L2)
-        for i in range (self.P):
-            realtive_impulse_response_p = np.empty(self.L1*self.L2)
-            h2_p_trans = np.transpose(self.h2_u[i*self.L2 : (i+1)*self.L2])
-            h1_p_trans = np.transpose(self.h1_u[i*self.L1 : (i+1)*self.L1])
-
-            for j, a in enumerate(h2_p_trans):
-                realtive_impulse_response_p[j*self.L1 : (j+1)*self.L1] = a*h1_p_trans
-
-            realtive_impulse_response += realtive_impulse_response_p
-
-        sdoa = np.argmax(np.abs(realtive_impulse_response)) - self.D 
-        return sdoa  
+            self.compute_r2() 
 
     def final_computation(self):
         realtive_impulse_response = np.empty(self.L1*self.L2)
@@ -99,7 +82,6 @@ class Kronecker:
 
         sdoa = np.argmax(np.abs(realtive_impulse_response)) - self.D 
         return sdoa       
-
 
     def compute_R2(self):
         self.R2 = np.matmul(self.y2_u, np.transpose(self.y2_u))  
@@ -140,6 +122,16 @@ class Kronecker:
 
     def compute_h1(self):
         self.h1_u = np.matmul(np.linalg.inv(self.R2 + self.regulation_constant*np.identity(self.P*self.L1)), self.r2)
+
+def compute_L1_L2(L):
+    L2 = 1
+    while (True):
+        L2 += 1
+        L1 = L // L2
+        if (L2 + 1) > L1: #use do while in cpp
+            break
+
+    return L1, L2
 
 
 
