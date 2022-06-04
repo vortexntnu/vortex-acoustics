@@ -127,8 +127,7 @@ def test_detect_change_in_pinger_pos():
         computed_pinger_position.integrate_new_measurement(estimate)
         if computed_pinger_position.detect_change_in_pinger_pos(True):
             computed_pinger_position.remove_obsolete_measurements()
-            #print("\nChange in position detected\n")
-
+            # print("\nChange in position detected\n")
 
     check_result(first_source_position, computed_pinger_position, True)
 
@@ -141,6 +140,6 @@ def test_detect_change_in_pinger_pos():
         computed_pinger_position.integrate_new_measurement(estimate)
         if computed_pinger_position.detect_change_in_pinger_pos(True):
             computed_pinger_position.remove_obsolete_measurements()
-            #print("\nChange in position detected\n")
+            # print("\nChange in position detected\n")
 
     check_result(second_source_position, computed_pinger_position, True)
