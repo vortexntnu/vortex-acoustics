@@ -62,9 +62,20 @@ class PositionEstimate:
             if self.distance_threshold.x < abs(prev_mean_x - current_mean_x):
                 if self.distance_threshold.y < abs(prev_mean_y - current_mean_y):
                     if self.distance_threshold.z < abs(prev_mean_z - current_mean_z):
-                        self.measurments[0] = self.measurments[0][n - m :]
-                        self.measurments[1] = self.measurments[1][n - m :]
-                        self.measurments[2] = self.measurments[2][n - m :]
+                        self.remove_obsolete_measurements()
+                        return True 
+            
+        return False
+
+    def remove_obsolete_measurements(self): 
+
+        n = len(self.measurments[0])
+        m = self.m_last_elements
+
+        self.measurments[0] = self.measurments[0][n - m :]
+        self.measurments[1] = self.measurments[1][n - m :]
+        self.measurments[2] = self.measurments[2][n - m :]
+
 
     def within_pool_boundaries(self, measurment: List) -> bool :
         valid_measurment = True
