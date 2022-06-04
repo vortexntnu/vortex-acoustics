@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import List
 
+
 @dataclass
 class Position:
     x: float = 0
@@ -22,7 +23,7 @@ class PositionEstimate:
 
     def integrate_new_measurment(self, measurement: list):
 
-        if (self.within_pool_boundaries(measurement)):
+        if self.within_pool_boundaries(measurement):
             self.measurements[0].append(measurement[0])
             self.measurements[1].append(measurement[1])
             self.measurements[2].append(measurement[2])
@@ -46,8 +47,8 @@ class PositionEstimate:
     def detect_change_in_pinger_pos(self, searching_for_second_pinger: bool):
         """
         Use bayesian detection to conclude if the last m measurments
-        are generated from a new pinger position. 
-        Assume both hyposthesis are equaly likely. 
+        are generated from a new pinger position.
+        Assume both hyposthesis are equaly likely.
         """
 
         n = len(self.measurements[0])
@@ -63,15 +64,19 @@ class PositionEstimate:
             current_mean_y = sum(self.measurements[1][n - m :]) / m
             current_mean_z = sum(self.measurements[2][n - m :]) / m
 
-            if self.distance_between_pingers.x/2 < abs(prev_mean_x - current_mean_x): 
-                if self.distance_between_pingers.y/2 < abs(prev_mean_y - current_mean_y):
-                    if self.distance_between_pingers.z/2 < abs(prev_mean_z - current_mean_z):
+            if self.distance_between_pingers.x / 2 < abs(prev_mean_x - current_mean_x):
+                if self.distance_between_pingers.y / 2 < abs(
+                    prev_mean_y - current_mean_y
+                ):
+                    if self.distance_between_pingers.z / 2 < abs(
+                        prev_mean_z - current_mean_z
+                    ):
                         self.remove_obsolete_measurements()
-                        return True 
-            
+                        return True
+
         return False
 
-    def remove_obsolete_measurements(self): 
+    def remove_obsolete_measurements(self):
 
         n = len(self.measurements[0])
         m = self.m_last_elements
@@ -80,8 +85,7 @@ class PositionEstimate:
         self.measurements[1] = self.measurements[1][n - m :]
         self.measurements[2] = self.measurements[2][n - m :]
 
-
-    def within_pool_boundaries(self, measurement: List) -> bool :
+    def within_pool_boundaries(self, measurement: List) -> bool:
         valid_measurement = True
         if abs(measurement[0]) < pool_size.x:
             valid_measurement = False
@@ -90,4 +94,3 @@ class PositionEstimate:
         elif abs(measurement[2]) < pool_size.z:
             valid_measurement = False
         return valid_measurement
-
