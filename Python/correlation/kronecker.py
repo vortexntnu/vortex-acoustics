@@ -31,23 +31,16 @@ class Kronecker:
         self.H2_p = np.zeros([self.L1*self.L2, self.L1])
         self.H1_p = np.zeros([self.L1*self.L2, self.L2]) 
 
-        self.y2_u = np.zeros([self.P, self.L1])
-        self.y1_u = np.zeros([self.P, self.L2])
+        self.y2_u = np.zeros([self.P*self.L1, 1])
+        self.y1_u = np.zeros([self.P*self.L2, 1])
 
-        self.R2 = np.zeros([self.P, self.P])
-        self.R1 = np.zeros([self.P, self.P])
+        self.R2 = np.zeros([self.P*self.L1, self.P*self.L1])
+        self.R1 = np.zeros([self.P*self.L2, self.P*self.L2])
 
-        self.r2 = np.zeros([self.P, self.L1])
-        self.r1 = np.zeros([self.P, self.L1])
-
-        self.initzialization()
-
-    def initzialization(self):
-        for p in range (self.P):
-            self.h2_u[p][0] = 0.1
+        self.r2 = np.zeros([self.P*self.L1, 1])
+        self.r1 = np.zeros([self.P*self.L2, 1])
 
         self.initialize()
-
 
     def initialize(self):
         for i in range (self.P):
