@@ -21,7 +21,7 @@ class PositionEstimate:
         self.m_last_elements = m_last_elem
         self.distance_between_pingers = distance_between_pingers
 
-    def integrate_new_measurment(self, measurement: list):
+    def integrate_new_measurement(self, measurement: list):
 
         if self.within_pool_boundaries(measurement):
             self.measurements[0].append(measurement[0])
@@ -71,7 +71,6 @@ class PositionEstimate:
                     if self.distance_between_pingers.z / 2 < abs(
                         prev_mean_z - current_mean_z
                     ):
-                        self.remove_obsolete_measurements()
                         return True
 
         return False
@@ -87,10 +86,10 @@ class PositionEstimate:
 
     def within_pool_boundaries(self, measurement: List) -> bool:
         valid_measurement = True
-        if abs(measurement[0]) < pool_size.x:
+        if abs(measurement[0]) > pool_size.x:
             valid_measurement = False
-        elif abs(measurement[1]) < pool_size.y:
+        elif abs(measurement[1]) > pool_size.y:
             valid_measurement = False
-        elif abs(measurement[2]) < pool_size.z:
+        elif abs(measurement[2]) > pool_size.z:
             valid_measurement = False
         return valid_measurement

@@ -13,7 +13,7 @@ def generate_estimates(
 ):
     """
     Args:
-        source_position: make sure source positidebugon is in positive octant
+        source_position: make sure source position is in positive octant
         hydrophone_positions: give hydrophone positions relative to origo (0,0,0)
     """
 
@@ -125,7 +125,10 @@ def test_detect_change_in_pinger_pos():
 
     for estimate in first_estimates:
         computed_pinger_position.integrate_new_measurement(estimate)
-        computed_pinger_position.detect_change_in_pinger_pos(True)
+        if computed_pinger_position.detect_change_in_pinger_pos(True):
+            computed_pinger_position.remove_obsolete_measurements()
+            #print("\nChange in position detected\n")
+
 
     check_result(first_source_position, computed_pinger_position, True)
 
@@ -136,6 +139,8 @@ def test_detect_change_in_pinger_pos():
     print("\n\n new position \n\n")
     for estimate in second_estimates:
         computed_pinger_position.integrate_new_measurement(estimate)
-        computed_pinger_position.detect_change_in_pinger_pos(True)
+        if computed_pinger_position.detect_change_in_pinger_pos(True):
+            computed_pinger_position.remove_obsolete_measurements()
+            #print("\nChange in position detected\n")
 
     check_result(second_source_position, computed_pinger_position, True)
