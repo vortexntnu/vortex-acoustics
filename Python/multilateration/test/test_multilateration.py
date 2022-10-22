@@ -2,9 +2,22 @@ import multilateration.multilateration as mult
 import multilateration.parameters as param
 import numpy as np
 from signal_generation.positioning import Position
+import pytest
+import matplotlib.pyplot as plt
+
+n = 1
+x = np.arange(n)
+# src_x_arr = np.exp(x/100) / n
+# src_x_arr = np.log(x/100) * 10
+src_x_arr = [16]
+# plt.plot(x, src_x_arr)
+# plt.show()
+
+result_mtx = np.ndarray((n, 2))
+# result_mtx = np.ndarray((n, 4))
 
 source_position = Position(
-    x=12.0,
+    x=8.0,
     y=2.0,
     z=1.0,
 )
@@ -102,20 +115,32 @@ def calculate_tdoa_array(
     return tdoa_sample_array
 
 
-def test_trilateration_algorithm():
+@pytest.mark.parametrize(
+    "source_position_x",
+    src_x_arr,
+    ids=x.tolist(),
+)
+def test_trilateration_algorithm(source_position_x, request):
     """Testing if algorithm gives wanted results.
 
     Calculates the distance between the estimated position and the
     actual position to check if within given tolerance value.
     Only considering x and y, since we only have three hydrophones.
     """
-
-    tolerance = 4
+    print("\n")
+    tolerance = 40000
     sample_frequency = 300000
-
+    source_position_new = Position(source_position_x, source_position.y, source_position.z)
     tdoa_sample_array = generate_tdoa_lag_array(
         hydrophone_positions=hydrophone_positions,
-        source_position=source_position,
+        source_position=source_position_new,
+        sample_frequency=sample_frequency,
+    )
+    print(tdoa_sample_array)
+    print("\n")
+    tdoa_sample_array = generate_tdoa_lag_array(
+        hydrophone_positions=hydrophone_positions,
+        source_position=source_position_new,
         sample_frequency=sample_frequency,
     )[:, 0][1:]
 
@@ -131,8 +156,32 @@ def test_trilateration_algorithm():
         z=res_z,
     )
 
-    assert abs(source_position - res_position) < tolerance
+    # print(source_position_x)
+    # print(request.node.callspec.id)
+    # print(abs(source_position_new - res_position))
+    # print("\n")
+    result_mtx[int(request.node.callspec.id)] = [int(request.node.callspec.id), abs(source_position_new - res_position)]
+    if int(request.node.callspec.id) == 999:
+        # plt.plot(x, result_mtx[:,1])
 
+        # plt.show()
+
+        print(max(result_mtx[:,1]))
+        print(max(src_x_arr))
+        
+        ax1 = plt.subplot()
+        l1, = ax1.plot(result_mtx[:,1], color='red')
+        ax2 = ax1.twinx()
+        l2, = ax2.plot(src_x_arr, color='orange')
+
+        plt.legend([l1, l2], ["error", "x_placement"])
+        plt.grid()
+        
+        plt.show()
+    
+    
+    
+    assert abs(source_position_new - res_position) < tolerance
 
 def test_compare_with_teensy():
     """Provides a reference for the code on the Teensy to compare against.

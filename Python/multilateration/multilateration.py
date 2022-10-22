@@ -15,6 +15,28 @@ def check_invalid_time(
     """Checking if the time difference exceeds the maximum allowed time for a valid signal."""
     return (abs(sample_diff) * 1 / sample_frequency) > max_time_difference
 
+def gauss_newton_nllr(x, y, z, t, x_init, y_init, z_init, t_init):
+    tol = 0.0001                                        # tolerance for convergence
+    iter_max = 50                                          # max iterations
+    
+    c = param.PhysicalConstants.SOUND_SPEED
+    #t = T + 1/c*np.sqrt((x-X)**2+(y-Y)**2+(z-Z)**2)
+
+    n = len(x)                                          # num of data point = num of hydrophones
+
+    f = np.ndarray((1, n)) # fnc arr
+    j = np.ndarray((n, 4)) # jacobian mtx
+    d = np.ndarray((1, n)) # delta arr
+    for iter in range(iter_max):
+        x_0, y_0, z_0, t_0 = x_init, y_init, z_init, t_init # init values from linear least squares
+        for i in range(n):
+            f[i] = t[i] + 1/c*np.sqrt((x_0-x[i])**2+(y_0-y[i])**2+(z_0-z[0])**2) - t_0      # non-linear model
+            j[i, 0] = (x[i] - x_0)/(c*np.sqrt((x_0-x[i])**2+(y_0-y[i])**2+(z_0-z[0])**2))   # pde wrt X
+            j[i, 1] = (y[i] - y_0)/(c*np.sqrt((x_0-x[i])**2+(y_0-y[i])**2+(z_0-z[0])**2))   # pde wrt Y
+            j[i, 2] = (z[i] - z_0)/(c*np.sqrt((x_0-x[i])**2+(y_0-y[i])**2+(z_0-z[0])**2))   # pde wrt Z
+            j[i, 3] = 1                                                                     # pde wrt T
+
+            print(f)
 
 def check_valid_signals(
     hydrophone_positions: np.array,
@@ -68,7 +90,12 @@ def calculate_pinger_position(
     x_estimate = solution_vec[0]
     y_estimate = solution_vec[1]
     z_estimate = solution_vec[2]
-
+    print(A)
+    print("\n")
+    print(B)
+    print("\n")
+    print(solution_vec)
+    print("\n")
     return x_estimate, y_estimate, z_estimate
 
 
