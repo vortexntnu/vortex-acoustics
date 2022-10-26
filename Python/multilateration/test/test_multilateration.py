@@ -5,20 +5,22 @@ from signal_generation.positioning import Position
 import pytest
 import matplotlib.pyplot as plt
 
-n = 1
+n = 1000
 x = np.arange(n)
 # src_x_arr = np.exp(x/100) / n
-# src_x_arr = np.log(x/100) * 10
-src_x_arr = [16]
+src_x_arr = abs(np.log(x/100) * 10) + 3
+#src_x_arr = x
 # plt.plot(x, src_x_arr)
 # plt.show()
 
 result_mtx = np.ndarray((n, 2))
+nl_result_mtx = np.ndarray((n, 2))
+
 # result_mtx = np.ndarray((n, 4))
 
 source_position = Position(
-    x=8.0,
-    y=2.0,
+    x=12.0,
+    y=5.0,
     z=1.0,
 )
 
@@ -136,7 +138,7 @@ def test_trilateration_algorithm(source_position_x, request):
         source_position=source_position_new,
         sample_frequency=sample_frequency,
     )
-    print(tdoa_sample_array)
+    print(tdoa_sample_array[:, 0][1:])
     print("\n")
     tdoa_sample_array = generate_tdoa_lag_array(
         hydrophone_positions=hydrophone_positions,
@@ -144,7 +146,7 @@ def test_trilateration_algorithm(source_position_x, request):
         sample_frequency=sample_frequency,
     )[:, 0][1:]
 
-    res_x, res_y, res_z = mult.calculate_pinger_position(
+    res_x, res_y, res_z, nl_res_x, nl_res_y, nl_res_z = mult.calculate_pinger_position(
         tdoa_lag_array=tdoa_sample_array,
         hydrophone_positions=hydrophone_positions,
         sample_frequency=sample_frequency,
@@ -156,25 +158,39 @@ def test_trilateration_algorithm(source_position_x, request):
         z=res_z,
     )
 
-    # print(source_position_x)
-    # print(request.node.callspec.id)
-    # print(abs(source_position_new - res_position))
-    # print("\n")
-    result_mtx[int(request.node.callspec.id)] = [int(request.node.callspec.id), abs(source_position_new - res_position)]
+    nl_res_position = Position(
+        x=nl_res_x,
+        y=nl_res_y,
+        z=nl_res_z,
+    )
+    print(source_position_x)
+    print(request.node.callspec.id)
+    error = abs(source_position_new - res_position)
+    if nl_res_position.x == -1 and nl_res_position.y == -1 and nl_res_position.z == -1:
+        nl_error = 3000
+    else:
+        nl_error = abs(source_position_new - nl_res_position)
+    print(error)
+    print(nl_error)
+    print("\n")
+    result_mtx[int(request.node.callspec.id)] = [int(request.node.callspec.id), error]
+    nl_result_mtx[int(request.node.callspec.id)] = [int(request.node.callspec.id), nl_error]
     if int(request.node.callspec.id) == 999:
         # plt.plot(x, result_mtx[:,1])
 
-        # plt.show()
+        plt.show()
 
         print(max(result_mtx[:,1]))
         print(max(src_x_arr))
         
         ax1 = plt.subplot()
-        l1, = ax1.plot(result_mtx[:,1], color='red')
-        ax2 = ax1.twinx()
-        l2, = ax2.plot(src_x_arr, color='orange')
+        l3, = ax1.plot(src_x_arr, color='orange')
 
-        plt.legend([l1, l2], ["error", "x_placement"])
+        ax2 = ax1.twinx()
+        l1, = ax2.plot(result_mtx[:,1], color='red')
+        l2, = ax2.plot(nl_result_mtx[:,1], color='green')
+        
+        plt.legend([l1, l2, l3], ["error", "nl_error", "x_placement"])
         plt.grid()
         
         plt.show()
