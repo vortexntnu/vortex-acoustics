@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def short_time_fourier_transform(
+def short_time_fourier_transform(  # Search up STFT
     signal: np.array,
     fft_size: int,
     sampling_frequency: float,  # [kHz]
@@ -19,13 +19,17 @@ def short_time_fourier_transform(
     return MN_point_fft
 
 
-def find_tone(
+def find_tone(  # Determines the frequency
     fft: np.array,
     sampling_frequency: float,
     fft_size: int,
 ) -> float:
-    frequency_bins = np.fft.rfftfreq(fft_size, 1 / sampling_frequency)
-    tone = frequency_bins[np.argmax(fft)]
+    frequency_bins = np.fft.rfftfreq(
+        fft_size, 1 / sampling_frequency
+    )  # divides the frequency axis into bins
+    tone = frequency_bins[
+        np.argmax(fft)
+    ]  # Determines which bin contains the greatest frequency magnitude
 
     return tone
 
