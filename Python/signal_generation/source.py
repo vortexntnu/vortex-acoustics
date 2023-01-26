@@ -15,7 +15,7 @@
 """
 import numpy as np
 import scipy.signal.windows
-from signal_generation.positioning import Position
+from positioning import Position
 
 
 def generate_pulse_window(
