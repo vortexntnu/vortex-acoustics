@@ -21,8 +21,8 @@ Here we add complexity by adding noise into the mix
 
 freq = 18.0  # [kHz]
 waveNum = 5  # Number of waves you want to generate in a signal
-noiseVariance = 0.001  # Variaty in noise, if variance >0.1, set noiseCliping
-noiseCliping = None  # If noiseVariance > 0.1 => Set cliping to equal noiseVariance or les, this is so that program doesent crash because of to much variance
+noiseVariance = 0.1  # Variaty in noise
+noiseCliping = None  # Set a float value you want noise amplitude to be cliped. Set variable to "None" for no cliping of noise
 # ----------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------
@@ -60,7 +60,7 @@ signalNoise = noise.generate_gaussian_noise(
 
 
 # Combine signal with noise
-signalCombo = numpy.multiply(signal, signalNoise)
+signalCombo = numpy.add(signal, signalNoise)
 
 # Write out data to a .txt file for later use
 with open(f"{SCRIPT_DIR}/Test4.txt", "w+") as file:
