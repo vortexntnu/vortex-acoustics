@@ -7,6 +7,7 @@ sys.path.append(os.path.dirname(SCRIPT_DIR))
 
 import source
 import noise
+import conversion
 import numpy
 import matplotlib.pyplot as pyplot
 
@@ -62,19 +63,33 @@ signalNoise = noise.generate_gaussian_noise(
 # Combine signal with noise
 signalCombo = numpy.add(signal, signalNoise)
 
-# Write out data to a .txt file for later use
+
+
+# Convert signal into binary data and save it in a .txt file
 with open(f"{SCRIPT_DIR}/Test4.txt", "w+") as file:
-    file.write(str(signalCombo))
+    signalComboDigital = conversion.convert_to_integer_type(
+        resulting_type = numpy.int8,
+        input_signal = signalCombo,
+        pre_offset=0.0,
+    )
+    file.write(str(signalComboDigital))
 
 # Plot signal to see
-t = list(range(0, len(signalNoise)))
-pyplot.plot(t, signalNoise)
 t = list(range(0, len(signal)))
-pyplot.plot(t, signal)
-pyplot.title("Simulating Seperate pieces")
+pyplot.plot(t, signal, "b", label = "Signal")
+t = list(range(0, len(signalNoise)))
+pyplot.plot(t, signalNoise, "c", label = "Noise")
+pyplot.title("Simulating combined signals with noise added")
+pyplot.legend()
 pyplot.show()
 
+
+fig, axs = pyplot.subplots(2)
+fig.suptitle("Simulation - Signal with noise")
 t = list(range(0, len(signalCombo)))
-pyplot.plot(t, signalCombo)
-pyplot.title("Simulations")
+axs[0].plot(t, signalCombo, "tab:purple")
+axs[0].set_title("Analog")
+t = list(range(0, len(signalComboDigital)))
+axs[1].plot(t, signalComboDigital, "tab:red")
+axs[1].set_title("Digital")
 pyplot.show()
