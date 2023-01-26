@@ -31,7 +31,7 @@ freqAmp = numpy.array(
     ]
 )
 waveNum = 5  # Number of waves you want to generate with the SMALEST frequency
-noisActive = True  # Noise has effect when True
+noisActive = True  # Noise has effect when True, No noise when False
 noiseVariance = 1.5  # Variaty in noise
 noiseCliping = None  # Set a float value you want noise amplitude to be cliped. Set variable to "None" for no cliping of noise
 # ----------------------------------------------------------------------------------------------------
