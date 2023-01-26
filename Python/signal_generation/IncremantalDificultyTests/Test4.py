@@ -64,21 +64,20 @@ signalNoise = noise.generate_gaussian_noise(
 signalCombo = numpy.add(signal, signalNoise)
 
 
-
 # Convert signal into binary data and save it in a .txt file
 with open(f"{SCRIPT_DIR}/Test4.txt", "w+") as file:
     signalComboDigital = conversion.convert_to_integer_type(
-        resulting_type = numpy.int8,
-        input_signal = signalCombo,
+        resulting_type=numpy.int8,
+        input_signal=signalCombo,
         pre_offset=0.0,
     )
     file.write(str(signalComboDigital))
 
 # Plot signal to see
 t = list(range(0, len(signal)))
-pyplot.plot(t, signal, "b", label = "Signal")
+pyplot.plot(t, signal, "b", label="Signal")
 t = list(range(0, len(signalNoise)))
-pyplot.plot(t, signalNoise, "c", label = "Noise")
+pyplot.plot(t, signalNoise, "c", label="Noise")
 pyplot.title("Simulating combined signals with noise added")
 pyplot.legend()
 pyplot.show()

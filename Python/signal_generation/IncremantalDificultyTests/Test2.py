@@ -51,14 +51,13 @@ signal = pingerObj.generate_signal(
 )
 
 
-
 # Convert signal into binary data and save it in a .txt file
 with open(f"{SCRIPT_DIR}/Test2.txt", "w+") as file:
     signalDigital = conversion.convert_to_integer_type(
-            resulting_type = numpy.int8,
-            input_signal = signal,
-            pre_offset=0.0,
-        )
+        resulting_type=numpy.int8,
+        input_signal=signal,
+        pre_offset=0.0,
+    )
     file.write(str(signalDigital))
 
 # Plot signal to see

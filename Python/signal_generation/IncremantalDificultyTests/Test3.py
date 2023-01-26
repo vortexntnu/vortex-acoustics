@@ -61,12 +61,11 @@ for i in range(len(signalList)):
     signalCombo = numpy.multiply(signalCombo, signalList[i])
 
 
-
 # Convert signal into binary data and save it in a .txt file
 with open(f"{SCRIPT_DIR}/Test3.txt", "w+") as file:
     signalComboDigital = conversion.convert_to_integer_type(
-        resulting_type = numpy.int8,
-        input_signal = signalCombo,
+        resulting_type=numpy.int8,
+        input_signal=signalCombo,
         pre_offset=0.0,
     )
     file.write(str(signalComboDigital))

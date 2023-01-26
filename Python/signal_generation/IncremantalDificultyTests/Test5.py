@@ -92,12 +92,11 @@ if noisActive:
     signalCombo = numpy.add(signalCombo, signalNoise)
 
 
-
 # Convert signal into binary data and save it in a .txt file
 with open(f"{SCRIPT_DIR}/Test5.txt", "w+") as file:
     signalComboDigital = conversion.convert_to_integer_type(
-        resulting_type = numpy.int8,
-        input_signal = signalCombo,
+        resulting_type=numpy.int8,
+        input_signal=signalCombo,
         pre_offset=0.0,
     )
     file.write(str(signalComboDigital))
@@ -112,15 +111,17 @@ pyplot.show()
 
 if noisActive:
     t = list(range(0, len(signalComboNoNoise)))
-    pyplot.plot(t, signalComboNoNoise, "b", label = "Signal")
+    pyplot.plot(t, signalComboNoNoise, "b", label="Signal")
     t = list(range(0, len(signalNoise)))
-    pyplot.plot(t, signalNoise, "c", label = "Noise")
+    pyplot.plot(t, signalNoise, "c", label="Noise")
     pyplot.title("Simulating combined signals with noise added")
     pyplot.legend()
     pyplot.show()
 
 fig, axs = pyplot.subplots(2)
-fig.suptitle("Simulation - Signal with multiple frequencies and amplitudes, combined with noise")
+fig.suptitle(
+    "Simulation - Signal with multiple frequencies and amplitudes, combined with noise"
+)
 t = list(range(0, len(signalCombo)))
 axs[0].plot(t, signalCombo, "tab:purple")
 axs[0].set_title("Analog")
