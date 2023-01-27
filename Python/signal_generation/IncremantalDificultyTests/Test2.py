@@ -58,7 +58,7 @@ with open(f"{SCRIPT_DIR}/Test2.txt", "w+") as file:
         input_signal=signal,
         pre_offset=0.0,
     )
-    file.write(str(signalDigital))
+    file.write(str(signalDigital.tolist()))
 
 # Plot signal to see
 fig, axs = pyplot.subplots(2)

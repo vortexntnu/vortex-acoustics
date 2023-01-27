@@ -99,7 +99,7 @@ with open(f"{SCRIPT_DIR}/Test5.txt", "w+") as file:
         input_signal=signalCombo,
         pre_offset=0.0,
     )
-    file.write(str(signalComboDigital))
+    file.write(str(signalComboDigital.tolist()))
 
 # Plot signal to see
 fig, axs = pyplot.subplots(len(signalList))

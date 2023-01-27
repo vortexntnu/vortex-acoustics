@@ -71,7 +71,7 @@ with open(f"{SCRIPT_DIR}/Test4.txt", "w+") as file:
         input_signal=signalCombo,
         pre_offset=0.0,
     )
-    file.write(str(signalComboDigital))
+    file.write(str(signalComboDigital.tolist()))
 
 # Plot signal to see
 t = list(range(0, len(signal)))
