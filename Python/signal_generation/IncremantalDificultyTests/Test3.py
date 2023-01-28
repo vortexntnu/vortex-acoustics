@@ -17,10 +17,18 @@ import matplotlib.pyplot as pyplot
 """
 This is iteration of the most basic test where only 1 single frequency is generated
 Here we add complexity by combining multiple frequencies
+Aswell as phase shift
 """
 
-freq = [10.0, 18.0, 40.0]  # [kHz]
-waveNum = 5  # Number of waves you want to generate with the SMALEST frequency
+# [frequency, phase shift]/[kHz, ms]
+freqShift = numpy.array(
+    [
+        [10.0, 0.2],
+        [18.0, 0.4],
+        [40.0, 0.6],
+    ]
+)
+waveNum = 7  # Number of waves you want to generate with the SMALEST frequency
 # ----------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------
@@ -28,37 +36,38 @@ waveNum = 5  # Number of waves you want to generate with the SMALEST frequency
 
 # Set upp variables
 samplingFreq = 500.0  # [kHz]
+minFreqIndex = numpy.argmin(freqShift[::, 0])
 pulseLenght = (
-    int(samplingFreq / min(freq)) * waveNum
-)  # Multiply by 10 to get a really good resolution of the sample
+    int(samplingFreq / freqShift[minFreqIndex, 0]) * waveNum + int(samplingFreq * freqShift[minFreqIndex, 1])
+)  # Multiply by 10 to get a really good resolution of the sample, compensate for phase shift by ading it in
 
-# Make a list of multiple pinger objects of the same size
+# Make pinger object
 pingerObj = source.Pinger(
-    frequency=freq[0],  # [kHz]
+    frequency=freqShift[0, 0],  # [kHz]
     sampling_frequency=samplingFreq,  # [kHz]
     pulse_length=pulseLenght,  # [ms]
     period=100000,  # [ms]
-    amplitude=1.0,
+    amplitude=0.1,
     use_window=False,
     # position: Position = Position(),
 )
 
 # Generate a list of sampling signal with identical lenght
 signalList = []
-for i in range(len(freq)):
-    pingerObj.frequency = freq[i]
+for i in range(len(freqShift)):
+    pingerObj.frequency = freqShift[i, 0]
 
     signalList += [
         pingerObj.generate_signal(
-            offset=0.0,
+            offset=freqShift[i, 1],
             length=pulseLenght,
         )
     ]
 
 # Combine all individual signals into one signal
-signalCombo = [1] * len(signalList[0])
+signalCombo = [0] * len(signalList[0])
 for i in range(len(signalList)):
-    signalCombo = numpy.multiply(signalCombo, signalList[i])
+    signalCombo = numpy.add(signalCombo, signalList[i])
 
 
 # Convert signal into binary data and save it in a .txt file

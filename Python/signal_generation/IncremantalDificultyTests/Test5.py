@@ -17,23 +17,23 @@ import matplotlib.pyplot as pyplot
 # ----------------------------------------------------------------------------------------------------
 """
 This is combination of Test 1, 2, 3 and 4
-We add multiple frequencies with their own seperate amplitudes
+We add multiple frequencies with their own seperate amplitudes and phase shifts
 In adition we can turn on and off noise
 """
 
-# [frequency, amplitude]/[kHz, dB]
-freqAmp = numpy.array(
+# [frequency, amplitude, phase shift]/[kHz, dB, ms]
+freqAmpShift = numpy.array(
     [
-        [10.0, 1.0],
-        [11.0, 0.8],
-        [22.0, 0.6],
-        [23.0, 2.4],
-        [30.0, 1.0],
+        [10.0, 0.10, 0.1],
+        [11.0, 0.08, 0.2],
+        [22.0, 0.06, 0.4],
+        [23.0, 0.24, 0.6],
+        [50.0, 0.10, 0.1],
     ]
 )
 waveNum = 20  # Number of waves you want to generate with the SMALEST frequency
 noisActive = True  # Noise has effect when True, No noise when False
-noiseVariance = 0.01  # Variaty in noise
+noiseVariance = 0.001  # Variaty in noise
 noiseCliping = None  # Set a float value you want noise amplitude to be cliped. Set variable to "None" for no cliping of noise
 # ----------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------
@@ -42,31 +42,31 @@ noiseCliping = None  # Set a float value you want noise amplitude to be cliped. 
 
 # Set upp variables
 samplingFreq = 500.0  # [kHz]
-minFreqIndex = numpy.argmin(freqAmp[::, 0])
+minFreqIndex = numpy.argmin(freqAmpShift[::, 0])
 pulseLenght = (
-    int(samplingFreq / freqAmp[minFreqIndex, 0]) * waveNum
-)  # Multiply by 10 to get a really good resolution of the sample
+    int(samplingFreq / freqAmpShift[minFreqIndex, 0]) * waveNum + int(samplingFreq * freqAmpShift[minFreqIndex, 1])
+)  # Multiply by 10 to get a really good resolution of the sample, compensate for phase shift by ading it in
 
-# Make a list of multiple pinger objects of the same size
+# Make pinger object
 pingerObj = source.Pinger(
-    frequency=freqAmp[0, 0],  # [kHz]
+    frequency=freqAmpShift[0, 0],  # [kHz]
     sampling_frequency=samplingFreq,  # [kHz]
     pulse_length=pulseLenght,  # [ms]
     period=100000,  # [ms]
-    amplitude=freqAmp[0, 1],
+    amplitude=freqAmpShift[0, 1],
     use_window=False,
     # position: Position = Position(),
 )
 
 # Generate a list of sampling signal with identical lenght
 signalList = []
-for i in range(len(freqAmp)):
-    pingerObj.frequency = freqAmp[i, 0]
-    pingerObj.amplitude = freqAmp[i, 1]
+for i in range(len(freqAmpShift)):
+    pingerObj.frequency = freqAmpShift[i, 0]
+    pingerObj.amplitude = freqAmpShift[i, 1]
 
     signalList += [
         pingerObj.generate_signal(
-            offset=0.0,
+            offset=freqAmpShift[i, 2],
             length=pulseLenght,
         )
     ]
@@ -82,9 +82,9 @@ else:
     signalNoise = None
 
 # Combine all individual signals into one signal
-signalCombo = [1] * len(signalList[0])
+signalCombo = [0] * len(signalList[0])
 for i in range(len(signalList)):
-    signalCombo = numpy.multiply(signalCombo, signalList[i])
+    signalCombo = numpy.add(signalCombo, signalList[i])
 
 # Combine signals with noise if allowed
 if noisActive:

@@ -222,7 +222,7 @@ class Pinger:
         """Generates an array of the output signal for the given length.
 
         Args:
-            amplitude: The amplitude used for scaling the pulse amplitude.
+            offset: The offset used to ofseting the pulse phase.
             length: The length of the output signal in number of samples.
 
         Returns:

@@ -22,7 +22,7 @@ Here we add complexity by adding noise into the mix
 
 freq = 18.0  # [kHz]
 waveNum = 5  # Number of waves you want to generate in a signal
-noiseVariance = 0.1  # Variaty in noise
+noiseVariance = 0.0001  # Variaty in noise
 noiseCliping = None  # Set a float value you want noise amplitude to be cliped. Set variable to "None" for no cliping of noise
 # ----------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------
@@ -41,7 +41,7 @@ pingerObj = source.Pinger(
     sampling_frequency=samplingFreq,  # [kHz]
     pulse_length=pulseLenght,  # [ms]
     period=100000,  # [ms]
-    amplitude=1.0,
+    amplitude=0.1,
     use_window=False,
     # position: Position = Position(),
 )

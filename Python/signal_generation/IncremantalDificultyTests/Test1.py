@@ -37,7 +37,7 @@ pingerObj = source.Pinger(
     sampling_frequency=samplingFreq,  # [kHz]
     pulse_length=pulseLenght,  # [ms]
     period=100000,  # [ms]
-    amplitude=1.0,
+    amplitude=0.1,
     use_window=False,
     # position: Position = Position(),
 )
