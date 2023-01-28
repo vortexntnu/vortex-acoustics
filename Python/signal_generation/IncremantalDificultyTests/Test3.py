@@ -37,8 +37,8 @@ waveNum = 7  # Number of waves you want to generate with the SMALEST frequency
 # Set upp variables
 samplingFreq = 500.0  # [kHz]
 minFreqIndex = numpy.argmin(freqShift[::, 0])
-pulseLenght = (
-    int(samplingFreq / freqShift[minFreqIndex, 0]) * waveNum + int(samplingFreq * freqShift[minFreqIndex, 1])
+pulseLenght = int(samplingFreq / freqShift[minFreqIndex, 0]) * waveNum + int(
+    samplingFreq * freqShift[minFreqIndex, 1]
 )  # Multiply by 10 to get a really good resolution of the sample, compensate for phase shift by ading it in
 
 # Make pinger object

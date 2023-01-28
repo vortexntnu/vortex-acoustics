@@ -43,8 +43,8 @@ noiseCliping = None  # Set a float value you want noise amplitude to be cliped. 
 # Set upp variables
 samplingFreq = 500.0  # [kHz]
 minFreqIndex = numpy.argmin(freqAmpShift[::, 0])
-pulseLenght = (
-    int(samplingFreq / freqAmpShift[minFreqIndex, 0]) * waveNum + int(samplingFreq * freqAmpShift[minFreqIndex, 1])
+pulseLenght = int(samplingFreq / freqAmpShift[minFreqIndex, 0]) * waveNum + int(
+    samplingFreq * freqAmpShift[minFreqIndex, 1]
 )  # Multiply by 10 to get a really good resolution of the sample, compensate for phase shift by ading it in
 
 # Make pinger object
