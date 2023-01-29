@@ -51,7 +51,6 @@ signal = pingerObj.generate_signal(
 )
 
 
-
 # Convert signal into binary 12-bit data and save it in a .txt file
 with open(f"{SCRIPT_DIR}/Test2.txt", "w+") as file:
     """
