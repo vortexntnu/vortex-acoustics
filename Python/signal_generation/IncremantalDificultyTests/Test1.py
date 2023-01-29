@@ -49,14 +49,24 @@ signal = pingerObj.generate_signal(
 )
 
 
-# Convert signal into binary data and save it in a .txt file
+# Convert signal into binary 12-bit data and save it in a .txt file
 with open(f"{SCRIPT_DIR}/Test1.txt", "w+") as file:
-    signalDigital = conversion.convert_to_integer_type(
-        resulting_type=numpy.int8,
+    """
+    We sample data in real life with 12-bit acuracy
+    Python only has 8 or 16 bit acuracy
+    We save value to 16 bits and shift by 4
+    We lose 4 least significant bits and 0.025% acuracy, but it is an anolog signal so we just live with it
+    """
+    signalDigital12bit = []
+    signalDigital16bit = conversion.convert_to_integer_type(
+        resulting_type=numpy.int16,
         input_signal=signal,
         pre_offset=0.0,
     )
-    file.write(str(signalDigital.tolist()))
+    for sd16bit in signalDigital16bit:
+        signalDigital12bit += [sd16bit >> 4]
+
+    file.write(str(signalDigital12bit))
 
 # Plot signal to see
 fig, axs = pyplot.subplots(2)
@@ -64,7 +74,7 @@ fig.suptitle("Simulation - Simple signal")
 t = list(range(0, len(signal)))
 axs[0].plot(t, signal, "tab:purple")
 axs[0].set_title("Analog")
-t = list(range(0, len(signalDigital)))
-axs[1].plot(t, signalDigital, "tab:red")
+t = list(range(0, len(signalDigital12bit)))
+axs[1].plot(t, signalDigital12bit, "tab:red")
 axs[1].set_title("Digital")
 pyplot.show()

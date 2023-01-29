@@ -64,14 +64,24 @@ signalNoise = noise.generate_gaussian_noise(
 signalCombo = numpy.add(signal, signalNoise)
 
 
-# Convert signal into binary data and save it in a .txt file
+# Convert signal into binary 12-bit data and save it in a .txt file
 with open(f"{SCRIPT_DIR}/Test4.txt", "w+") as file:
-    signalComboDigital = conversion.convert_to_integer_type(
-        resulting_type=numpy.int8,
+    """
+    We sample data in real life with 12-bit acuracy
+    Python only has 8 or 16 bit acuracy
+    We save value to 16 bits and shift by 4
+    We lose 4 least significant bits and 0.025% acuracy, but it is an anolog signal so we just live with it
+    """
+    signalComboDigital12bit = []
+    signalComboDigital16bit = conversion.convert_to_integer_type(
+        resulting_type=numpy.int16,
         input_signal=signalCombo,
         pre_offset=0.0,
     )
-    file.write(str(signalComboDigital.tolist()))
+    for sd16bit in signalComboDigital16bit:
+        signalComboDigital12bit += [sd16bit >> 4]
+
+    file.write(str(signalComboDigital12bit))
 
 # Plot signal to see
 t = list(range(0, len(signal)))
@@ -88,7 +98,7 @@ fig.suptitle("Simulation - Signal with noise")
 t = list(range(0, len(signalCombo)))
 axs[0].plot(t, signalCombo, "tab:purple")
 axs[0].set_title("Analog")
-t = list(range(0, len(signalComboDigital)))
-axs[1].plot(t, signalComboDigital, "tab:red")
+t = list(range(0, len(signalComboDigital12bit)))
+axs[1].plot(t, signalComboDigital12bit, "tab:red")
 axs[1].set_title("Digital")
 pyplot.show()
