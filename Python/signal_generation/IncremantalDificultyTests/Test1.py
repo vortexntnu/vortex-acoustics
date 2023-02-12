@@ -26,7 +26,7 @@ waveNum = 10  # Number of waves you want to generate in a signal
 
 
 # Set upp variables
-samplingFreq = 500.0  # [kHz]
+samplingFreq = 510.0  # [kHz]
 pulseLenght = (
     int(samplingFreq / freq) * waveNum
 )  # Multiply by 10 to get a really good resolution of the sample
@@ -66,8 +66,14 @@ with open(f"{SCRIPT_DIR}/Test1.txt", "w+") as file:
     for sd16bit in signalDigital16bit:
         signalDigital12bit += [sd16bit >> 4]
 
-    file.write(str(signalDigital12bit))
-    print(len(signalDigital12bit))
+    """
+    NOTE IMPORTANT!!!
+    We take the 16-bit signal and save it in text file
+    This is because we temporarily will be using in real life a ADC that is 16-bit resolution
+    This ADC is just temporary, and the real 12-bit ADC will be coming later
+    That is why we first test with the 16-bit ADC instead :) 
+    """
+    file.write(str(signalDigital16bit))
 
 # Plot signal to see
 fig, axs = pyplot.subplots(2)

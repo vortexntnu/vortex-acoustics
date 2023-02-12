@@ -35,7 +35,7 @@ waveNum = 20  # Number of waves you want to generate with the SMALEST frequency
 
 
 # Set upp variables
-samplingFreq = 500.0  # [kHz]
+samplingFreq = 510.0  # [kHz]
 minFreqIndex = numpy.argmin(freqShift[::, 0])
 pulseLenght = int(samplingFreq / freqShift[minFreqIndex, 0]) * waveNum + int(
     samplingFreq * freqShift[minFreqIndex, 1]
@@ -87,7 +87,14 @@ with open(f"{SCRIPT_DIR}/Test3.txt", "w+") as file:
     for sd16bit in signalComboDigital16bit:
         signalComboDigital12bit += [sd16bit >> 4]
 
-    file.write(str(signalComboDigital12bit))
+    """
+    NOTE IMPORTANT!!!
+    We take the 16-bit signal and save it in text file
+    This is because we temporarily will be using in real life a ADC that is 16-bit resolution
+    This ADC is just temporary, and the real 12-bit ADC will be coming later
+    That is why we first test with the 16-bit ADC instead :) 
+    """
+    file.write(str(signalComboDigital16bit))
 
 # Plot signal to see
 fig, axs = pyplot.subplots(len(signalList))

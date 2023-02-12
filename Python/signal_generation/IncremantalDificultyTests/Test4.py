@@ -21,7 +21,7 @@ Here we add complexity by adding noise into the mix
 """
 
 freq = 18.0  # [kHz]
-waveNum = 50  # Number of waves you want to generate in a signal
+waveNum = 10  # Number of waves you want to generate in a signal
 noiseVariance = 0.0001  # Variaty in noise
 noiseCliping = None  # Set a float value you want noise amplitude to be cliped. Set variable to "None" for no cliping of noise
 # ----------------------------------------------------------------------------------------------------
@@ -30,7 +30,7 @@ noiseCliping = None  # Set a float value you want noise amplitude to be cliped. 
 
 
 # Set upp variables
-samplingFreq = 500.0  # [kHz]
+samplingFreq = 510.0  # [kHz]
 pulseLenght = (
     int(samplingFreq / freq) * waveNum
 )  # Multiply by 10 to get a really good resolution of the sample
@@ -81,7 +81,14 @@ with open(f"{SCRIPT_DIR}/Test4.txt", "w+") as file:
     for sd16bit in signalComboDigital16bit:
         signalComboDigital12bit += [sd16bit >> 4]
 
-    file.write(str(signalComboDigital12bit))
+    """
+    NOTE IMPORTANT!!!
+    We take the 16-bit signal and save it in text file
+    This is because we temporarily will be using in real life a ADC that is 16-bit resolution
+    This ADC is just temporary, and the real 12-bit ADC will be coming later
+    That is why we first test with the 16-bit ADC instead :) 
+    """
+    file.write(str(signalComboDigital16bit))
 
 # Plot signal to see
 t = list(range(0, len(signal)))

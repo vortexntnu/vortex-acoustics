@@ -5,14 +5,11 @@ import os
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
-import source
-import conversion
-import numpy
 import matplotlib.pyplot as pyplot
 
 
 # Set upp variables
-samplingFreq = 500.0  # [kHz]
+samplingFreq = 510.0  # [kHz]
 
 fftSampleAmplitude = [
     0,
