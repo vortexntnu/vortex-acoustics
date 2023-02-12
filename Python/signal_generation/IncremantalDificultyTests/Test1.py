@@ -18,8 +18,8 @@ import matplotlib.pyplot as pyplot
 This is the most basic test where only 1 single frequency is generated
 """
 
-freq = 18.0  # [kHz]
-waveNum = 5  # Number of waves you want to generate in a signal
+freq = 4.85  # [kHz]
+waveNum = 10  # Number of waves you want to generate in a signal
 # ----------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------
@@ -67,6 +67,7 @@ with open(f"{SCRIPT_DIR}/Test1.txt", "w+") as file:
         signalDigital12bit += [sd16bit >> 4]
 
     file.write(str(signalDigital12bit))
+    print(len(signalDigital12bit))
 
 # Plot signal to see
 fig, axs = pyplot.subplots(2)
@@ -78,3 +79,5 @@ t = list(range(0, len(signalDigital12bit)))
 axs[1].plot(t, signalDigital12bit, "tab:red")
 axs[1].set_title("Digital")
 pyplot.show()
+
+print(len(signalDigital12bit))

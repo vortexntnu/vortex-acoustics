@@ -20,8 +20,8 @@ Here we add complexity by varying amplitude
 """
 
 freq = 50.0  # [kHz]
-amplitude = 2.5  # [dB]
-waveNum = 5  # Number of waves you want to generate in a signal
+amplitude = 0.9  # [dB]
+waveNum = 180  # Number of waves you want to generate in a signal
 # ----------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------
@@ -68,7 +68,8 @@ with open(f"{SCRIPT_DIR}/Test2.txt", "w+") as file:
     for sd16bit in signalDigital16bit:
         signalDigital12bit += [sd16bit >> 4]
 
-    file.write(str(signalDigital12bit))
+    file.write(str(signalDigital12bit[:1040]))
+    print(len(signalDigital12bit))
 
 # Plot signal to see
 fig, axs = pyplot.subplots(2)
@@ -80,3 +81,5 @@ t = list(range(0, len(signalDigital12bit)))
 axs[1].plot(t, signalDigital12bit, "tab:red")
 axs[1].set_title("Digital")
 pyplot.show()
+
+print(len(signalDigital12bit))
