@@ -94,7 +94,7 @@ with open(f"{SCRIPT_DIR}/Test3.txt", "w+") as file:
     This ADC is just temporary, and the real 12-bit ADC will be coming later
     That is why we first test with the 16-bit ADC instead :) 
     """
-    file.write(str(signalComboDigital16bit))
+    file.write(str(signalComboDigital16bit.tolist())[1:-1])
 
 # Plot signal to see
 fig, axs = pyplot.subplots(len(signalList))

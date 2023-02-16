@@ -21,7 +21,7 @@ Here we add complexity by adding noise into the mix
 """
 
 freq = 18.0  # [kHz]
-waveNum = 10  # Number of waves you want to generate in a signal
+waveNum = 20  # Number of waves you want to generate in a signal
 noiseVariance = 0.0001  # Variaty in noise
 noiseCliping = None  # Set a float value you want noise amplitude to be cliped. Set variable to "None" for no cliping of noise
 # ----------------------------------------------------------------------------------------------------
@@ -88,7 +88,7 @@ with open(f"{SCRIPT_DIR}/Test4.txt", "w+") as file:
     This ADC is just temporary, and the real 12-bit ADC will be coming later
     That is why we first test with the 16-bit ADC instead :) 
     """
-    file.write(str(signalComboDigital16bit))
+    file.write(str(signalComboDigital16bit.tolist())[1:-1])
 
 # Plot signal to see
 t = list(range(0, len(signal)))
