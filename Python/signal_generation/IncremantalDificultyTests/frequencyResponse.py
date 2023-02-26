@@ -19,7 +19,7 @@ fftSampleAmplitude = [
 fftPeaks = np.array([
     [1, 1],
     [20, 3],
-    [3, 5]
+    [3, 5],
 ])
 
 
@@ -31,7 +31,7 @@ for i in range(sampleLenght):
     frequency += [i * (samplingFreq / sampleLenght)]
 
 # Take the peaks from the 2D array
-xPeaks = fftPeaks[:, 0]
+xPeaks = fftPeaks[:, 0]/1000
 yPeaks = fftPeaks[:, 1]
 
 # Plot the frequency response of fft in frequency domain
