@@ -60,7 +60,7 @@ def generate_hyperbole_points(
     a = distance_difference / 2  # why divided by 2
     c = abs(spec_position_one.y)
 
-    y_pos = a * np.sqrt(x ** 2 / (c ** 2 - a ** 2) + 1)
+    y_pos = a * np.sqrt(x**2 / (c**2 - a**2) + 1)
     y_neg = -1.0 * y_pos
 
     # group_coordinates in tuples

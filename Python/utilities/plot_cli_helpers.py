@@ -103,7 +103,7 @@ def plot_hyperboles(args):
     )
 
     xs = np.linspace(-radius + 0.1, radius, number_of_sources)
-    ys = np.sqrt(radius ** 2 - xs ** 2)
+    ys = np.sqrt(radius**2 - xs**2)
 
     source_positions = [(xs[i], ys[i]) for i, x in enumerate(xs)]
 

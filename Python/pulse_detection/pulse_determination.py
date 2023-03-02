@@ -7,7 +7,6 @@ def short_time_fourier_transform(  # Search up STFT
     sampling_frequency: float,  # [kHz]
     pulse_length: int,  # [ms]
 ) -> np.array:
-
     MN_point_fft = np.zeros(fft_size // 2 + 1, dtype=np.complex)
     M = (pulse_length * sampling_frequency) // fft_size
     for i in range(M):

@@ -1,12 +1,11 @@
 # Seting upp libraries
-import sys
 import os
+import sys
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
 import matplotlib.pyplot as pyplot
-
 
 # Filtered signal
 signal = [0, 0, 0]

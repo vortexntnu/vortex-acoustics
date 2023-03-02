@@ -1,16 +1,15 @@
 # Seting upp libraries
-import sys
 import os
+import sys
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
-import source
-import noise
 import conversion
-import numpy
 import matplotlib.pyplot as pyplot
-
+import noise
+import numpy
+import source
 
 # ----------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------
