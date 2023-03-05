@@ -127,65 +127,67 @@ int16_t samplesRaw[SAMPLE_LENGTH] = {
 
 void setup() {
 
-  Serial.begin(9600);
+    Serial.begin(9600);
 
-  startTime = micros();
+    startTime = micros();
 
-  q15_t *samplesFiltered = filterButterWorth9thOrder50kHz(samplesRaw);
+    q15_t* samplesFiltered = filterButterWorth9thOrder50kHz(samplesRaw);
 
-  for (int i = 0; i < SAMPLE_LENGTH; i++) {
-    Serial.print(samplesFiltered[i]);
-    Serial.print(", ");
-  }
+    for (int i = 0; i < SAMPLE_LENGTH; i++) {
+        Serial.print(samplesFiltered[i]);
+        Serial.print(", ");
+    }
 
-  Serial.println("");
-  Serial.println("============================================================="
-                 "========================");
-  Serial.println("");
+    Serial.println("");
+    Serial.println(
+        "============================================================="
+        "========================");
+    Serial.println("");
 
-  q15_t *FFTResults = magFFT(samplesFiltered);
+    q15_t* FFTResults = magFFT(samplesFiltered);
 
-  for (int i = 0; i < SAMPLE_LENGTH; i++) {
-    Serial.print(FFTResults[i]);
-    Serial.print(", ");
-  }
+    for (int i = 0; i < SAMPLE_LENGTH; i++) {
+        Serial.print(FFTResults[i]);
+        Serial.print(", ");
+    }
 
-  Serial.println("");
-  Serial.println("============================================================="
-                 "=======================");
-  Serial.println("");
+    Serial.println("");
+    Serial.println(
+        "============================================================="
+        "=======================");
+    Serial.println("");
 
-  int16_t countTest = 0;
+    int16_t countTest = 0;
 
-  q31_t **peaks = peakDetection(FFTResults, countTest);
+    q31_t** peaks = peakDetection(FFTResults, countTest);
 
-  int lengthOfPeakArray = peaks[0][1];
+    int lengthOfPeakArray = peaks[0][1];
 
-  Serial.println(lengthOfPeakArray);
+    Serial.println(lengthOfPeakArray);
 
-  // Since we are sotring the length of the array in the first index, we do
-  // not start from 0 in the array when printing out. Find out how to get
-  // length of a 2D array of a q31_t datatype. For now we return the length of
-  // the array in the first index of 2D array, This must be solved, this is
-  // not a good solution.
-  for (int i = 1; i < lengthOfPeakArray; i++) {
-    Serial.print("[");
-    Serial.print(peaks[i][0]);
-    Serial.print(", ");
-    Serial.print(peaks[i][1]);
-    Serial.println("],");
-  }
+    // Since we are sotring the length of the array in the first index, we do
+    // not start from 0 in the array when printing out. Find out how to get
+    // length of a 2D array of a q31_t datatype. For now we return the length of
+    // the array in the first index of 2D array, This must be solved, this is
+    // not a good solution.
+    for (int i = 1; i < lengthOfPeakArray; i++) {
+        Serial.print("[");
+        Serial.print(peaks[i][0]);
+        Serial.print(", ");
+        Serial.print(peaks[i][1]);
+        Serial.println("],");
+    }
 
-  endTime = micros();
-  timeDiff = endTime - startTime;
-  Serial.print("StartTime: ");
-  Serial.println(startTime);
-  Serial.print("EndTime: ");
-  Serial.println(endTime);
-  Serial.print("Time: ");
-  Serial.println(timeDiff); // Just printing the time it takes for the script
-                            // to run. The printing and loops associated
-  // take time, with all of it it takes around 1700 microseconds
+    endTime = micros();
+    timeDiff = endTime - startTime;
+    Serial.print("StartTime: ");
+    Serial.println(startTime);
+    Serial.print("EndTime: ");
+    Serial.println(endTime);
+    Serial.print("Time: ");
+    Serial.println(timeDiff); // Just printing the time it takes for the script
+                              // to run. The printing and loops associated
+    // take time, with all of it it takes around 1700 microseconds
 }
 
 void loop() {}

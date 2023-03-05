@@ -10,9 +10,9 @@ const float32_t SOUND_SPEED = 1480.0; //[m/s]
 const int SAMPLING_FREQ = 300000;     //[Hz]
 
 struct Position {
-  float32_t X;
-  float32_t Y;
-  float32_t Z;
+    float32_t X;
+    float32_t Y;
+    float32_t Z;
 };
 
 // OBS: use same x, y, z system as autonomous
@@ -26,16 +26,16 @@ const Position hydrophonePositions[NUM_HYDROPHONES] = {
 
 arm_status calculatePingerPosition(int32_t TdoaArray[],
                                    const Position hydrophonePositions[],
-                                   const arm_matrix_instance_f32 *pA,
-                                   const arm_matrix_instance_f32 *pB,
-                                   Position *pSourcePosition);
+                                   const arm_matrix_instance_f32* pA,
+                                   const arm_matrix_instance_f32* pB,
+                                   Position* pSourcePosition);
 
-void initialComputationA(float32_t *AData,
+void initialComputationA(float32_t* AData,
                          const Position hydrophonePositions[]);
-void computeA(int32_t TdoaArray[], float32_t *AData);
+void computeA(int32_t TdoaArray[], float32_t* AData);
 void computeB(int32_t TdoaArray[], const Position hydrophonePositions[],
-              float32_t *BData);
+              float32_t* BData);
 
-arm_status leastSquareEstimation(const arm_matrix_instance_f32 *pA,
-                                 const arm_matrix_instance_f32 *pB,
-                                 Position *pSourcePosition);
+arm_status leastSquareEstimation(const arm_matrix_instance_f32* pA,
+                                 const arm_matrix_instance_f32* pB,
+                                 Position* pSourcePosition);
