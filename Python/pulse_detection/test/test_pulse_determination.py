@@ -31,7 +31,6 @@ def test_short_time_fourier_transform():
 
 
 def test_find_optimal_sampling_frequency():
-
     fft_size = FFT_SIZE
     sample_frequency, frequency_bins = pd_pdeter.find_optimal_sampling_frequency(
         fft_size
@@ -49,7 +48,6 @@ def generate_cosine_wave(
     amplitude_of_secondary_freq: float,
     noise_variance: float,
 ) -> np.array:
-
     dt = 1 / sampling_frequency
     secondary_frequency = 61.7158
     time = np.arange(0, pulse_length, dt)

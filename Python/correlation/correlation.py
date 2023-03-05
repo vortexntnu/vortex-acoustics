@@ -33,7 +33,6 @@ def cut_signals(
     frame,
     signals,
 ):
-
     """
 
     Args:
