@@ -1,162 +1,167 @@
-/* ----------------------------------------------------------------------------    
-* Copyright (C) 2010-2014 ARM Limited. All rights reserved.    
-*    
-* $Date:        19. March 2015
-* $Revision: 	V.1.4.5
-*    
-* Project: 	    CMSIS DSP Library    
-* Title:		arm_conv_f32.c    
-*    
-* Description:	Convolution of floating-point sequences.    
-*    
-* Target Processor: Cortex-M4/Cortex-M3/Cortex-M0
-*  
-* Redistribution and use in source and binary forms, with or without 
-* modification, are permitted provided that the following conditions
-* are met:
-*   - Redistributions of source code must retain the above copyright
-*     notice, this list of conditions and the following disclaimer.
-*   - Redistributions in binary form must reproduce the above copyright
-*     notice, this list of conditions and the following disclaimer in
-*     the documentation and/or other materials provided with the 
-*     distribution.
-*   - Neither the name of ARM LIMITED nor the names of its contributors
-*     may be used to endorse or promote products derived from this
-*     software without specific prior written permission.
-*
-* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
-* COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-* INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-* BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-* LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-* CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-* LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-* ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-* POSSIBILITY OF SUCH DAMAGE.  
-* -------------------------------------------------------------------------- */
+/* ----------------------------------------------------------------------------
+ * Copyright (C) 2010-2014 ARM Limited. All rights reserved.
+ *
+ * $Date:        19. March 2015
+ * $Revision: 	V.1.4.5
+ *
+ * Project: 	    CMSIS DSP Library
+ * Title:		arm_conv_f32.c
+ *
+ * Description:	Convolution of floating-point sequences.
+ *
+ * Target Processor: Cortex-M4/Cortex-M3/Cortex-M0
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *   - Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *   - Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in
+ *     the documentation and/or other materials provided with the
+ *     distribution.
+ *   - Neither the name of ARM LIMITED nor the names of its contributors
+ *     may be used to endorse or promote products derived from this
+ *     software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ * -------------------------------------------------------------------------- */
 
 #include "arm_math.h"
 
-/**    
- * @ingroup groupFilters    
+/**
+ * @ingroup groupFilters
  */
 
-/**    
- * @defgroup Conv Convolution    
- *    
- * Convolution is a mathematical operation that operates on two finite length vectors to generate a finite length output vector.    
- * Convolution is similar to correlation and is frequently used in filtering and data analysis.    
- * The CMSIS DSP library contains functions for convolving Q7, Q15, Q31, and floating-point data types.    
- * The library also provides fast versions of the Q15 and Q31 functions on Cortex-M4 and Cortex-M3.    
- *    
- * \par Algorithm    
- * Let <code>a[n]</code> and <code>b[n]</code> be sequences of length <code>srcALen</code> and <code>srcBLen</code> samples respectively.    
- * Then the convolution    
- *    
- * <pre>    
- *                   c[n] = a[n] * b[n]    
- * </pre>    
- *    
- * \par    
- * is defined as    
- * \image html ConvolutionEquation.gif    
- * \par    
- * Note that <code>c[n]</code> is of length <code>srcALen + srcBLen - 1</code> and is defined over the interval <code>n=0, 1, 2, ..., srcALen + srcBLen - 2</code>.    
- * <code>pSrcA</code> points to the first input vector of length <code>srcALen</code> and    
- * <code>pSrcB</code> points to the second input vector of length <code>srcBLen</code>.    
- * The output result is written to <code>pDst</code> and the calling function must allocate <code>srcALen+srcBLen-1</code> words for the result.    
- *    
- * \par    
- * Conceptually, when two signals <code>a[n]</code> and <code>b[n]</code> are convolved,    
- * the signal <code>b[n]</code> slides over <code>a[n]</code>.    
- * For each offset \c n, the overlapping portions of a[n] and b[n] are multiplied and summed together.    
- *    
- * \par    
- * Note that convolution is a commutative operation:    
- *    
- * <pre>    
- *                   a[n] * b[n] = b[n] * a[n].    
- * </pre>    
- *    
- * \par    
- * This means that switching the A and B arguments to the convolution functions has no effect.    
- *    
- * <b>Fixed-Point Behavior</b>    
- *    
- * \par    
- * Convolution requires summing up a large number of intermediate products.    
- * As such, the Q7, Q15, and Q31 functions run a risk of overflow and saturation.    
- * Refer to the function specific documentation below for further details of the particular algorithm used.    
+/**
+ * @defgroup Conv Convolution
+ *
+ * Convolution is a mathematical operation that operates on two finite length
+ * vectors to generate a finite length output vector. Convolution is similar to
+ * correlation and is frequently used in filtering and data analysis. The CMSIS
+ * DSP library contains functions for convolving Q7, Q15, Q31, and
+ * floating-point data types. The library also provides fast versions of the Q15
+ * and Q31 functions on Cortex-M4 and Cortex-M3.
+ *
+ * \par Algorithm
+ * Let <code>a[n]</code> and <code>b[n]</code> be sequences of length
+ * <code>srcALen</code> and <code>srcBLen</code> samples respectively. Then the
+ * convolution
+ *
+ * <pre>
+ *                   c[n] = a[n] * b[n]
+ * </pre>
+ *
+ * \par
+ * is defined as
+ * \image html ConvolutionEquation.gif
+ * \par
+ * Note that <code>c[n]</code> is of length <code>srcALen + srcBLen - 1</code>
+ * and is defined over the interval <code>n=0, 1, 2, ..., srcALen + srcBLen -
+ * 2</code>. <code>pSrcA</code> points to the first input vector of length
+ * <code>srcALen</code> and <code>pSrcB</code> points to the second input vector
+ * of length <code>srcBLen</code>. The output result is written to
+ * <code>pDst</code> and the calling function must allocate
+ * <code>srcALen+srcBLen-1</code> words for the result.
+ *
+ * \par
+ * Conceptually, when two signals <code>a[n]</code> and <code>b[n]</code> are
+ * convolved, the signal <code>b[n]</code> slides over <code>a[n]</code>. For
+ * each offset \c n, the overlapping portions of a[n] and b[n] are multiplied
+ * and summed together.
+ *
+ * \par
+ * Note that convolution is a commutative operation:
+ *
+ * <pre>
+ *                   a[n] * b[n] = b[n] * a[n].
+ * </pre>
+ *
+ * \par
+ * This means that switching the A and B arguments to the convolution functions
+ * has no effect.
+ *
+ * <b>Fixed-Point Behavior</b>
+ *
+ * \par
+ * Convolution requires summing up a large number of intermediate products.
+ * As such, the Q7, Q15, and Q31 functions run a risk of overflow and
+ * saturation. Refer to the function specific documentation below for further
+ * details of the particular algorithm used.
  *
  *
  * <b>Fast Versions</b>
  *
- * \par 
- * Fast versions are supported for Q31 and Q15.  Cycles for Fast versions are less compared to Q31 and Q15 of conv and the design requires
- * the input signals should be scaled down to avoid intermediate overflows.   
+ * \par
+ * Fast versions are supported for Q31 and Q15.  Cycles for Fast versions are
+ * less compared to Q31 and Q15 of conv and the design requires the input
+ * signals should be scaled down to avoid intermediate overflows.
  *
  *
  * <b>Opt Versions</b>
  *
- * \par 
- * Opt versions are supported for Q15 and Q7.  Design uses internal scratch buffer for getting good optimisation.
- * These versions are optimised in cycles and consumes more memory(Scratch memory) compared to Q15 and Q7 versions 
+ * \par
+ * Opt versions are supported for Q15 and Q7.  Design uses internal scratch
+ * buffer for getting good optimisation. These versions are optimised in cycles
+ * and consumes more memory(Scratch memory) compared to Q15 and Q7 versions
  */
 
-/**    
- * @addtogroup Conv    
- * @{    
+/**
+ * @addtogroup Conv
+ * @{
  */
 
-/**    
- * @brief Convolution of floating-point sequences.    
- * @param[in] *pSrcA points to the first input sequence.    
- * @param[in] srcALen length of the first input sequence.    
- * @param[in] *pSrcB points to the second input sequence.    
- * @param[in] srcBLen length of the second input sequence.    
- * @param[out] *pDst points to the location where the output result is written.  Length srcALen+srcBLen-1.    
- * @return none.    
+/**
+ * @brief Convolution of floating-point sequences.
+ * @param[in] *pSrcA points to the first input sequence.
+ * @param[in] srcALen length of the first input sequence.
+ * @param[in] *pSrcB points to the second input sequence.
+ * @param[in] srcBLen length of the second input sequence.
+ * @param[out] *pDst points to the location where the output result is written.
+ * Length srcALen+srcBLen-1.
+ * @return none.
  */
 
-void arm_conv_f32(
-  float32_t * pSrcA,
-  uint32_t srcALen,
-  float32_t * pSrcB,
-  uint32_t srcBLen,
-  float32_t * pDst)
-{
-
+void arm_conv_f32(float32_t *pSrcA, uint32_t srcALen, float32_t *pSrcB,
+                  uint32_t srcBLen, float32_t *pDst) {
 
 #ifndef ARM_MATH_CM0_FAMILY
 
   /* Run the below code for Cortex-M4 and Cortex-M3 */
 
-  float32_t *pIn1;                               /* inputA pointer */
-  float32_t *pIn2;                               /* inputB pointer */
-  float32_t *pOut = pDst;                        /* output pointer */
-  float32_t *px;                                 /* Intermediate inputA pointer */
-  float32_t *py;                                 /* Intermediate inputB pointer */
-  float32_t *pSrc1, *pSrc2;                      /* Intermediate pointers */
-  float32_t sum, acc0, acc1, acc2, acc3;         /* Accumulator */
-  float32_t x0, x1, x2, x3, c0;                  /* Temporary variables to hold state and coefficient values */
-  uint32_t j, k, count, blkCnt, blockSize1, blockSize2, blockSize3;     /* loop counters */
+  float32_t *pIn1;                       /* inputA pointer */
+  float32_t *pIn2;                       /* inputB pointer */
+  float32_t *pOut = pDst;                /* output pointer */
+  float32_t *px;                         /* Intermediate inputA pointer */
+  float32_t *py;                         /* Intermediate inputB pointer */
+  float32_t *pSrc1, *pSrc2;              /* Intermediate pointers */
+  float32_t sum, acc0, acc1, acc2, acc3; /* Accumulator */
+  float32_t x0, x1, x2, x3,
+      c0; /* Temporary variables to hold state and coefficient values */
+  uint32_t j, k, count, blkCnt, blockSize1, blockSize2,
+      blockSize3; /* loop counters */
 
   /* The algorithm implementation is based on the lengths of the inputs. */
   /* srcB is always made to slide across srcA. */
   /* So srcBLen is always considered as shorter or equal to srcALen */
-  if(srcALen >= srcBLen)
-  {
+  if (srcALen >= srcBLen) {
     /* Initialization of inputA pointer */
     pIn1 = pSrcA;
 
     /* Initialization of inputB pointer */
     pIn2 = pSrcB;
-  }
-  else
-  {
+  } else {
     /* Initialization of inputA pointer */
     pIn1 = pSrcB;
 
@@ -169,32 +174,34 @@ void arm_conv_f32(
     srcALen = j;
   }
 
-  /* conv(x,y) at n = x[n] * y[0] + x[n-1] * y[1] + x[n-2] * y[2] + ...+ x[n-N+1] * y[N -1] */
-  /* The function is internally    
-   * divided into three stages according to the number of multiplications that has to be    
-   * taken place between inputA samples and inputB samples. In the first stage of the    
-   * algorithm, the multiplications increase by one for every iteration.    
-   * In the second stage of the algorithm, srcBLen number of multiplications are done.    
-   * In the third stage of the algorithm, the multiplications decrease by one    
-   * for every iteration. */
+  /* conv(x,y) at n = x[n] * y[0] + x[n-1] * y[1] + x[n-2] * y[2] + ...+
+   * x[n-N+1] * y[N -1] */
+  /* The function is internally
+   * divided into three stages according to the number of multiplications that
+   * has to be taken place between inputA samples and inputB samples. In the
+   * first stage of the algorithm, the multiplications increase by one for every
+   * iteration. In the second stage of the algorithm, srcBLen number of
+   * multiplications are done. In the third stage of the algorithm, the
+   * multiplications decrease by one for every iteration. */
 
-  /* The algorithm is implemented in three stages.    
+  /* The algorithm is implemented in three stages.
      The loop counters of each stage is initiated here. */
   blockSize1 = srcBLen - 1u;
   blockSize2 = srcALen - (srcBLen - 1u);
   blockSize3 = blockSize1;
 
-  /* --------------------------    
-   * initializations of stage1    
+  /* --------------------------
+   * initializations of stage1
    * -------------------------*/
 
-  /* sum = x[0] * y[0]    
-   * sum = x[0] * y[1] + x[1] * y[0]    
-   * ....    
-   * sum = x[0] * y[srcBlen - 1] + x[1] * y[srcBlen - 2] +...+ x[srcBLen - 1] * y[0]    
+  /* sum = x[0] * y[0]
+   * sum = x[0] * y[1] + x[1] * y[0]
+   * ....
+   * sum = x[0] * y[srcBlen - 1] + x[1] * y[srcBlen - 2] +...+ x[srcBLen - 1] *
+   * y[0]
    */
 
-  /* In this stage the MAC operations are increased by 1 for every iteration.    
+  /* In this stage the MAC operations are increased by 1 for every iteration.
      The count variable holds the number of MAC operations performed */
   count = 1u;
 
@@ -204,24 +211,22 @@ void arm_conv_f32(
   /* Working pointer of inputB */
   py = pIn2;
 
-
-  /* ------------------------    
-   * Stage1 process    
+  /* ------------------------
+   * Stage1 process
    * ----------------------*/
 
   /* The first stage starts here */
-  while(blockSize1 > 0u)
-  {
+  while (blockSize1 > 0u) {
     /* Accumulator is made zero for every iteration */
     sum = 0.0f;
 
     /* Apply loop unrolling and compute 4 MACs simultaneously. */
     k = count >> 2u;
 
-    /* First part of the processing with loop unrolling.  Compute 4 MACs at a time.    
+    /* First part of the processing with loop unrolling.  Compute 4 MACs at a
+     *time.
      ** a second loop below computes MACs for the remaining 1 to 3 samples. */
-    while(k > 0u)
-    {
+    while (k > 0u) {
       /* x[0] * y[srcBLen - 1] */
       sum += *px++ * *py--;
 
@@ -238,12 +243,11 @@ void arm_conv_f32(
       k--;
     }
 
-    /* If the count is not a multiple of 4, compute any remaining MACs here.    
+    /* If the count is not a multiple of 4, compute any remaining MACs here.
      ** No loop unrolling is used. */
     k = count % 0x4u;
 
-    while(k > 0u)
-    {
+    while (k > 0u) {
       /* Perform the multiply-accumulate */
       sum += *px++ * *py--;
 
@@ -265,14 +269,15 @@ void arm_conv_f32(
     blockSize1--;
   }
 
-  /* --------------------------    
-   * Initializations of stage2    
+  /* --------------------------
+   * Initializations of stage2
    * ------------------------*/
 
-  /* sum = x[0] * y[srcBLen-1] + x[1] * y[srcBLen-2] +...+ x[srcBLen-1] * y[0]    
-   * sum = x[1] * y[srcBLen-1] + x[2] * y[srcBLen-2] +...+ x[srcBLen] * y[0]    
-   * ....    
-   * sum = x[srcALen-srcBLen-2] * y[srcBLen-1] + x[srcALen] * y[srcBLen-2] +...+ x[srcALen-1] * y[0]    
+  /* sum = x[0] * y[srcBLen-1] + x[1] * y[srcBLen-2] +...+ x[srcBLen-1] * y[0]
+   * sum = x[1] * y[srcBLen-1] + x[2] * y[srcBLen-2] +...+ x[srcBLen] * y[0]
+   * ....
+   * sum = x[srcALen-srcBLen-2] * y[srcBLen-1] + x[srcALen] * y[srcBLen-2] +...+
+   * x[srcALen-1] * y[0]
    */
 
   /* Working pointer of inputA */
@@ -285,20 +290,18 @@ void arm_conv_f32(
   /* count is index by which the pointer pIn1 to be incremented */
   count = 0u;
 
-  /* -------------------    
-   * Stage2 process    
+  /* -------------------
+   * Stage2 process
    * ------------------*/
 
-  /* Stage2 depends on srcBLen as in this stage srcBLen number of MACS are performed.    
-   * So, to loop unroll over blockSize2,    
-   * srcBLen should be greater than or equal to 4 */
-  if(srcBLen >= 4u)
-  {
+  /* Stage2 depends on srcBLen as in this stage srcBLen number of MACS are
+   * performed. So, to loop unroll over blockSize2, srcBLen should be greater
+   * than or equal to 4 */
+  if (srcBLen >= 4u) {
     /* Loop unroll over blockSize2, by 4 */
     blkCnt = blockSize2 >> 2u;
 
-    while(blkCnt > 0u)
-    {
+    while (blkCnt > 0u) {
       /* Set all accumulators to zero */
       acc0 = 0.0f;
       acc1 = 0.0f;
@@ -313,10 +316,10 @@ void arm_conv_f32(
       /* Apply loop unrolling and compute 4 MACs simultaneously. */
       k = srcBLen >> 2u;
 
-      /* First part of the processing with loop unrolling.  Compute 4 MACs at a time.    
+      /* First part of the processing with loop unrolling.  Compute 4 MACs at a
+       *time.
        ** a second loop below computes MACs for the remaining 1 to 3 samples. */
-      do
-      {
+      do {
         /* Read y[srcBLen - 1] sample */
         c0 = *(py--);
 
@@ -385,15 +388,13 @@ void arm_conv_f32(
         /* acc3 +=  x[6] * y[srcBLen - 4] */
         acc3 += x2 * c0;
 
+      } while (--k);
 
-      } while(--k);
-
-      /* If the srcBLen is not a multiple of 4, compute any remaining MACs here.    
+      /* If the srcBLen is not a multiple of 4, compute any remaining MACs here.
        ** No loop unrolling is used. */
       k = srcBLen % 0x4u;
 
-      while(k > 0u)
-      {
+      while (k > 0u) {
         /* Read y[srcBLen - 5] sample */
         c0 = *(py--);
 
@@ -432,28 +433,26 @@ void arm_conv_f32(
       px = pIn1 + count;
       py = pSrc2;
 
-
       /* Decrement the loop counter */
       blkCnt--;
     }
 
-
-    /* If the blockSize2 is not a multiple of 4, compute any remaining output samples here.    
+    /* If the blockSize2 is not a multiple of 4, compute any remaining output
+     *samples here.
      ** No loop unrolling is used. */
     blkCnt = blockSize2 % 0x4u;
 
-    while(blkCnt > 0u)
-    {
+    while (blkCnt > 0u) {
       /* Accumulator is made zero for every iteration */
       sum = 0.0f;
 
       /* Apply loop unrolling and compute 4 MACs simultaneously. */
       k = srcBLen >> 2u;
 
-      /* First part of the processing with loop unrolling.  Compute 4 MACs at a time.    
+      /* First part of the processing with loop unrolling.  Compute 4 MACs at a
+       *time.
        ** a second loop below computes MACs for the remaining 1 to 3 samples. */
-      while(k > 0u)
-      {
+      while (k > 0u) {
         /* Perform the multiply-accumulates */
         sum += *px++ * *py--;
         sum += *px++ * *py--;
@@ -464,12 +463,11 @@ void arm_conv_f32(
         k--;
       }
 
-      /* If the srcBLen is not a multiple of 4, compute any remaining MACs here.    
+      /* If the srcBLen is not a multiple of 4, compute any remaining MACs here.
        ** No loop unrolling is used. */
       k = srcBLen % 0x4u;
 
-      while(k > 0u)
-      {
+      while (k > 0u) {
         /* Perform the multiply-accumulate */
         sum += *px++ * *py--;
 
@@ -490,23 +488,19 @@ void arm_conv_f32(
       /* Decrement the loop counter */
       blkCnt--;
     }
-  }
-  else
-  {
-    /* If the srcBLen is not a multiple of 4,    
+  } else {
+    /* If the srcBLen is not a multiple of 4,
      * the blockSize2 loop cannot be unrolled by 4 */
     blkCnt = blockSize2;
 
-    while(blkCnt > 0u)
-    {
+    while (blkCnt > 0u) {
       /* Accumulator is made zero for every iteration */
       sum = 0.0f;
 
       /* srcBLen number of MACS should be performed */
       k = srcBLen;
 
-      while(k > 0u)
-      {
+      while (k > 0u) {
         /* Perform the multiply-accumulate */
         sum += *px++ * *py--;
 
@@ -529,19 +523,20 @@ void arm_conv_f32(
     }
   }
 
-
-  /* --------------------------    
-   * Initializations of stage3    
+  /* --------------------------
+   * Initializations of stage3
    * -------------------------*/
 
-  /* sum += x[srcALen-srcBLen+1] * y[srcBLen-1] + x[srcALen-srcBLen+2] * y[srcBLen-2] +...+ x[srcALen-1] * y[1]    
-   * sum += x[srcALen-srcBLen+2] * y[srcBLen-1] + x[srcALen-srcBLen+3] * y[srcBLen-2] +...+ x[srcALen-1] * y[2]    
-   * ....    
-   * sum +=  x[srcALen-2] * y[srcBLen-1] + x[srcALen-1] * y[srcBLen-2]    
-   * sum +=  x[srcALen-1] * y[srcBLen-1]    
+  /* sum += x[srcALen-srcBLen+1] * y[srcBLen-1] + x[srcALen-srcBLen+2] *
+   * y[srcBLen-2] +...+ x[srcALen-1] * y[1] sum += x[srcALen-srcBLen+2] *
+   * y[srcBLen-1] + x[srcALen-srcBLen+3] * y[srcBLen-2] +...+ x[srcALen-1] *
+   * y[2]
+   * ....
+   * sum +=  x[srcALen-2] * y[srcBLen-1] + x[srcALen-1] * y[srcBLen-2]
+   * sum +=  x[srcALen-1] * y[srcBLen-1]
    */
 
-  /* In this stage the MAC operations are decreased by 1 for every iteration.    
+  /* In this stage the MAC operations are decreased by 1 for every iteration.
      The blockSize3 variable holds the number of MAC operations performed */
 
   /* Working pointer of inputA */
@@ -552,22 +547,21 @@ void arm_conv_f32(
   pSrc2 = pIn2 + (srcBLen - 1u);
   py = pSrc2;
 
-  /* -------------------    
-   * Stage3 process    
+  /* -------------------
+   * Stage3 process
    * ------------------*/
 
-  while(blockSize3 > 0u)
-  {
+  while (blockSize3 > 0u) {
     /* Accumulator is made zero for every iteration */
     sum = 0.0f;
 
     /* Apply loop unrolling and compute 4 MACs simultaneously. */
     k = blockSize3 >> 2u;
 
-    /* First part of the processing with loop unrolling.  Compute 4 MACs at a time.    
+    /* First part of the processing with loop unrolling.  Compute 4 MACs at a
+     *time.
      ** a second loop below computes MACs for the remaining 1 to 3 samples. */
-    while(k > 0u)
-    {
+    while (k > 0u) {
       /* sum += x[srcALen - srcBLen + 1] * y[srcBLen - 1] */
       sum += *px++ * *py--;
 
@@ -584,12 +578,12 @@ void arm_conv_f32(
       k--;
     }
 
-    /* If the blockSize3 is not a multiple of 4, compute any remaining MACs here.    
+    /* If the blockSize3 is not a multiple of 4, compute any remaining MACs
+     *here.
      ** No loop unrolling is used. */
     k = blockSize3 % 0x4u;
 
-    while(k > 0u)
-    {
+    while (k > 0u) {
       /* Perform the multiply-accumulates */
       /* sum +=  x[srcALen-1] * y[srcBLen-1] */
       sum += *px++ * *py--;
@@ -613,23 +607,20 @@ void arm_conv_f32(
 
   /* Run the below code for Cortex-M0 */
 
-  float32_t *pIn1 = pSrcA;                       /* inputA pointer */
-  float32_t *pIn2 = pSrcB;                       /* inputB pointer */
-  float32_t sum;                                 /* Accumulator */
-  uint32_t i, j;                                 /* loop counters */
+  float32_t *pIn1 = pSrcA; /* inputA pointer */
+  float32_t *pIn2 = pSrcB; /* inputB pointer */
+  float32_t sum;           /* Accumulator */
+  uint32_t i, j;           /* loop counters */
 
   /* Loop to calculate convolution for output length number of times */
-  for (i = 0u; i < ((srcALen + srcBLen) - 1u); i++)
-  {
+  for (i = 0u; i < ((srcALen + srcBLen) - 1u); i++) {
     /* Initialize sum with zero to carry out MAC operations */
     sum = 0.0f;
 
     /* Loop to perform MAC operations according to convolution equation */
-    for (j = 0u; j <= i; j++)
-    {
+    for (j = 0u; j <= i; j++) {
       /* Check the array limitations */
-      if((((i - j) < srcBLen) && (j < srcALen)))
-      {
+      if ((((i - j) < srcBLen) && (j < srcALen))) {
         /* z[i] += x[i-j] * y[j] */
         sum += pIn1[j] * pIn2[i - j];
       }
@@ -639,9 +630,8 @@ void arm_conv_f32(
   }
 
 #endif /*   #ifndef ARM_MATH_CM0_FAMILY        */
-
 }
 
-/**    
- * @} end of Conv group    
+/**
+ * @} end of Conv group
  */
