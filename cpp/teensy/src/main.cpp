@@ -131,20 +131,24 @@ void setup() {
 
     startTime = micros();
 
-    q15_t* samplesFiltered = filterButterWorth9thOrder50kHz(samplesRaw);
+    q15_t* samplesFiltered = filter_butterwort_9th_order_50kHz(samplesRaw);
 
     for (int i = 0; i < SAMPLE_LENGTH; i++) {
-        Serial.print(samplesFiltered[i]);
+        float temp = 0;
+        arm_q15_to_float(&samplesFiltered[i], &temp, 1);
+        Serial.print(round(temp));
         Serial.print(", ");
     }
 
+    /*
     Serial.println("");
     Serial.println(
         "============================================================="
         "========================");
     Serial.println("");
 
-    q15_t* FFTResults = magFFT(samplesFiltered);
+    q15_t* FFTResultsRaw = FFT_raw(samplesFiltered);
+    q15_t* FFTResults = FFT_mag(FFTResultsRaw);
 
     for (int i = 0; i < SAMPLE_LENGTH; i++) {
         Serial.print(FFTResults[i]);
@@ -157,11 +161,9 @@ void setup() {
         "=======================");
     Serial.println("");
 
-    int16_t countTest = 0;
+    q31_t** peaks = peak_detection(FFTResultsRaw, FFTResults);
 
-    q31_t** peaks = peakDetection(FFTResults, countTest);
-
-    int lengthOfPeakArray = peaks[0][1];
+    int lengthOfPeakArray = peaks[0][0];
 
     Serial.println(lengthOfPeakArray);
 
@@ -170,11 +172,15 @@ void setup() {
     // length of a 2D array of a q31_t datatype. For now we return the length of
     // the array in the first index of 2D array, This must be solved, this is
     // not a good solution.
+    Serial.println("[Amplitude, Frequency, Phase]");
+
     for (int i = 1; i < lengthOfPeakArray; i++) {
         Serial.print("[");
         Serial.print(peaks[i][0]);
         Serial.print(", ");
         Serial.print(peaks[i][1]);
+        Serial.print(", ");
+        Serial.print(peaks[i][2]);
         Serial.println("],");
     }
 
@@ -188,6 +194,7 @@ void setup() {
     Serial.println(timeDiff); // Just printing the time it takes for the script
                               // to run. The printing and loops associated
     // take time, with all of it it takes around 1700 microseconds
+    */
 }
 
 void loop() {}
