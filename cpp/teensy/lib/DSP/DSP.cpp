@@ -1,7 +1,7 @@
 #include <DSP.h>
 
 // Making sure the inside functions are seen
-q15_t q15_multiply(q15_t a, q15_t b);
+q15_t float_to_q15(float value);
 q15_t q15_divide(q15_t a, q15_t b);
 q15_t q15_taylor_atan(q15_t x);
 
@@ -10,7 +10,7 @@ q15_t q15_taylor_atan(q15_t x);
 const q15_t samplesOfInterest = FREQUENCY_LIMIT * SAMPLE_LENGTH / SAMPLE_RATE;
 const int fOrder = 9;
 
-/* Coefficients found at https://www.meme.net.au/butterworth.html, put 9th
+/* Coefficients for filter found at https://www.meme.net.au/butterworth.html, put 9th
     order filter, 510kHz sampling rate and 50kHz cut-off */
 const float32_t aFilterCoeffs[fOrder] = {
     5.4569203401896500,   -13.7047980216478000, 20.6476635308150000,
@@ -31,6 +31,7 @@ const q15_t PI_q15 = (q15_t)(PI * (1 << 15) + 0.5);
 
 
 q15_t* filter_butterwort_9th_order_50kHz(int16_t* samplesRaw) {
+    Serial.println("TestFilter");
     // Create array to store the filtered samples
     static q15_t samples[SAMPLE_LENGTH];
 
@@ -282,17 +283,6 @@ q31_t** peak_detection(q15_t* resultsRaw, q15_t* results) {
 }
 
 // Function for inside use
-q15_t q15_multiply(q15_t a, q15_t b) {
-    // Multiplying two q15_t numbers requires scaling the result by the
-    // appropriate factor (2^15 for q15_t) to maintain the fixed-point format
-    int32_t temp = (int32_t)a * b;
-
-    // Right-shift by 15 to scale back to the q15_t format
-    temp >>= 15;
-
-    return (q15_t)temp;
-}
-
 q15_t q15_divide(q15_t a, q15_t b) {
     // Cast the dividend and divisor to int32_t to avoid overflow
     int32_t a_scaled = (int32_t)a;

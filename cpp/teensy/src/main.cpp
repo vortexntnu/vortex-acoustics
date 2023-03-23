@@ -123,78 +123,83 @@ int16_t samplesRaw[SAMPLE_LENGTH] = {
     921,    6510,   6475,   9831,   10670,  11034,  6981,   5978,   7532,
     8628,   7924,   6853,   3137,   139,    -4003,  -9094,  -13298, -17558,
     -15587, -15236, -12033, -6698,  -6676,  -5836,  -2363,  -3622,  681,
-    530,    1191,   5679,   6872,   8398,   4861,   7697};
+    530,    1191,   5679,   6872,   8398,   4861,   7697
+};
 
 void setup() {
+  Serial.begin(9600);
+  Serial.println("Test");
 
-    Serial.begin(9600);
+  startTime = micros();
 
-    startTime = micros();
+  
+  q15_t* samplesFiltered = filter_butterwort_9th_order_50kHz(samplesRaw);
+  
+  for (int i = 0; i < SAMPLE_LENGTH; i++) {
+      float temp = 0;
+      arm_q15_to_float(&samplesFiltered[i], &temp, 1);
+      Serial.print(round(temp));
+      Serial.print(", ");
+  }
 
-    q15_t* samplesFiltered = filter_butterwort_9th_order_50kHz(samplesRaw);
+  
+  Serial.println("");
+  Serial.println(
+      "============================================================="
+      "========================");
+  Serial.println("");
+  /*
 
-    for (int i = 0; i < SAMPLE_LENGTH; i++) {
-        float temp = 0;
-        arm_q15_to_float(&samplesFiltered[i], &temp, 1);
-        Serial.print(round(temp));
-        Serial.print(", ");
-    }
+  q15_t* FFTResultsRaw = FFT_raw(samplesFiltered);
+  q15_t* FFTResults = FFT_mag(FFTResultsRaw);
 
-    /*
-    Serial.println("");
-    Serial.println(
-        "============================================================="
-        "========================");
-    Serial.println("");
+  for (int i = 0; i < SAMPLE_LENGTH; i++) {
+      Serial.print(FFTResults[i]);
+      Serial.print(", ");
+  }
 
-    q15_t* FFTResultsRaw = FFT_raw(samplesFiltered);
-    q15_t* FFTResults = FFT_mag(FFTResultsRaw);
+  Serial.println("");
+  Serial.println(
+      "============================================================="
+      "=======================");
+  Serial.println("");
 
-    for (int i = 0; i < SAMPLE_LENGTH; i++) {
-        Serial.print(FFTResults[i]);
-        Serial.print(", ");
-    }
+  q31_t** peaks = peak_detection(FFTResultsRaw, FFTResults);
 
-    Serial.println("");
-    Serial.println(
-        "============================================================="
-        "=======================");
-    Serial.println("");
+  int lengthOfPeakArray = peaks[0][0];
 
-    q31_t** peaks = peak_detection(FFTResultsRaw, FFTResults);
+  Serial.println(lengthOfPeakArray);
 
-    int lengthOfPeakArray = peaks[0][0];
+  // Since we are sotring the length of the array in the first index, we do
+  // not start from 0 in the array when printing out. Find out how to get
+  // length of a 2D array of a q31_t datatype. For now we return the length of
+  // the array in the first index of 2D array, This must be solved, this is
+  // not a good solution.
+  Serial.println("[Amplitude, Frequency, Phase]");
 
-    Serial.println(lengthOfPeakArray);
+  for (int i = 1; i < lengthOfPeakArray; i++) {
+      Serial.print("[");
+      Serial.print(peaks[i][0]);
+      Serial.print(", ");
+      Serial.print(peaks[i][1]);
+      Serial.print(", ");
+      Serial.print(peaks[i][2]);
+      Serial.println("],");
+  }
 
-    // Since we are sotring the length of the array in the first index, we do
-    // not start from 0 in the array when printing out. Find out how to get
-    // length of a 2D array of a q31_t datatype. For now we return the length of
-    // the array in the first index of 2D array, This must be solved, this is
-    // not a good solution.
-    Serial.println("[Amplitude, Frequency, Phase]");
-
-    for (int i = 1; i < lengthOfPeakArray; i++) {
-        Serial.print("[");
-        Serial.print(peaks[i][0]);
-        Serial.print(", ");
-        Serial.print(peaks[i][1]);
-        Serial.print(", ");
-        Serial.print(peaks[i][2]);
-        Serial.println("],");
-    }
-
-    endTime = micros();
-    timeDiff = endTime - startTime;
-    Serial.print("StartTime: ");
-    Serial.println(startTime);
-    Serial.print("EndTime: ");
-    Serial.println(endTime);
-    Serial.print("Time: ");
-    Serial.println(timeDiff); // Just printing the time it takes for the script
-                              // to run. The printing and loops associated
-    // take time, with all of it it takes around 1700 microseconds
-    */
+  endTime = micros();
+  timeDiff = endTime - startTime;
+  Serial.print("StartTime: ");
+  Serial.println(startTime);
+  Serial.print("EndTime: ");
+  Serial.println(endTime);
+  Serial.print("Time: ");
+  Serial.println(timeDiff); // Just printing the time it takes for the script
+                            // to run. The printing and loops associated
+  // take time, with all of it it takes around 1700 microseconds
+  */
 }
 
-void loop() {}
+void loop() {
+  //Serial.println("Test");
+}
