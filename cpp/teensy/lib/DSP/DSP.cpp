@@ -282,17 +282,6 @@ q31_t** peak_detection(q15_t* resultsRaw, q15_t* results) {
 }
 
 // Function for inside use
-q15_t q15_multiply(q15_t a, q15_t b) {
-    // Multiplying two q15_t numbers requires scaling the result by the
-    // appropriate factor (2^15 for q15_t) to maintain the fixed-point format
-    int32_t temp = (int32_t)a * b;
-
-    // Right-shift by 15 to scale back to the q15_t format
-    temp >>= 15;
-
-    return (q15_t)temp;
-}
-
 q15_t q15_divide(q15_t a, q15_t b) {
     // Cast the dividend and divisor to int32_t to avoid overflow
     int32_t a_scaled = (int32_t)a;
