@@ -66,7 +66,7 @@ void setup() {
   // length of a 2D array of a q31_t datatype. For now we return the length of
   // the array in the first index of 2D array, This must be solved, this is
   // not a good solution.
-  Serial.println("[Amplitude, Frequency, Phase]");
+  Serial.println("[Amplitude, Frequency, Phase in radians]");
 
   for (int i = 1; i < lengthOfPeakArray; i++) {
       Serial.print("[");
@@ -74,8 +74,6 @@ void setup() {
       Serial.print(", ");
       Serial.print(peaks[i][1]);
       Serial.print(", ");
-      Serial.print(peaks[i][2]);
-      Serial.print(",");
 
       // Calculate phase in comprehensible manner =====
       // peaks[i][2] is q31_t type but in the taylor expansion it is actually q15_t, the rest of the 16 MSB are just 0,
@@ -87,7 +85,7 @@ void setup() {
       Serial.println("],");
   }
 
-  /*
+  
   endTime = micros();
   timeDiff = endTime - startTime;
   Serial.print("StartTime: ");
@@ -95,10 +93,10 @@ void setup() {
   Serial.print("EndTime: ");
   Serial.println(endTime);
   Serial.print("Time: ");
-  Serial.println(timeDiff); // Just printing the time it takes for the script
-                            // to run. The printing and loops associated
+  Serial.println(timeDiff); 
+  // Just printing the time it takes for the script
+  // to run. The printing and loops associated
   // take time, with all of it it takes around 1700 microseconds
-  */
 }
 
 void loop() {
