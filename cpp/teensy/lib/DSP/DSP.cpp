@@ -1,7 +1,6 @@
 #include <DSP.h>
 
 // Making sure the inside functions are seen
-q15_t float_to_q15(float value);
 q15_t q15_divide(q15_t a, q15_t b);
 q15_t q15_taylor_atan(q15_t x);
 
@@ -65,8 +64,7 @@ q15_t* filter_butterwort_9th_order_50kHz(int16_t* samplesRaw) {
         float influenceTotalFloat = output_influence + input_influence;
 
         // Convert float to q15 datatype in the correct way
-        q15_t influenceTotalQ15 = 0;
-        arm_float_to_q15(&influenceTotalFloat, &influenceTotalQ15, 1);
+        q15_t influenceTotalQ15 = (q15_t)influenceTotalFloat;
         samples[i] = influenceTotalQ15;
     }
     return samples;
@@ -282,7 +280,15 @@ q31_t** peak_detection(q15_t* resultsRaw, q15_t* results) {
     return peaksReturn;
 }
 
-// Function for inside use
+float32_t phaseQ31_to_radianFloat32(q31_t phaseQ15) {
+    float32_t pi = 3.141592653589793f;
+    float32_t conversionRatio = 32768.0f;
+    
+    return (phaseQ15/conversionRatio) * pi;
+}
+
+
+// Function for inside use only ==================================================
 q15_t q15_divide(q15_t a, q15_t b) {
     // Cast the dividend and divisor to int32_t to avoid overflow
     int32_t a_scaled = (int32_t)a;

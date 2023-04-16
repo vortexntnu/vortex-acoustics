@@ -16,3 +16,5 @@ q15_t* FFT_raw(q15_t* samples);
 q15_t* FFT_mag(q15_t* resultsRaw);
 
 q31_t** peak_detection(q15_t* resultsRaw, q15_t* results);
+
+float32_t phaseQ31_to_radianFloat32(q31_t phaseQ15);
