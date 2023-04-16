@@ -131,14 +131,14 @@ signalNoise = [
     530,    1191,   5679,   6872,   8398,   4861,   7697
 ]
 try:
-    with open(f"{SCRIPT_DIR}/Test4.txt", "r+") as file:
+    with open(f"{SCRIPT_DIR}/Test5.txt", "r+") as file:
         temp = file.readline()[1:-1]
         tempProcessed = temp.split(",")
 
         for value in tempProcessed:
             signalNoise += [int(value)]
 except:
-    print("Run Test4 first")
+    print("Run Test5 first")
 
 
 # Plot signal to see
