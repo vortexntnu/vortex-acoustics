@@ -137,7 +137,7 @@ we return the peaks:
     - Frequency
     - Phase shift
 */
-q31_t** peak_detection(q15_t* resultsRaw, q15_t* results) {
+q31_t** peak_detection(q15_t* resultsRaw, q15_t* results, q15_t threshold) {
     // Dynamically allocate the 2D array
     q31_t** peaks = new q31_t*[SAMPLE_LENGTH];
     for (int i = 0; i < SAMPLE_LENGTH; i++) {
@@ -200,7 +200,8 @@ q31_t** peak_detection(q15_t* resultsRaw, q15_t* results) {
     values. We are aware the formatting is wonky, but that's how it
     has to be
     */
-    q15_t avgMedian = (resultsSort[(samplesOfInterest/2) - 1] + resultsSort[samplesOfInterest/2])/2 + 10;
+    q15_t avgMedian = (resultsSort[(samplesOfInterest/2) - 1] + resultsSort[samplesOfInterest/2])/2;
+    avgMedian += threshold;
 
     /*
     The next section is nothing short of a crime against all those who want
