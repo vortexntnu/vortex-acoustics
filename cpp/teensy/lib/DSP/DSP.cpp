@@ -1,3 +1,8 @@
+/*
+Code for digital signal processing
+Processes raw sound data sampled in a way that can be used further down the line
+*/
+
 #include <DSP.h>
 
 // Making sure the inside functions are seen
@@ -9,8 +14,10 @@ q15_t q15_taylor_atan(q15_t x);
 const q15_t samplesOfInterest = FREQUENCY_LIMIT * SAMPLE_LENGTH / SAMPLE_RATE;
 const int fOrder = 9;
 
-/* Coefficients for filter found at https://www.meme.net.au/butterworth.html, put 9th
-    order filter, 510kHz sampling rate and 50kHz cut-off */
+/* 
+Coefficients for filter found at https://www.meme.net.au/butterworth.html, 
+put 9th order filter, 510kHz sampling rate and 50kHz cut-off 
+*/
 const float32_t aFilterCoeffs[fOrder] = {
     5.4569203401896500,   -13.7047980216478000, 20.6476635308150000,
     -20.4748421533297000, 13.8143215886326000,  -6.3261752484730100,
@@ -21,8 +28,10 @@ const float32_t bFilterCoeffs[fOrder + 1] = {
     0.00045812057245895900, 0.00019633738819669700, 0.00004908434704917420,
     0.00000545381633879714};
 
-/* Bit reversing is applied in a lot of FFT
-algorithms for increase efficiency.*/
+/* 
+Bit reversing is applied in a lot of FFT
+algorithms for increase efficiency.
+*/
 const uint32_t doBitReverse = 1;
 
 // Constants in q_15 format done right
@@ -35,14 +44,15 @@ q15_t* filter_butterwort_9th_order_50kHz(int16_t* samplesRaw) {
     static q15_t samples[SAMPLE_LENGTH];
 
     /*
-      Implement Butterwort filter of "fOrder"
-      y = (a_1 * y_1 + .... + a_n * y_n) + (b_1 * x_1 + ... b_m * x_m)
-      Se Wiki:
-      http://vortex.a2hosted.com/index.php/Acoustics_Digital_Signal_Processing_(DSP)
-      Se source: https://www.meme.net.au/butterworth.html
+    Implement Butterwort filter of "fOrder"
+    y = (a_1 * y_1 + .... + a_n * y_n) + (b_1 * x_1 + ... b_m * x_m)
+    Se Wiki:
+    http://vortex.a2hosted.com/index.php/Acoustics_Digital_Signal_Processing_(DSP)
+    Se source: https://www.meme.net.au/butterworth.html
     */
 
-    /* Iterate through each index of the raw samples, and apply filtering to
+    /*
+    Iterate through each index of the raw samples, and apply filtering to
     them. Starting at fOrder because we can't use an index outside of the
     samples array.
     */
@@ -76,10 +86,12 @@ We calculating first the raw values out of FFT witch are "Real" and "Imaginary" 
 these values are really interesting since this raw format can be used to calculate both amplitude, frequencies and phase shift of a signal
 */
 q15_t* FFT_raw(q15_t* samples) {
-    /* To store the results of fft with
+    /*
+    To store the results of fft with
     complex numbers, need to have double the
     size of the sample length
-    z = a + bi, (a1, b1, a2, b2, a3, b3 ... ) */
+    z = a + bi, (a1, b1, a2, b2, a3, b3 ... )
+    */
     static q15_t resultsRaw[2 * SAMPLE_LENGTH];
 
     /* Forward transform, which is what we want,
@@ -101,10 +113,12 @@ q15_t* FFT_raw(q15_t* samples) {
 }
 
 q15_t* FFT_mag(q15_t* resultsRaw) {
-    /* Create an empty array to store the magnitude
+    /*
+    Create an empty array to store the magnitude
     calculations of the FFT.
     As we are not dealing with complex numbers
-    anymore, it is the size of the sample length */
+    anymore, it is the size of the sample length
+    */
     static q15_t results[SAMPLE_LENGTH];
 
     // Converts the complex array into a magnitude array.
@@ -113,7 +127,8 @@ q15_t* FFT_mag(q15_t* resultsRaw) {
     return results;
 }
 
-/* We will be returning q31_t datatypes as
+/* 
+We will be returning q31_t datatypes as
 the frequency numbers become too great to
 handle for q15_t
 Here we take inn FFT response and return the peaks we find
@@ -129,13 +144,17 @@ q31_t** peak_detection(q15_t* resultsRaw, q15_t* results) {
         peaks[i] = new q31_t[2]; // We make a 2 dimensional array
     }
 
-    /* Once we allocated the memory to the 2d array, the memory that we have
+    /*
+    Once we allocated the memory to the 2d array, the memory that we have
     allocated was already in use, so it had values from before, from other
     tasks. In order to have a clean slate we must iterate through the array to
-    make sure we don't read wrong values at the end.*/
+    make sure we don't read wrong values at the end
+    */
 
-    /* Fill the array with 0s, this is important so we don't end up
-    having memory that is filled with other stuff.*/
+    /*
+    Fill the array with 0s, this is important so we don't end up
+    having memory that is filled with other stuff
+    */
     for (int i = 0; i < SAMPLE_LENGTH; i++) {
         peaks[i][0] = 0;
         peaks[i][1] = 0;
@@ -150,10 +169,12 @@ q31_t** peak_detection(q15_t* resultsRaw, q15_t* results) {
         }
     }
 
-    /*We make an array with the results sorted for use in the median
+    /*
+    We make an array with the results sorted for use in the median
     calculation. A big part of the 510k Hz zone is either 0 or very low, so not
     only is is performance wise wasteful, it is also for calculating a proper
-    median*/
+    median
+    */
     q15_t resultsSort[samplesOfInterest];
 
     // Sorting algorithm
@@ -173,49 +194,55 @@ q31_t** peak_detection(q15_t* resultsRaw, q15_t* results) {
         resultsSort[j + 1] = key;
     }
 
-    /*As we may easily have an even number
+    /*
+    As we may easily have an even number
     of results, we calculate the median using the average of the two middle
     values. We are aware the formatting is wonky, but that's how it
-    has to be*/
-    q15_t avgMedian = (resultsSort[(samplesOfInterest / 2) - 1] +
-                       resultsSort[samplesOfInterest / 2]) /
-                          2 +
-                      1;
+    has to be
+    */
+    q15_t avgMedian = (resultsSort[(samplesOfInterest/2) - 1] + resultsSort[samplesOfInterest/2])/2 + 10;
 
-    /* The next section is nothing short of a crime against all those who want
+    /*
+    The next section is nothing short of a crime against all those who want
     optimized code, we sincerely apologize for leaving you with this The
     following code is so that we return a 2D array only the size of the number
-    of peaks we actually have.*/
+    of peaks we actually have
+    */
     int numNotNullValuesInList = 0;
     for (int i = 0; i < SAMPLE_LENGTH; i++) {
-        /* We filter by the median*2 because it works, the x2
+        /*
+        We filter by the median*3 because it works, the x3
         is there just because mediean is too small to filter
-        out all the "false" peaks*/
-        if (peaks[i][1] <= avgMedian * 2) {
-            /* If the magnitue does not pass the threshold we bring
-            the entire index to 0*/
+        out all the "false" peaks
+        */
+        if (peaks[i][1] <= avgMedian * 3) {
+            //if the magnitue does not pass the threshold we bring the entire index to 0
             peaks[i][0] = 0;
             peaks[i][1] = 0;
         } else {
-            /* If it passes we count it towards the number of peaks we
-            have.*/
+            // If it passes we count it towards the number of peaks we have
             numNotNullValuesInList++;
         }
     }
-    /* This is something that needs to be resolved ASAP, we are putting in the
+    /*
+    This is something that needs to be resolved ASAP, we are putting in the
     length of the array in the very front of the array This is because q31_t
     does not work seem well with the sizeof() function for arrays. This is why
-    the array has 1 extra index. */
+    the array has 1 extra index
+    */
     numNotNullValuesInList++;
 
-    /* Dynamically make a new array for the peaks we
-    actually want to return, notice the use of nomNonNull*/
+    /* 
+    Dynamically make a new array for the peaks we
+    actually want to return, notice the use of nomNonNull
+    */
     q31_t** peaksReturn = new q31_t*[numNotNullValuesInList];
     for (int i = 0; i < numNotNullValuesInList; i++) {
         peaksReturn[i] = new q31_t[3];
     }
 
-    /* We send the length of the array through the 1st index of the array. It is
+    /*
+    We send the length of the array through the 1st index of the array. It is
     very important to find another solution. Maybe look into using the uint16_t
     datatype
     */
@@ -232,16 +259,19 @@ q31_t** peak_detection(q15_t* resultsRaw, q15_t* results) {
     q15_t phase = 0;
 
     for (int i = 0; i < SAMPLE_LENGTH; i++) {
-        /*We filter by the median*2 because it works, the x2
+        /*
+        We filter by the median*2 because it works, the x2
         is there just because median is too small to filter
-        out all the "false" peaks */
+        out all the "false" peaks
+        */
         if (peaks[i][1] > avgMedian * 2) {
             // Fill the return array with the peaks.
             peaksReturn[tempCount][0] = peaks[i][0];
             peaksReturn[tempCount][1] = peaks[i][1];
 
-            // Calculate phase shift of the peak frequency
             /*
+            Calculate phase shift of the peak frequency
+
             Since we took in the raw values of the FFT
             We now know the:
             Real      -> x-axis
@@ -271,8 +301,10 @@ q31_t** peak_detection(q15_t* resultsRaw, q15_t* results) {
 
             peaksReturn[tempCount][2] = phase;
 
-            /* As our first index is reserved for the length of the array
-            we use tempCount, which is 1 ahead of i, instead of i*/
+            /*
+            As our first index is reserved for the length of the array
+            we use tempCount, which is 1 ahead of i, instead of i
+            */
             tempCount++;
         }
     }
