@@ -14,9 +14,9 @@ q15_t q15_taylor_atan(q15_t x);
 const q15_t samplesOfInterest = FREQUENCY_LIMIT * SAMPLE_LENGTH / SAMPLE_RATE;
 const int fOrder = 9;
 
-/* 
-Coefficients for filter found at https://www.meme.net.au/butterworth.html, 
-put 9th order filter, 510kHz sampling rate and 50kHz cut-off 
+/*
+Coefficients for filter found at https://www.meme.net.au/butterworth.html,
+put 9th order filter, 510kHz sampling rate and 50kHz cut-off
 */
 const float32_t aFilterCoeffs[fOrder] = {
     5.4569203401896500,   -13.7047980216478000, 20.6476635308150000,
@@ -28,7 +28,7 @@ const float32_t bFilterCoeffs[fOrder + 1] = {
     0.00045812057245895900, 0.00019633738819669700, 0.00004908434704917420,
     0.00000545381633879714};
 
-/* 
+/*
 Bit reversing is applied in a lot of FFT
 algorithms for increase efficiency.
 */
@@ -36,7 +36,6 @@ const uint32_t doBitReverse = 1;
 
 // Constants in q_15 format done right
 const q15_t PI_q15 = (q15_t)(PI * (1 << 15) + 0.5);
-
 
 q15_t* filter_butterwort_9th_order_50kHz(int16_t* samplesRaw) {
     Serial.println("TestFilter");
@@ -82,8 +81,9 @@ q15_t* filter_butterwort_9th_order_50kHz(int16_t* samplesRaw) {
 
 /*
 Instead of taking the full FFT in a signle function we split it
-We calculating first the raw values out of FFT witch are "Real" and "Imaginary" values
-these values are really interesting since this raw format can be used to calculate both amplitude, frequencies and phase shift of a signal
+We calculating first the raw values out of FFT witch are "Real" and "Imaginary"
+values these values are really interesting since this raw format can be used to
+calculate both amplitude, frequencies and phase shift of a signal
 */
 q15_t* FFT_raw(q15_t* samples) {
     /*
@@ -127,7 +127,7 @@ q15_t* FFT_mag(q15_t* resultsRaw) {
     return results;
 }
 
-/* 
+/*
 We will be returning q31_t datatypes as
 the frequency numbers become too great to
 handle for q15_t
@@ -200,7 +200,9 @@ q31_t** peak_detection(q15_t* resultsRaw, q15_t* results, q15_t threshold) {
     values. We are aware the formatting is wonky, but that's how it
     has to be
     */
-    q15_t avgMedian = (resultsSort[(samplesOfInterest/2) - 1] + resultsSort[samplesOfInterest/2])/2;
+    q15_t avgMedian = (resultsSort[(samplesOfInterest / 2) - 1] +
+                       resultsSort[samplesOfInterest / 2]) /
+                      2;
     avgMedian += threshold;
 
     /*
@@ -217,7 +219,8 @@ q31_t** peak_detection(q15_t* resultsRaw, q15_t* results, q15_t threshold) {
         out all the "false" peaks
         */
         if (peaks[i][0] <= avgMedian * 3) {
-            //if the magnitue does not pass the threshold we bring the entire index to 0
+            // if the magnitue does not pass the threshold we bring the entire
+            // index to 0
             peaks[i][0] = 0;
             peaks[i][1] = 0;
         } else {
@@ -233,7 +236,7 @@ q31_t** peak_detection(q15_t* resultsRaw, q15_t* results, q15_t threshold) {
     */
     numNotNullValuesInList++;
 
-    /* 
+    /*
     Dynamically make a new array for the peaks we
     actually want to return, notice the use of nomNonNull
     */
@@ -252,7 +255,8 @@ q31_t** peak_detection(q15_t* resultsRaw, q15_t* results, q15_t threshold) {
     peaksReturn[0][2] = numNotNullValuesInList;
 
     // Start with 1 because length of the list is in the first element
-    // Again, we need to find a better way to return length of the array then putting it in the first element of the array :/
+    // Again, we need to find a better way to return length of the array then
+    // putting it in the first element of the array :/
     int tempCount = 1;
 
     q15_t real = 0;
@@ -262,7 +266,7 @@ q31_t** peak_detection(q15_t* resultsRaw, q15_t* results, q15_t threshold) {
     for (int i = 0; i < SAMPLE_LENGTH; i++) {
         /*
         We already filtered out non peak values
-        So all values will be 0 except the peaks that are left unchanged 
+        So all values will be 0 except the peaks that are left unchanged
 
         if (peaks[i][0] > avgMedian * 2) {
         */
@@ -286,18 +290,15 @@ q31_t** peak_detection(q15_t* resultsRaw, q15_t* results, q15_t threshold) {
 
             /*
             First we check if our Real value is 0 to insure we dont divide by 0
-            If real is 0 we know that angle must be either 0 or +-pi/2 
+            If real is 0 we know that angle must be either 0 or +-pi/2
             */
             if ((real == 0) && (imag == 0)) {
                 phase = 0;
-            }
-            else if ((real == 0) && (imag > 0)) {
+            } else if ((real == 0) && (imag > 0)) {
                 phase = q15_divide(PI_q15, 2);
-            }
-            else if ((real == 0) && (imag < 0)) {
+            } else if ((real == 0) && (imag < 0)) {
                 phase = -q15_divide(PI_q15, 2);
-            }
-            else {
+            } else {
                 phase = q15_taylor_atan(q15_divide(imag, real));
             }
 
@@ -317,12 +318,12 @@ q31_t** peak_detection(q15_t* resultsRaw, q15_t* results, q15_t threshold) {
 float32_t phaseQ31_to_radianFloat32(q31_t phaseQ15) {
     float32_t pi = 3.141592653589793f;
     float32_t conversionRatio = 32768.0f;
-    
-    return (phaseQ15/conversionRatio) * pi;
+
+    return (phaseQ15 / conversionRatio) * pi;
 }
 
-
-// Function for inside use only ==================================================
+// Function for inside use only
+// ==================================================
 q15_t q15_divide(q15_t a, q15_t b) {
     // Cast the dividend and divisor to int32_t to avoid overflow
     int32_t a_scaled = (int32_t)a;
@@ -338,30 +339,32 @@ q15_t q15_divide(q15_t a, q15_t b) {
     return (q15_t)result;
 }
 
-
 /*
-Since the CMSIS ARM libary uses FIXED pointer arithmetic we cant use conventional means
-Normal Arduino math uses FLOAT pointer arithmetic which are slower and not compatible with CMSIS q_15 data type
-This is why we make a FIXED pointer arithmetic function to do "arctan" to get angle
-This method of arctan is a aproximation algorithm using taylor series
+Since the CMSIS ARM libary uses FIXED pointer arithmetic we cant use
+conventional means Normal Arduino math uses FLOAT pointer arithmetic which are
+slower and not compatible with CMSIS q_15 data type This is why we make a FIXED
+pointer arithmetic function to do "arctan" to get angle This method of arctan is
+a aproximation algorithm using taylor series
 
-Check wiki for more info: https://proofwiki.org/wiki/Power_Series_Expansion_for_Real_Arctangent_Function
+Check wiki for more info:
+https://proofwiki.org/wiki/Power_Series_Expansion_for_Real_Arctangent_Function
 */
 q15_t q15_taylor_atan(q15_t x) {
-    // Change this variable, the bigger the more accurate the value but the longer computational time required
-    int TAYLOR_SERIES_TERMS = 10; // 
+    // Change this variable, the bigger the more accurate the value but the
+    // longer computational time required
+    int TAYLOR_SERIES_TERMS = 10; //
 
     // Variables
     q15_t x_squared, term, result;
     int32_t temp;
 
-    x_squared = (q15_t) (((int32_t) x * x) >> 15);
+    x_squared = (q15_t)(((int32_t)x * x) >> 15);
     term = x;
     result = x;
 
     for (int i = 1; i < TAYLOR_SERIES_TERMS; i++) {
-        term = (q15_t) ((((int32_t) term * x_squared) + (1 << 14)) >> 15);
-        temp = (int32_t) term / ((2 * i + 1) << 15);
+        term = (q15_t)((((int32_t)term * x_squared) + (1 << 14)) >> 15);
+        temp = (int32_t)term / ((2 * i + 1) << 15);
         if (i % 2 == 0) {
             result += temp;
         } else {
