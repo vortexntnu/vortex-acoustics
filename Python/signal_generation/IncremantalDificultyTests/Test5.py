@@ -23,8 +23,8 @@ In adition we can turn on and off noise
 # [frequency, amplitude, phase shift]/[kHz, dB, ms]
 freqAmpShift = numpy.array(
     [
-        [1.0 , 0.20, 0.0],
-        [5.0 , 0.20, 0.0],
+        [1.0, 0.20, 0.0],
+        [5.0, 0.20, 0.0],
         [10.0, 0.20, 0.1],
         [22.0, 0.30, 0.4],
         [50.0, 0.30, 0.1],
