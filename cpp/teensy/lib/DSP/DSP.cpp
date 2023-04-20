@@ -163,9 +163,9 @@ q31_t** peak_detection(q15_t* resultsRaw, q15_t* results) {
     for (int i = 1; i < SAMPLE_LENGTH - 2; i++) {
         // Check if a sample is greater than both of its neighboring samples.
         if (results[i] >= results[i - 1] && results[i] >= results[i + 1]) {
-            peaks[i][0] = i * SAMPLE_RATE / SAMPLE_LENGTH;
+            peaks[i][0] = results[i];
             // Fill the array with the frequency and attached magnitude
-            peaks[i][1] = results[i];
+            peaks[i][1] = i * SAMPLE_RATE / SAMPLE_LENGTH;
         }
     }
 
@@ -215,7 +215,7 @@ q31_t** peak_detection(q15_t* resultsRaw, q15_t* results) {
         is there just because mediean is too small to filter
         out all the "false" peaks
         */
-        if (peaks[i][1] <= avgMedian * 3) {
+        if (peaks[i][0] <= avgMedian * 3) {
             //if the magnitue does not pass the threshold we bring the entire index to 0
             peaks[i][0] = 0;
             peaks[i][1] = 0;
@@ -260,11 +260,12 @@ q31_t** peak_detection(q15_t* resultsRaw, q15_t* results) {
 
     for (int i = 0; i < SAMPLE_LENGTH; i++) {
         /*
-        We filter by the median*2 because it works, the x2
-        is there just because median is too small to filter
-        out all the "false" peaks
+        We already filtered out non peak values
+        So all values will be 0 except the peaks that are left unchanged 
+
+        if (peaks[i][0] > avgMedian * 2) {
         */
-        if (peaks[i][1] > avgMedian * 2) {
+        if (peaks[i][0] > 0) {
             // Fill the return array with the peaks.
             peaksReturn[tempCount][0] = peaks[i][0];
             peaksReturn[tempCount][1] = peaks[i][1];
