@@ -190,27 +190,13 @@ void setup() {
     // trigger_conversion()
 }
 
-<<<<<<< HEAD
-    // is starting the major loop timer, PIT0 that will trigger the conversion until stopped
-    // @sample_period_us : a conversion will happen every "sample_period_us" microseconds
-    void startConversion(uint32_t sample_period_us, ADC_sample_mode sample_mode)
+// is starting the major loop timer, PIT0 that will trigger the conversion until stopped
+// @sample_period_us : a conversion will happen every "sample_period_us" microseconds
+void startConversion(uint32_t sample_period_us, ADC_sample_mode sample_mode)
     {
         // ? do it in one call?
         // PIT::setUpPeriodicISR(triggerConversion, clock::get_clockcycles_micro(1000000), PIT::PIT_0);
         // value found by trial and error.
-=======
-// is starting the major loop timer, PIT0 that will trigger the conversion until
-// stopped
-// @sample_period_us : a conversion will happen every "sample_period_us"
-// microseconds
-void startConversion(uint32_t sample_period_us, ADC_sample_mode sample_mode) {
-    Serial.println("Starting conversion");
-    // ? do it in one call?
-    // PIT::setUpPeriodicISR(triggerConversion,
-    // clock::get_clockcycles_micro(1000000), PIT::PIT_0); value found by trial
-    // and error.
->>>>>>> c3e6cab261bbe24c4336985b4427327b4682aea5
-
     ADC_mode = sample_mode;
     uint32_t bounded_period = sample_period_us;
     switch (sample_mode) {
