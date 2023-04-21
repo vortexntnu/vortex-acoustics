@@ -1538,9 +1538,8 @@ typedef struct {
                                 (non-secure address space) */
 
 #define SCB_NS                                                                 \
-    (                                                                          \
-        (SCB_Type*)SCB_BASE_NS) /*!< SCB configuration struct (non-secure                                                                   \
-                                   address space) */
+    ((SCB_Type*)SCB_BASE_NS) /*!< SCB configuration struct (non-secure         \
+                                address space) */
 #define SysTick_NS                                                             \
     ((SysTick_Type*)SysTick_BASE_NS) /*!< SysTick configuration struct         \
                                         (non-secure address space) */
@@ -1557,9 +1556,8 @@ typedef struct {
      0x0D90UL) /*!< Memory Protection Unit            (non-secure              \
                   address space) */
 #define MPU_NS                                                                 \
-    (                                                                          \
-        (MPU_Type*)MPU_BASE_NS) /*!< Memory Protection Unit (non-secure                                                                   \
-                                   address space) */
+    ((MPU_Type*)MPU_BASE_NS) /*!< Memory Protection Unit (non-secure           \
+                                address space) */
 #endif
 
 #endif /* defined (__ARM_FEATURE_CMSE) && (__ARM_FEATURE_CMSE == 3U) */
