@@ -65,7 +65,7 @@ void setup() {
     // (1) - First part: initializing ADC before being able to use it
     Serial.println("Initialize ADC");
     // clock of teensy is 600MHz after normal boot
-    clock::setup();
+    clockSampling::setup();
     adc::init();
     // defining value of register
     uint32_t ADC_reg_config;
