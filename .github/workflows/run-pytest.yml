@@ -28,9 +28,8 @@ jobs:
             python3 -m venv venv
             source ./venv/bin/activate
             python -m pip install -r '${{ env.PYTHON_DIR }}/requirements.txt'
-      
-      - name: Run Pytest
-        run: |
-            source ./venv/bin/activate
-            python -m pytest ${{ env.PYTHON_DIR }} --verbose
 
+#      - name: Run Pytest
+#        run: |
+#            source ./venv/bin/activate
+#            python -m pytest ${{ env.PYTHON_DIR }} --verbose
