@@ -106,12 +106,12 @@ void setup() {
     for (uint16_t i = 0; i < number_samples; i++) {samplesRawHydrophone5[i] = (int16_t)adc::ChannelC0.get();}
     /*
         Do sample and process repeatedly:
-            1: reset all the ringbuffer so that the new values are written from
-       the start 2: Sample again for the wanted number of samples 3: process the
-       new values 4: go back to 1 and reset the ringbuffers Following can be
-       implemented to sample "continuously":
-            - setup adc
-            - define sample number and frequency
+            1: reset all the ringbuffer so that the new values are written from the start 
+            2: Sample again for the wanted number of samples 
+            3: process the new values
+            4: go back to 1 and reset the ringbuffers Following can be implemented to sample "continuously":
+                - setup adc
+                - define sample number and frequency
             loop:
                 - sample
                 - process the data in the ringbuffer
