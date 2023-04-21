@@ -122,8 +122,7 @@ void setup() {
 
     // Digital Signal Processing (START) ==================================================
     // Filter raw samples
-    q15_t* samplesFiltered =
-        filter_butterwort_9th_order_50kHz(samplesRawHydrophone1);
+    q15_t* samplesFiltered = filter_butterwort_9th_order_50kHz(samplesRawHydrophone1);
 
     // Preform FFT calculations on filtered samples
     q15_t* FFTResultsRaw = FFT_raw(samplesFiltered);
