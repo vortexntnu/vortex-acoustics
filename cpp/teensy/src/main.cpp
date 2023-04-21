@@ -51,15 +51,13 @@ int16_t samplesRawHydrophone3[SAMPLE_LENGTH];
 int16_t samplesRawHydrophone4[SAMPLE_LENGTH];
 int16_t samplesRawHydrophone5[SAMPLE_LENGTH];
 
-// Variables for Digital Signal Processing
-// ================================================== A manual variable to
-// filter out small peaks that dont manage to get over the threshold
+// Variables for Digital Signal Processing ================================================== 
+// A manual variable to filter out small peaks that dont manage to get over the threshold
 const q15_t peakThreshold = 200;
 
 void setup() {
     Serial.begin(9600);
-    while (!Serial)
-        ;
+    while (!Serial);
     Serial.println("Serial connected\r\n");
 
     // Start timer to see time it takes for everything to run
@@ -101,25 +99,14 @@ void setup() {
     // (3) - Third Part:  The data is now in the ringbuffers. First the
     // timestamps are processed and the each of the channels
     Serial.println("");
-    Serial.println("==========================================================="
-                   "==========================");
+    Serial.println("=====================================================================================");
     Serial.println("Getting data");
     // Saving data into array we will use further down the line
-    for (uint16_t i = 0; i < number_samples; i++) {
-        samplesRawHydrophone1[i] = (int16_t)adc::ChannelA0.get();
-    }
-    for (uint16_t i = 0; i < number_samples; i++) {
-        samplesRawHydrophone2[i] = (int16_t)adc::ChannelA1.get();
-    }
-    for (uint16_t i = 0; i < number_samples; i++) {
-        samplesRawHydrophone3[i] = (int16_t)adc::ChannelB0.get();
-    }
-    for (uint16_t i = 0; i < number_samples; i++) {
-        samplesRawHydrophone4[i] = (int16_t)adc::ChannelB1.get();
-    }
-    for (uint16_t i = 0; i < number_samples; i++) {
-        samplesRawHydrophone5[i] = (int16_t)adc::ChannelC0.get();
-    }
+    for (uint16_t i = 0; i < number_samples; i++) {samplesRawHydrophone1[i] = (int16_t)adc::ChannelA0.get();}
+    for (uint16_t i = 0; i < number_samples; i++) {samplesRawHydrophone2[i] = (int16_t)adc::ChannelA1.get();}
+    for (uint16_t i = 0; i < number_samples; i++) {samplesRawHydrophone3[i] = (int16_t)adc::ChannelB0.get();}
+    for (uint16_t i = 0; i < number_samples; i++) {samplesRawHydrophone4[i] = (int16_t)adc::ChannelB1.get();}
+    for (uint16_t i = 0; i < number_samples; i++) {samplesRawHydrophone5[i] = (int16_t)adc::ChannelC0.get();}
     /*
         Do sample and process repeatedly:
             1: reset all the ringbuffer so that the new values are written from
@@ -136,8 +123,8 @@ void setup() {
     */
     // Sampling (STOP) ==================================================
 
-    // Digital Signal Processing (START)
-    // ================================================== Filter raw samples
+    // Digital Signal Processing (START) ==================================================
+    // Filter raw samples
     q15_t* samplesFiltered =
         filter_butterwort_9th_order_50kHz(samplesRawHydrophone1);
 
@@ -161,16 +148,14 @@ void setup() {
     // TIPS: For getting phase of the peak FFTs from q31 format that we dont
     // understand to radians in floats, use this:
     // phaseQ31_to_radianFloat32(peaks[x][2]);
-    // Digital Signal Processing (STOP)
-    // ==================================================
+    // Digital Signal Processing (STOP) ==================================================
 
     // End timer for testing speed of algorithm
     endTime = micros();
 
     // Print out how long it takes to run the whole algorithm
     Serial.println("");
-    Serial.println("==========================================================="
-                   "==========================");
+    Serial.println("=====================================================================================");
     Serial.println("Timer");
     timeDiff = endTime - startTime;
     Serial.print("StartTime: ");
@@ -182,8 +167,7 @@ void setup() {
 
     // Print raw sampled signal
     Serial.println("");
-    Serial.println("==========================================================="
-                   "==========================");
+    Serial.println("=====================================================================================");
     Serial.println("Raw data from hydrophone 1");
     for (uint16_t i = 0; i < number_samples; i++) {
         Serial.print(samplesRawHydrophone1[i]);
@@ -192,8 +176,7 @@ void setup() {
 
     // Print Filtered signal response
     Serial.println("");
-    Serial.println("==========================================================="
-                   "==========================");
+    Serial.println("=====================================================================================");
     Serial.println("Filtered samples");
     for (int i = 0; i < SAMPLE_LENGTH; i++) {
         Serial.print(samplesFiltered[i]);
@@ -202,8 +185,7 @@ void setup() {
 
     // Print FFT
     Serial.println("");
-    Serial.println("==========================================================="
-                   "==========================");
+    Serial.println("=====================================================================================");
     Serial.println("FFT");
     for (int i = 0; i < SAMPLE_LENGTH; i++) {
         Serial.print(FFTResults[i]);
@@ -212,8 +194,7 @@ void setup() {
 
     // Print peaks of FFT
     Serial.println("");
-    Serial.println("==========================================================="
-                   "==========================");
+    Serial.println("=====================================================================================");
     Serial.println("Peaks");
     Serial.println(lengthOfPeakArray);
     Serial.println("[Amplitude, Frequency, Phase in radians]");
