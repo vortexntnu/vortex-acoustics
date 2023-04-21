@@ -198,37 +198,36 @@ void startConversion(uint32_t sample_period_us, ADC_sample_mode sample_mode)
         // PIT::setUpPeriodicISR(triggerConversion, clock::get_clockcycles_micro(1000000), PIT::PIT_0);
         // value found by trial and error.
     ADC_mode = sample_mode;
-    uint32_t bounded_period = sample_period_us;
-    switch (sample_mode) {
-    case BLOCKING:
-        if (sample_period_us < MIN_SAMP_PERIOD_BLOCKING) {
-            bounded_period = MIN_SAMP_PERIOD_BLOCKING;
-        }
-        break;
-    case TIMER:
-        if (sample_period_us < MIN_SAMP_PERIOD_TIMER) {
-            bounded_period = MIN_SAMP_PERIOD_TIMER;
-        }
-        break;
-    case DMA:
-        if (sample_period_us < MIN_SAMP_PERIOD_DMA) {
-            bounded_period = MIN_SAMP_PERIOD_DMA;
-        }
-        break;
-    default:
-        break;
+uint32_t bounded_period = sample_period_us;
+switch (sample_mode) {
+case BLOCKING:
+    if (sample_period_us < MIN_SAMP_PERIOD_BLOCKING) {
+        bounded_period = MIN_SAMP_PERIOD_BLOCKING;
     }
-
-    // if (sample_period_us < MIN_SAMPLING_PERIOD)
-    // {
-    //     sample_period_us = MIN_SAMPLING_PERIOD;
-    // }
-    PIT::setUpPeriodicISR(triggerConversion,
-                          clock::get_clockcycles_micro(bounded_period),
-                          PIT::PIT_0);
-
-    PIT::startPeriodic(PIT::PIT_0); // will call triggerConversion
+    break;
+case TIMER:
+    if (sample_period_us < MIN_SAMP_PERIOD_TIMER) {
+        bounded_period = MIN_SAMP_PERIOD_TIMER;
+    }
+    break;
+case DMA:
+    if (sample_period_us < MIN_SAMP_PERIOD_DMA) {
+        bounded_period = MIN_SAMP_PERIOD_DMA;
+    }
+    break;
+default:
+    break;
 }
+
+// if (sample_period_us < MIN_SAMPLING_PERIOD)
+// {
+//     sample_period_us = MIN_SAMPLING_PERIOD;
+// }
+PIT::setUpPeriodicISR(triggerConversion,
+                      clock::get_clockcycles_micro(bounded_period), PIT::PIT_0);
+
+PIT::startPeriodic(PIT::PIT_0); // will call triggerConversion
+} // namespace adc
 
 void stopConversion() {
     // no new conversion
@@ -568,4 +567,5 @@ void setting_up_DMA_channels() {
     // // p.58
     // dma3.triggerAtHardwareEvent(DMAMUX_SOURCE_XBAR1_2);
 }
-}; // namespace adc
+}
+; // namespace adc
