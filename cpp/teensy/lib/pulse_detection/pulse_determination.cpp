@@ -1,7 +1,6 @@
 #include "pulse_determination.h"
 
-arm_status shortTimeFourierTransform(float32_t* pulse, uint32_t pulseLength,
-                                     float32_t* mnPointFft) {
+arm_status shortTimeFourierTransform(float32_t* pulse, uint32_t pulseLength, float32_t* mnPointFft) {
 
     float32_t* nPointFft = new float32_t[FFT_SIZE];
 

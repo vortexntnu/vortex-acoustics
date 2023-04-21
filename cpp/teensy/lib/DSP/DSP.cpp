@@ -18,15 +18,8 @@ const int fOrder = 9;
 Coefficients for filter found at https://www.meme.net.au/butterworth.html,
 put 9th order filter, 510kHz sampling rate and 50kHz cut-off
 */
-const float32_t aFilterCoeffs[fOrder] = {
-    5.4569203401896500,   -13.7047980216478000, 20.6476635308150000,
-    -20.4748421533297000, 13.8143215886326000,  -6.3261752484730100,
-    1.8924462642157100,   -0.3350397779275800,  0.0267111235596287};
-const float32_t bFilterCoeffs[fOrder + 1] = {
-    0.00000545381633879714, 0.00004908434704917420, 0.00019633738819669700,
-    0.00045812057245895900, 0.00068718085868843900, 0.00068718085868843900,
-    0.00045812057245895900, 0.00019633738819669700, 0.00004908434704917420,
-    0.00000545381633879714};
+const float32_t aFilterCoeffs[fOrder] = {5.4569203401896500, -13.7047980216478000, 20.6476635308150000, -20.4748421533297000, 13.8143215886326000, -6.3261752484730100, 1.8924462642157100, -0.3350397779275800, 0.0267111235596287};
+const float32_t bFilterCoeffs[fOrder + 1] = {0.00000545381633879714, 0.00004908434704917420, 0.00019633738819669700, 0.00045812057245895900, 0.00068718085868843900, 0.00068718085868843900, 0.00045812057245895900, 0.00019633738819669700, 0.00004908434704917420, 0.00000545381633879714};
 
 /*
 Bit reversing is applied in a lot of FFT
@@ -200,9 +193,7 @@ q31_t** peak_detection(q15_t* resultsRaw, q15_t* results, q15_t threshold) {
     values. We are aware the formatting is wonky, but that's how it
     has to be
     */
-    q15_t avgMedian = (resultsSort[(samplesOfInterest / 2) - 1] +
-                       resultsSort[samplesOfInterest / 2]) /
-                      2;
+    q15_t avgMedian = (resultsSort[(samplesOfInterest / 2) - 1] + resultsSort[samplesOfInterest / 2]) / 2;
     avgMedian += threshold;
 
     /*

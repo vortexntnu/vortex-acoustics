@@ -18,14 +18,13 @@
 /// USE the inbuilt function delaynanoseconds INSTEAD !!!!!!!!!!!!!!!!!!!!!!!!!! -----------------------------
 
 /// @brief GENERAL PURPOSE TIMER
-namespace gpt
-{
-    extern int waiting;
+namespace gpt {
+extern int waiting;
 
-    typedef void (*void_function_ptr)(void);
+typedef void (*void_function_ptr)(void);
 
-    void setup();
-    void startTimer(int clockcycles);
-    ////void ISR(void); /// should not be called from outside!!
-    void setUpGptISR(void_function_ptr function);
-};
+void setup();
+void startTimer(int clockcycles);
+////void ISR(void); /// should not be called from outside!!
+void setUpGptISR(void_function_ptr function);
+}; // namespace gpt

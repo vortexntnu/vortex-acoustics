@@ -24,18 +24,10 @@ const Position hydrophonePositions[NUM_HYDROPHONES] = {
     {0.4, 0.0, -0.4}     // Hyd4 {x,y,z}
 };
 
-arm_status calculatePingerPosition(int32_t TdoaArray[],
-                                   const Position hydrophonePositions[],
-                                   const arm_matrix_instance_f32* pA,
-                                   const arm_matrix_instance_f32* pB,
-                                   Position* pSourcePosition);
+arm_status calculatePingerPosition(int32_t TdoaArray[], const Position hydrophonePositions[], const arm_matrix_instance_f32* pA, const arm_matrix_instance_f32* pB, Position* pSourcePosition);
 
-void initialComputationA(float32_t* AData,
-                         const Position hydrophonePositions[]);
+void initialComputationA(float32_t* AData, const Position hydrophonePositions[]);
 void computeA(int32_t TdoaArray[], float32_t* AData);
-void computeB(int32_t TdoaArray[], const Position hydrophonePositions[],
-              float32_t* BData);
+void computeB(int32_t TdoaArray[], const Position hydrophonePositions[], float32_t* BData);
 
-arm_status leastSquareEstimation(const arm_matrix_instance_f32* pA,
-                                 const arm_matrix_instance_f32* pB,
-                                 Position* pSourcePosition);
+arm_status leastSquareEstimation(const arm_matrix_instance_f32* pA, const arm_matrix_instance_f32* pB, Position* pSourcePosition);

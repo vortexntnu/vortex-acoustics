@@ -10,25 +10,18 @@
 #include "Arduino.h"
 #endif
 
-namespace PIT
-{
+namespace PIT {
 
-    typedef void (*void_function_ptr)(void);
-    typedef enum PIT_channels
-    {
-        PIT_0,
-        PIT_1,
-        PIT_2,
-        PIT_3
-    } PIT_channels;
+typedef void (*void_function_ptr)(void);
+typedef enum PIT_channels { PIT_0, PIT_1, PIT_2, PIT_3 } PIT_channels;
 
-    void setup();
+void setup();
 
-    // general
-    void setUpPeriodicISR(void_function_ptr function, uint32_t clockcycles, PIT_channels PIT_number);
-    void setUpPeriodicISR(void_function_ptr function, PIT_channels PIT_number);
-    void startPeriodic(void_function_ptr ISR_func, uint32_t clockcycles, PIT_channels PIT_number, uint8_t chained = 0);
-    void startPeriodic(uint32_t clockcycles, PIT_channels PIT_number, uint8_t chained = 0);
-    void startPeriodic(PIT_channels PIT_number, uint8_t chained = 0);
-    void stopPeriodic(PIT_channels PIT_number);
-} // PIT
+// general
+void setUpPeriodicISR(void_function_ptr function, uint32_t clockcycles, PIT_channels PIT_number);
+void setUpPeriodicISR(void_function_ptr function, PIT_channels PIT_number);
+void startPeriodic(void_function_ptr ISR_func, uint32_t clockcycles, PIT_channels PIT_number, uint8_t chained = 0);
+void startPeriodic(uint32_t clockcycles, PIT_channels PIT_number, uint8_t chained = 0);
+void startPeriodic(PIT_channels PIT_number, uint8_t chained = 0);
+void stopPeriodic(PIT_channels PIT_number);
+} // namespace PIT
