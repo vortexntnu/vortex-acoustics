@@ -17,6 +17,9 @@ Code written by: Vortex NTNU
 #include "arm_const_structs.h"
 #include "arm_math.h"
 
+// Arduino Libraries
+#include <Arduino.h>
+
 // Sampling Analog to Digital Converter (ADC) Libraries
 #include "gpio.h"
 #include "PIT.h"
@@ -28,15 +31,14 @@ Code written by: Vortex NTNU
 // Digital Signal Processing (DSP) Libraries
 #include "DSP.h"
 
-// Arduino Libraries
-#include <Arduino.h>
+
 
 
 
 // Variables for Debugging ==================================================
 /*
 These are just to measure the time it takes to run the entire code.
-The new calculations show 732 us (micro seconds) for the whole algorithm
+The new calculations show 13300 us (micro seconds) (13.3 ms) for the whole algorithm
 */
 unsigned long timeDiff;
 unsigned long startTime;
@@ -73,10 +75,9 @@ void setup() {
 
     // Sampling (START) ==================================================
     // (1) - First part: initializing ADC before being able to use it
-    Serial.println("");
-    Serial.println("=====================================================================================");
     Serial.println("Initialize ADC");
-
+    // clock of teensy is 600MHz after normal boot
+    clock::setup();
     adc::init();
     // defining value of register
     uint32_t ADC_reg_config;
@@ -90,10 +91,6 @@ void setup() {
     // adc is now ready to use
 
     // (2) - Second Part: Sampling the data that is then put into the ringbuffers
-    Serial.println("");
-    Serial.println("=====================================================================================");
-    Serial.println("Sampling ADC data");
-
     // to not overfill ringbuffer, just set maximum hard set limit of number of samples to 1500
     if (number_samples > 1500) {
         number_samples = 1500;
@@ -104,28 +101,17 @@ void setup() {
     delayMicroseconds(sample_period * number_samples);
     // Stop Sampling
     adc::stopConversion();
-    Serial.println("Sampling stopped");
 
     // (3) - Third Part:  The data is now in the ringbuffers. First the timestamps are processed and the each of the channels
     Serial.println("");
     Serial.println("=====================================================================================");
     Serial.println("Getting data");
-
-    for (uint16_t i = 0; i < number_samples; i++) {
-        samplesRawHydrophone1[i] = (int16_t)adc::ChannelA0.get();
-        //samplesRawHydrophone2[i] = (int16_t)adc::ChannelA1.get();
-        //samplesRawHydrophone3[i] = (int16_t)adc::ChannelB0.get();
-        //samplesRawHydrophone4[i] = (int16_t)adc::ChannelB1.get();
-        //samplesRawHydrophone5[i] = (int16_t)adc::ChannelC0.get();
-    }
-    Serial.println("Printing data for hydrophone 1:");
-    for (uint16_t i = 0; i < number_samples; i++) {
-        Serial.print(samplesRawHydrophone1[i]);
-        Serial.print(", ");
-    }
-    Serial.println("");
-    /* ----------------------------------------------------------------------------- */
-    /* ----------------------------------------------------------------------------- */
+    // Saving data into array we will use further down the line
+    for (uint16_t i = 0; i < number_samples; i++) {samplesRawHydrophone1[i] = (int16_t)adc::ChannelA0.get();}
+    for (uint16_t i = 0; i < number_samples; i++) {samplesRawHydrophone2[i] = (int16_t)adc::ChannelA1.get();}
+    for (uint16_t i = 0; i < number_samples; i++) {samplesRawHydrophone3[i] = (int16_t)adc::ChannelB0.get();}
+    for (uint16_t i = 0; i < number_samples; i++) {samplesRawHydrophone4[i] = (int16_t)adc::ChannelB1.get();}
+    for (uint16_t i = 0; i < number_samples; i++) {samplesRawHydrophone5[i] = (int16_t)adc::ChannelC0.get();}
     /*
         Do sample and process repeatedly:
             1: reset all the ringbuffer so that the new values are written from the start
@@ -146,7 +132,7 @@ void setup() {
 
     // Digital Signal Processing (START) ==================================================
     // Filter raw samples
-    q15_t* samplesFiltered = filter_butterwort_9th_order_50kHz(samplesRaw);  
+    q15_t* samplesFiltered = filter_butterwort_9th_order_50kHz(samplesRawHydrophone1);  
 
     // Preform FFT calculations on filtered samples
     q15_t* FFTResultsRaw = FFT_raw(samplesFiltered);
@@ -183,6 +169,15 @@ void setup() {
     Serial.println(endTime);
     Serial.print("Time: ");
     Serial.println(timeDiff); 
+
+    // Print raw sampled signal
+    Serial.println("");
+    Serial.println("=====================================================================================");
+    Serial.println("Raw data from hydrophone 1");
+    for (uint16_t i = 0; i < number_samples; i++) {
+        Serial.print(samplesRawHydrophone1[i]);
+        Serial.print(", ");
+    }
 
     // Print Filtered signal response
     Serial.println("");

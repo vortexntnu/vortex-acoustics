@@ -2,7 +2,7 @@
 #include "arm_math.h"
 #include <Arduino.h>
 
-#define SAMPLE_RATE 510000
+#define SAMPLE_RATE 92000
 #define SAMPLE_LENGTH 1024
 #define BITSHiFT 9
 #define SCALE_FACTOR 1000.0

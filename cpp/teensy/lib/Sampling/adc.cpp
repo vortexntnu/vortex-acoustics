@@ -193,7 +193,6 @@ namespace adc
     // @sample_period_us : a conversion will happen every "sample_period_us" microseconds
     void startConversion(uint32_t sample_period_us, ADC_sample_mode sample_mode)
     {
-        Serial.println("Starting conversion");
         // ? do it in one call?
         // PIT::setUpPeriodicISR(triggerConversion, clock::get_clockcycles_micro(1000000), PIT::PIT_0);
         // value found by trial and error.
