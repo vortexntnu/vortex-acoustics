@@ -52,7 +52,7 @@ BreakConstructorInitializers: BeforeColon
 BreakAfterJavaFieldAnnotations: false
 BreakStringLiterals: true
 ColumnLimit: 9999
-CommentPragmas: "^(//.*$|/\*.*\*/)"
+CommentPragmas: "^(//.*$|/\\*.*\\*/)"
 CompactNamespaces: false
 ConstructorInitializerAllOnOneLineOrOnePerLine: false
 ConstructorInitializerIndentWidth: 4
