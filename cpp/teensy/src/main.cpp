@@ -6,8 +6,7 @@ This is because they are to big and so they get auto deleted
 For now the libraries that need to be manually installed are
 - CMSIS
 To import libraries properly do this:
-Copy file from ".\vortex-acoustics\Resource\CMSIS" to
-".\vortex-acoustics\cpp\teensy\.pio\libdeps\teensy41\CMSIS"
+Copy file from ".\vortex-acoustics\Resource\CMSIS" to ".\vortex-acoustics\cpp\teensy\.pio\libdeps\teensy41\CMSIS"
 
 Code written by: Vortex NTNU
 */
@@ -41,8 +40,7 @@ unsigned long startTime;
 unsigned long endTime;
 
 // Variables for Sampling ==================================================
-// to be safe should be a bit under 1500. If it sampled more than 1500 for some
-// reason, the data gathered will be inconsistent.
+// to be safe should be a bit under 1500. If it sampled more than 1500 for some reason, the data gathered will be inconsistent.
 uint16_t number_samples = SAMPLE_LENGTH;
 uint32_t sample_period = 11; // >= MIN_SAMP_PERIOD_TIMER
 int16_t samplesRawHydrophone1[SAMPLE_LENGTH];
@@ -74,8 +72,7 @@ void setup() {
     // WRITE_EN needs to be set to update REG, internal clock, BUSY mode active
     // high, powering off channel D because we don't need it, internal ref
     // because nothing external connected, reference voltage to 2.5V
-    ADC_reg_config = (1 << CONFIG_WRITE_EN) | (1 << CONFIG_PD_D) |
-                     (1 << CONFIG_REFEN) | (0x3FF << CONFIG_REFDAC);
+    ADC_reg_config = (1 << CONFIG_WRITE_EN) | (1 << CONFIG_PD_D) | (1 << CONFIG_REFEN) | (0x3FF << CONFIG_REFDAC);
     // value of channel A doubles by dividing range by 2 (works as expected)
     // ADC_reg_config = (1 << CONFIG_WRITE_EN) | (1 << CONFIG_PD_D) | (1 <<
     // CONFIG_REFEN) | (0x3FF << CONFIG_REFDAC) | (1 << CONFIG_RANGE_A);
