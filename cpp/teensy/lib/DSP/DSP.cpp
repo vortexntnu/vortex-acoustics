@@ -104,7 +104,7 @@ q15_t* FFT_raw(q15_t* samples) {
     arm_rfft_init_q15(&fftInstance, SAMPLE_LENGTH, ifftFlag, doBitReverse);
 
     // Scale the samples for better contrasts.
-    arm_scale_q15(samples, SCALE_FACTOR, BITSHiFT, samples, SAMPLE_LENGTH);
+    arm_scale_q15(samples, SCALE_FACTOR, BITSHIFT, samples, SAMPLE_LENGTH);
 
     // The FFT itself, output is the FFT complex array
     arm_rfft_q15(&fftInstance, samples, resultsRaw);
@@ -137,7 +137,7 @@ we return the peaks:
     - Frequency
     - Phase shift
 */
-q31_t** peak_detection(q15_t* resultsRaw, q15_t* results, q15_t threshold) {
+q31_t** peak_detection(q15_t* resultsRaw, q15_t* results) {
     // Dynamically allocate the 2D array
     q31_t** peaks = new q31_t*[SAMPLE_LENGTH];
     for (int i = 0; i < SAMPLE_LENGTH; i++) {
@@ -203,7 +203,7 @@ q31_t** peak_detection(q15_t* resultsRaw, q15_t* results, q15_t threshold) {
     q15_t avgMedian = (resultsSort[(samplesOfInterest / 2) - 1] +
                        resultsSort[samplesOfInterest / 2]) /
                       2;
-    avgMedian += threshold;
+    avgMedian += PEAK_THRESHOLD;
 
     /*
     The next section is nothing short of a crime against all those who want

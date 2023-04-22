@@ -49,9 +49,6 @@ int16_t samplesRawHydrophone3[SAMPLE_LENGTH];
 int16_t samplesRawHydrophone4[SAMPLE_LENGTH];
 int16_t samplesRawHydrophone5[SAMPLE_LENGTH];
 
-// Variables for Digital Signal Processing ================================================== 
-// A manual variable to filter out small peaks that dont manage to get over the threshold
-const q15_t peakThreshold = 200;
 
 void setup() {
     Serial.begin(9600);
@@ -130,7 +127,7 @@ void setup() {
 
     // Get peaks of frequencies that might be of interest and their useful
     // information like amplitude, frequency and phase
-    q31_t** peaks = peak_detection(FFTResultsRaw, FFTResults, peakThreshold);
+    q31_t** peaks = peak_detection(FFTResultsRaw, FFTResults);
 
     /*
     Since we are storing the length of the array in the first index, we do
