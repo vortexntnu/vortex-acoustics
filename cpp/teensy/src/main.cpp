@@ -49,10 +49,17 @@ int16_t samplesRawHydrophone3[SAMPLE_LENGTH];
 int16_t samplesRawHydrophone4[SAMPLE_LENGTH];
 int16_t samplesRawHydrophone5[SAMPLE_LENGTH];
 
+<<<<<<< HEAD
+=======
+// Variables for Digital Signal Processing ==================================================
+// A manual variable to filter out small peaks that dont manage to get over the threshold
+const q15_t peakThreshold = 200;
+>>>>>>> 2b135a629537a30021d051019ccb2a531b53aa68
 
 void setup() {
     Serial.begin(9600);
-    while (!Serial);
+    while (!Serial)
+        ;
     Serial.println("Serial connected\r\n");
 
     // Start timer to see time it takes for everything to run
@@ -96,11 +103,21 @@ void setup() {
     Serial.println("=====================================================================================");
     Serial.println("Getting data");
     // Saving data into array we will use further down the line
-    for (uint16_t i = 0; i < number_samples; i++) {samplesRawHydrophone1[i] = (int16_t)adc::ChannelA0.get();}
-    for (uint16_t i = 0; i < number_samples; i++) {samplesRawHydrophone2[i] = (int16_t)adc::ChannelA1.get();}
-    for (uint16_t i = 0; i < number_samples; i++) {samplesRawHydrophone3[i] = (int16_t)adc::ChannelB0.get();}
-    for (uint16_t i = 0; i < number_samples; i++) {samplesRawHydrophone4[i] = (int16_t)adc::ChannelB1.get();}
-    for (uint16_t i = 0; i < number_samples; i++) {samplesRawHydrophone5[i] = (int16_t)adc::ChannelC0.get();}
+    for (uint16_t i = 0; i < number_samples; i++) {
+        samplesRawHydrophone1[i] = (int16_t)adc::ChannelA0.get();
+    }
+    for (uint16_t i = 0; i < number_samples; i++) {
+        samplesRawHydrophone2[i] = (int16_t)adc::ChannelA1.get();
+    }
+    for (uint16_t i = 0; i < number_samples; i++) {
+        samplesRawHydrophone3[i] = (int16_t)adc::ChannelB0.get();
+    }
+    for (uint16_t i = 0; i < number_samples; i++) {
+        samplesRawHydrophone4[i] = (int16_t)adc::ChannelB1.get();
+    }
+    for (uint16_t i = 0; i < number_samples; i++) {
+        samplesRawHydrophone5[i] = (int16_t)adc::ChannelC0.get();
+    }
     /*
         Do sample and process repeatedly:
             1: reset all the ringbuffer so that the new values are written from the start 
