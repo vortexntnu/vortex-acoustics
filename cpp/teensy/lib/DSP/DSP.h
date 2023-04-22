@@ -11,13 +11,12 @@
 #define BITSHIFT 9
 // How more pronounced the peaks of a frequencies will be in contrast with the lower
 // dont have it to high as this will make the noise have high peaks as well
-#define SCALE_FACTOR 1000.0 
+#define SCALE_FACTOR 1000.0
 // The upper frequency limit of the frequency band we actually want to check
-#define FREQUENCY_LIMIT 60000 
+#define FREQUENCY_LIMIT 60000
 
 // A manual variable to filter out small peaks that don't manage to get over the threshold, so called "fake peaks"
 #define PEAK_THRESHOLD 200
-
 
 q15_t* filter_butterwort_9th_order_50kHz(int16_t* samplesRaw);
 
