@@ -214,13 +214,8 @@ q31_t** peak_detection(q15_t* resultsRaw, q15_t* results) {
     values. We are aware the formatting is wonky, but that's how it
     has to be
     */
-<<<<<<< HEAD
     q15_t avgMedian = (resultsSort[(samplesOfInterest/2) - 1] + resultsSort[samplesOfInterest/2])/2;
     avgMedian += PEAK_THRESHOLD;
-=======
-    q15_t avgMedian = (resultsSort[(samplesOfInterest / 2) - 1] + resultsSort[samplesOfInterest / 2]) / 2;
-    avgMedian += threshold;
->>>>>>> 2b135a629537a30021d051019ccb2a531b53aa68
 
     /*
     The next section is nothing short of a crime against all those who want

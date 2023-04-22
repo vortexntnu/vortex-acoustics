@@ -49,12 +49,6 @@ int16_t samplesRawHydrophone3[SAMPLE_LENGTH];
 int16_t samplesRawHydrophone4[SAMPLE_LENGTH];
 int16_t samplesRawHydrophone5[SAMPLE_LENGTH];
 
-<<<<<<< HEAD
-=======
-// Variables for Digital Signal Processing ==================================================
-// A manual variable to filter out small peaks that dont manage to get over the threshold
-const q15_t peakThreshold = 200;
->>>>>>> 2b135a629537a30021d051019ccb2a531b53aa68
 
 void setup() {
     Serial.begin(9600);
