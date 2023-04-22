@@ -49,7 +49,6 @@ int16_t samplesRawHydrophone3[SAMPLE_LENGTH];
 int16_t samplesRawHydrophone4[SAMPLE_LENGTH];
 int16_t samplesRawHydrophone5[SAMPLE_LENGTH];
 
-
 void setup() {
     Serial.begin(9600);
     while (!Serial)
