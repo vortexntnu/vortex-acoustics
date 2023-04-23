@@ -10,10 +10,7 @@ void test_arm_lib() {
 }
 
 void test_correlation_with_simple_arrays() {
-    float32_t result_from_correlation_in_python[] = {
-        17.1,   49.74,  84.58,  113.87, 167.56, 192.7,  221.34,
-        251.39, 313.45, 251.39, 221.34, 192.7,  167.56, 113.87,
-        84.58,  49.74,  17.1,   0.,     0.,     0.,     0.};
+    float32_t result_from_correlation_in_python[] = {17.1, 49.74, 84.58, 113.87, 167.56, 192.7, 221.34, 251.39, 313.45, 251.39, 221.34, 192.7, 167.56, 113.87, 84.58, 49.74, 17.1, 0., 0., 0., 0.};
 
     float32_t arr1[] = {3.0, 5.2, 5.2, 6.7, 8.9, 2.0, 6.7, 6.7, 5.7, 0.0, 0.0};
     float32_t arr2[] = {0.0, 0.0, 3.0, 5.2, 5.2, 6.7, 8.9, 2.0, 6.7, 6.7, 5.7};
@@ -22,12 +19,9 @@ void test_correlation_with_simple_arrays() {
     int outputSize = 2 * inputSize - 1;
 
     float32_t result_from_correlation_on_teensy[outputSize];
-    arm_correlate_f32(arr1, inputSize, arr2, inputSize,
-                      result_from_correlation_on_teensy);
+    arm_correlate_f32(arr1, inputSize, arr2, inputSize, result_from_correlation_on_teensy);
 
-    TEST_ASSERT_EQUAL_FLOAT_ARRAY(result_from_correlation_in_python,
-                                  result_from_correlation_on_teensy,
-                                  outputSize);
+    TEST_ASSERT_EQUAL_FLOAT_ARRAY(result_from_correlation_in_python, result_from_correlation_on_teensy, outputSize);
 }
 
 void test_find_lag() {
@@ -41,14 +35,10 @@ void test_find_lag() {
 }
 
 void test_compute_tdoa_array() {
-    float32_t arr1[] = {3.0, 5.2, 5.2, 6.7, 8.9, 2.0, 6.7,
-                        6.7, 5.7, 0.0, 0.0, 0.0, 0.0};
-    float32_t arr2[] = {0.0, 3.0, 5.2, 5.2, 6.7, 8.9, 2.0,
-                        6.7, 6.7, 5.7, 0.0, 0.0, 0.0};
-    float32_t arr3[] = {0.0, 0.0, 3.0, 5.2, 5.2, 6.7, 8.9,
-                        2.0, 6.7, 6.7, 5.7, 0.0, 0.0};
-    float32_t arr4[] = {0.0, 0.0, 0.0, 3.0, 5.2, 5.2, 6.7,
-                        8.9, 2.0, 6.7, 6.7, 5.7, 0.0};
+    float32_t arr1[] = {3.0, 5.2, 5.2, 6.7, 8.9, 2.0, 6.7, 6.7, 5.7, 0.0, 0.0, 0.0, 0.0};
+    float32_t arr2[] = {0.0, 3.0, 5.2, 5.2, 6.7, 8.9, 2.0, 6.7, 6.7, 5.7, 0.0, 0.0, 0.0};
+    float32_t arr3[] = {0.0, 0.0, 3.0, 5.2, 5.2, 6.7, 8.9, 2.0, 6.7, 6.7, 5.7, 0.0, 0.0};
+    float32_t arr4[] = {0.0, 0.0, 0.0, 3.0, 5.2, 5.2, 6.7, 8.9, 2.0, 6.7, 6.7, 5.7, 0.0};
 
     uint32_t numberOfSignals = 4;
     uint32_t signalLength = sizeof(arr1) / sizeof(arr1[0]);
@@ -58,8 +48,7 @@ void test_compute_tdoa_array() {
     int32_t tdoaArray[numberOfSignals - 1];
     computeTdoaArray(signals, numberOfSignals, signalLength, tdoaArray);
 
-    int32_t expectedTdoaVaules[] = {
-        (signalLength - 1 - 1), (signalLength - 1 - 2), (signalLength - 1 - 3)};
+    int32_t expectedTdoaVaules[] = {(signalLength - 1 - 1), (signalLength - 1 - 2), (signalLength - 1 - 3)};
 
     TEST_ASSERT_EQUAL_INT32_ARRAY(expectedTdoaVaules, tdoaArray, 3);
 }

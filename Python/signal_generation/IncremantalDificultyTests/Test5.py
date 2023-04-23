@@ -23,17 +23,17 @@ In adition we can turn on and off noise
 # [frequency, amplitude, phase shift]/[kHz, dB, ms]
 freqAmpShift = numpy.array(
     [
-        [10.0, 0.10, 0.1],
-        [11.0, 0.08, 0.2],
-        [22.0, 0.06, 0.4],
-        [23.0, 0.24, 0.6],
-        [50.0, 0.10, 0.1],
+        [1.0, 0.20, 0.0],
+        [5.0, 0.20, 0.0],
+        [10.0, 0.20, 0.1],
+        [22.0, 0.30, 0.4],
+        [50.0, 0.30, 0.1],
     ]
 )
-waveNum = 20  # Number of waves you want to generate with the SMALEST frequency
+waveNum = 8  # Number of waves you want to generate with the SMALEST frequency
 noisActive = True  # Noise has effect when True, No noise when False
-noiseVariance = 0.001  # Variaty in noise
-noiseCliping = None  # Set a float value you want noise amplitude to be cliped. Set variable to "None" for no cliping of noise
+noiseVariance = 0.1  # Variaty in noise
+noiseCliping = 0.2  # Set a float value you want noise amplitude to be cliped. Set variable to "None" for no cliping of noise
 # ----------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------
