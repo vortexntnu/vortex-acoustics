@@ -25,7 +25,6 @@ const float32_t bFilterCoeffs[fOrder + 1] = {0.00000545381633879714, 0.000049084
 const float32_t aFilterCoeffs2[fOrder2] = {1.142934233, -0.412816189};
 const float32_t bFilterCoeffs2[fOrder2 + 1] = {0.0674536, 0.1349073, 0.0674536};
 
-
 /*
 Bit reversing is applied in a lot of FFT
 algorithms for increase efficiency.

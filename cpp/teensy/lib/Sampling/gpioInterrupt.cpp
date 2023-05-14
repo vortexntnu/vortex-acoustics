@@ -41,13 +41,9 @@ void ISR(void) /// this function is linked to interrupt IRQ_GPIO6789 (see below)
     NVIC_ENABLE_IRQ(IRQ_GPIO6789);
 }
 
-void setUpGpioISR(void_function_ptr function)
-{
-    isr_convert_func = function;
-}
+void setUpGpioISR(void_function_ptr function) { isr_convert_func = function; }
 
-void setup()
-{
+void setup() {
 #ifdef SERIAL_DEBUG
     Serial.printf("Setting up GPIO interrupts\n");
 #endif
@@ -81,9 +77,6 @@ void setup()
 }
 
 /// prints registers GDIR, IMR and ICR2 --> need to be checked what exactly is in there
-void dump_GPIO_interrupt_registers()
-{
-    Serial.printf("GDIR: 0x%X\nIMR: 0x%X\nICR2: 0x%X\n", GPIO8_GDIR, GPIO8_IMR, GPIO8_ICR2);
-}
+void dump_GPIO_interrupt_registers() { Serial.printf("GDIR: 0x%X\nIMR: 0x%X\nICR2: 0x%X\n", GPIO8_GDIR, GPIO8_IMR, GPIO8_ICR2); }
 
-}; // gpioInterrupt
+}; // namespace gpioInterrupt

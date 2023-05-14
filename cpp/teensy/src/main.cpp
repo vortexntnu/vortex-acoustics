@@ -29,7 +29,6 @@ Code written by: Vortex NTNU
 // Digital Signal Processing (DSP) Libraries
 #include "DSP.h"
 
-
 // Variables for Debugging ==========
 /*
 These are just to measure the time it takes to run the entire code.
@@ -39,11 +38,10 @@ unsigned long timeDiff;
 unsigned long startTime;
 unsigned long endTime;
 
-
 // Variables for Sampling ==========
 // to be safe should be a bit under 1500. If it sampled more than 1500 for some reason, the data gathered will be inconsistent.
 uint16_t number_samples = SAMPLE_LENGTH;
-uint32_t sample_period = 2.3; // >= MIN_SAMP_PERIOD_TIMER 
+uint32_t sample_period = 2.3; // >= MIN_SAMP_PERIOD_TIMER
 int16_t samplesRawHydrophone1[SAMPLE_LENGTH];
 int16_t samplesRawHydrophone2[SAMPLE_LENGTH];
 int16_t samplesRawHydrophone3[SAMPLE_LENGTH];
@@ -52,7 +50,8 @@ int16_t samplesRawHydrophone5[SAMPLE_LENGTH];
 
 void setup() {
     Serial.begin(9600);
-    while (!Serial);
+    while (!Serial)
+        ;
     Serial.println("Serial connected\r\n");
 
     // Sampling Setup (START) ====================================================================================================
@@ -65,7 +64,7 @@ void setup() {
     // Configure ADC
     adc::config(ADC_reg_config);
     adc::setup();
-    // Double check that the number of samples we want to take in doesn't overflow the ADC ring buffer space 
+    // Double check that the number of samples we want to take in doesn't overflow the ADC ring buffer space
     if (number_samples > 3 * SAMPLE_LENGTH_ADC) {
         number_samples = 3 * SAMPLE_LENGTH_ADC;
     }
@@ -75,34 +74,46 @@ void setup() {
 void loop() {
     // Start timer to see time it takes for everything to run
     startTime = micros();
-    
-    
+
     // Sampling (START) ====================================================================================================
     // Start sampling
     adc::startConversion(sample_period, adc::BLOCKING);
     // Start sampling into the buffer
     uint8_t buffer_to_check = adc::active_buffer;
-    while (!adc::buffer_filled[buffer_to_check]);
+    while (!adc::buffer_filled[buffer_to_check])
+        ;
     // Stop Sampling
     adc::stopConversion();
 
     // Process data from the ring-buffer
     // Saving data into array we will be used further down the line
-    for (uint16_t i = 0; i < number_samples; i++) {samplesRawHydrophone1[i] = (int16_t)adc::channel_buff_ptr[1][buffer_to_check][i];}
-    for (uint16_t i = 0; i < number_samples; i++) {samplesRawHydrophone2[i] = (int16_t)adc::channel_buff_ptr[2][buffer_to_check][i];}
-    for (uint16_t i = 0; i < number_samples; i++) {samplesRawHydrophone3[i] = (int16_t)adc::channel_buff_ptr[3][buffer_to_check][i];}
-    for (uint16_t i = 0; i < number_samples; i++) {samplesRawHydrophone4[i] = (int16_t)adc::channel_buff_ptr[4][buffer_to_check][i];}
-    for (uint16_t i = 0; i < number_samples; i++) {samplesRawHydrophone5[i] = (int16_t)adc::channel_buff_ptr[0][buffer_to_check][i];}
-    
+    for (uint16_t i = 0; i < number_samples; i++) {
+        samplesRawHydrophone1[i] = (int16_t)adc::channel_buff_ptr[1][buffer_to_check][i];
+    }
+    for (uint16_t i = 0; i < number_samples; i++) {
+        samplesRawHydrophone2[i] = (int16_t)adc::channel_buff_ptr[2][buffer_to_check][i];
+    }
+    for (uint16_t i = 0; i < number_samples; i++) {
+        samplesRawHydrophone3[i] = (int16_t)adc::channel_buff_ptr[3][buffer_to_check][i];
+    }
+    for (uint16_t i = 0; i < number_samples; i++) {
+        samplesRawHydrophone4[i] = (int16_t)adc::channel_buff_ptr[4][buffer_to_check][i];
+    }
+    for (uint16_t i = 0; i < number_samples; i++) {
+        samplesRawHydrophone5[i] = (int16_t)adc::channel_buff_ptr[0][buffer_to_check][i];
+    }
+
     // Clean ring-buffers
     // this is done so that next time we can add new data into the ring-buffers
-    for (uint8_t i = 0; i < BUFFER_PER_CHANNEL; i++) {adc::buffer_filled[i] = 0;}
+    for (uint8_t i = 0; i < BUFFER_PER_CHANNEL; i++) {
+        adc::buffer_filled[i] = 0;
+    }
     // Sampling (STOP) ====================================================================================================
 
     // Digital Signal Processing (START) ====================================================================================================
     // Filter raw samples
     q15_t* samplesFiltered = filter_butterwort_2th_order_50kHz(samplesRawHydrophone1);
-    
+
     // Preform FFT calculations on filtered samples
     q15_t* FFTResultsRaw = FFT_raw(samplesFiltered);
     q15_t* FFTResults = FFT_mag(FFTResultsRaw);
@@ -124,10 +135,8 @@ void loop() {
     */
     // Digital Signal Processing (STOP) ====================================================================================================
 
-
     // End timer for testing speed of algorithm
     endTime = micros();
-
 
     // Debugging (START) ====================================================================================================
     // Print out how long it takes to run the whole algorithm
@@ -147,7 +156,8 @@ void loop() {
     Serial.println("=====================================================================================");
     Serial.println("Raw data from hydrophone 1");
     for (uint16_t i = 0; i < number_samples; i++) {
-        Serial.print(samplesRawHydrophone1[i]);Serial.print(",");
+        Serial.print(samplesRawHydrophone1[i]);
+        Serial.print(",");
     }
 
     // Print Filtered signal response
@@ -155,7 +165,8 @@ void loop() {
     Serial.println("=====================================================================================");
     Serial.println("Filtered samples");
     for (int i = 0; i < SAMPLE_LENGTH; i++) {
-        Serial.print(samplesFiltered[i]);Serial.print(",");
+        Serial.print(samplesFiltered[i]);
+        Serial.print(",");
     }
 
     // Print FFT
@@ -163,7 +174,8 @@ void loop() {
     Serial.println("=====================================================================================");
     Serial.println("FFT");
     for (int i = 0; i < SAMPLE_LENGTH; i++) {
-        Serial.print(FFTResults[i]);Serial.print(",");
+        Serial.print(FFTResults[i]);
+        Serial.print(",");
     }
 
     // Print peaks of FFT
