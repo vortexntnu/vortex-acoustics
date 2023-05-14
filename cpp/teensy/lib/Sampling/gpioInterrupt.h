@@ -25,4 +25,4 @@ void setUpGpioISR(void_function_ptr function);
 void configPin(int pin, int mode); /// not implemented
 
 void dump_GPIO_interrupt_registers();
-}; // namespace gpioInterrupt
+};
