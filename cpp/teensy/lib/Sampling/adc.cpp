@@ -63,6 +63,8 @@ Repeat:
         ! min time between 2 CONVST rising edges: 240ns
 */
 
+uint8_t DMA_test_variable;
+
 namespace adc {
 
 ADC_sample_mode ADC_mode;
@@ -75,15 +77,42 @@ uint16_t testing_value_par;
 #endif
 
 RingBuffer_16bit ChannelA0 = RingBuffer_16bit();
-RingBuffer_16bit ChannelA1 = RingBuffer_16bit();
 RingBuffer_16bit ChannelB0 = RingBuffer_16bit();
+RingBuffer_16bit ChannelA1 = RingBuffer_16bit();
 RingBuffer_16bit ChannelB1 = RingBuffer_16bit();
 RingBuffer_16bit ChannelC0 = RingBuffer_16bit();
 RingBuffer_32bit sampleTime = RingBuffer_32bit();
 
+RingBuffer_32bit ChannelA0_DMA = RingBuffer_32bit();
+
 RingBuffer_16bit* ringbuffer_channels_ptr[5];
 
+sample_buff_3_1024 chanA0;
+sample_buff_3_1024 chanA1;
+sample_buff_3_1024 chanB0;
+sample_buff_3_1024 chanB1;
+sample_buff_3_1024 chanC0;
+
+time_buff_3_1024 timestamps;
+
+buffer_ptr channel_buff_ptr[5] = {chanA0, chanA1, chanB0, chanB1, chanC0};
+
+volatile uint8_t stop_sampling;
+
+volatile uint8_t active_buffer; // to know which one is being filled, [0, BUFFER_PER_CHANNEL-1]
+volatile uint16_t sample_index;
+volatile uint8_t buffer_filled[BUFFER_PER_CHANNEL]; // to know which have been filled with new values
+
 elapsedMicros stopwatch;
+uint32_t clk_cyc = 0;
+
+// * DMA ----------------------
+uint8_t _RD_reg_value = 1 << _RD;
+uint8_t vec_RD_values[5];
+
+DMAChannel dma1 = DMAChannel();
+DMAChannel dma2 = DMAChannel();
+DMAChannel dma3 = DMAChannel();
 
 // sets pins accordingly to value (no control signals)
 void write_ADC_par(uint16_t value);
@@ -100,18 +129,19 @@ void transferData(); // transfer data to ringbuffers.
 void read_loop();
 
 void init() {
-    gpio::set_normal_GPIO(1 << adc::_WR, _WR_GPIO_PORT_NORMAL);
-    gpio::set_normal_GPIO(1 << adc::_RD, _RD_GPIO_PORT_NORMAL);
-    gpio::set_normal_GPIO(1 << adc::_CS, _CS_GPIO_PORT_NORMAL);
-    gpio::set_normal_GPIO(1 << adc::BUSYINT, BUSYINT_GPIO_PORT_NORMAL);
-    gpio::set_normal_GPIO(1 << adc::HWSW, HWSW_GPIO_PORT_NORMAL);
-    gpio::set_normal_GPIO(1 << adc::PARSER, PARSER_GPIO_PORT_NORMAL);
-    gpio::set_normal_GPIO(1 << adc::XCLK, XCLK_GPIO_PORT_NORMAL);
-    gpio::set_normal_GPIO(1 << adc::STBY, STBY_GPIO_PORT_NORMAL);
-    gpio::set_normal_GPIO(1 << adc::CONVST, CONVST_GPIO_PORT_NORMAL);
-    gpio::set_normal_GPIO(1 << adc::RESET, RESET_GPIO_PORT_NORMAL);
+    // ! commented because we test with using the fast pins
+    // gpio::set_normal_GPIO(1 << adc::_WR, _WR_GPIO_PORT_NORMAL);
+    // gpio::set_normal_GPIO(1 << adc::_RD, _RD_GPIO_PORT_NORMAL);
+    // gpio::set_normal_GPIO(1 << adc::_CS, _CS_GPIO_PORT_NORMAL);
+    // gpio::set_normal_GPIO(1 << adc::BUSYINT, BUSYINT_GPIO_PORT_NORMAL);
+    // gpio::set_normal_GPIO(1 << adc::HWSW, HWSW_GPIO_PORT_NORMAL);
+    // gpio::set_normal_GPIO(1 << adc::PARSER, PARSER_GPIO_PORT_NORMAL);
+    // gpio::set_normal_GPIO(1 << adc::XCLK, XCLK_GPIO_PORT_NORMAL);
+    // gpio::set_normal_GPIO(1 << adc::STBY, STBY_GPIO_PORT_NORMAL);
+    // gpio::set_normal_GPIO(1 << adc::CONVST, CONVST_GPIO_PORT_NORMAL);
+    // gpio::set_normal_GPIO(1 << adc::RESET, RESET_GPIO_PORT_NORMAL);
 
-    gpio::set_normal_GPIO(0xFFFF0000, DB_GPIO_PORT_NORMAL);
+    // gpio::set_normal_GPIO(0xFFFF0000, DB_GPIO_PORT_NORMAL);
 
     // BUSYINT as input
     gpio::configPin(BUSYINT, 0, BUSYINT_GPIO_PORT_NORMAL);
@@ -165,36 +195,50 @@ void init() {
 
 // set up sampling
 void setup() {
-    clockSampling::setup(); /// the clockfrequency needs to be defined somewhere, does it need to be called also if adc is not init()
+    clock::setup(); /// the clockfrequency needs to be defined somewhere, does it need to be called also if adc is not init()
     PIT::setup();
 
-    // setting pointers for the ringbuffers
+    // ! setting pointers for the ringbuffers, maybe not used anymore
     ringbuffer_channels_ptr[0] = &ChannelA0;
     ringbuffer_channels_ptr[1] = &ChannelA1;
     ringbuffer_channels_ptr[2] = &ChannelB0;
     ringbuffer_channels_ptr[3] = &ChannelB1;
     ringbuffer_channels_ptr[4] = &ChannelC0;
 
+    active_buffer = 0;
+    for (uint8_t i = 0; i < BUFFER_PER_CHANNEL; i++) {
+        buffer_filled[i] = 0; // no sampling yet
+    }
+
     // experimental found values
-    PIT::setUpPeriodicISR(readData, clockSampling::get_clockcycles_nano(T_RDL * 20), PIT::PIT_1);
-    Serial.print("Clockcycles PIT1 : ");
-    Serial.println(clockSampling::get_clockcycles_nano(T_RDL * 20));
-    PIT::setUpPeriodicISR(next_RD, clockSampling::get_clockcycles_nano(T_RDH * 20), PIT::PIT_2);
-    Serial.print("Clockcycles PIT2 : ");
-    Serial.println(clockSampling::get_clockcycles_nano(T_RDH * 20));
+    PIT::setUpPeriodicISR(readData, clock::get_clockcycles_nano(T_RDL * 20), PIT::PIT_1);
+    // Serial.print("Clockcycles PIT1 : ");
+    // Serial.println(clock::get_clockcycles_nano(T_RDL * 20));
+    PIT::setUpPeriodicISR(next_RD, clock::get_clockcycles_nano(T_RDH * 20), PIT::PIT_2);
+    // Serial.print("Clockcycles PIT2 : ");
+    // Serial.println(clock::get_clockcycles_nano(T_RDH * 20));
     // ! connect beginRead() to BUSY/INT interrupt -> is done in trigger_conversion()
 }
 
 // is starting the major loop timer, PIT0 that will trigger the conversion until stopped
 // @sample_period_us : a conversion will happen every "sample_period_us" microseconds
-void startConversion(uint32_t sample_period_us, ADC_sample_mode sample_mode) {
-    Serial.println("Starting conversion");
+void startConversion(float sample_period_us, ADC_sample_mode sample_mode) {
+    // Serial.println("Starting conversion");
     // ? do it in one call?
-    // PIT::setUpPeriodicISR(triggerConversion, clockSampling::get_clockcycles_micro(1000000), PIT::PIT_0);
+    // PIT::setUpPeriodicISR(triggerConversion, clock::get_clockcycles_micro(1000000), PIT::PIT_0);
     // value found by trial and error.
 
+    sample_index = 0;
+    stop_sampling = 0;
+    // * to check if buffer needs to be set to 0.
+    active_buffer = 0;
+
+    gpio::write_pin(RESET, 1, RESET_GPIO_PORT_NORMAL);
+    delay(1);
+    gpio::write_pin(RESET, 0, RESET_GPIO_PORT_NORMAL);
+
     ADC_mode = sample_mode;
-    uint32_t bounded_period = sample_period_us;
+    float bounded_period = sample_period_us;
     switch (sample_mode) {
     case BLOCKING:
         if (sample_period_us < MIN_SAMP_PERIOD_BLOCKING) {
@@ -219,19 +263,23 @@ void startConversion(uint32_t sample_period_us, ADC_sample_mode sample_mode) {
     // {
     //     sample_period_us = MIN_SAMPLING_PERIOD;
     // }
-    PIT::setUpPeriodicISR(triggerConversion, clockSampling::get_clockcycles_micro(bounded_period), PIT::PIT_0);
+    PIT::setUpPeriodicISR(triggerConversion, clock::get_clockcycles_micro(bounded_period), PIT::PIT_0);
 
     PIT::startPeriodic(PIT::PIT_0); // will call triggerConversion
+    stopwatch = elapsedMicros();    // to see how much time per sample(in average)
 }
 
 void stopConversion() {
+    stop_sampling = 1;
     // no new conversion
     PIT::stopPeriodic(PIT::PIT_0);
     // to finish the ongoing reading
-    delayMicroseconds(100);
+    // delayMicroseconds(100);
     for (uint8_t i = 1; i < 3; i++) {
         PIT::stopPeriodic(i);
     }
+    detachInterrupt(BUSYINT_ARDUINO_PIN);
+
     gpio::write_pin(_RD, 1, _RD_GPIO_PORT_NORMAL);
     gpio::write_pin(CONVST, 0, CONVST_GPIO_PORT_NORMAL);
     gpio::write_pin(_CS, 1, _CS_GPIO_PORT_NORMAL);
@@ -246,13 +294,18 @@ void stopConversion() {
 void triggerConversion() {
     // Serial.println("t");
 
-    // ringbuffer with the timestamps
-    stopwatch = elapsedMicros();
-    sampleTime.insert(micros());
-
     // will pull the CONVST line high, that indicates to the adc to start conversion on all channels
-
+    // stopwatch = elapsedMicros();
+    // clk_cyc = ARM_DWT_CYCCNT;
     gpio::write_pin(CONVST, 1, CONVST_GPIO_PORT_NORMAL);
+    // adding timestamp
+    // timestamps[active_buffer][sample_index] = micros();
+    if (!stop_sampling) {
+        timestamps[active_buffer][sample_index] = ARM_DWT_CYCCNT;
+    }
+
+    // changing indexing to put data at right place is done at end of read loop
+    // ! not yet implemented with timers
 
     // enable interrupt on BUSY/INT pin
     switch (ADC_mode) {
@@ -265,8 +318,7 @@ void triggerConversion() {
     default:
         break;
     }
-    // * previous version
-    // attachInterrupt(digitalPinToInterrupt(BUSYINT_ARDUINO_PIN), beginRead, FALLING);
+    // clk_cyc = ARM_DWT_CYCCNT;
 }
 
 // resetting channels_processed and CONVST, continues with readData
@@ -297,9 +349,7 @@ void readData() {
     // Serial.println("r");
 
 #ifndef TESTING
-    // sampleData[channels_processed] = read_ADC_par(); /// sampledata len = 8, maybe change if not needed (readloop would only need len = 5)
     ringbuffer_channels_ptr[channels_processed]->insert(read_ADC_par());
-    // ringbuffer_channels_ptr[channels_processed]->insert(read_ADC_par());
 #endif
 #ifdef TESTING
     write_ADC_par(testing_value_par);
@@ -314,8 +364,8 @@ void readData() {
         stopRead();
     } else {
         // ! testing of faster way
-        //gpio::write_pin(_RD, 0, _RD_GPIO_PORT_NORMAL);
-        //PIT::startPeriodic(PIT::PIT_1);
+        // gpio::write_pin(_RD, 0, _RD_GPIO_PORT_NORMAL);
+        // PIT::startPeriodic(PIT::PIT_1);
 
         PIT::startPeriodic(PIT::PIT_2);
     }
@@ -338,8 +388,9 @@ void stopRead() {
 
     // timers are already off, no need to do anything
     gpio::write_pin(_CS, 1, _CS_GPIO_PORT_NORMAL);
+    // * to know how long it takes to read the channels
     // unsigned long time_to_read = stopwatch;
-    // Serial.print("time for 1 reading : ");
+    // Serial.print("time 1 read: ");
     // Serial.println(time_to_read);
     //  Serial.println("stop");
     // transferData();
@@ -354,29 +405,197 @@ void transferData() {
 }
 
 void read_loop() {
-    detachInterrupt(BUSYINT_ARDUINO_PIN);
+    // timestamps[active_buffer][sample_index] = ARM_DWT_CYCCNT - clk_cyc;
+    if (stop_sampling)
+        return;
+    NVIC_DISABLE_IRQ(IRQ_PIT);
+    // detachInterrupt(BUSYINT_ARDUINO_PIN);
 
     // no need to have CONVST high now
-    gpio::write_pin(CONVST, 0, CONVST_GPIO_PORT_NORMAL);
+    // * write both at the same time to go faster
+    IMXRT_GPIO7.DR_CLEAR = 1 << CONVST | 1 << _CS;
 
-    gpio::write_pin(_CS, 0, _CS_GPIO_PORT_NORMAL);
+    for (uint16_t hydroph = 0; hydroph < N_HYDROPHONES; hydroph++) {
+        // gpio::write_pin(_RD, 0, _RD_GPIO_PORT_NORMAL);
+        IMXRT_GPIO9.DR_CLEAR |= (1 << _RD);
+        // maybe not needed
+        // delayNanoseconds(T_RDL);
 
-    for (uint16_t i = 0; i < N_HYDROPHONES; i++) {
-        gpio::write_pin(_RD, 0, _RD_GPIO_PORT_NORMAL);
-        // should take at least 20ns to trigger timer
-        delayNanoseconds(T_RDL);
-
-        ringbuffer_channels_ptr[i]->insert(read_ADC_par());
-        gpio::write_pin(_RD, 1, _RD_GPIO_PORT_NORMAL);
-        // this is already enough delay for 2ns (toggeling takes more than 2ns)
-        // delayNanoseconds(20);
+        // ringbuffer_channels_ptr[i]->insert(read_ADC_par());
+        channel_buff_ptr[hydroph][active_buffer][sample_index] = read_ADC_par();
+        IMXRT_GPIO9.DR_SET |= (1 << _RD);
+        // gpio::write_pin(_RD, 1, _RD_GPIO_PORT_NORMAL);
+        //  this is already enough delay for 2ns (toggeling takes more than 2ns)
+        //  delayNanoseconds(20);
     }
 
-    gpio::write_pin(_CS, 1, _CS_GPIO_PORT_NORMAL);
-    unsigned long time_to_read = stopwatch;
-    // Serial.print("time for 1 reading : ");
+    _CS_GPIO_PORT_NORMAL.DR_SET |= (1 << _CS);
+
+    // timestamps[active_buffer][sample_index] = stopwatch;
+    // stopwatch = elapsedMicros();
+    sample_index++;
+    if (sample_index >= SAMPLE_LENGTH_ADC) {
+
+        // unsigned long time_to_read = stopwatch;
+
+        // updating global variables
+        buffer_filled[active_buffer] = 1;
+        sample_index = sample_index % SAMPLE_LENGTH_ADC;
+        active_buffer = (active_buffer + 1) % BUFFER_PER_CHANNEL;
+        buffer_filled[active_buffer] = 0;
+    }
+    // timestamps[active_buffer][sample_index] = ARM_DWT_CYCCNT - clk_cyc;
+    // unsigned long time_to_read = stopwatch;
+    // Serial.print("time 1 read: ");
     // Serial.println(time_to_read);
+    NVIC_ENABLE_IRQ(IRQ_PIT);
 }
+
+void sample_fasfb(uint16_t nb_samples) {
+    // resetting ADC to make sure it behaves the same
+    gpio::write_pin(RESET, 1, RESET_GPIO_PORT_NORMAL);
+    delay(10);
+    gpio::write_pin(RESET, 0, RESET_GPIO_PORT_NORMAL);
+    delay(100);
+
+    uint32_t slack_variable;
+    stopwatch = elapsedMicros();
+    elapsedMicros sampling_delta_time = elapsedMicros();
+
+    uint32_t clk_cyc = 0;
+
+    //! decide what to do with data sampled before
+    active_buffer = 0;
+    for (uint8_t i = 0; i < BUFFER_PER_CHANNEL; i++) {
+        buffer_filled[i] = 0; // no sampling yet
+    }
+
+    // taking the number of wanted samples, with no delay
+    for (uint16_t iiint = 0; iiint < nb_samples; iiint++) {
+        if (iiint >= SAMPLE_LENGTH_ADC * (1 + active_buffer)) {
+            active_buffer = (active_buffer + 1) % 3;
+        }
+        // Serial.print("Active buffer : ");
+        // Serial.print(active_buffer);
+        // Serial.print(",    current index : ");
+        // Serial.println(iiint % SAMPLE_LENGTH_ADC);
+        // clk_cyc = ARM_DWT_CYCCNT;
+
+        // will pull the CONVST line high, that indicates to the adc to start conversion on all channels
+        gpio::write_pin(CONVST, 1, CONVST_GPIO_PORT_NORMAL);
+        // gpio::write_pin(CONVST, 1, CONVST_GPIO_PORT_NORMAL);
+        // CONVST_GPIO_PORT_NORMAL.DR_SET |= 1 << CONVST;
+        // ringbuffer with the timestamps
+        // takes a shit load of time (or maybe not)
+        // sampleTime.insert(micros()); // should take enough so that the BUSY pin is high
+        // millis();
+        // sampleTime.insert(sampling_delta_time);
+        // sampleTime.insert(ARM_DWT_CYCCNT);
+        // sampleTime.insert(3);
+
+        // sampling_delta_time = elapsedMicros();
+        // ! Really important to have a delay before polling BUSY pin, otherwise it is still low and code continues
+
+        // sampleTime.insert(micros());
+        // !
+        timestamps[active_buffer][iiint % SAMPLE_LENGTH_ADC] = micros();
+
+        delayNanoseconds(20);
+        // to make sure the pin goes high
+        // while (!gpio::read_pin(BUSYINT, BUSYINT_GPIO_PORT_NORMAL))
+        // {
+        //     ;
+        // }
+
+        // waiting for the busy pin to go low again
+        while (gpio::read_pin(BUSYINT, BUSYINT_GPIO_PORT_NORMAL))
+            ;
+        delayNanoseconds(10);
+
+        // clk_cyc = 1;
+        // slack_variable = clk_cyc;
+        // clk_cyc = 2;
+        // clk_cyc = ARM_DWT_CYCCNT;
+        // delayNanoseconds(500);
+
+        // gpio::write_pin(CONVST, 0, CONVST_GPIO_PORT_NORMAL);
+        // gpio::write_pin(_CS, 0, _CS_GPIO_PORT_NORMAL);
+        // * write both at the same time to go faster
+        IMXRT_GPIO7.DR_CLEAR = 1 << CONVST | 1 << _CS;
+        // gpio::write_port(0, IMXRT_GPIO7, 1 << CONVST | 1 << _CS);
+
+        for (uint16_t hydroph = 0; hydroph < N_HYDROPHONES; hydroph++) {
+            // gpio::write_pin(_RD, 0, _RD_GPIO_PORT_NORMAL);
+            IMXRT_GPIO9.DR_CLEAR |= (1 << _RD);
+            // 20ns for data to be valid
+            // delayNanoseconds(T_RDL);
+            // gpio::write_pin(_RD, 0, _RD_GPIO_PORT_NORMAL);
+            // IMXRT_GPIO9.DR_CLEAR |= (1 << _RD);
+            // delayNanoseconds(10);
+
+            // Serial.print(",");
+            // Serial.print(read_ADC_par());
+            // ringbuffer_channels_ptr[i]->insert(read_ADC_par());
+            // !
+            channel_buff_ptr[hydroph][active_buffer][iiint % SAMPLE_LENGTH_ADC] = read_ADC_par();
+            // read_ADC_par();
+            // gpio::write_pin(_RD, 1, _RD_GPIO_PORT_NORMAL);
+            IMXRT_GPIO9.DR_SET |= (1 << _RD);
+
+            // this is already enough delay for 2ns (toggeling takes more than 2ns)
+            // delayNanoseconds(10);
+        }
+        //!
+        // Serial.println("");
+        // * without the loop:
+        // IMXRT_GPIO9.DR_CLEAR |= (1 << _RD);
+        // IMXRT_GPIO9.DR_CLEAR |= (1 << _RD);
+        // ringbuffer_channels_ptr[0]->insert(read_ADC_par());
+        // IMXRT_GPIO9.DR_SET |= (1 << _RD);
+        // ARM_DWT_CYCCNT;
+
+        // IMXRT_GPIO9.DR_CLEAR |= (1 << _RD);
+        // IMXRT_GPIO9.DR_CLEAR |= (1 << _RD);
+        // ringbuffer_channels_ptr[1]->insert(read_ADC_par());
+        // IMXRT_GPIO9.DR_SET |= (1 << _RD);
+        // ARM_DWT_CYCCNT;
+
+        // IMXRT_GPIO9.DR_CLEAR |= (1 << _RD);
+        // IMXRT_GPIO9.DR_CLEAR |= (1 << _RD);
+        // ringbuffer_channels_ptr[2]->insert(read_ADC_par());
+        // IMXRT_GPIO9.DR_SET |= (1 << _RD);
+        // ARM_DWT_CYCCNT;
+
+        // IMXRT_GPIO9.DR_CLEAR |= (1 << _RD);
+        // IMXRT_GPIO9.DR_CLEAR |= (1 << _RD);
+        // ringbuffer_channels_ptr[3]->insert(read_ADC_par());
+        // IMXRT_GPIO9.DR_SET |= (1 << _RD);
+        // ARM_DWT_CYCCNT;
+
+        // IMXRT_GPIO9.DR_CLEAR |= (1 << _RD);
+        // IMXRT_GPIO9.DR_CLEAR |= (1 << _RD);
+        // ringbuffer_channels_ptr[4]->insert(read_ADC_par());
+        // IMXRT_GPIO9.DR_SET |= (1 << _RD);
+        // * end of instead loop
+
+        // gpio::write_pin(_CS, 1, _CS_GPIO_PORT_NORMAL);
+        _CS_GPIO_PORT_NORMAL.DR_SET |= (1 << _CS);
+        // delayNanoseconds(1000);
+        // sampleTime.insert(ARM_DWT_CYCCNT - clk_cyc);
+
+        // ! testing memory issues
+        // transferData();
+
+        // delayNanoseconds(25);
+        // sampleTime.insert(ARM_DWT_CYCCNT - clk_cyc);
+    }
+
+    unsigned long time_to_read = stopwatch;
+    // Serial.print("Average reading time per sample: ");
+    // Serial.println(time_to_read / (float)nb_samples);
+    // Serial.println(slack_variable);
+}
+
 /**
       @brief configures the internal 32-bit config register of the ADC
       @param reg_val: value of the 32bit register
@@ -432,9 +651,11 @@ void setting_up_timers_DMA() {
     Serial.print("FBUSACTUAL : ");
     Serial.println(F_BUS_ACTUAL);
     comp1load[0] = 0xFFFF;
-    (uint16_t)((float)F_BUS_ACTUAL * (float)2);
-    comp1load[1] = (uint16_t)((float)F_BUS_ACTUAL * (float)1);
-    comp1load[2] = (uint16_t)((float)F_BUS_ACTUAL * (float)1);
+    // (uint16_t)((float)F_BUS_ACTUAL * (float)2);
+    // comp1load[1] = (uint16_t)((float)F_BUS_ACTUAL * (float)1);
+    // comp1load[2] = (uint16_t)((float)F_BUS_ACTUAL * (float)1);
+    comp1load[1] = 0x3FFF;
+    comp1load[2] = 0xEFFF;
     // in the Octo library:
     // 1: THTL total duraction for one pulse
     // 2: T0H the time after the GPIO needs to be LOW for a zero
@@ -480,11 +701,12 @@ void setting_up_timers_DMA() {
 
     // route the timer outputs through XBAR to edge trigger DMA request
 
-    CCM_CCGR2 |= CCM_CCGR2_XBAR1(CCM_CCGR_ON); // enabling clock (probably)
+    CCM_CCGR2 |= CCM_CCGR2_XBAR1(CCM_CCGR_ON); // enabling clock for x_bar
     xbar_connect(XBARA1_IN_QTIMER4_TIMER0, XBARA1_OUT_DMA_CH_MUX_REQ30);
     xbar_connect(XBARA1_IN_QTIMER4_TIMER1, XBARA1_OUT_DMA_CH_MUX_REQ31);
     xbar_connect(XBARA1_IN_QTIMER4_TIMER2, XBARA1_OUT_DMA_CH_MUX_REQ94);
     // don't know, p. 3271
+    // enable edge detection, detects both edges, enables DMA request
     XBARA1_CTRL0 = XBARA_CTRL_STS1 | XBARA_CTRL_EDGE1(3) | XBARA_CTRL_DEN1 | XBARA_CTRL_STS0 | XBARA_CTRL_EDGE0(3) | XBARA_CTRL_DEN0;
     XBARA1_CTRL1 = XBARA_CTRL_STS0 | XBARA_CTRL_EDGE0(3) | XBARA_CTRL_DEN0;
 
@@ -492,10 +714,17 @@ void setting_up_timers_DMA() {
 }
 
 void setting_up_DMA_channels() {
+    DMA_test_variable = 0;
+    for (uint8_t i = 0; i < 5; i++) {
+        vec_RD_values[i] = _RD_reg_value;
+    }
+
+    Serial.print("Value of setting value : ");
+    Serial.println(_RD_reg_value);
     // configure DMA channels
     // dma1.begin();
-    // dma1.sourceAddress();
-    // dma1.destinationAddress();
+    // dma1.source(&);
+    // dma1.destination();
     // dma1.TCD->SADDR = bitmask;
     // dma1.TCD->SOFF = 8;
     // dma1.TCD->ATTR = DMA_TCD_ATTR_SSIZE(3) | DMA_TCD_ATTR_SMOD(4) | DMA_TCD_ATTR_DSIZE(2);
@@ -527,10 +756,15 @@ void setting_up_DMA_channels() {
     // dma2.TCD->CSR = 0;
 
     // dma2.begin();
-    // dma2.triggerAtHardwareEvent(DMAMUX_SOURCE_XBAR1_1);
+    dma2.sourceBuffer(vec_RD_values, 5);
+    // dma2.destination(_RD_GPIO_PORT_NORMAL.DR_SET);
+    dma2.destination(DMA_test_variable);
+    dma2.triggerAtHardwareEvent(DMAMUX_SOURCE_XBAR1_1);
     // dma2.attachInterrupt(isr);
 
     // dma3.begin();
+    dma3.source(_RD_reg_value);
+    dma3.destination(DMA_test_variable);
     // dma3.TCD->SADDR = bitmask;
     // dma3.TCD->SOFF = 8;
     // dma3.TCD->ATTR = DMA_TCD_ATTR_SSIZE(3) | DMA_TCD_ATTR_SMOD(4) | DMA_TCD_ATTR_DSIZE(2);
@@ -545,6 +779,9 @@ void setting_up_DMA_channels() {
     // dma3.TCD->BITER_ELINKNO = numbytes * 8;
     // dma3.TCD->CSR = DMA_TCD_CSR_DREQ | DMA_TCD_CSR_DONE;
     // // p.58
-    // dma3.triggerAtHardwareEvent(DMAMUX_SOURCE_XBAR1_2);
+    dma3.triggerAtHardwareEvent(DMAMUX_SOURCE_XBAR1_2);
+
+    dma2.enable();
+    dma3.enable();
 }
 }; // namespace adc

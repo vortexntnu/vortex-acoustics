@@ -30,32 +30,30 @@ void dumpPeriodicRegisters() {
 
 void ISR() {
     NVIC_DISABLE_IRQ(IRQ_PIT);
-
-    // making sure it is not an empty pointer that would crash the programm
-    if (PIT_TFLG3 && isr_funct_table[3] != nullptr) { // bit 0 of this register: interupt pending
-        PIT_TFLG3 = 0x1;
-        //(*isr_periodic_func3)();
-        (*isr_funct_table[3])();
-    }
-
-    if (PIT_TFLG2 && isr_funct_table[2] != nullptr) { // bit 0 of this register: interupt pending
-        PIT_TFLG2 = 0x1;
-        //(*isr_periodic_func3)();
-        (*isr_funct_table[2])();
-    }
-
-    if (PIT_TFLG1 && isr_funct_table[1] != nullptr) { // bit 0 of this register: interupt pending
-        PIT_TFLG1 = 0x1;
-        //(*isr_periodic_func3)();
-        // Serial.println("1");
-        (*isr_funct_table[1])();
-    }
-
     if (PIT_TFLG0 && isr_funct_table[0] != nullptr) { // bit 0 of this register: interupt pending
         PIT_TFLG0 = 0x1;
         // Serial.println("0");
         //(*isr_periodic_func3)();
         (*isr_funct_table[0])();
+    }
+    // making sure it is not an empty pointer that would crash the programm
+    else if (PIT_TFLG3 && isr_funct_table[3] != nullptr) { // bit 0 of this register: interupt pending
+        PIT_TFLG3 = 0x1;
+        //(*isr_periodic_func3)();
+        (*isr_funct_table[3])();
+    }
+
+    else if (PIT_TFLG2 && isr_funct_table[2] != nullptr) { // bit 0 of this register: interupt pending
+        PIT_TFLG2 = 0x1;
+        //(*isr_periodic_func3)();
+        (*isr_funct_table[2])();
+    }
+
+    else if (PIT_TFLG1 && isr_funct_table[1] != nullptr) { // bit 0 of this register: interupt pending
+        PIT_TFLG1 = 0x1;
+        //(*isr_periodic_func3)();
+        // Serial.println("1");
+        (*isr_funct_table[1])();
     }
 
     NVIC_ENABLE_IRQ(IRQ_PIT);

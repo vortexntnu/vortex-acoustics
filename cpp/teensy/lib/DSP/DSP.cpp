@@ -13,6 +13,7 @@ q15_t q15_taylor_atan(q15_t x);
 // indexes of indexes, go to the h file
 const q15_t samplesOfInterest = FREQUENCY_LIMIT * SAMPLE_LENGTH / SAMPLE_RATE;
 const int fOrder = 9;
+const int fOrder2 = 2;
 
 /*
 Coefficients for filter found at https://www.meme.net.au/butterworth.html,
@@ -20,6 +21,9 @@ put 9th order filter, 510kHz sampling rate and 50kHz cut-off
 */
 const float32_t aFilterCoeffs[fOrder] = {5.4569203401896500, -13.7047980216478000, 20.6476635308150000, -20.4748421533297000, 13.8143215886326000, -6.3261752484730100, 1.8924462642157100, -0.3350397779275800, 0.0267111235596287};
 const float32_t bFilterCoeffs[fOrder + 1] = {0.00000545381633879714, 0.00004908434704917420, 0.00019633738819669700, 0.00045812057245895900, 0.00068718085868843900, 0.00068718085868843900, 0.00045812057245895900, 0.00019633738819669700, 0.00004908434704917420, 0.00000545381633879714};
+
+const float32_t aFilterCoeffs2[fOrder2] = {1.142934233, -0.412816189};
+const float32_t bFilterCoeffs2[fOrder2 + 1] = {0.0674536, 0.1349073, 0.0674536};
 
 /*
 Bit reversing is applied in a lot of FFT
@@ -60,7 +64,49 @@ q15_t* filter_butterwort_9th_order_50kHz(int16_t* samplesRaw) {
         /* We iterate through the previous unfilteredsamples for the
         filtering, as it is more clean and convenient.*/
         for (int k = 0; k < fOrder + 1; k++) {
-            input_influence += bFilterCoeffs[k] * samplesRaw[i - k];
+            input_influence += bFilterCoeffs[k] * (samplesRaw[i - k] * FILTER_AMPLIFICATION);
+        }
+
+        float influenceTotalFloat = output_influence + input_influence;
+
+        // Convert float to q15 datatype in the correct way
+        q15_t influenceTotalQ15 = (q15_t)influenceTotalFloat;
+        samples[i] = influenceTotalQ15;
+    }
+    return samples;
+}
+
+q15_t* filter_butterwort_2th_order_50kHz(int16_t* samplesRaw) {
+    Serial.println("TestFilter");
+    // Create array to store the filtered samples
+    static q15_t samples[SAMPLE_LENGTH];
+
+    /*
+    Implement Butterwort filter of "fOrder"
+    y = (a_1 * y_1 + .... + a_n * y_n) + (b_1 * x_1 + ... b_m * x_m)
+    Se Wiki:
+    http://vortex.a2hosted.com/index.php/Acoustics_Digital_Signal_Processing_(DSP)
+    Se source: https://www.meme.net.au/butterworth.html
+    */
+
+    /*
+    Iterate through each index of the raw samples, and apply filtering to
+    them. Starting at fOrder2 because we can't use an index outside of the
+    samples array.
+    */
+    for (int i = fOrder2; i < SAMPLE_LENGTH; i++) {
+        float32_t output_influence = 0;
+        /* We iterate through the previous filtered samples for the
+        filtering, as it is more clean and convenient. */
+        for (int k = 0; k < fOrder2; k++) {
+            output_influence += aFilterCoeffs2[k] * samples[i - (k + 1)];
+        }
+
+        float32_t input_influence = 0;
+        /* We iterate through the previous unfilteredsamples for the
+        filtering, as it is more clean and convenient.*/
+        for (int k = 0; k < fOrder2 + 1; k++) {
+            input_influence += bFilterCoeffs2[k] * (samplesRaw[i - k] * FILTER_AMPLIFICATION);
         }
 
         float influenceTotalFloat = output_influence + input_influence;

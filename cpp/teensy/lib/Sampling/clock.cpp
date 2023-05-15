@@ -1,6 +1,6 @@
 #include "clock.h"
 
-namespace clockSampling {
+namespace clock {
 uint32_t PITclockFreq;
 
 #ifdef SERIAL_DEBUG
@@ -46,8 +46,8 @@ void setup() {
 #endif
 }
 
-uint32_t get_clockcycles_micro(uint32_t microseconds) { return microseconds * (PITclockFreq / 1000000.0); }
+uint32_t get_clockcycles_micro(float microseconds) { return microseconds * (PITclockFreq / 1000000.0); }
 
-uint32_t get_clockcycles_nano(uint32_t nanoseconds) { return nanoseconds * (PITclockFreq / 1000000000.0); }
+uint32_t get_clockcycles_nano(float nanoseconds) { return nanoseconds * (PITclockFreq / 1000000000.0); }
 
-}; // namespace clockSampling
+}; // namespace clock
