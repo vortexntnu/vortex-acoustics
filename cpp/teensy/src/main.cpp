@@ -29,24 +29,27 @@ Code written by: Vortex NTNU
 // Digital Signal Processing (DSP) Libraries
 #include "DSP.h"
 
-// Variables for Debugging ==========
-/*
-These are just to measure the time it takes to run the entire code.
-The new calculations show 13300 us (micro seconds) (13.3 ms) for the whole algorithm
-*/
-unsigned long timeDiff;
-unsigned long startTime;
-unsigned long endTime;
 
-// Variables for Sampling ==========
-// to be safe should be a bit under 1500. If it sampled more than 1500 for some reason, the data gathered will be inconsistent.
-uint16_t number_samples = SAMPLE_LENGTH;
-uint32_t sample_period = 2.3; // >= MIN_SAMP_PERIOD_TIMER
-int16_t samplesRawHydrophone1[SAMPLE_LENGTH];
-int16_t samplesRawHydrophone2[SAMPLE_LENGTH];
-int16_t samplesRawHydrophone3[SAMPLE_LENGTH];
-int16_t samplesRawHydrophone4[SAMPLE_LENGTH];
-int16_t samplesRawHydrophone5[SAMPLE_LENGTH];
+
+
+
+// Libraries for ethernet
+#include <Ethernet.h>
+#include <EthernetUdp.h>
+
+// Variables that should be in .h file ==========
+// MAC address for every device must be different in every network
+byte macAddressTeensy[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
+// Necessary networking variables for Teensy to be part of the network
+IPAddress ipAddressTeensy(10, 0, 0, 1);
+unsigned int localPort = 8888;
+
+// Variables that should be in .cpp file ==========
+// buffers for receiving and sending data
+char receiveBuffer[UDP_TX_PACKET_MAX_SIZE];
+char replyBuffer[] = "acknowledged";
+// An EthernetUDP instance to let us send and receive packets over UDP
+EthernetUDP Udp;
 
 void setup() {
     Serial.begin(9600);
@@ -54,158 +57,55 @@ void setup() {
         ;
     Serial.println("Serial connected\r\n");
 
-    // Sampling Setup (START) ====================================================================================================
-    // initializing ADC before being able to use it
-    Serial.println("Initialize ADC");
-    adc::init();
-    // Setup parameters for ADC
-    uint32_t ADC_reg_config;
-    ADC_reg_config = (1 << CONFIG_WRITE_EN) | (1 << CONFIG_PD_D) | (1 << CONFIG_REFEN) | (0x3FF << CONFIG_REFDAC) | (1 << CONFIG_VREF);
-    // Configure ADC
-    adc::config(ADC_reg_config);
-    adc::setup();
-    // Double check that the number of samples we want to take in doesn't overflow the ADC ring buffer space
-    if (number_samples > 3 * SAMPLE_LENGTH_ADC) {
-        number_samples = 3 * SAMPLE_LENGTH_ADC;
+    // start the Ethernet
+    Serial.println("Connecting to network");
+    Ethernet.begin(macAddressTeensy, ipAddressTeensy);
+
+    // Check that the port is available
+    if (Udp.begin(localPort)) {
+        Serial.println("SUCCESS! Connected to network");
     }
-    // Sampling Setup (STOP) ====================================================================================================
+    else {
+        Serial.println("FAILED could not connect to network");
+    }
 }
 
 void loop() {
-    // Start timer to see time it takes for everything to run
-    startTime = micros();
+   // if there's data available, read a packet
+  int packetSize = Udp.parsePacket();
 
-    // Sampling (START) ====================================================================================================
-    // Start sampling
-    adc::startConversion(sample_period, adc::BLOCKING);
-    // Start sampling into the buffer
-    uint8_t buffer_to_check = adc::active_buffer;
-    while (!adc::buffer_filled[buffer_to_check])
-        ;
-    // Stop Sampling
-    adc::stopConversion();
+  if (packetSize) {
+    // Get packet size
+    Serial.print("Received packet of size ");Serial.print(packetSize);
+    Serial.println();
 
-    // Process data from the ring-buffer
-    // Saving data into array we will be used further down the line
-    for (uint16_t i = 0; i < number_samples; i++) {
-        samplesRawHydrophone1[i] = (int16_t)adc::channel_buff_ptr[1][buffer_to_check][i];
+    // Get senders IP
+    IPAddress remoteIP = Udp.remoteIP();
+    Serial.print("From: ");
+    for (int i=0; i < 4; i++) {
+      Serial.print(remoteIP[i], DEC);
+      if (i < 3) {
+        Serial.print(".");
+      }
     }
-    for (uint16_t i = 0; i < number_samples; i++) {
-        samplesRawHydrophone2[i] = (int16_t)adc::channel_buff_ptr[2][buffer_to_check][i];
-    }
-    for (uint16_t i = 0; i < number_samples; i++) {
-        samplesRawHydrophone3[i] = (int16_t)adc::channel_buff_ptr[3][buffer_to_check][i];
-    }
-    for (uint16_t i = 0; i < number_samples; i++) {
-        samplesRawHydrophone4[i] = (int16_t)adc::channel_buff_ptr[4][buffer_to_check][i];
-    }
-    for (uint16_t i = 0; i < number_samples; i++) {
-        samplesRawHydrophone5[i] = (int16_t)adc::channel_buff_ptr[0][buffer_to_check][i];
-    }
+    Serial.println();
 
-    // Clean ring-buffers
-    // this is done so that next time we can add new data into the ring-buffers
-    for (uint8_t i = 0; i < BUFFER_PER_CHANNEL; i++) {
-        adc::buffer_filled[i] = 0;
-    }
-    // Sampling (STOP) ====================================================================================================
+    // Get senders port
+    IPAddress remotePort = Udp.remotePort();
+    Serial.print("Port: ");Serial.print(remotePort);
+    Serial.println();
 
-    // Digital Signal Processing (START) ====================================================================================================
-    // Filter raw samples
-    q15_t* samplesFiltered = filter_butterwort_2th_order_50kHz(samplesRawHydrophone1);
+    // read the message into buffer
+    Udp.read(receiveBuffer, UDP_TX_PACKET_MAX_SIZE);
+    Serial.println("Contents:");
+    Serial.println(receiveBuffer);
 
-    // Preform FFT calculations on filtered samples
-    q15_t* FFTResultsRaw = FFT_raw(samplesFiltered);
-    q15_t* FFTResults = FFT_mag(FFTResultsRaw);
+    // send a message back to the IP address and port that sent us the message
+    Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
+    Udp.write(replyBuffer);
+    Udp.endPacket();
+  }
 
-    // Get peaks of frequencies that might be of interest and their useful information like amplitude, frequency and phase
-    q31_t** peaks = peak_detection(FFTResultsRaw, FFTResults);
-
-    /*
-    Since we are storing the length of the array in the first index, we do not start from 0 in the array when printing out. 
-    Find out how to get length of a 2D array of a q31_t datatype. 
-    For now we return the length of the array in the first index of 2D array, This must be solved
-    this is NOT a good solution.
-    */
-    int lengthOfPeakArray = peaks[0][0];
-
-    /*
-    TIPS: For getting phase of the peak FFTs from q31 format that we dont understand to radians in floats, use this:
-    phaseQ31_to_radianFloat32(peaks[x][2]);
-    */
-    // Digital Signal Processing (STOP) ====================================================================================================
-
-    // End timer for testing speed of algorithm
-    endTime = micros();
-
-    // Debugging (START) ====================================================================================================
-    // Print out how long it takes to run the whole algorithm
-    Serial.println("");
-    Serial.println("=====================================================================================");
-    Serial.println("Timer");
-    timeDiff = endTime - startTime;
-    Serial.print("StartTime: ");
-    Serial.println(startTime);
-    Serial.print("EndTime: ");
-    Serial.println(endTime);
-    Serial.print("Time: ");
-    Serial.println(timeDiff);
-
-    // Print raw sampled signal
-    Serial.println("");
-    Serial.println("=====================================================================================");
-    Serial.println("Raw data from hydrophone 1");
-    for (uint16_t i = 0; i < number_samples; i++) {
-        Serial.print(samplesRawHydrophone1[i]);
-        Serial.print(",");
-    }
-
-    // Print Filtered signal response
-    Serial.println("");
-    Serial.println("=====================================================================================");
-    Serial.println("Filtered samples");
-    for (int i = 0; i < SAMPLE_LENGTH; i++) {
-        Serial.print(samplesFiltered[i]);
-        Serial.print(",");
-    }
-
-    // Print FFT
-    Serial.println("");
-    Serial.println("=====================================================================================");
-    Serial.println("FFT");
-    for (int i = 0; i < SAMPLE_LENGTH; i++) {
-        Serial.print(FFTResults[i]);
-        Serial.print(",");
-    }
-
-    // Print peaks of FFT
-    Serial.println("");
-    Serial.println("=====================================================================================");
-    Serial.println("Peaks");
-    Serial.println(lengthOfPeakArray);
-    Serial.println("[Amplitude, Frequency, Phase in radians]");
-    for (int i = 1; i < lengthOfPeakArray; i++) {
-        Serial.print("[");
-        Serial.print(peaks[i][0]);
-        Serial.print(", ");
-        Serial.print(peaks[i][1]);
-        Serial.print(", ");
-
-        // Calculate phase in comprehensible manner
-        // peaks[i][2] is q31_t type but in the taylor expansion it is actually
-        // q15_t, the rest of the 16 MSB are just 0, The reason it is q31_t is
-        // just because we send it with all the frequencies, witch are really
-        // big and require q31_t to be stored properly
-        float32_t phase_in_radians = phaseQ31_to_radianFloat32(peaks[i][2]);
-
-        Serial.print(phase_in_radians);
-
-        Serial.println("],");
-    }
-
-    // 20 second delay
-    // This is here just so that we can observe data with human eyes and copy it
-    // Because other wise it goes to fast
-    delay(20000);
-    // Debugging (STOP) ====================================================================================================
+  // Wait for 10 seconds
+  delay(10000);
 }
