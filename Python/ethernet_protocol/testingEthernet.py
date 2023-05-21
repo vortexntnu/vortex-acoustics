@@ -11,7 +11,7 @@ address = (HOST, PORT)
 # Code words
 SEND_FREQUENCY = "sf" # Send frequency to look for and variance
 GET_HYDROPHONE_DATA = "gh" # Get all 5 hydrophone raw sample data
-GET_DSP_DATA = "gd" # Det raw data, filtered data, FFT and all the Peaks
+GET_DSP_DATA = "gd" # Get Digital Signal Processing data -> raw data, filtered data, FFT data and peak data
 
 # Socket setup
 clientSocket = socket(AF_INET, SOCK_DGRAM)
