@@ -46,7 +46,7 @@ namespace ethernetModule {
         return UDPReceiveBuffer;
     }
 
-    void UDP_send_message(char* UDPReplyBuffer) {
+    void UDP_send_message(char* UDPReplyBuffer, int16_t sizeOfMessage) {
         // Temporary variable for later use
         byte tempByte;
 
@@ -56,12 +56,10 @@ namespace ethernetModule {
 
         // Start sending data
         Udp.beginPacket(remoteIP, remotePort);
-
-        tempByte = (byte)UDPReplyBuffer[0];
-        Udp.write(tempByte);
-        tempByte = (byte)UDPReplyBuffer[1];
-        Udp.write(tempByte);
-
+        for (int i = 0; i < sizeOfMessage;i++) {
+            tempByte = (byte)UDPReplyBuffer[i];
+            Udp.write(tempByte);
+        }
         Udp.endPacket();
     }
 

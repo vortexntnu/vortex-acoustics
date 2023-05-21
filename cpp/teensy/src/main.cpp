@@ -35,7 +35,7 @@ Code written by: Vortex NTNU
 // ethernet variables
 int16_t packetSize = 0;
 char* messageToReceive;
-char messageToSend[] = "AB";
+char messageToSend[] = "ABCDEFGHIJKLMOPQRSTUVWXYZ1234567890";
 
 void setup() {
     Serial.begin(9600);
@@ -51,12 +51,13 @@ void loop() {
     packetSize = ethernetModule::UDP_check_if_connected();
 
     if (packetSize > 0) {
+        // Receive
         messageToReceive = ethernetModule::UDP_read_message();
         Serial.println(messageToReceive);
-
-        ethernetModule::UDP_send_message(messageToSend);
-
-        //Serial.println(messageToSend);
+        
+        // Send
+        int16_t lengthMessageArray = strlen(messageToSend);
+        ethernetModule::UDP_send_message(messageToSend, lengthMessageArray);
     }
 
     ethernetModule::UDP_clean_message_memory();
