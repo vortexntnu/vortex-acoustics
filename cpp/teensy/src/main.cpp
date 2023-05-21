@@ -41,7 +41,7 @@ Code written by: Vortex NTNU
 // MAC address for every device must be different in every network
 byte macAddressTeensy[] = {0xDE, 0xED, 0xBE, 0xEE, 0xFE, 0xED};
 // Necessary networking variables for Teensy to be part of the network
-IPAddress ipAddressTeensy(10, 0, 0, 142);
+IPAddress ipAddressTeensy(10, 0, 0, 111);
 unsigned int localPort = 8888;
 
 // Variables that should be in .cpp file ==========
@@ -88,7 +88,6 @@ void setup() {
 void loop() {
    // if there's data available, read a packet
   int packetSize = Udp.parsePacket();
-  Serial.println(packetSize);
 
   if (packetSize) {
     // Get packet size
@@ -122,6 +121,6 @@ void loop() {
     Udp.endPacket();
   }
 
-  // Wait for 10 seconds
-  delay(500);
+  // Wait for 0.1 seconds
+  delay(100);
 }
