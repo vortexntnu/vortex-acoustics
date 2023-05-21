@@ -29,27 +29,13 @@ Code written by: Vortex NTNU
 // Digital Signal Processing (DSP) Libraries
 #include "DSP.h"
 
-
-
-
-
 // Libraries for ethernet
-#include <NativeEthernet.h>
-#include <NativeEthernetUdp.h>
+#include "ethernetModule.h"
 
-// Variables that should be in .h file ==========
-// MAC address for every device must be different in every network
-byte macAddressTeensy[] = {0xDE, 0xED, 0xBE, 0xEE, 0xFE, 0xED};
-// Necessary networking variables for Teensy to be part of the network
-IPAddress ipAddressTeensy(10, 0, 0, 111);
-unsigned int localPort = 8888;
-
-// Variables that should be in .cpp file ==========
-// buffers for receiving and sending data
-char receiveBuffer[UDP_TX_PACKET_MAX_SIZE];
-char replyBuffer[] = "acknowledged";
-// An EthernetUDP instance to let us send and receive packets over UDP
-EthernetUDP Udp;
+// ethernet variables
+int16_t packetSize = 0;
+char* messageToReceive;
+char messageToSend[] = "AB";
 
 void setup() {
     Serial.begin(9600);
@@ -57,70 +43,21 @@ void setup() {
         ;
     Serial.println("Serial connected\r\n");
 
-    // Initialize Ethernet pins
-    //Ethernet.init(20);
-
-    // start the Ethernet
-    Serial.println("Connecting to network");
-    Ethernet.begin(macAddressTeensy, ipAddressTeensy);
-
-    // Check for Ethernet hardware present
-    if (Ethernet.hardwareStatus() == EthernetNoHardware) {
-        Serial.println("Ethernet shield was not found.  Sorry, can't run without hardware. :(");
-        while (true) {
-        delay(1); // do nothing, no point running without Ethernet hardware
-        }
-    }
-    if (Ethernet.linkStatus() == LinkOFF) {
-        Serial.println("Ethernet cable is not connected.");
-    }
-
-    // Check that the port is available
-    if (Udp.begin(localPort)) {
-        Serial.println("SUCCESS! Connected to network");
-    }
-    else {
-        Serial.println("FAILED could not connect to network");
-        Serial.println(Udp.begin(localPort));
-    }
+    ethernetModule::UDP_init();
 }
 
 void loop() {
-   // if there's data available, read a packet
-  int packetSize = Udp.parsePacket();
+    // Check if data is being transferred to 
+    packetSize = ethernetModule::UDP_check_if_connected();
 
-  if (packetSize) {
-    // Get packet size
-    Serial.print("Received packet of size ");Serial.print(packetSize);
-    Serial.println();
+    if (packetSize > 0) {
+        messageToReceive = ethernetModule::UDP_read_message();
+        Serial.println(messageToReceive);
 
-    // Get senders IP
-    IPAddress remoteIP = Udp.remoteIP();
-    Serial.print("From: ");
-    for (int i=0; i < 4; i++) {
-      Serial.print(remoteIP[i], DEC);
-      if (i < 3) {
-        Serial.print(".");
-      }
+        ethernetModule::UDP_send_message(messageToSend);
+
+        //Serial.println(messageToSend);
     }
-    Serial.println();
 
-    // Get senders port
-    IPAddress remotePort = Udp.remotePort();
-    Serial.print("Port: ");Serial.print(remotePort);
-    Serial.println();
-
-    // read the message into buffer
-    Udp.read(receiveBuffer, UDP_TX_PACKET_MAX_SIZE);
-    Serial.println("Contents:");
-    Serial.println(receiveBuffer);
-
-    // send a message back to the IP address and port that sent us the message
-    Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
-    Udp.write(replyBuffer);
-    Udp.endPacket();
-  }
-
-  // Wait for 0.1 seconds
-  delay(100);
+    ethernetModule::UDP_clean_message_memory();
 }

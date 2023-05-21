@@ -1,75 +1,71 @@
-#include "ethernetModule.h"
+#include <ethernetModule.h>
 
-namespace eth
-{
+// Networking variables
+byte macAddressTeensy[] = {0xDE, 0xED, 0xBE, 0xEE, 0xFE, 0xED};
+IPAddress ipAddressTeensy(10, 0, 0, 111);
+unsigned int localPort = 8888;
 
-    EthernetUDP Udp;
+// buffers for receiving and sending data
+char UDPReceiveBuffer[UDP_TX_PACKET_MAX_SIZE];
 
-    // GLOBALS
-    byte macAddressTeensy[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
-    IPAddress ipAddressTeensy(10, 0, 0, 1);
-    // IPAddress switchAddress(129, 241, 187, 1);
-    IPAddress targetAddress(10, 0, 0, 2);
+// An EthernetUDP instance to let us send and receive packets over UDP
+EthernetUDP Udp;
 
-    unsigned int localPort = 8888;
-    unsigned int targetPort = 8888;
+namespace ethernetModule {
+    void UDP_init() {
+        // Start the ethernet connection
+        Ethernet.begin(macAddressTeensy, ipAddressTeensy);
 
-    char recievedString[UDP_TX_PACKET_MAX_SIZE];
-
-    status setup()
-    {
-        Ethernet.begin(macAddressTeensy, ipAddressTeensy); /// native ethernet library is importet in .h
-        if (Udp.begin(localPort))
-        {
-            return SUCCESS;
+        // Check for Ethernet hardware present
+        if (Ethernet.hardwareStatus() == EthernetNoHardware) {
+            Serial.println("Ethernet shield was not found.  Sorry, can't run without hardware. :(");
         }
-        else
-        {
-            return FAILURE;
+        if (Ethernet.linkStatus() == LinkOFF) {
+            Serial.println("Ethernet cable is not connected.");
         }
-    }
 
-    status write(char *message)
-    {
-        int udpStatus1 = Udp.beginPacket(targetAddress, targetPort);
-        Udp.write(message);
-        int udpStatus2 = Udp.endPacket();
-        if (udpStatus1 && udpStatus2)
-        {
-            return SUCCESS;
+        // Check that the port is available
+        if (Udp.begin(localPort)) {
+            Serial.println("SUCCESS! Connected to network");
         }
-        else
-        {
-            return FAILURE;
+        else {
+            Serial.println("FAILED could not connect to network");
+            Serial.println(Udp.begin(localPort));
         }
     }
 
-    status write(uint16_t data)
-    {
-        int udpStatus1 = Udp.beginPacket(targetAddress, targetPort);
-        uint8_t *packetStart = reinterpret_cast<uint8_t *>(&data);
-        Udp.write(packetStart, sizeof(uint16_t));
-        int udpStatus2 = Udp.endPacket();
-        if (udpStatus1 && udpStatus2)
-        {
-            return SUCCESS;
-        }
-        else
-        {
-            return FAILURE;
-        }
+    int16_t UDP_check_if_connected() {
+        int16_t packetSize = Udp.parsePacket();
+        return packetSize;
     }
 
-    char *read()
-    {
-        if (Udp.parsePacket() != 0)
-        { // if part to confirm recieved UDP package
-            Udp.read(recievedString, UDP_TX_PACKET_MAX_SIZE);
-            return recievedString; /// global variable (pointer)
-        }
-        else
-        {
-            return nullptr;
-        }
+    char* UDP_read_message() {
+        // read the message into buffer
+        Udp.read(UDPReceiveBuffer, UDP_TX_PACKET_MAX_SIZE);
+        
+        return UDPReceiveBuffer;
     }
-};
+
+    void UDP_send_message(char* UDPReplyBuffer) {
+        // Temporary variable for later use
+        byte tempByte;
+
+        // Get IP and Port of sender
+        IPAddress remoteIP = Udp.remoteIP();
+        IPAddress remotePort = Udp.remotePort();
+
+        // Start sending data
+        Udp.beginPacket(remoteIP, remotePort);
+
+        tempByte = (byte)UDPReplyBuffer[0];
+        Udp.write(tempByte);
+        tempByte = (byte)UDPReplyBuffer[1];
+        Udp.write(tempByte);
+
+        Udp.endPacket();
+    }
+
+    void UDP_clean_message_memory() {
+        memset(UDPReceiveBuffer, 0, UDP_TX_PACKET_MAX_SIZE); //clear out the packetBuffer array
+    }
+}
