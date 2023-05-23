@@ -5,7 +5,7 @@ import time
 HOST = "10.0.0.111"
 PORT = 8888  # (non-privileged ports are > 1023)
 MAX_PACKAGE_SIZE_RECEIVED = 65536
-TIMEOUT = 100 # Wait period before giving up on communications [seconds], Remember teensy takes time to calculate everything
+TIMEOUT = 60*5 # Wait period before giving up on communications [seconds], Remember teensy takes time to calculate everything
 address = (HOST, PORT)
 
 # Code words for communication
@@ -102,7 +102,7 @@ def get_DSP_data():
 # Get data
 startTime = time.time()
 
-send_frequency_of_interest(0, 100000)
+send_frequency_of_interest(20000, 1000)
 BigBoy =  get_raw_hydrophone_data()
 rawSampleData, filteredSampleData, FFTData, peakData  = get_DSP_data()
 send_SKIP()

@@ -37,7 +37,6 @@ Code written by: Vortex NTNU
 // Variables for Debugging ==========
 /*
 These are just to measure the time it takes to run the entire code.
-The new calculations show 13300 us (micro seconds) (13.3 ms) for the whole algorithm
 */
 unsigned long timeDiff;
 unsigned long startTime;
@@ -62,21 +61,33 @@ std::vector<std::vector<q31_t>> peaks;
 int16_t lengthOfPeakArray;
 
 // Variables for Peak Detection ==========
-int32_t frequencyOfInterest = 0; // 0 Hz
-int32_t frequencyVariance = 0; // +-0 Hz
+int32_t frequencyOfInterest = 10000; // 0 Hz
+int32_t frequencyVariance = 1000; // +-0 Hz
 
 // Variables for data transmission ==========
-void comunicationTeensy();
+void communicationTeensy();
 
 void setup() {
     Serial.begin(9600);
     while (!Serial)
         ;
-    Serial.println("1 - Serial connected\r\n");
+    Serial.println("1 - Serial connected");
+    Serial.println();
+
+    // Ethernet Setup PART 1 (START) ====================================================================================================
+    /*
+    NOTE: This code HAS to come befor "Sampling Setup", otherwise some values are configured incorrectly
+    Why? I have no Idea, some memory magic probably =_=
+    */
+    // Ethernet init
+    Serial.print("2 - ");
+    ethernetModule::UDP_init();
+    Serial.println();
+    // Ethernet Setup PART 1 (STOP) ====================================================================================================
 
     // Sampling Setup (START) ====================================================================================================
     // initializing ADC before being able to use it
-    Serial.println("2 - Initializing ADC");
+    Serial.println("3 - Initializing ADC");
     adc::init();
     // Setup parameters for ADC
     uint32_t ADC_reg_config;
@@ -88,7 +99,7 @@ void setup() {
     if (number_samples > 3 * SAMPLE_LENGTH) {
         number_samples = 3 * SAMPLE_LENGTH;
     }
-    Serial.println("2 - ADC setup done");
+    Serial.println("3 - ADC setup done");
     Serial.println();
     // Sampling Setup (STOP) ====================================================================================================
 
@@ -99,19 +110,21 @@ void setup() {
     FFTResults = FFT_mag(FFTResultsRaw);
     peaks = peak_detection(FFTResultsRaw, FFTResults);
     lengthOfPeakArray = peaks[0][0];
-    Serial.println("3 - DSP Setup Complete");
+    Serial.println("4 - DSP Setup Complete");
     Serial.println();
     // Digital Signal Processing Setup (STOP) ====================================================================================================
 
-    // Ethernet Setup (START) ====================================================================================================
-    // Ethernet init
-    ethernetModule::UDP_init();
+    // Ethernet Setup PART 2 (START) ====================================================================================================
+    /*
+    NOTE: This code HAS to come after "Sampling Setup" otherwise some values are configured incorrectly
+    Why? I have no Idea, some memory magic probably =_=
+    */
     // Wait until someone is coected and sends SKIP request to indicate they are ready to start receiving data
-    Serial.println("4 - Waiting for client conection...");
-    comunicationTeensy();
-    Serial.println("4 - Client CONECTED");
+    Serial.println("5 - Waiting for client connection...");
+    communicationTeensy();
+    Serial.println("5 - Client CONNECTED");
     Serial.println();
-    // Ethernet Setup (STOP) ====================================================================================================
+    // Ethernet Setup PART 2 (STOP) ====================================================================================================
 
     Serial.println();
     Serial.println("==================================================");
@@ -181,8 +194,6 @@ void loop() {
                 found++;
             }
         }
-        Serial.println("Hello O_O");
-        break;
 
         // Increment buffer to check
         buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
@@ -216,13 +227,14 @@ void loop() {
     // Sampling (STOP) ====================================================================================================
 
     // Send data (START) ====================================================================================================
-    Serial.println("Waiting for next orders");
-    comunicationTeensy();
-    Serial.println("Data sending DONE :D");
+    Serial.println("Waiting for clients requests...");
+    communicationTeensy();
+    Serial.println("Data transfer complete");
+    Serial.println();
     // Send data (STOP) ====================================================================================================
 }
 
-void comunicationTeensy() {
+void communicationTeensy() {
     // Necessary ethernet variables ==========
     char* messageToReceive;
     char tempCharA = '0';
