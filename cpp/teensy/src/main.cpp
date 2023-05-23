@@ -54,10 +54,6 @@ int32_t frequencyVariance;
 
 // ethernet variables ==========
 void comunicationTeensy();
-char* messageToReceive;
-char tempCharA = '0';
-char tempCharB = '0';
-int32_t* frequencyDataFromClient;
 
 /*
 X Wait for frequemncy data first
@@ -101,6 +97,12 @@ void loop() {
 }
 
 void comunicationTeensy() {
+    // Necessary ethernet variables ==========
+    char* messageToReceive;
+    char tempCharA = '0';
+    char tempCharB = '0';
+    int32_t* frequencyDataFromClient;
+
     // Endless loop until SKIP is sent back
     while (true) {
         // wait until a request is sent from client
