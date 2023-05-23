@@ -1,4 +1,4 @@
-#include <ethernetModule.h>
+#include "ethernetModule.h"
 
 // Networking variables
 byte macAddressTeensy[] = {0xDE, 0xED, 0xBE, 0xEE, 0xFE, 0xED};
@@ -46,7 +46,7 @@ namespace ethernetModule {
         return UDPReceiveBuffer;
     }
 
-    void UDP_send_message(char* UDPReplyBuffer, int16_t sizeOfMessage) {
+    void UDP_send_message(char* UDPReplyBuffer, int16_t sizeOfMessage, int16_t startIndexForMessage) {
         // Temporary variable for later use
         byte tempByte;
 
@@ -56,7 +56,7 @@ namespace ethernetModule {
 
         // Start sending data
         Udp.beginPacket(remoteIP, remotePort);
-        for (int i = 0; i < sizeOfMessage;i++) {
+        for (int16_t i = startIndexForMessage; i < (startIndexForMessage + sizeOfMessage); i++) {
             tempByte = (byte)UDPReplyBuffer[i];
             Udp.write(tempByte);
         }

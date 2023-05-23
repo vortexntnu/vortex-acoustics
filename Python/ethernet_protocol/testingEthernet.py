@@ -5,11 +5,12 @@ import time
 HOST = "10.0.0.111"
 PORT = 8888  # (non-privileged ports are > 1023)
 MAX_PACKAGE_SIZE_RECEIVED = 65536
-TIMEOUT = 10 # Wait period before giving up on communications [seconds]
+TIMEOUT = 100 # Wait period before giving up on communications [seconds], Remember teensy takes time to calculate everything
 address = (HOST, PORT)
 
 # Code words
 SEND_FREQUENCY = "sf" # Send frequency to look for and variance
+SEND_SKIP = "ss" # Send SKIP command, teensy will stop waiting for data transfer and will continue with its calculations
 GET_HYDROPHONE_DATA = "gh" # Get all 5 hydrophone raw sample data
 GET_DSP_DATA = "gd" # Get Digital Signal Processing data -> raw data, filtered data, FFT data and peak data
 
@@ -17,27 +18,44 @@ GET_DSP_DATA = "gd" # Get Digital Signal Processing data -> raw data, filtered d
 clientSocket = socket(AF_INET, SOCK_DGRAM)
 clientSocket.settimeout(TIMEOUT)
 
-def send_frequency_of_interest(frequencyOfInterest):
-    data = str(frequencyOfInterest).encode() # Converts the string to bytes
+def send_frequency_of_interest(frequencyOfInterest, frequencyVariance):
+    # Send a request to send
     clientSocket.sendto(SEND_FREQUENCY.encode(), address)
-    clientSocket.sendto(data, address) # Send data
+
+    # Send data
+    data = str(frequencyOfInterest).encode()
+    clientSocket.sendto(data, address)
+    data = str(frequencyVariance).encode()
+    clientSocket.sendto(data, address)
+
+def send_SKIP():
+    # Send a request to send
+    clientSocket.sendto(SEND_SKIP.encode(), address)
 
 def get_raw_hydrophone_data():
+    # Send request
     clientSocket.sendto(GET_HYDROPHONE_DATA.encode(), address)
 
     try:
         #Read response from Teensy
-        rec_data, addr = clientSocket.recvfrom(MAX_PACKAGE_SIZE_RECEIVED) 
-        messageReceived = rec_data.decode()
-
-        return messageReceived
+        messageBIG = ["", "", "", "", ""]
+        hydrophoneNr = 0
+        while (hydrophoneNr < 5):
+            done = False
+            while (not done):
+                rec_data, addr = clientSocket.recvfrom(MAX_PACKAGE_SIZE_RECEIVED) 
+                messageReceived = rec_data.decode()
+                if messageReceived == "f":
+                    done = True
+                else:
+                    messageBIG[hydrophoneNr] += messageReceived
+            hydrophoneNr += 1
+            
+        return messageBIG
     except:
         return "ERROR"
 
-
-while(True):
-    hydrophoneData = get_raw_hydrophone_data()
-    print(hydrophoneData)
-
-    #delay before sending next command
-    time.sleep(0.1)
+#send_frequency_of_interest(30000, 1000)
+BigBoy =  get_raw_hydrophone_data()
+print("Data we got:", BigBoy)
+send_SKIP()
