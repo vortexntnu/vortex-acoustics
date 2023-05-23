@@ -12,58 +12,57 @@ char UDPReceiveBuffer[UDP_TX_PACKET_MAX_SIZE];
 EthernetUDP Udp;
 
 namespace ethernetModule {
-    void UDP_init() {
-        // Start the ethernet connection
-        Ethernet.begin(macAddressTeensy, ipAddressTeensy);
+void UDP_init() {
+    // Start the ethernet connection
+    Ethernet.begin(macAddressTeensy, ipAddressTeensy);
 
-        // Check for Ethernet hardware present
-        if (Ethernet.hardwareStatus() == EthernetNoHardware) {
-            Serial.println("Ethernet shield was not found.  Sorry, can't run without hardware. :(");
-        }
-        if (Ethernet.linkStatus() == LinkOFF) {
-            Serial.println("Ethernet cable is not connected.");
-        }
-
-        // Check that the port is available
-        if (Udp.begin(localPort)) {
-            Serial.println("SUCCESS! Connected to network");
-        }
-        else {
-            Serial.println("FAILED could not connect to network");
-            Serial.println(Udp.begin(localPort));
-        }
+    // Check for Ethernet hardware present
+    if (Ethernet.hardwareStatus() == EthernetNoHardware) {
+        Serial.println("Ethernet shield was not found.  Sorry, can't run without hardware. :(");
+    }
+    if (Ethernet.linkStatus() == LinkOFF) {
+        Serial.println("Ethernet cable is not connected.");
     }
 
-    int16_t UDP_check_if_connected() {
-        int16_t packetSize = Udp.parsePacket();
-        return packetSize;
-    }
-
-    char* UDP_read_message() {
-        // read the message into buffer
-        Udp.read(UDPReceiveBuffer, UDP_TX_PACKET_MAX_SIZE);
-        
-        return UDPReceiveBuffer;
-    }
-
-    void UDP_send_message(char* UDPReplyBuffer, int16_t sizeOfMessage, int16_t startIndexForMessage) {
-        // Temporary variable for later use
-        byte tempByte;
-
-        // Get IP and Port of sender
-        IPAddress remoteIP = Udp.remoteIP();
-        IPAddress remotePort = Udp.remotePort();
-
-        // Start sending data
-        Udp.beginPacket(remoteIP, remotePort);
-        for (int16_t i = startIndexForMessage; i < (startIndexForMessage + sizeOfMessage); i++) {
-            tempByte = (byte)UDPReplyBuffer[i];
-            Udp.write(tempByte);
-        }
-        Udp.endPacket();
-    }
-
-    void UDP_clean_message_memory() {
-        memset(UDPReceiveBuffer, 0, UDP_TX_PACKET_MAX_SIZE); //clear out the packetBuffer array
+    // Check that the port is available
+    if (Udp.begin(localPort)) {
+        Serial.println("SUCCESS! Connected to network");
+    } else {
+        Serial.println("FAILED could not connect to network");
+        Serial.println(Udp.begin(localPort));
     }
 }
+
+int16_t UDP_check_if_connected() {
+    int16_t packetSize = Udp.parsePacket();
+    return packetSize;
+}
+
+char* UDP_read_message() {
+    // read the message into buffer
+    Udp.read(UDPReceiveBuffer, UDP_TX_PACKET_MAX_SIZE);
+
+    return UDPReceiveBuffer;
+}
+
+void UDP_send_message(char* UDPReplyBuffer, int16_t sizeOfMessage, int16_t startIndexForMessage) {
+    // Temporary variable for later use
+    byte tempByte;
+
+    // Get IP and Port of sender
+    IPAddress remoteIP = Udp.remoteIP();
+    IPAddress remotePort = Udp.remotePort();
+
+    // Start sending data
+    Udp.beginPacket(remoteIP, remotePort);
+    for (int16_t i = startIndexForMessage; i < (startIndexForMessage + sizeOfMessage); i++) {
+        tempByte = (byte)UDPReplyBuffer[i];
+        Udp.write(tempByte);
+    }
+    Udp.endPacket();
+}
+
+void UDP_clean_message_memory() {
+    memset(UDPReceiveBuffer, 0, UDP_TX_PACKET_MAX_SIZE); //clear out the packetBuffer array
+}
+} // namespace ethernetModule

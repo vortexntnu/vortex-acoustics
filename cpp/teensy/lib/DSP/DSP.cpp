@@ -2,8 +2,8 @@
 Code for digital signal processing
 Processes raw sound data sampled in a way that can be used further down the line
 */
-#include <vector>
 #include <DSP.h>
+#include <vector>
 
 // Making sure the inside functions are seen
 q15_t q15_divide(q15_t a, q15_t b);
@@ -177,7 +177,7 @@ we return the peaks:
 std::vector<std::vector<q31_t>> peak_detection(q15_t* resultsRaw, q15_t* results) {
     // Dynamically allocate the 2D array
     static q31_t peaks[SAMPLE_LENGTH][2];
-    
+
     /*
     Once we allocated the memory to the 2d array, the memory that we have
     allocated was already in use, so it had values from before, from other
