@@ -52,7 +52,7 @@ int16_t lengthOfPeakArray;
 int32_t frequencyOfInterest;
 int32_t frequencyVariance;
 
-// ethernet variables
+// ethernet variables ==========
 void comunicationTeensy();
 char* messageToReceive;
 char tempCharA = '0';
