@@ -159,7 +159,8 @@ void loop() {
     unsigned long samplingStartTime = millis();
     while (!found) {
         // Wait until first ring buffer is filled
-        while (!adc::buffer_filled[buffer_to_check]);
+        while (!adc::buffer_filled[buffer_to_check])
+            ;
 
         // Save raw sampled data
         for (uint16_t i = 0; i < SAMPLE_LENGTH; i++) {
@@ -208,7 +209,8 @@ void loop() {
         }
     }
     // After finding peaks of interest let the last sampling sequence finish
-    while (!adc::buffer_filled[buffer_to_check]);
+    while (!adc::buffer_filled[buffer_to_check])
+        ;
     // Stop Sampling
     adc::stopConversion();
 
@@ -253,7 +255,8 @@ void communicationTeensy() {
     // Endless loop until SKIP is sent back
     while (true) {
         // wait until a request is sent from client
-        while(!ethernetModule::UDP_check_if_connected());
+        while (!ethernetModule::UDP_check_if_connected())
+            ;
         messageToReceive = ethernetModule::UDP_read_message();
         tempCharA = messageToReceive[0];
         tempCharB = messageToReceive[1];
