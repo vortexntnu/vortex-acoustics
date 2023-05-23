@@ -5,7 +5,7 @@ from socket import *
 HOST = "10.0.0.111"
 PORT = 8888  # (non-privileged ports are > 1023)
 MAX_PACKAGE_SIZE_RECEIVED = 65536
-TIMEOUT = 60 # Wait period before giving up on communications [seconds], Remember teensy takes time to calculate everything
+TIMEOUT = 60  # Wait period before giving up on communications [seconds], Remember teensy takes time to calculate everything
 address = (HOST, PORT)
 
 # Code words for communication

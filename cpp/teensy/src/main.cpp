@@ -63,7 +63,7 @@ int16_t lengthOfPeakArray;
 
 // Variables for Peak Detection ==========
 int32_t frequencyOfInterest = 0; // 0 Hz
-int32_t frequencyVariance = 0; // +-0 Hz
+int32_t frequencyVariance = 0;   // +-0 Hz
 
 // Variables for data transmission ==========
 void communicationTeensy();
