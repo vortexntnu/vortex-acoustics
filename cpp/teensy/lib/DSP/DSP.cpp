@@ -2,8 +2,8 @@
 Code for digital signal processing
 Processes raw sound data sampled in a way that can be used further down the line
 */
-
 #include <DSP.h>
+#include <vector>
 
 // Making sure the inside functions are seen
 q15_t q15_divide(q15_t a, q15_t b);
@@ -35,7 +35,6 @@ const uint32_t doBitReverse = 1;
 const q15_t PI_q15 = (q15_t)(PI * (1 << 15) + 0.5);
 
 q15_t* filter_butterwort_9th_order_50kHz(int16_t* samplesRaw) {
-    Serial.println("TestFilter");
     // Create array to store the filtered samples
     static q15_t samples[SAMPLE_LENGTH];
 
@@ -77,7 +76,6 @@ q15_t* filter_butterwort_9th_order_50kHz(int16_t* samplesRaw) {
 }
 
 q15_t* filter_butterwort_2th_order_50kHz(int16_t* samplesRaw) {
-    Serial.println("TestFilter");
     // Create array to store the filtered samples
     static q15_t samples[SAMPLE_LENGTH];
 
@@ -176,12 +174,9 @@ we return the peaks:
     - Frequency
     - Phase shift
 */
-q31_t** peak_detection(q15_t* resultsRaw, q15_t* results) {
+std::vector<std::vector<q31_t>> peak_detection(q15_t* resultsRaw, q15_t* results) {
     // Dynamically allocate the 2D array
-    q31_t** peaks = new q31_t*[SAMPLE_LENGTH];
-    for (int i = 0; i < SAMPLE_LENGTH; i++) {
-        peaks[i] = new q31_t[2]; // We make a 2 dimensional array
-    }
+    static q31_t peaks[SAMPLE_LENGTH][2];
 
     /*
     Once we allocated the memory to the 2d array, the memory that we have
@@ -274,13 +269,10 @@ q31_t** peak_detection(q15_t* resultsRaw, q15_t* results) {
     numNotNullValuesInList++;
 
     /*
-    Dynamically make a new array for the peaks we
-    actually want to return, notice the use of nomNonNull
+    Dynamically allocate space to a new array for the peaks we actually want to return
+    notice the use of numNonNull
     */
-    q31_t** peaksReturn = new q31_t*[numNotNullValuesInList];
-    for (int i = 0; i < numNotNullValuesInList; i++) {
-        peaksReturn[i] = new q31_t[3];
-    }
+    std::vector<std::vector<q31_t>> peaksReturn(numNotNullValuesInList, std::vector<q31_t>(3));
 
     /*
     We send the length of the array through the 1st index of the array. It is
