@@ -1,6 +1,7 @@
 #include "arm_const_structs.h"
 #include "arm_math.h"
 #include <Arduino.h>
+#include <vector>
 
 // How fast the ADC samples, important to know for FFT, the max is 510 kHz, HOWEVER for some reason ADC can not go max, real value is lower at:
 #define SAMPLE_RATE 430000 // 430.0 kHz
@@ -27,6 +28,6 @@ q15_t* filter_butterwort_2th_order_50kHz(int16_t* samplesRaw);
 q15_t* FFT_raw(q15_t* samples);
 q15_t* FFT_mag(q15_t* resultsRaw);
 
-q31_t** peak_detection(q15_t* resultsRaw, q15_t* results);
+std::vector<std::vector<q31_t>> peak_detection(q15_t* resultsRaw, q15_t* results);
 
 float32_t phaseQ31_to_radianFloat32(q31_t phaseQ15);
