@@ -51,6 +51,7 @@ int16_t samplesRawHydrophone2[SAMPLE_LENGTH * 3];
 int16_t samplesRawHydrophone3[SAMPLE_LENGTH * 3];
 int16_t samplesRawHydrophone4[SAMPLE_LENGTH * 3];
 int16_t samplesRawHydrophone5[SAMPLE_LENGTH * 3];
+#define SAMPLING_TIMEOUT 60000 // [60 s] If sampling takes to long before finding a frequency of interest we exit the loop and later try again
 
 // Variables for Digital Signal Processing ==========
 int16_t samplesRawForDSP[SAMPLE_LENGTH];
@@ -61,8 +62,8 @@ std::vector<std::vector<q31_t>> peaks;
 int16_t lengthOfPeakArray;
 
 // Variables for Peak Detection ==========
-int32_t frequencyOfInterest = 10000; // 0 Hz
-int32_t frequencyVariance = 1000; // +-0 Hz
+int32_t frequencyOfInterest = 0; // 0 Hz
+int32_t frequencyVariance = 0; // +-0 Hz
 
 // Variables for data transmission ==========
 void communicationTeensy();
@@ -149,10 +150,13 @@ void loop() {
     Have a endless loop that samples signals
     Process signal and check for any peaks
     If peaks of interest detected exit loop and process data further down the line
+
+    If sampling takes to long to find a peak we exit the loop and try again later
     */
     int32_t frequencyOfInterestMax = frequencyOfInterest + frequencyVariance;
     int32_t frequencyOfInterestMin = frequencyOfInterest - frequencyVariance;
     uint8_t found = 0;
+    unsigned long samplingStartTime = millis();
     while (!found) {
         // Wait until first ring buffer is filled
         while (!adc::buffer_filled[buffer_to_check]);
@@ -197,6 +201,11 @@ void loop() {
 
         // Increment buffer to check
         buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
+
+        // Check if sampling has taken to long and if so exit the loop and try again later
+        if ((millis() - samplingStartTime) > SAMPLING_TIMEOUT) {
+            break;
+        }
     }
     // After finding peaks of interest let the last sampling sequence finish
     while (!adc::buffer_filled[buffer_to_check]);
