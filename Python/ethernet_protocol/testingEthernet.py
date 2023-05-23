@@ -37,25 +37,39 @@ def get_raw_hydrophone_data():
     clientSocket.sendto(GET_HYDROPHONE_DATA.encode(), address)
 
     try:
-        #Read response from Teensy
-        messageBIG = ["", "", "", "", ""]
+        #Read response from Teensy 5 times because of 5 hydrophones
+        allHydrophoneData = [[], [], [], [], []]
         hydrophoneNr = 0
         while (hydrophoneNr < 5):
             done = False
+            tempString = ""
+            
             while (not done):
+                # Read data
                 rec_data, addr = clientSocket.recvfrom(MAX_PACKAGE_SIZE_RECEIVED) 
                 messageReceived = rec_data.decode()
-                if messageReceived == "f":
+
+                # Check if data is done sending, else save
+                if messageReceived == "DONE":
                     done = True
                 else:
-                    messageBIG[hydrophoneNr] += messageReceived
+                    tempString += messageReceived
+
+            # Save string into a integer array
+            tempString = tempString[0:-1]
+            tempIntList = list(map(int, tempString.split(',')))
+            allHydrophoneData[hydrophoneNr] = tempIntList
+
             hydrophoneNr += 1
-            
-        return messageBIG
+
+        return allHydrophoneData
     except:
         return "ERROR"
 
 #send_frequency_of_interest(30000, 1000)
 BigBoy =  get_raw_hydrophone_data()
-print("Data we got:", BigBoy)
+for longList in BigBoy:
+    print(longList)
+    print("="*200)
+    print("="*200)
 send_SKIP()

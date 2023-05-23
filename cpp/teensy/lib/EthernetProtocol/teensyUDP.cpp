@@ -55,21 +55,21 @@ namespace teensyUDP {
         // Send data in intervals to not overwhelm Client
         int amountLeftToSend = 0;
         while (amountLeftToSend < index) {
-            // Before sending the whole big interval, just double check that all of the registers are filled up
+            // Before sending the whole big interval, just double check that all of the registers are filled up, else skip
             if ((amountLeftToSend + maxClientCapacity) < index) {
                 ethernetModule::UDP_send_message(hydrophoneData, maxClientCapacity, amountLeftToSend);
             }
             amountLeftToSend += maxClientCapacity;
         }
-        // There will be MOST of the time some data left unsent since it was to small for the big buffer, send the rest in that case
+        // There will be MOST of the time some data left unsent since it was to small for the big buffer, send the rest through here
         if (amountLeftToSend != index) {
             amountLeftToSend -= maxClientCapacity;
             index -= amountLeftToSend;
             ethernetModule::UDP_send_message(hydrophoneData, index, amountLeftToSend);
         }
-        // Send 'f' as a signal to signal that data transfer is finished
-        char finishingData[] = "f";
-        ethernetModule::UDP_send_message(finishingData, 1, 0);
+        // Send "DONE" as a signal, to signal that data transfer is finished
+        char finishingData[] = "DONE";
+        ethernetModule::UDP_send_message(finishingData, 4, 0);
         
         // Free up allocated space since we don't use it anymore
         free(hydrophoneData);

@@ -97,8 +97,7 @@ void loop() {
     // g - Client wants to get soemthing from Teensy
     // This loop will go on until SKIP request from the Client is sent
     comunicationTeensy();
-    Serial.print("F: ");Serial.print(tempCharA);Serial.print(", V: ");Serial.print(tempCharB);
-    Serial.println();
+    Serial.println("Data sending DONE :D");
 }
 
 void comunicationTeensy() {
