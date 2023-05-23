@@ -26,7 +26,7 @@ namespace teensyUDP {
         return frequencyData;
     }
 
-    void send_a_single_hydrophone_data(int16_t* hydrophone, int16_t lengthOfData) {
+    void send_hydrophone_data(int16_t* hydrophone, int16_t lengthOfData) {
         // To not overwhelm the client we need to limit each data pack sent in size
         int16_t maxClientCapacity = 1000;
 
@@ -73,14 +73,5 @@ namespace teensyUDP {
         
         // Free up allocated space since we don't use it anymore
         free(hydrophoneData);
-    }
-
-    void send_hydrophone_data(int16_t* hydrophone1, int16_t* hydrophone2, int16_t* hydrophone3, int16_t* hydrophone4, int16_t* hydrophone5, int16_t lengthOfData) {
-        teensyUDP::send_a_single_hydrophone_data(hydrophone1, lengthOfData);
-        teensyUDP::send_a_single_hydrophone_data(hydrophone2, lengthOfData);
-        teensyUDP::send_a_single_hydrophone_data(hydrophone3, lengthOfData);
-        teensyUDP::send_a_single_hydrophone_data(hydrophone4, lengthOfData);
-        teensyUDP::send_a_single_hydrophone_data(hydrophone5, lengthOfData);
-        Serial.println("Done :D");
     }
 }

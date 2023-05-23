@@ -66,11 +66,13 @@ X Wait for frequemncy data first
 
 now we have a wihle loop that checks if any send or get request are sent
 get:
-    - If get request for Hydrophones -> Send that data
-    - If get request for DSP data -> Send DSP data
+    - XIf get request for Hydrophones -> Send that data
+    - !!!!!!!!!!!!!!!If get request for DSP data -> Send DSP data
 send:
-    - If send request for frequency. Save new frequency parameters
-    - If send request SKIP. End endless while loop and continue calculations
+    - XIf send request for frequency. Save new frequency parameters
+    - XIf send request SKIP. End endless while loop and continue calculations
+
+Only DSP part left!!!
 */
 
 void setup() {
@@ -121,7 +123,11 @@ void comunicationTeensy() {
         }
         // gh - Get Hydrophone data
         if ((tempCharA == 'g') && (tempCharB == 'h')) {
-            teensyUDP::send_hydrophone_data(samplesRawHydrophone1, samplesRawHydrophone2, samplesRawHydrophone3, samplesRawHydrophone4, samplesRawHydrophone5, (SAMPLE_LENGTH * 3));
+            teensyUDP::send_hydrophone_data(samplesRawHydrophone1, (SAMPLE_LENGTH * 3));
+            teensyUDP::send_hydrophone_data(samplesRawHydrophone2, (SAMPLE_LENGTH * 3));
+            teensyUDP::send_hydrophone_data(samplesRawHydrophone3, (SAMPLE_LENGTH * 3));
+            teensyUDP::send_hydrophone_data(samplesRawHydrophone4, (SAMPLE_LENGTH * 3));
+            teensyUDP::send_hydrophone_data(samplesRawHydrophone5, (SAMPLE_LENGTH * 3));
         }
         ethernetModule::UDP_clean_message_memory();
     }
