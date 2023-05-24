@@ -106,7 +106,7 @@ void setup() {
 
     // Digital Signal Processing Setup (START) ====================================================================================================
     // Fill up buffers with 0s first to not get unexpected errors
-    samplesFiltered = filter_butterwort_2th_order_50kHz(samplesRawForDSP);
+    samplesFiltered = filter_butterwort_9th_order_50kHz(samplesRawForDSP);
     FFTResultsRaw = FFT_raw(samplesFiltered);
     FFTResults = FFT_mag(FFTResultsRaw);
     peaks = peak_detection(FFTResultsRaw, FFTResults);
@@ -170,7 +170,7 @@ void loop() {
 
         // Digital Signal Processing (START) ====================================================================================================
         // Filter raw samples
-        samplesFiltered = filter_butterwort_2th_order_50kHz(samplesRawForDSP);
+        samplesFiltered = filter_butterwort_9th_order_50kHz(samplesRawForDSP);
 
         // Preform FFT calculations on filtered samples
         FFTResultsRaw = FFT_raw(samplesFiltered);

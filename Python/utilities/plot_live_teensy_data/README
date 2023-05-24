@@ -1,0 +1,5 @@
+This Folder is for getting data from Teensy once it is set up  with ethernet cable and is sampling some REAL data
+Use this folder then to start reading and displaying data Teensy is gathering and analyze the signals
+This folder provides live data feedback on graphical display and data storage for later analysis
+
+Read more here: https://vortex.a2hosted.com/index.php/Teensy_communication
