@@ -117,10 +117,11 @@ void setup() {
 
     // Ethernet Setup PART 2 (START) ====================================================================================================
     /*
-    NOTE: This code HAS to come after "Sampling Setup" otherwise some values are configured incorrectly
-    Why? I have no Idea, some memory magic probably =_=
+    NOTE: This code HAS to come after "Digital Signal Processing Setup" 
+    Otherwise when client request some data, the data we are pointing to has not been setup yet
+    This will cause Teensy to look for data that doesn't exist and will crash the system O_O    
     */
-    // Wait until someone is coected and sends SKIP request to indicate they are ready to start receiving data
+    // Wait until someone is connected and sends SKIP request to indicate they are ready to start receiving data
     Serial.println("5 - Waiting for client connection...");
     communicationTeensy();
     Serial.println("5 - Client CONNECTED");
