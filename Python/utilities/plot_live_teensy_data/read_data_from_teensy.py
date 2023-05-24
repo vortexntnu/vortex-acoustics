@@ -64,6 +64,20 @@ def randomDataDSP(minVal, maxVal):
     
     return buffer
 
+def randomPeaks(minVal, maxVal):
+    lengthOfList = random.randint(0, 50)
+    buffer = []
+
+    for i in range(lengthOfList):
+        tempList = []
+        tempList.append(random.randint(minVal, maxVal))
+        tempList.append(random.randint(minVal, maxVal))
+        tempList.append(random.randint(minVal, maxVal))
+
+        buffer.append(tempList)
+    
+    return buffer
+
 # Infinite loop for reading data
 while True:
     # try to get data and save it
@@ -80,7 +94,7 @@ while True:
         rawSampleData = randomDataDSP(-500, 500)
         filteredSampleData = randomDataDSP(-1000, 1000)
         FFTData = randomDataDSP(0, 5000)
-        peakData = [[1,2,3],[1,2,3],[1,2,3],[1,2,3]]
+        peakData = randomPeaks(0, 5000)
 
         # Save data to csv files
         with open(f"{MY_FILE_DIR}hydrophone_data/hydrophone_{formattedDateAndTime}.csv", "a", encoding="UTF8", newline="") as f:
