@@ -249,13 +249,12 @@ void loop() {
         for (uint16_t u = 0; u < SAMPLE_LENGTH; u++) {
             index = (SAMPLE_LENGTH * i) + u;
 
-            samplesRawHydrophone1[index] = (int16_t)adc::channel_buff_ptr[1][to_print_buffer][index];
-            samplesRawHydrophone2[index] = (int16_t)adc::channel_buff_ptr[2][to_print_buffer][index];
-            samplesRawHydrophone3[index] = (int16_t)adc::channel_buff_ptr[3][to_print_buffer][index];
-            samplesRawHydrophone4[index] = (int16_t)adc::channel_buff_ptr[4][to_print_buffer][index];
-            samplesRawHydrophone5[index] = (int16_t)adc::channel_buff_ptr[0][to_print_buffer][index];
+            samplesRawHydrophone1[index] = (int16_t)adc::channel_buff_ptr[1][to_print_buffer][u];
+            samplesRawHydrophone2[index] = (int16_t)adc::channel_buff_ptr[2][to_print_buffer][u];
+            samplesRawHydrophone3[index] = (int16_t)adc::channel_buff_ptr[3][to_print_buffer][u];
+            samplesRawHydrophone4[index] = (int16_t)adc::channel_buff_ptr[4][to_print_buffer][u];
+            samplesRawHydrophone5[index] = (int16_t)adc::channel_buff_ptr[0][to_print_buffer][u];
         }
-        buffer_to_check = (buffer_to_check + 1) % BUFFER_PER_CHANNEL;
         to_print_buffer = (to_print_buffer + 1) % BUFFER_PER_CHANNEL;
     }
     // Clean ring-buffers
@@ -368,6 +367,8 @@ void print_all_buffers_to_csv(uint16_t nb_samples, uint8_t nb_channels) {
 }
 
 void print_merged_buffers_to_csv() {
+    uint8_t to_print_buffer;
+
     // creating column names for later in pandas
     Serial.print(",Time");
     for (uint8_t i = 0; i < 5; i++) {
@@ -381,8 +382,10 @@ void print_merged_buffers_to_csv() {
 
         // sample number
         Serial.print(sample_nb);
+
         Serial.print(",");
-        // Serial.print((uint32_t)adc::timestamps[to_print_buffer][sample_nb]);
+        to_print_buffer = (adc::active_buffer + sample_nb / 1024) % BUFFER_PER_CHANNEL;
+        Serial.print((uint32_t)adc::timestamps[to_print_buffer][sample_nb % 1024]);
 
         Serial.print(",");
         Serial.print(samplesRawHydrophone1[sample_nb]);
