@@ -45,7 +45,7 @@ unsigned long endTime;
 // Variables for Sampling ==========
 // to be safe should be a bit under 1500. If it sampled more than 1500 for some reason, the data gathered will be inconsistent.
 uint16_t number_samples = SAMPLE_LENGTH * 3;
-uint32_t sample_period = 2.3; // >= MIN_SAMP_PERIOD_TIMER
+float sample_period = 2.3; // >= MIN_SAMP_PERIOD_TIMER
 int16_t samplesRawHydrophone1[SAMPLE_LENGTH * 3];
 int16_t samplesRawHydrophone2[SAMPLE_LENGTH * 3];
 int16_t samplesRawHydrophone3[SAMPLE_LENGTH * 3];
@@ -156,12 +156,15 @@ void loop() {
     int32_t frequencyOfInterestMax = frequencyOfInterest + frequencyVariance;
     int32_t frequencyOfInterestMin = frequencyOfInterest - frequencyVariance;
     uint8_t found = 0;
+    uint32_t counting_calculations_in_time = 0;
     unsigned long samplingStartTime = millis();
     while (!found) {
         // Wait until first ring buffer is filled
         while (!adc::buffer_filled[buffer_to_check])
             ;
 
+        // when starting calculation, saves the buffer nb that is being filled during
+        uint32_t buffer_nb_when_start_fft = adc::overall_buffer_count;
         // Save raw sampled data
         for (uint16_t i = 0; i < SAMPLE_LENGTH; i++) {
             samplesRawForDSP[i] = (int16_t)adc::channel_buff_ptr[1][buffer_to_check][i];
@@ -196,7 +199,7 @@ void loop() {
         for (int i = 1; i < lengthOfPeakArray; i++) {
             int32_t peakFrequency = peaks[i][1];
             if ((peakFrequency < frequencyOfInterestMax) && (peakFrequency > frequencyOfInterestMin)) {
-                found++;
+                found = 1;
             }
         }
 
@@ -207,6 +210,14 @@ void loop() {
         if ((millis() - samplingStartTime) > SAMPLING_TIMEOUT) {
             break;
         }
+
+        // checking if calculations took too long
+        if (buffer_nb_when_start_fft == adc::overall_buffer_count) {
+            counting_calculations_in_time++;
+        } else if (buffer_nb_when_start_fft != adc::overall_buffer_count) {
+            found = 2;
+            // break;
+        }
     }
     // After finding peaks of interest let the last sampling sequence finish
     while (!adc::buffer_filled[buffer_to_check])
@@ -214,7 +225,18 @@ void loop() {
     // Stop Sampling
     adc::stopConversion();
 
+    Serial.print("number of buffers filled : ");
+    Serial.println(adc::overall_buffer_count);
+    Serial.print("Calculation in time : ");
+    Serial.println(counting_calculations_in_time);
+
+    if (found == 2) {
+        Serial.println("ERROR - calculations took too long");
+    }
+
     // Process data from the ring-buffer
+    // active buffer is one further than the last filled one, which is the oldest one now
+    uint8_t to_print_buffer = adc::active_buffer;
     // Saving data into array we will use further down the line
     uint16_t index = 0;
     for (uint8_t i = 0; i < BUFFER_PER_CHANNEL; i++) {
@@ -222,19 +244,21 @@ void loop() {
         for (uint16_t u = 0; u < SAMPLE_LENGTH; u++) {
             index = (SAMPLE_LENGTH * i) + u;
 
-            samplesRawHydrophone1[index] = (int16_t)adc::channel_buff_ptr[1][buffer_to_check][index];
-            samplesRawHydrophone2[index] = (int16_t)adc::channel_buff_ptr[2][buffer_to_check][index];
-            samplesRawHydrophone3[index] = (int16_t)adc::channel_buff_ptr[3][buffer_to_check][index];
-            samplesRawHydrophone4[index] = (int16_t)adc::channel_buff_ptr[4][buffer_to_check][index];
-            samplesRawHydrophone5[index] = (int16_t)adc::channel_buff_ptr[0][buffer_to_check][index];
+            samplesRawHydrophone1[index] = (int16_t)adc::channel_buff_ptr[1][to_print_buffer][index];
+            samplesRawHydrophone2[index] = (int16_t)adc::channel_buff_ptr[2][to_print_buffer][index];
+            samplesRawHydrophone3[index] = (int16_t)adc::channel_buff_ptr[3][to_print_buffer][index];
+            samplesRawHydrophone4[index] = (int16_t)adc::channel_buff_ptr[4][to_print_buffer][index];
+            samplesRawHydrophone5[index] = (int16_t)adc::channel_buff_ptr[0][to_print_buffer][index];
         }
         buffer_to_check = (buffer_to_check + 1) % BUFFER_PER_CHANNEL;
+        to_print_buffer = (to_print_buffer + 1) % BUFFER_PER_CHANNEL;
     }
     // Clean ring-buffers
     // this is done so that next time we can add new data into the ring-buffers
     for (uint8_t i = 0; i < BUFFER_PER_CHANNEL; i++) {
         adc::buffer_filled[i] = 0;
     }
+
     // Sampling (STOP) ====================================================================================================
 
     // Send data (START) ====================================================================================================

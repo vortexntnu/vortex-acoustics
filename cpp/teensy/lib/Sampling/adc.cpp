@@ -99,9 +99,10 @@ buffer_ptr channel_buff_ptr[5] = {chanA0, chanA1, chanB0, chanB1, chanC0};
 
 volatile uint8_t stop_sampling;
 
-volatile uint8_t active_buffer; // to know which one is being filled, [0, BUFFER_PER_CHANNEL-1]
+volatile uint8_t active_buffer;                     // to know which one is being filled, [0, BUFFER_PER_CHANNEL-1]
 volatile uint16_t sample_index;
 volatile uint8_t buffer_filled[BUFFER_PER_CHANNEL]; // to know which have been filled with new values
+volatile uint32_t overall_buffer_count;
 
 elapsedMicros stopwatch;
 uint32_t clk_cyc = 0;
@@ -123,7 +124,7 @@ uint16_t read_ADC_par();
 // trigger conversion can be called from the outside to sample only once.
 void beginRead();
 void readData();
-void next_RD(); // pulling _RD down, starting timer for next read
+void next_RD();      // pulling _RD down, starting timer for next read
 void stopRead();
 void transferData(); // transfer data to ringbuffers.
 void read_loop();
@@ -206,6 +207,7 @@ void setup() {
     ringbuffer_channels_ptr[4] = &ChannelC0;
 
     active_buffer = 0;
+    overall_buffer_count = 0;
     for (uint8_t i = 0; i < BUFFER_PER_CHANNEL; i++) {
         buffer_filled[i] = 0; // no sampling yet
     }
@@ -232,6 +234,7 @@ void startConversion(float sample_period_us, ADC_sample_mode sample_mode) {
     stop_sampling = 0;
     // * to check if buffer needs to be set to 0.
     active_buffer = 0;
+    overall_buffer_count = 0;
 
     gpio::write_pin(RESET, 1, RESET_GPIO_PORT_NORMAL);
     delay(1);
@@ -440,9 +443,11 @@ void read_loop() {
 
         // updating global variables
         buffer_filled[active_buffer] = 1;
-        sample_index = sample_index % SAMPLE_LENGTH_ADC;
+        sample_index = sample_index % SAMPLE_LENGTH_ADC; // or maybe to 0
         active_buffer = (active_buffer + 1) % BUFFER_PER_CHANNEL;
         buffer_filled[active_buffer] = 0;
+
+        overall_buffer_count++;
     }
     // timestamps[active_buffer][sample_index] = ARM_DWT_CYCCNT - clk_cyc;
     // unsigned long time_to_read = stopwatch;
@@ -622,7 +627,7 @@ void config(uint32_t reg_val) {
     write_ADC_par(reg_val & 0xFFFF);
     gpio::write_pin(_WR, 0, _WR_GPIO_PORT_NORMAL);
 
-    delayNanoseconds(15); // t_WRL
+    delayNanoseconds(15);                          // t_WRL
 
     gpio::write_pin(_WR, 1, _WR_GPIO_PORT_NORMAL); // stop 2nd write access
     gpio::write_pin(_CS, 1, _CS_GPIO_PORT_NORMAL);

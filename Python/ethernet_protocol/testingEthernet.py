@@ -114,23 +114,24 @@ send_SKIP()
 
 stoptTime = time.time()
 
-# Print data
-for longList in BigBoy:
-    print(longList)
-    print("=" * 200)
-    print("=" * 200)
-
-print(rawSampleData)
 print("=" * 200)
+
+# Print data
+for index,longList in enumerate(BigBoy):
+    print("=" * 100)
+    print("Hydrophone " + str(index + 1))
+    print("=" * 100)
+    print(longList)
+
+print("=" * 100)
+print("rawSampleData")
+print(rawSampleData)
 print("=" * 200)
 print(filteredSampleData)
 print("=" * 200)
-print("=" * 200)
 print(FFTData)
 print("=" * 200)
-print("=" * 200)
 print(peakData)
-print("=" * 200)
 print("=" * 200)
 
 print(stoptTime - startTime)
