@@ -117,7 +117,7 @@ stoptTime = time.time()
 print("=" * 200)
 
 # Print data
-for index,longList in enumerate(BigBoy):
+for index, longList in enumerate(BigBoy):
     print("=" * 100)
     print("Hydrophone " + str(index + 1))
     print(len(longList))

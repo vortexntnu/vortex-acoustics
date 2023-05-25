@@ -6,7 +6,7 @@
 extern uint8_t DMA_test_variable;
 
 namespace adc {
-const int N_CHANNELS = 8;   // no. of channels on the ADC
+const int N_CHANNELS = 8; // no. of channels on the ADC
 const int N_HYDROPHONES = 5;
 const int SAMPLE_SIZE = 12; // bits in one sample
 
@@ -140,14 +140,14 @@ volatile extern uint8_t active_buffer;                     // to know which one 
 volatile extern uint8_t buffer_filled[BUFFER_PER_CHANNEL]; // to know which have been filled with new values
 volatile extern uint32_t overall_buffer_count;
 
-void init();                                                                          // inits pins
-void setup();                                                                         // setup the ADC
-void config(uint32_t reg_val);                                                        // configure ADC so it's ready to send data.
+void init();                   // inits pins
+void setup();                  // setup the ADC
+void config(uint32_t reg_val); // configure ADC so it's ready to send data.
 
 void startConversion(float sample_period_us, ADC_sample_mode sample_mode = BLOCKING); // setup periodic timer interrupts.
 void stopConversion();                                                                // stop periodic timer interrupts
 
-void triggerConversion();                                                             // tell ADC to start converting.
+void triggerConversion(); // tell ADC to start converting.
 
 void sample_fasfb(uint16_t nb_samples);
 

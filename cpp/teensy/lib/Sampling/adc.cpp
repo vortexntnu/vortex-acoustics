@@ -88,7 +88,7 @@ buffer_ptr channel_buff_ptr[5] = {chanA0, chanA1, chanB0, chanB1, chanC0};
 
 volatile uint8_t stop_sampling;
 
-volatile uint8_t active_buffer;                     // to know which one is being filled, [0, BUFFER_PER_CHANNEL-1]
+volatile uint8_t active_buffer; // to know which one is being filled, [0, BUFFER_PER_CHANNEL-1]
 volatile uint16_t sample_index;
 volatile uint8_t buffer_filled[BUFFER_PER_CHANNEL]; // to know which have been filled with new values
 volatile uint32_t overall_buffer_count;
@@ -517,7 +517,7 @@ void config(uint32_t reg_val) {
     write_ADC_par(reg_val & 0xFFFF);
     gpio::write_pin(_WR, 0, _WR_GPIO_PORT_NORMAL);
 
-    delayNanoseconds(15);                          // t_WRL
+    delayNanoseconds(15); // t_WRL
 
     gpio::write_pin(_WR, 1, _WR_GPIO_PORT_NORMAL); // stop 2nd write access
     gpio::write_pin(_CS, 1, _CS_GPIO_PORT_NORMAL);
