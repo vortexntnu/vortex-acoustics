@@ -76,17 +76,6 @@ volatile uint8_t channels_processed;
 uint16_t testing_value_par;
 #endif
 
-RingBuffer_16bit ChannelA0 = RingBuffer_16bit();
-RingBuffer_16bit ChannelB0 = RingBuffer_16bit();
-RingBuffer_16bit ChannelA1 = RingBuffer_16bit();
-RingBuffer_16bit ChannelB1 = RingBuffer_16bit();
-RingBuffer_16bit ChannelC0 = RingBuffer_16bit();
-RingBuffer_32bit sampleTime = RingBuffer_32bit();
-
-RingBuffer_32bit ChannelA0_DMA = RingBuffer_32bit();
-
-RingBuffer_16bit* ringbuffer_channels_ptr[5];
-
 sample_buff_3_1024 chanA0;
 sample_buff_3_1024 chanA1;
 sample_buff_3_1024 chanB0;
@@ -122,11 +111,6 @@ uint16_t read_ADC_par();
 
 // should not be accessed from outside, get called when triggerconversion is called.
 // trigger conversion can be called from the outside to sample only once.
-void beginRead();
-void readData();
-void next_RD();      // pulling _RD down, starting timer for next read
-void stopRead();
-void transferData(); // transfer data to ringbuffers.
 void read_loop();
 
 void init() {
@@ -199,31 +183,20 @@ void setup() {
     clock::setup(); /// the clockfrequency needs to be defined somewhere, does it need to be called also if adc is not init()
     PIT::setup();
 
-    // ! setting pointers for the ringbuffers, maybe not used anymore
-    ringbuffer_channels_ptr[0] = &ChannelA0;
-    ringbuffer_channels_ptr[1] = &ChannelA1;
-    ringbuffer_channels_ptr[2] = &ChannelB0;
-    ringbuffer_channels_ptr[3] = &ChannelB1;
-    ringbuffer_channels_ptr[4] = &ChannelC0;
-
     active_buffer = 0;
     overall_buffer_count = 0;
     for (uint8_t i = 0; i < BUFFER_PER_CHANNEL; i++) {
         buffer_filled[i] = 0; // no sampling yet
     }
 
-    // experimental found values
-    PIT::setUpPeriodicISR(readData, clock::get_clockcycles_nano(T_RDL * 20), PIT::PIT_1);
-    // Serial.print("Clockcycles PIT1 : ");
-    // Serial.println(clock::get_clockcycles_nano(T_RDL * 20));
-    PIT::setUpPeriodicISR(next_RD, clock::get_clockcycles_nano(T_RDH * 20), PIT::PIT_2);
-    // Serial.print("Clockcycles PIT2 : ");
-    // Serial.println(clock::get_clockcycles_nano(T_RDH * 20));
     // ! connect beginRead() to BUSY/INT interrupt -> is done in trigger_conversion()
 }
 
-// is starting the major loop timer, PIT0 that will trigger the conversion until stopped
-// @sample_period_us : a conversion will happen every "sample_period_us" microseconds
+/**
+   @brief is starting the major loop timer, PIT0 that will trigger the conversion until stopped
+   @param sample_period_us : a conversion will happen every "sample_period_us" microseconds
+   @param sample_mode : ONLY use BLOCKING
+*/
 void startConversion(float sample_period_us, ADC_sample_mode sample_mode) {
     // Serial.println("Starting conversion");
     // ? do it in one call?
@@ -316,95 +289,12 @@ void triggerConversion() {
         attachInterrupt(digitalPinToInterrupt(BUSYINT_ARDUINO_PIN), read_loop, FALLING);
         break;
     case TIMER:
-        attachInterrupt(digitalPinToInterrupt(BUSYINT_ARDUINO_PIN), beginRead, FALLING);
+        // attachInterrupt(digitalPinToInterrupt(BUSYINT_ARDUINO_PIN), beginRead, FALLING);
         break;
     default:
         break;
     }
     // clk_cyc = ARM_DWT_CYCCNT;
-}
-
-// resetting channels_processed and CONVST, continues with readData
-// updated version
-void beginRead() {
-    // Serial.println("b");
-    //  ! disable interrupts from BUSY/INT, will be enabled again by next triggerConvst()
-    detachInterrupt(BUSYINT_ARDUINO_PIN);
-    // PIT0 is continuing to run
-
-    channels_processed = 0;
-#ifdef TESTING
-    testing_value_par = 1;
-#endif
-    // no need to have CONVST high now
-    gpio::write_pin(CONVST, 0, CONVST_GPIO_PORT_NORMAL);
-
-    gpio::write_pin(_CS, 0, _CS_GPIO_PORT_NORMAL);
-    gpio::write_pin(_RD, 0, _RD_GPIO_PORT_NORMAL);
-    // should take at least 20ns to trigger timer
-    PIT::startPeriodic(PIT::PIT_1); // will call readData()
-}
-
-// reads the data on the parallel bus, when beginRead() was called (updated)
-void readData() {
-    // disabling timer, so far it is not a periodic timer
-    PIT::stopPeriodic(PIT::PIT_1);
-    // Serial.println("r");
-
-#ifndef TESTING
-    ringbuffer_channels_ptr[channels_processed]->insert(read_ADC_par());
-#endif
-#ifdef TESTING
-    write_ADC_par(testing_value_par);
-    testing_value_par *= 2;
-#endif
-
-    gpio::write_pin(_RD, 1, _RD_GPIO_PORT_NORMAL);
-    channels_processed++;
-
-    // will automatically stop
-    if (channels_processed == N_HYDROPHONES) {
-        stopRead();
-    } else {
-        // ! testing of faster way
-        // gpio::write_pin(_RD, 0, _RD_GPIO_PORT_NORMAL);
-        // PIT::startPeriodic(PIT::PIT_1);
-
-        PIT::startPeriodic(PIT::PIT_2);
-    }
-}
-
-// updated version
-void next_RD() {
-    PIT::stopPeriodic(PIT::PIT_2);
-
-    // Serial.println("n");
-
-    gpio::write_pin(_RD, 0, _RD_GPIO_PORT_NORMAL);
-    // will call readData
-    PIT::startPeriodic(PIT::PIT_1);
-}
-
-// turning of
-void stopRead() {
-    // Serial.println("s");
-
-    // timers are already off, no need to do anything
-    gpio::write_pin(_CS, 1, _CS_GPIO_PORT_NORMAL);
-    // * to know how long it takes to read the channels
-    // unsigned long time_to_read = stopwatch;
-    // Serial.print("time 1 read: ");
-    // Serial.println(time_to_read);
-    //  Serial.println("stop");
-    // transferData();
-}
-
-void transferData() {
-    ChannelA0.insert(sampleData[0]);
-    ChannelA1.insert(sampleData[1]);
-    ChannelB0.insert(sampleData[2]);
-    ChannelB1.insert(sampleData[3]);
-    ChannelC0.insert(sampleData[4]);
 }
 
 void read_loop() {

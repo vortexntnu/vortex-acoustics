@@ -120,6 +120,7 @@ print("=" * 200)
 for index,longList in enumerate(BigBoy):
     print("=" * 100)
     print("Hydrophone " + str(index + 1))
+    print(len(longList))
     print("=" * 100)
     print(longList)
 

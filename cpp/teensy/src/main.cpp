@@ -141,7 +141,7 @@ void setup() {
 
 void loop() {
     // Sampling (START) ====================================================================================================
-    // Start sampling
+    // Start sampling ONLY use BLOCKING, others are not implemented
     adc::startConversion(sample_period, adc::BLOCKING);
     // Start sampling into the buffer
     uint8_t buffer_to_check = adc::active_buffer;
