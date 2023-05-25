@@ -1,7 +1,6 @@
 # Setting up libraries
 import os
 import sys
-
 PARENT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 MY_FILE_DIR = f"{PARENT_DIR}/utilities/plot_live_teensy_data/"
 sys.path.append(PARENT_DIR)

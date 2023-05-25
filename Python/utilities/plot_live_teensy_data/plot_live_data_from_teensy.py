@@ -1,8 +1,16 @@
 # Import libraries
+import os
+import sys
+PARENT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+MY_FILE_DIR = f"{PARENT_DIR}/utilities/plot_live_teensy_data/"
+sys.path.append(PARENT_DIR)
+
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import matplotlib.animation as animation
-from matplotlib import style
+import pandas as pd
+import glob
+import os
 
 import random
 
@@ -10,7 +18,7 @@ import random
 SAMPLE_RATE = 430_000 # 430 kHz
 MAX_FREQUENCY_TO_SHOW = 60_000 # 60 kHz
 
-# Make a good layout ==================================================
+# Make a good plot layout ==================================================
 fig = plt.figure()
 # Create an outer GridSpec for the two columns
 outer_gs = gridspec.GridSpec(1, 2, figure=fig, width_ratios=[1, 1])
@@ -33,6 +41,14 @@ filterAxis = fig.add_subplot(gs_dsp[1])
 
 # Plot type so that the size is dynamic
 plt.tight_layout()
+
+# Get the latest csv file
+listOfHydrophoneFiles = glob.glob(f"{MY_FILE_DIR}hydrophone_data/*.csv")
+latestHydrophoneFile = max(listOfHydrophoneFiles, key=os.path.getctime)
+listOfDSPFiles = glob.glob(f"{MY_FILE_DIR}hydrophone_data/*.csv")
+latestDSPFile = max(listOfDSPFiles, key=os.path.getctime)
+hydrophoneDataFrame = pd.read_csv(latestHydrophoneFile)
+DSPDataFrame = pd.read_csv(latestDSPFile)
 
 def display_live_data(frame):
     # Variables
