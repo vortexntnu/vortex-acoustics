@@ -51,7 +51,7 @@ int16_t samplesRawHydrophone2[SAMPLE_LENGTH * 3];
 int16_t samplesRawHydrophone3[SAMPLE_LENGTH * 3];
 int16_t samplesRawHydrophone4[SAMPLE_LENGTH * 3];
 int16_t samplesRawHydrophone5[SAMPLE_LENGTH * 3];
-#define SAMPLING_TIMEOUT 60000 // [60 s] If sampling takes to long before finding a frequency of interest we exit the loop and later try again
+#define SAMPLING_TIMEOUT 10000 // [60 s] If sampling takes to long before finding a frequency of interest we exit the loop and later try again
 
 // Variables for Digital Signal Processing ==========
 int16_t samplesRawForDSP[SAMPLE_LENGTH];
@@ -67,6 +67,11 @@ int32_t frequencyVariance = 0;   // +-0 Hz
 
 // Variables for data transmission ==========
 void communicationTeensy();
+
+// prints the buffers in csv format to serial
+String channel_names[5] = {"A0", "A1", "B0", "B1", "C0"};
+void print_all_buffers_to_csv(uint16_t nb_samples, uint8_t nb_channels);
+void print_merged_buffers_to_csv();
 
 void setup() {
     Serial.begin(9600);
@@ -264,6 +269,11 @@ void loop() {
     // Send data (START) ====================================================================================================
     Serial.println("Waiting for clients requests...");
     communicationTeensy();
+
+    // * to compare data between ethernet and serial
+    print_all_buffers_to_csv(3 * SAMPLE_LENGTH, 5);
+    print_merged_buffers_to_csv();
+
     Serial.println("Data transfer complete");
     Serial.println();
     // Send data (STOP) ====================================================================================================
@@ -314,4 +324,78 @@ void communicationTeensy() {
         ethernetModule::UDP_clean_message_memory();
     }
     ethernetModule::UDP_clean_message_memory();
+}
+
+void print_all_buffers_to_csv(uint16_t nb_samples, uint8_t nb_channels) {
+    if (nb_samples > BUFFER_PER_CHANNEL * SAMPLE_LENGTH_ADC) {
+        nb_samples = BUFFER_PER_CHANNEL * SAMPLE_LENGTH_ADC;
+    }
+    // creating column names for later in pandas
+    Serial.print(",Time");
+    for (uint8_t i = 0; i < nb_channels; i++) {
+        Serial.print(",");
+        Serial.print(channel_names[i]);
+    }
+    Serial.println("");
+
+    // active buffer is one further than the last filled one, which is the oldest one now
+    uint8_t to_print_buffer = adc::active_buffer;
+    uint8_t index_buffer = 0;
+
+    // printing sample values
+    for (uint8_t buff = 0; buff < BUFFER_PER_CHANNEL; buff++) {
+        for (uint16_t sample_nb = 0; sample_nb < SAMPLE_LENGTH_ADC; sample_nb++) {
+            if (index_buffer * SAMPLE_LENGTH_ADC + sample_nb >= nb_samples) {
+                return;
+            }
+            // sample number
+            Serial.print(index_buffer * SAMPLE_LENGTH_ADC + sample_nb);
+            Serial.print(",");
+            Serial.print((uint32_t)adc::timestamps[to_print_buffer][sample_nb]);
+
+            for (uint8_t channel = 0; channel < nb_channels; channel++) {
+                Serial.print(",");
+                Serial.print((int16_t)adc::channel_buff_ptr[channel][to_print_buffer][sample_nb]);
+            }
+            Serial.println("");
+            delay(10);
+        }
+        // next buffer
+        adc::buffer_filled[to_print_buffer] = 0;
+        to_print_buffer = (to_print_buffer + 1) % BUFFER_PER_CHANNEL;
+        index_buffer++; // starts at 0 so will never go over 3
+    }
+}
+
+void print_merged_buffers_to_csv() {
+    // creating column names for later in pandas
+    Serial.print(",Time");
+    for (uint8_t i = 0; i < 5; i++) {
+        Serial.print(",");
+        Serial.print(channel_names[i]);
+    }
+    Serial.println("");
+
+    // printing sample values
+    for (uint16_t sample_nb = 0; sample_nb < SAMPLE_LENGTH_ADC * 3; sample_nb++) {
+
+        // sample number
+        Serial.print(sample_nb);
+        Serial.print(",");
+        // Serial.print((uint32_t)adc::timestamps[to_print_buffer][sample_nb]);
+
+        Serial.print(",");
+        Serial.print(samplesRawHydrophone1[sample_nb]);
+        Serial.print(",");
+        Serial.print(samplesRawHydrophone2[sample_nb]);
+        Serial.print(",");
+        Serial.print(samplesRawHydrophone3[sample_nb]);
+        Serial.print(",");
+        Serial.print(samplesRawHydrophone4[sample_nb]);
+        Serial.print(",");
+        Serial.print(samplesRawHydrophone5[sample_nb]);
+
+        Serial.println("");
+        delay(10);
+    }
 }
