@@ -270,8 +270,9 @@ void loop() {
     communicationTeensy();
 
     // * to compare data between ethernet and serial
-    print_all_buffers_to_csv(3 * SAMPLE_LENGTH, 5);
-    print_merged_buffers_to_csv();
+    // uncomment if debugging is needed
+    // print_all_buffers_to_csv(3 * SAMPLE_LENGTH, 5);
+    // print_merged_buffers_to_csv();
 
     Serial.println("Data transfer complete");
     Serial.println();
@@ -325,6 +326,8 @@ void communicationTeensy() {
     ethernetModule::UDP_clean_message_memory();
 }
 
+// if only this function prints to serial, and the serial output is saved to a file it can be plotted
+// if other prints happened, they need to be deleted in the csv file, and then plot the data
 void print_all_buffers_to_csv(uint16_t nb_samples, uint8_t nb_channels) {
     if (nb_samples > BUFFER_PER_CHANNEL * SAMPLE_LENGTH_ADC) {
         nb_samples = BUFFER_PER_CHANNEL * SAMPLE_LENGTH_ADC;
@@ -384,6 +387,7 @@ void print_merged_buffers_to_csv() {
         Serial.print(sample_nb);
 
         Serial.print(",");
+        // taking timestamps from the 3-buffer system, to be able to plot afterwarts
         to_print_buffer = (adc::active_buffer + sample_nb / 1024) % BUFFER_PER_CHANNEL;
         Serial.print((uint32_t)adc::timestamps[to_print_buffer][sample_nb % 1024]);
 
