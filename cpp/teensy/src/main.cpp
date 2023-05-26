@@ -122,19 +122,13 @@ void setup() {
     Otherwise when client request some data, the data we are pointing to has not been setup yet
     This will cause Teensy to look for data that doesn't exist and will crash the system O_O    
     */
-    // Wait until someone is connected and sends SKIP request to indicate they are ready to start receiving data
+    // Wait until someone is connected and get their IP and Port address
     Serial.println("5 - Waiting for client connection...");
     while (!ethernetModule::UDP_check_if_connected())
         ;
     clientIP = ethernetModule::get_remoteIP();
     clientPort = ethernetModule::get_remotePort();
-    for (int i = 0; i < 4; i++) {
-        Serial.print(clientIP[i]);
-        Serial.print(",");
-    }
-    Serial.println();
-    Serial.println(clientPort);
-
+    // Wait until client sends SKIP request to indicate they are ready to start receiving data
     Serial.println("5 - Waiting for client configuration...");
     communicationTeensy();
     Serial.println("5 - Client CONNECTED");
@@ -251,7 +245,6 @@ void loop() {
     for (uint8_t i = 0; i < BUFFER_PER_CHANNEL; i++) {
         adc::buffer_filled[i] = 0;
     }
-
     // Sampling (STOP) ====================================================================================================
 
     // Send data (START) ====================================================================================================
@@ -267,9 +260,8 @@ void communicationTeensy() {
     char* messageToReceive;
     char tempCharA = '0';
     char tempCharB = '0';
-    int32_t* frequencyDataFromClient;
-
-    // Endless loop until SKIP is sent back
+    
+    // Endless loop until SKIP command is sent from client
     while (true) {
         // wait until a request is sent from client
         while (!ethernetModule::UDP_check_if_connected()) {
@@ -287,6 +279,7 @@ void communicationTeensy() {
         }
         // sf - Send Frequency data
         if ((tempCharA == 's') && (tempCharB == 'f')) {
+            int32_t* frequencyDataFromClient;
             frequencyDataFromClient = teensyUDP::frequency_data_from_client();
             frequencyOfInterest = frequencyDataFromClient[0];
             frequencyVariance = frequencyDataFromClient[1];
