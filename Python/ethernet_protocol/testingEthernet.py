@@ -4,7 +4,7 @@ from socket import *
 # Teensy networking
 HOST = "10.0.0.111"
 PORT = 8888  # (non-privileged ports are > 1023)
-PC_PORT = 9999 # 15.39
+PC_PORT = 9999  # 15.39
 MAX_PACKAGE_SIZE_RECEIVED = 65536
 TIMEOUT = 1  # Wait period before giving up on communications [seconds], Remember teensy takes time to calculate everything
 address = (HOST, PORT)
@@ -24,6 +24,7 @@ clientSocket = socket(AF_INET, SOCK_DGRAM)
 clientSocket.settimeout(TIMEOUT)
 clientSocket.bind((pcIPAddress, PC_PORT))
 
+
 def check_if_available():
     try:
         # Read data
@@ -38,12 +39,14 @@ def check_if_available():
     except:
         return False
 
+
 def send_SKIP():
     try:
         # Send a request to send
         clientSocket.sendto(SEND_SKIP.encode(), address)
     except:
         print("Couldn't send SKIP command...")
+
 
 def send_frequency_of_interest(frequencyOfInterest, frequencyVariance):
     try:
@@ -57,6 +60,7 @@ def send_frequency_of_interest(frequencyOfInterest, frequencyVariance):
         clientSocket.sendto(data, address)
     except:
         print("Couldn't send Frequency data...")
+
 
 def get_data():
     data = []
@@ -128,8 +132,9 @@ def get_DSP_data():
         print("ERROR: DSP")
         return [0], [0], [0], [0]
 
-#rawSampleData, filteredSampleData, FFTData, peakData = get_DSP_data()
-#print(FFTData)
+
+# rawSampleData, filteredSampleData, FFTData, peakData = get_DSP_data()
+# print(FFTData)
 send_frequency_of_interest(10_000, 1000)
 
 while not check_if_available():
@@ -138,21 +143,16 @@ while not check_if_available():
 print("Passed!")
 
 
-
-
-
-
-
 # Get data
-#startTime = time.time()
+# startTime = time.time()
 
 # while not check_if_available():
 #     pass
 
-#send_frequency_of_interest(10_000, 1000)
+# send_frequency_of_interest(10_000, 1000)
 # BigBoy = get_raw_hydrophone_data()
 # rawSampleData, filteredSampleData, FFTData, peakData = get_DSP_data()
-#send_SKIP()
+# send_SKIP()
 
 # stoptTime = time.time()
 

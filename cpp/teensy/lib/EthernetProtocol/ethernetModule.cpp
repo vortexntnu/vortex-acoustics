@@ -18,6 +18,12 @@ void UDP_init() {
 
     // Start the ethernet connection
     Ethernet.begin(macAddressTeensy, ipAddressTeensy);
+    void UDP_init() {
+        // Configure pins for Teensy
+        Ethernet.init(20);
+
+        // Start the ethernet connection
+        Ethernet.begin(macAddressTeensy, ipAddressTeensy);
 
         // Check for Ethernet hardware present
         if (Ethernet.hardwareStatus() == EthernetNoHardware) {
@@ -58,7 +64,7 @@ void UDP_init() {
         return tempPort;
     }
 
-    void UDP_send_ready_signal(uint8_t* remoteIPArray, uint16_t remotePort) {
+    void UDP_send_ready_signal(uint8_t * remoteIPArray, uint16_t remotePort) {
         // Variables
         char UDPReplyBuffer[] = "READY";
         byte tempByte;
