@@ -143,7 +143,7 @@ while not check_if_available():
 print("Passed!")
 
 
-# Get data
+# Get data 123
 # startTime = time.time()
 
 # while not check_if_available():
