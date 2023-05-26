@@ -86,9 +86,14 @@ def display_live_data(frame):
     FFTDataFrequency = FFTDataFrequency[0:maxFrequencyIndex]
     FFTDataAmplitude = FFTData[0:maxFrequencyIndex]
 
-    peaksData = [peak for peak in peaksData if peak[1] < MAX_FREQUENCY_TO_SHOW]
-    peaksDataAmplitude = [subList[0] for subList in peaksData]
-    peaksDataFrequency = [subList[1] for subList in peaksData]
+    peaksDataAmplitude = []
+    peaksDataFrequency = []
+    try:
+        peaksData = [peak for peak in peaksData if peak[1] < MAX_FREQUENCY_TO_SHOW]
+        peaksDataAmplitude = [subList[0] for subList in peaksData]
+        peaksDataFrequency = [subList[1] for subList in peaksData]
+    except:
+        pass
 
     # Plot hydrophone data
     for i in range(5):
@@ -109,7 +114,7 @@ def display_live_data(frame):
     # Plot FFT data
     FFTAxis.clear()
     FFTAxis.set_title("FFT")
-    FFTAxis.set_xlabel("Frequency [kHz]")
+    FFTAxis.set_xlabel("Frequency [Hz]")
     FFTAxis.set_ylabel("Amplitude")
     FFTAxis.bar(FFTDataFrequency, FFTDataAmplitude, label="FFT", color=colorSoftPurple, alpha=1, width=500)
     FFTAxis.scatter(peaksDataFrequency, peaksDataAmplitude, label="Peaks", color="red", alpha=0.7, s=30, linewidths=1.4, marker="x")
