@@ -4,41 +4,72 @@ class TeensyCommunicationUDP:
     # Setup the communications with Teensy on initialization
     def __init__(
             self,
-            HOST = "10.0.0.111",
-            PORT = 8888,  # (non-privileged ports are > 1023)
+            TEENSY_IP = "10.0.0.111",
+            TEENSY_PORT = 8888,  # (non-privileged ports are > 1023)
+            MY_PORT = 9999,
             MAX_PACKAGE_SIZE_RECEIVED = 65536,
-            TIMEOUT = 60,  # Wait period before giving up on communications [seconds], Remember teensy takes time to calculate everything)
+            TIMEOUT = 10,  # Wait period before giving up on communications [seconds], Remember teensy takes time to calculate everything)
     ):
         # Teensy networking Setup
-        self.HOST = HOST
-        self.PORT = PORT
+        self.TEENSY_IP = TEENSY_IP
+        self.TEENSY_PORT = TEENSY_PORT
+        self.MY_PORT = MY_PORT
         self.MAX_PACKAGE_SIZE_RECEIVED = MAX_PACKAGE_SIZE_RECEIVED
         self.TIMEOUT = TIMEOUT
-        self.address = (HOST, PORT)
+        self.address = (TEENSY_IP, TEENSY_PORT)
 
         # Code words for communication
+        self.INITIALIZATION_MESSAGE = "HELLO :D" # This is a message only sent once to establish 2 way communication between Teensy and client
         self.SEND_SKIP = "ss"  # Send SKIP command, teensy will stop waiting for data transfer and will continue with its calculations
         self.SEND_FREQUENCY = "sf"  # Send frequency to look for and variance
         self.GET_HYDROPHONE_DATA = "gh"  # Get all 5 hydrophone raw sample data
         self.GET_DSP_DATA = "gd"  # Get Digital Signal Processing data -> raw data, filtered data, FFT data and peak data
 
+        # Get PC IP
+        pcHostname = gethostname()
+        self.MY_IP = gethostbyname(pcHostname)
+
         # Socket setup
         self.clientSocket = socket(AF_INET, SOCK_DGRAM)
         self.clientSocket.settimeout(TIMEOUT)
+        self.clientSocket.bind((self.MY_IP, self.MY_PORT))
+
+        # Send initialization message to Teensy
+        self.clientSocket.sendto(self.INITIALIZATION_MESSAGE.encode(), self.address)
+
+    def check_if_available(self):
+        try:
+            # Read data
+            rec_data, addr = self.clientSocket.recvfrom(self.MAX_PACKAGE_SIZE_RECEIVED)
+            messageReceived = rec_data.decode()
+
+            # Check if correct signal was sent
+            if messageReceived == "READY":
+                return True
+            else:
+                return False
+        except:
+            return False
 
     def send_SKIP(self):
-        # Send a request to send SKIP
-        self.clientSocket.sendto(self.SEND_SKIP.encode(), self.address)
+        try:
+            # Send a request to send frequency data
+            self.clientSocket.sendto(self.SEND_SKIP.encode(), self.address)
+        except:
+            print("Couldn't send SKIP command...")
 
     def send_frequency_of_interest(self, frequencyOfInterest, frequencyVariance):
-        # Send a request to send frequency data
-        self.clientSocket.sendto(self.SEND_FREQUENCY.encode(), self.address)
+        try:
+            # Send a request to send frequency data
+            self.clientSocket.sendto(self.SEND_FREQUENCY.encode(), self.address)
 
-        # Send data
-        data = str(frequencyOfInterest).encode()
-        self.clientSocket.sendto(data, self.address)
-        data = str(frequencyVariance).encode()
-        self.clientSocket.sendto(data, self.address)
+            # Send data
+            data = str(frequencyOfInterest).encode()
+            self.clientSocket.sendto(data, self.address)
+            data = str(frequencyVariance).encode()
+            self.clientSocket.sendto(data, self.address)
+        except:
+            print("Couldn't send Frequency data...")
 
     # Universal function for getting data from Teensy, it is standardized in Teensy to send data back in such format
     def get_data(self):
