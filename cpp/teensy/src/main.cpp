@@ -264,6 +264,7 @@ void communicationTeensy() {
     // Endless loop until SKIP command is sent from client
     while (true) {
         // wait until a request is sent from client
+        // Signal that we are ready to receive requests
         while (!ethernetModule::UDP_check_if_connected()) {
             ethernetModule::UDP_send_ready_signal(clientIP, clientPort);
         }
