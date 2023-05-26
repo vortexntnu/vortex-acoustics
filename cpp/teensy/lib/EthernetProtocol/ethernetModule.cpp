@@ -15,7 +15,7 @@ namespace ethernetModule {
 void UDP_init() {
     // Configure pins for Teensy
     Ethernet.init(20);
-    
+
     // Start the ethernet connection
     Ethernet.begin(macAddressTeensy, ipAddressTeensy);
 

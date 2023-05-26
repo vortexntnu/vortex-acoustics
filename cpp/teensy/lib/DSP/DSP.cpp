@@ -75,7 +75,6 @@ q15_t* filter_butterwort_9th_order_50kHz(int16_t* samplesRaw) {
     return samples;
 }
 
-
 //filter coefficients
 const float aFilterCoeffs1[] = {1.0, -0.44669};
 const float bFilterCoeffs1[] = {0.27665, 0.27665};
@@ -84,7 +83,7 @@ q15_t* filter_butterwort_1th_order_50kHz(int16_t* samplesRaw) {
     // Create array to store the filtered samples
     static q15_t samples[SAMPLE_LENGTH];
     int16_t i = 1;
-    static q15_t input[2] = {0, 0}; // Buffer for previous inputs
+    static q15_t input[2] = {0, 0};  // Buffer for previous inputs
     static q15_t output[2] = {0, 0}; // Buffer for previous outputs
     q15_t inputTotal = 0;
     q15_t outputTotal = 0;
@@ -98,17 +97,16 @@ q15_t* filter_butterwort_1th_order_50kHz(int16_t* samplesRaw) {
         input[i] = (q15_t)samplesRaw[index] * FILTER_AMPLIFICATION;
 
         // calculate the new output
-        inputTotal = bFilterCoeffs1[0]*input[i - 0] + bFilterCoeffs1[1]*input[i - 1];
-        outputTotal =  aFilterCoeffs1[1]*output[i - 1];
-        output[i]  = inputTotal - outputTotal;
-        output[i] = aFilterCoeffs1[0]*output[i - 0];
+        inputTotal = bFilterCoeffs1[0] * input[i - 0] + bFilterCoeffs1[1] * input[i - 1];
+        outputTotal = aFilterCoeffs1[1] * output[i - 1];
+        output[i] = inputTotal - outputTotal;
+        output[i] = aFilterCoeffs1[0] * output[i - 0];
 
         // store the new output
         samples[index] = output[i];
     }
     return samples;
 }
-
 
 q15_t* filter_butterwort_2th_order_50kHz(int16_t* samplesRaw) {
     // Create array to store the filtered samples

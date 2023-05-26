@@ -126,9 +126,9 @@ for index, longList in enumerate(BigBoy):
 
 print("=" * 100)
 print("rawSampleData")
-print (str(rawSampleData).replace(" ", ""))
+print(str(rawSampleData).replace(" ", ""))
 print("=" * 200)
-print (str(filteredSampleData).replace(" ", ""))
+print(str(filteredSampleData).replace(" ", ""))
 print("=" * 200)
 print(str(FFTData).replace(" ", ""))
 print("=" * 200)

@@ -212,7 +212,7 @@ void loop() {
     while (!adc::buffer_filled[buffer_to_check])
         ;
     // Stop Sampling
-    adc::stopConversion();    
+    adc::stopConversion();
 
     // Process data from the ring-buffer
     // active buffer is one further than the last filled one, which is the oldest one now
