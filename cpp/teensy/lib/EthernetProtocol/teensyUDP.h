@@ -12,7 +12,10 @@
 
 namespace teensyUDP {
 int32_t* frequency_data_from_client();
-void send_data(int16_t* data, int16_t lengthOfData);
+
+void send_data_16Bit(int16_t* data, int16_t lengthOfData);
+void send_data_32Bit(int32_t* data, int32_t lengthOfData);
+
 void send_hydrophone_data(int16_t* hydrophone, int16_t lengthOfData);
 void send_samples_raw_data(int16_t* samplesRaw, int16_t lengthOfData);
 void send_samples_filtered_data(q15_t* samplesFiltered, int16_t lengthOfData);

@@ -45,13 +45,13 @@ unsigned long endTime;
 // Variables for Sampling ==========
 // to be safe should be a bit under 1500. If it sampled more than 1500 for some reason, the data gathered will be inconsistent.
 uint16_t number_samples = SAMPLE_LENGTH * 3;
-uint32_t sample_period = 2.3; // >= MIN_SAMP_PERIOD_TIMER
+float sample_period = 2.3; // >= MIN_SAMP_PERIOD_TIMER
 int16_t samplesRawHydrophone1[SAMPLE_LENGTH * 3];
 int16_t samplesRawHydrophone2[SAMPLE_LENGTH * 3];
 int16_t samplesRawHydrophone3[SAMPLE_LENGTH * 3];
 int16_t samplesRawHydrophone4[SAMPLE_LENGTH * 3];
 int16_t samplesRawHydrophone5[SAMPLE_LENGTH * 3];
-#define SAMPLING_TIMEOUT 60000 // [60 s] If sampling takes to long before finding a frequency of interest we exit the loop and later try again
+#define SAMPLING_TIMEOUT 10000 // [10 s] If sampling takes to long before finding a frequency of interest we exit the loop and later try again
 
 // Variables for Digital Signal Processing ==========
 int16_t samplesRawForDSP[SAMPLE_LENGTH];
@@ -66,12 +66,13 @@ int32_t frequencyOfInterest = 0; // 0 Hz
 int32_t frequencyVariance = 0;   // +-0 Hz
 
 // Variables for data transmission ==========
+uint8_t* clientIP;
+uint16_t clientPort;
 void communicationTeensy();
 
 void setup() {
     Serial.begin(9600);
-    while (!Serial)
-        ;
+    delay(1000); // 1 second pause for giving time to enter serial monitor
     Serial.println("1 - Serial connected");
     Serial.println();
 
@@ -106,7 +107,7 @@ void setup() {
 
     // Digital Signal Processing Setup (START) ====================================================================================================
     // Fill up buffers with 0s first to not get unexpected errors
-    samplesFiltered = filter_butterwort_2th_order_50kHz(samplesRawForDSP);
+    samplesFiltered = filter_butterwort_1th_order_50kHz(samplesRawForDSP);
     FFTResultsRaw = FFT_raw(samplesFiltered);
     FFTResults = FFT_mag(FFTResultsRaw);
     peaks = peak_detection(FFTResultsRaw, FFTResults);
@@ -117,11 +118,24 @@ void setup() {
 
     // Ethernet Setup PART 2 (START) ====================================================================================================
     /*
-    NOTE: This code HAS to come after "Sampling Setup" otherwise some values are configured incorrectly
-    Why? I have no Idea, some memory magic probably =_=
+    NOTE: This code HAS to come after "Digital Signal Processing Setup" 
+    Otherwise when client request some data, the data we are pointing to has not been setup yet
+    This will cause Teensy to look for data that doesn't exist and will crash the system O_O    
     */
-    // Wait until someone is coected and sends SKIP request to indicate they are ready to start receiving data
+    // Wait until someone is connected and sends SKIP request to indicate they are ready to start receiving data
     Serial.println("5 - Waiting for client connection...");
+    while (!ethernetModule::UDP_check_if_connected())
+        ;
+    clientIP = ethernetModule::get_remoteIP();
+    clientPort = ethernetModule::get_remotePort();
+    for (int i = 0; i < 4; i++) {
+        Serial.print(clientIP[i]);
+        Serial.print(",");
+    }
+    Serial.println();
+    Serial.println(clientPort);
+
+    Serial.println("5 - Waiting for client configuration...");
     communicationTeensy();
     Serial.println("5 - Client CONNECTED");
     Serial.println();
@@ -136,7 +150,7 @@ void setup() {
 
 void loop() {
     // Sampling (START) ====================================================================================================
-    // Start sampling
+    // Start sampling ONLY use BLOCKING, others are not implemented
     adc::startConversion(sample_period, adc::BLOCKING);
     // Start sampling into the buffer
     uint8_t buffer_to_check = adc::active_buffer;
@@ -169,7 +183,7 @@ void loop() {
 
         // Digital Signal Processing (START) ====================================================================================================
         // Filter raw samples
-        samplesFiltered = filter_butterwort_2th_order_50kHz(samplesRawForDSP);
+        samplesFiltered = filter_butterwort_1th_order_50kHz(samplesRawForDSP);
 
         // Preform FFT calculations on filtered samples
         FFTResultsRaw = FFT_raw(samplesFiltered);
@@ -196,7 +210,7 @@ void loop() {
         for (int i = 1; i < lengthOfPeakArray; i++) {
             int32_t peakFrequency = peaks[i][1];
             if ((peakFrequency < frequencyOfInterestMax) && (peakFrequency > frequencyOfInterestMin)) {
-                found++;
+                found = 1;
             }
         }
 
@@ -215,6 +229,8 @@ void loop() {
     adc::stopConversion();
 
     // Process data from the ring-buffer
+    // active buffer is one further than the last filled one, which is the oldest one now
+    uint8_t bufferIndex = adc::active_buffer;
     // Saving data into array we will use further down the line
     uint16_t index = 0;
     for (uint8_t i = 0; i < BUFFER_PER_CHANNEL; i++) {
@@ -222,19 +238,20 @@ void loop() {
         for (uint16_t u = 0; u < SAMPLE_LENGTH; u++) {
             index = (SAMPLE_LENGTH * i) + u;
 
-            samplesRawHydrophone1[index] = (int16_t)adc::channel_buff_ptr[1][buffer_to_check][index];
-            samplesRawHydrophone2[index] = (int16_t)adc::channel_buff_ptr[2][buffer_to_check][index];
-            samplesRawHydrophone3[index] = (int16_t)adc::channel_buff_ptr[3][buffer_to_check][index];
-            samplesRawHydrophone4[index] = (int16_t)adc::channel_buff_ptr[4][buffer_to_check][index];
-            samplesRawHydrophone5[index] = (int16_t)adc::channel_buff_ptr[0][buffer_to_check][index];
+            samplesRawHydrophone1[index] = (int16_t)adc::channel_buff_ptr[1][bufferIndex][u];
+            samplesRawHydrophone2[index] = (int16_t)adc::channel_buff_ptr[2][bufferIndex][u];
+            samplesRawHydrophone3[index] = (int16_t)adc::channel_buff_ptr[3][bufferIndex][u];
+            samplesRawHydrophone4[index] = (int16_t)adc::channel_buff_ptr[4][bufferIndex][u];
+            samplesRawHydrophone5[index] = (int16_t)adc::channel_buff_ptr[0][bufferIndex][u];
         }
-        buffer_to_check = (buffer_to_check + 1) % BUFFER_PER_CHANNEL;
+        bufferIndex = (bufferIndex + 1) % BUFFER_PER_CHANNEL;
     }
     // Clean ring-buffers
     // this is done so that next time we can add new data into the ring-buffers
     for (uint8_t i = 0; i < BUFFER_PER_CHANNEL; i++) {
         adc::buffer_filled[i] = 0;
     }
+
     // Sampling (STOP) ====================================================================================================
 
     // Send data (START) ====================================================================================================
@@ -255,8 +272,10 @@ void communicationTeensy() {
     // Endless loop until SKIP is sent back
     while (true) {
         // wait until a request is sent from client
-        while (!ethernetModule::UDP_check_if_connected())
-            ;
+        while (!ethernetModule::UDP_check_if_connected()) {
+            ethernetModule::UDP_send_ready_signal(clientIP, clientPort);
+        }
+
         messageToReceive = ethernetModule::UDP_read_message();
         tempCharA = messageToReceive[0];
         tempCharB = messageToReceive[1];

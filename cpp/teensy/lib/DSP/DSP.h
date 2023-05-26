@@ -9,7 +9,7 @@
 #define SAMPLE_LENGTH 1024
 
 // How much should the signal should be amplified before filtering it
-#define FILTER_AMPLIFICATION 10
+#define FILTER_AMPLIFICATION 2
 
 // For FFT to shift bits
 #define BITSHIFT 9
@@ -24,6 +24,7 @@
 
 q15_t* filter_butterwort_9th_order_50kHz(int16_t* samplesRaw);
 q15_t* filter_butterwort_2th_order_50kHz(int16_t* samplesRaw);
+q15_t* filter_butterwort_1th_order_50kHz(int16_t* samplesRaw);
 
 q15_t* FFT_raw(q15_t* samples);
 q15_t* FFT_mag(q15_t* resultsRaw);
