@@ -22,8 +22,8 @@ put 9th order filter, 510kHz sampling rate and 50kHz cut-off
 const float32_t aFilterCoeffs[fOrder] = {5.4569203401896500, -13.7047980216478000, 20.6476635308150000, -20.4748421533297000, 13.8143215886326000, -6.3261752484730100, 1.8924462642157100, -0.3350397779275800, 0.0267111235596287};
 const float32_t bFilterCoeffs[fOrder + 1] = {0.00000545381633879714, 0.00004908434704917420, 0.00019633738819669700, 0.00045812057245895900, 0.00068718085868843900, 0.00068718085868843900, 0.00045812057245895900, 0.00019633738819669700, 0.00004908434704917420, 0.00000545381633879714};
 
-const float32_t aFilterCoeffs2[fOrder2] = {1.142934233, -0.412816189};
-const float32_t bFilterCoeffs2[fOrder2 + 1] = {0.0674536, 0.1349073, 0.0674536};
+const float32_t aFilterCoeffs2[fOrder2] = {0.00101196462632, -0.00035885208947};
+const float32_t bFilterCoeffs2[fOrder2 + 1] = {0.000086700190740, 0.000173400381481, 0.000086700190740};
 
 /*
 Bit reversing is applied in a lot of FFT
@@ -63,17 +63,52 @@ q15_t* filter_butterwort_9th_order_50kHz(int16_t* samplesRaw) {
         /* We iterate through the previous unfilteredsamples for the
         filtering, as it is more clean and convenient.*/
         for (int k = 0; k < fOrder + 1; k++) {
-            input_influence += bFilterCoeffs[k] * (samplesRaw[i - k] * FILTER_AMPLIFICATION);
+            input_influence += bFilterCoeffs[k] * (samplesRaw[i - k]);
         }
 
         float influenceTotalFloat = output_influence + input_influence;
 
         // Convert float to q15 datatype in the correct way
         q15_t influenceTotalQ15 = (q15_t)influenceTotalFloat;
-        samples[i] = influenceTotalQ15;
+        samples[i] = influenceTotalQ15 * FILTER_AMPLIFICATION;
     }
     return samples;
 }
+
+
+//filter coefficients
+const float aFilterCoeffs1[] = {1.0, -0.44669};
+const float bFilterCoeffs1[] = {0.27665, 0.27665};
+
+q15_t* filter_butterwort_1th_order_50kHz(int16_t* samplesRaw) {
+    // Create array to store the filtered samples
+    static q15_t samples[SAMPLE_LENGTH];
+    int16_t i = 1;
+    static q15_t input[2] = {0, 0}; // Buffer for previous inputs
+    static q15_t output[2] = {0, 0}; // Buffer for previous outputs
+    q15_t inputTotal = 0;
+    q15_t outputTotal = 0;
+
+    for (int index = 0; index < SAMPLE_LENGTH; index++) {
+        // shift the old samples
+        input[i - 1] = input[i];
+        output[i - 1] = output[i];
+
+        // get the new input
+        input[i] = (q15_t)samplesRaw[index] * FILTER_AMPLIFICATION;
+
+        // calculate the new output
+        inputTotal = bFilterCoeffs1[0]*input[i - 0] + bFilterCoeffs1[1]*input[i - 1];
+        outputTotal =  aFilterCoeffs1[1]*output[i - 1];
+        output[i]  = inputTotal - outputTotal;
+        output[i] = aFilterCoeffs1[0]*output[i - 0];
+
+        // store the new output
+        samples[index] = output[i];
+    }
+    return samples;
+}
+
 
 q15_t* filter_butterwort_2th_order_50kHz(int16_t* samplesRaw) {
     // Create array to store the filtered samples
@@ -176,7 +211,7 @@ we return the peaks:
 */
 std::vector<std::vector<q31_t>> peak_detection(q15_t* resultsRaw, q15_t* results) {
     // Dynamically allocate the 2D array
-    static q31_t peaks[SAMPLE_LENGTH][2];
+    q31_t peaks[SAMPLE_LENGTH][2];
 
     /*
     Once we allocated the memory to the 2d array, the memory that we have

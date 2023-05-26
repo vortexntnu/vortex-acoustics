@@ -5,7 +5,7 @@ from socket import *
 HOST = "10.0.0.111"
 PORT = 8888  # (non-privileged ports are > 1023)
 MAX_PACKAGE_SIZE_RECEIVED = 65536
-TIMEOUT = 60  # Wait period before giving up on communications [seconds], Remember teensy takes time to calculate everything
+TIMEOUT = 1  # Wait period before giving up on communications [seconds], Remember teensy takes time to calculate everything
 address = (HOST, PORT)
 
 # Code words for communication
@@ -107,7 +107,7 @@ def get_DSP_data():
 # Get data
 startTime = time.time()
 
-send_frequency_of_interest(20000, 1000)
+send_frequency_of_interest(10000, 1000)
 BigBoy = get_raw_hydrophone_data()
 rawSampleData, filteredSampleData, FFTData, peakData = get_DSP_data()
 send_SKIP()
@@ -126,11 +126,11 @@ for index, longList in enumerate(BigBoy):
 
 print("=" * 100)
 print("rawSampleData")
-print(rawSampleData)
+print (str(rawSampleData).replace(" ", ""))
 print("=" * 200)
-print(filteredSampleData)
+print (str(filteredSampleData).replace(" ", ""))
 print("=" * 200)
-print(FFTData)
+print(str(FFTData).replace(" ", ""))
 print("=" * 200)
 print(peakData)
 print("=" * 200)

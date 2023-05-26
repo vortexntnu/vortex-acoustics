@@ -51,7 +51,7 @@ int16_t samplesRawHydrophone2[SAMPLE_LENGTH * 3];
 int16_t samplesRawHydrophone3[SAMPLE_LENGTH * 3];
 int16_t samplesRawHydrophone4[SAMPLE_LENGTH * 3];
 int16_t samplesRawHydrophone5[SAMPLE_LENGTH * 3];
-#define SAMPLING_TIMEOUT 10000 // [60 s] If sampling takes to long before finding a frequency of interest we exit the loop and later try again
+#define SAMPLING_TIMEOUT 10000 // [10 s] If sampling takes to long before finding a frequency of interest we exit the loop and later try again
 
 // Variables for Digital Signal Processing ==========
 int16_t samplesRawForDSP[SAMPLE_LENGTH];
@@ -68,15 +68,9 @@ int32_t frequencyVariance = 0;   // +-0 Hz
 // Variables for data transmission ==========
 void communicationTeensy();
 
-// prints the buffers in csv format to serial
-String channel_names[5] = {"A0", "A1", "B0", "B1", "C0"};
-void print_all_buffers_to_csv(uint16_t nb_samples, uint8_t nb_channels);
-void print_merged_buffers_to_csv();
-
 void setup() {
     Serial.begin(9600);
-    while (!Serial)
-        ;
+    delay(1000); // 1 second pause for giving time to enter serial monitor
     Serial.println("1 - Serial connected");
     Serial.println();
 
@@ -111,7 +105,7 @@ void setup() {
 
     // Digital Signal Processing Setup (START) ====================================================================================================
     // Fill up buffers with 0s first to not get unexpected errors
-    samplesFiltered = filter_butterwort_2th_order_50kHz(samplesRawForDSP);
+    samplesFiltered = filter_butterwort_1th_order_50kHz(samplesRawForDSP);
     FFTResultsRaw = FFT_raw(samplesFiltered);
     FFTResults = FFT_mag(FFTResultsRaw);
     peaks = peak_detection(FFTResultsRaw, FFTResults);
@@ -122,10 +116,11 @@ void setup() {
 
     // Ethernet Setup PART 2 (START) ====================================================================================================
     /*
-    NOTE: This code HAS to come after "Sampling Setup" otherwise some values are configured incorrectly
-    Why? I have no Idea, some memory magic probably =_=
+    NOTE: This code HAS to come after "Digital Signal Processing Setup" 
+    Otherwise when client request some data, the data we are pointing to has not been setup yet
+    This will cause Teensy to look for data that doesn't exist and will crash the system O_O    
     */
-    // Wait until someone is coected and sends SKIP request to indicate they are ready to start receiving data
+    // Wait until someone is connected and sends SKIP request to indicate they are ready to start receiving data
     Serial.println("5 - Waiting for client connection...");
     communicationTeensy();
     Serial.println("5 - Client CONNECTED");
@@ -161,15 +156,12 @@ void loop() {
     int32_t frequencyOfInterestMax = frequencyOfInterest + frequencyVariance;
     int32_t frequencyOfInterestMin = frequencyOfInterest - frequencyVariance;
     uint8_t found = 0;
-    uint32_t counting_calculations_in_time = 0;
     unsigned long samplingStartTime = millis();
     while (!found) {
         // Wait until first ring buffer is filled
         while (!adc::buffer_filled[buffer_to_check])
             ;
 
-        // when starting calculation, saves the buffer nb that is being filled during
-        uint32_t buffer_nb_when_start_fft = adc::overall_buffer_count;
         // Save raw sampled data
         for (uint16_t i = 0; i < SAMPLE_LENGTH; i++) {
             samplesRawForDSP[i] = (int16_t)adc::channel_buff_ptr[1][buffer_to_check][i];
@@ -177,7 +169,7 @@ void loop() {
 
         // Digital Signal Processing (START) ====================================================================================================
         // Filter raw samples
-        samplesFiltered = filter_butterwort_2th_order_50kHz(samplesRawForDSP);
+        samplesFiltered = filter_butterwort_1th_order_50kHz(samplesRawForDSP);
 
         // Preform FFT calculations on filtered samples
         FFTResultsRaw = FFT_raw(samplesFiltered);
@@ -215,33 +207,16 @@ void loop() {
         if ((millis() - samplingStartTime) > SAMPLING_TIMEOUT) {
             break;
         }
-
-        // checking if calculations took too long
-        if (buffer_nb_when_start_fft == adc::overall_buffer_count) {
-            counting_calculations_in_time++;
-        } else if (buffer_nb_when_start_fft != adc::overall_buffer_count) {
-            found = 2;
-            // break;
-        }
     }
     // After finding peaks of interest let the last sampling sequence finish
     while (!adc::buffer_filled[buffer_to_check])
         ;
     // Stop Sampling
-    adc::stopConversion();
-
-    Serial.print("number of buffers filled : ");
-    Serial.println(adc::overall_buffer_count);
-    Serial.print("Calculation in time : ");
-    Serial.println(counting_calculations_in_time);
-
-    if (found == 2) {
-        Serial.println("ERROR - calculations took too long");
-    }
+    adc::stopConversion();    
 
     // Process data from the ring-buffer
     // active buffer is one further than the last filled one, which is the oldest one now
-    uint8_t to_print_buffer = adc::active_buffer;
+    uint8_t bufferIndex = adc::active_buffer;
     // Saving data into array we will use further down the line
     uint16_t index = 0;
     for (uint8_t i = 0; i < BUFFER_PER_CHANNEL; i++) {
@@ -249,13 +224,13 @@ void loop() {
         for (uint16_t u = 0; u < SAMPLE_LENGTH; u++) {
             index = (SAMPLE_LENGTH * i) + u;
 
-            samplesRawHydrophone1[index] = (int16_t)adc::channel_buff_ptr[1][to_print_buffer][u];
-            samplesRawHydrophone2[index] = (int16_t)adc::channel_buff_ptr[2][to_print_buffer][u];
-            samplesRawHydrophone3[index] = (int16_t)adc::channel_buff_ptr[3][to_print_buffer][u];
-            samplesRawHydrophone4[index] = (int16_t)adc::channel_buff_ptr[4][to_print_buffer][u];
-            samplesRawHydrophone5[index] = (int16_t)adc::channel_buff_ptr[0][to_print_buffer][u];
+            samplesRawHydrophone1[index] = (int16_t)adc::channel_buff_ptr[1][bufferIndex][u];
+            samplesRawHydrophone2[index] = (int16_t)adc::channel_buff_ptr[2][bufferIndex][u];
+            samplesRawHydrophone3[index] = (int16_t)adc::channel_buff_ptr[3][bufferIndex][u];
+            samplesRawHydrophone4[index] = (int16_t)adc::channel_buff_ptr[4][bufferIndex][u];
+            samplesRawHydrophone5[index] = (int16_t)adc::channel_buff_ptr[0][bufferIndex][u];
         }
-        to_print_buffer = (to_print_buffer + 1) % BUFFER_PER_CHANNEL;
+        bufferIndex = (bufferIndex + 1) % BUFFER_PER_CHANNEL;
     }
     // Clean ring-buffers
     // this is done so that next time we can add new data into the ring-buffers
@@ -268,12 +243,6 @@ void loop() {
     // Send data (START) ====================================================================================================
     Serial.println("Waiting for clients requests...");
     communicationTeensy();
-
-    // * to compare data between ethernet and serial
-    // uncomment if debugging is needed
-    // print_all_buffers_to_csv(3 * SAMPLE_LENGTH, 5);
-    // print_merged_buffers_to_csv();
-
     Serial.println("Data transfer complete");
     Serial.println();
     // Send data (STOP) ====================================================================================================
@@ -324,85 +293,4 @@ void communicationTeensy() {
         ethernetModule::UDP_clean_message_memory();
     }
     ethernetModule::UDP_clean_message_memory();
-}
-
-// if only this function prints to serial, and the serial output is saved to a file it can be plotted
-// if other prints happened, they need to be deleted in the csv file, and then plot the data
-void print_all_buffers_to_csv(uint16_t nb_samples, uint8_t nb_channels) {
-    if (nb_samples > BUFFER_PER_CHANNEL * SAMPLE_LENGTH_ADC) {
-        nb_samples = BUFFER_PER_CHANNEL * SAMPLE_LENGTH_ADC;
-    }
-    // creating column names for later in pandas
-    Serial.print(",Time");
-    for (uint8_t i = 0; i < nb_channels; i++) {
-        Serial.print(",");
-        Serial.print(channel_names[i]);
-    }
-    Serial.println("");
-
-    // active buffer is one further than the last filled one, which is the oldest one now
-    uint8_t to_print_buffer = adc::active_buffer;
-    uint8_t index_buffer = 0;
-
-    // printing sample values
-    for (uint8_t buff = 0; buff < BUFFER_PER_CHANNEL; buff++) {
-        for (uint16_t sample_nb = 0; sample_nb < SAMPLE_LENGTH_ADC; sample_nb++) {
-            if (index_buffer * SAMPLE_LENGTH_ADC + sample_nb >= nb_samples) {
-                return;
-            }
-            // sample number
-            Serial.print(index_buffer * SAMPLE_LENGTH_ADC + sample_nb);
-            Serial.print(",");
-            Serial.print((uint32_t)adc::timestamps[to_print_buffer][sample_nb]);
-
-            for (uint8_t channel = 0; channel < nb_channels; channel++) {
-                Serial.print(",");
-                Serial.print((int16_t)adc::channel_buff_ptr[channel][to_print_buffer][sample_nb]);
-            }
-            Serial.println("");
-            delay(10);
-        }
-        // next buffer
-        adc::buffer_filled[to_print_buffer] = 0;
-        to_print_buffer = (to_print_buffer + 1) % BUFFER_PER_CHANNEL;
-        index_buffer++; // starts at 0 so will never go over 3
-    }
-}
-
-void print_merged_buffers_to_csv() {
-    uint8_t to_print_buffer;
-
-    // creating column names for later in pandas
-    Serial.print(",Time");
-    for (uint8_t i = 0; i < 5; i++) {
-        Serial.print(",");
-        Serial.print(channel_names[i]);
-    }
-    Serial.println("");
-
-    // printing sample values
-    for (uint16_t sample_nb = 0; sample_nb < SAMPLE_LENGTH_ADC * 3; sample_nb++) {
-
-        // sample number
-        Serial.print(sample_nb);
-
-        Serial.print(",");
-        // taking timestamps from the 3-buffer system, to be able to plot afterwarts
-        to_print_buffer = (adc::active_buffer + sample_nb / 1024) % BUFFER_PER_CHANNEL;
-        Serial.print((uint32_t)adc::timestamps[to_print_buffer][sample_nb % 1024]);
-
-        Serial.print(",");
-        Serial.print(samplesRawHydrophone1[sample_nb]);
-        Serial.print(",");
-        Serial.print(samplesRawHydrophone2[sample_nb]);
-        Serial.print(",");
-        Serial.print(samplesRawHydrophone3[sample_nb]);
-        Serial.print(",");
-        Serial.print(samplesRawHydrophone4[sample_nb]);
-        Serial.print(",");
-        Serial.print(samplesRawHydrophone5[sample_nb]);
-
-        Serial.println("");
-        delay(10);
-    }
 }
