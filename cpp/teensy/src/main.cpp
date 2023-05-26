@@ -66,6 +66,8 @@ int32_t frequencyOfInterest = 0; // 0 Hz
 int32_t frequencyVariance = 0;   // +-0 Hz
 
 // Variables for data transmission ==========
+uint8_t* clientIP;
+uint16_t clientPort;
 void communicationTeensy();
 
 void setup() {
@@ -122,6 +124,16 @@ void setup() {
     */
     // Wait until someone is connected and sends SKIP request to indicate they are ready to start receiving data
     Serial.println("5 - Waiting for client connection...");
+    while (!ethernetModule::UDP_check_if_connected());
+    clientIP = ethernetModule::get_remoteIP();
+    clientPort = ethernetModule::get_remotePort();
+    for (int i = 0; i < 4; i++) {
+        Serial.print(clientIP[i]);Serial.print(",");
+    }
+    Serial.println();
+    Serial.println(clientPort);
+    
+    Serial.println("5 - Waiting for client configuration...");
     communicationTeensy();
     Serial.println("5 - Client CONNECTED");
     Serial.println();
@@ -258,8 +270,10 @@ void communicationTeensy() {
     // Endless loop until SKIP is sent back
     while (true) {
         // wait until a request is sent from client
-        while (!ethernetModule::UDP_check_if_connected())
-            ;
+        while (!ethernetModule::UDP_check_if_connected()) {
+            ethernetModule::UDP_send_ready_signal(clientIP, clientPort);
+        }
+            
         messageToReceive = ethernetModule::UDP_read_message();
         tempCharA = messageToReceive[0];
         tempCharB = messageToReceive[1];

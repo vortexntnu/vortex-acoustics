@@ -4,6 +4,7 @@ from socket import *
 # Teensy networking
 HOST = "10.0.0.111"
 PORT = 8888  # (non-privileged ports are > 1023)
+PC_PORT = 9999 # 15.39
 MAX_PACKAGE_SIZE_RECEIVED = 65536
 TIMEOUT = 1  # Wait period before giving up on communications [seconds], Remember teensy takes time to calculate everything
 address = (HOST, PORT)
@@ -14,26 +15,48 @@ SEND_FREQUENCY = "sf"  # Send frequency to look for and variance
 GET_HYDROPHONE_DATA = "gh"  # Get all 5 hydrophone raw sample data
 GET_DSP_DATA = "gd"  # Get Digital Signal Processing data -> raw data, filtered data, FFT data and peak data
 
+# Get PC IP
+pcHostname = gethostname()
+pcIPAddress = gethostbyname(pcHostname)
+
 # Socket setup
 clientSocket = socket(AF_INET, SOCK_DGRAM)
 clientSocket.settimeout(TIMEOUT)
+clientSocket.bind((pcIPAddress, PC_PORT))
 
+def check_if_available():
+    try:
+        # Read data
+        rec_data, addr = clientSocket.recvfrom(MAX_PACKAGE_SIZE_RECEIVED)
+        messageReceived = rec_data.decode()
+
+        # Check if data is done sending, else save
+        if messageReceived == "READY":
+            return True
+        else:
+            return False
+    except:
+        return False
 
 def send_SKIP():
-    # Send a request to send
-    clientSocket.sendto(SEND_SKIP.encode(), address)
-
+    try:
+        # Send a request to send
+        clientSocket.sendto(SEND_SKIP.encode(), address)
+    except:
+        print("Couldn't send SKIP command...")
 
 def send_frequency_of_interest(frequencyOfInterest, frequencyVariance):
-    # Send a request to send
-    clientSocket.sendto(SEND_FREQUENCY.encode(), address)
+    try:
+        # Send a request to send
+        clientSocket.sendto(SEND_FREQUENCY.encode(), address)
 
-    # Send data
-    data = str(frequencyOfInterest).encode()
-    clientSocket.sendto(data, address)
-    data = str(frequencyVariance).encode()
-    clientSocket.sendto(data, address)
-
+        # Send data
+        data = str(frequencyOfInterest).encode()
+        clientSocket.sendto(data, address)
+        data = str(frequencyVariance).encode()
+        clientSocket.sendto(data, address)
+    except:
+        print("Couldn't send Frequency data...")
 
 def get_data():
     data = []
@@ -75,7 +98,8 @@ def get_raw_hydrophone_data():
 
         return allHydrophoneData
     except:
-        return "ERROR"
+        print("ERROR: hydrophone")
+        return [[0], [0], [0], [0], [0]]
 
 
 def get_DSP_data():
@@ -101,38 +125,57 @@ def get_DSP_data():
 
         return rawSampleData, filteredSampleData, FFTData, peakData
     except:
-        return "ERROR"
+        print("ERROR: DSP")
+        return [0], [0], [0], [0]
+
+
+#rawSampleData, filteredSampleData, FFTData, peakData = get_DSP_data()
+#print(FFTData)
+send_frequency_of_interest(10_000, 1000)
+
+while not check_if_available():
+    pass
+
+#print("Passed!")
+
+
+
+
+
 
 
 # Get data
-startTime = time.time()
+#startTime = time.time()
 
-send_frequency_of_interest(10000, 1000)
-BigBoy = get_raw_hydrophone_data()
-rawSampleData, filteredSampleData, FFTData, peakData = get_DSP_data()
-send_SKIP()
+# while not check_if_available():
+#     pass
 
-stoptTime = time.time()
+#send_frequency_of_interest(10_000, 1000)
+# BigBoy = get_raw_hydrophone_data()
+# rawSampleData, filteredSampleData, FFTData, peakData = get_DSP_data()
+#send_SKIP()
 
-print("=" * 200)
+# stoptTime = time.time()
 
-# Print data
-for index, longList in enumerate(BigBoy):
-    print("=" * 100)
-    print("Hydrophone " + str(index + 1))
-    print(len(longList))
-    print("=" * 100)
-    print(longList)
+# print("=" * 200)
 
-print("=" * 100)
-print("rawSampleData")
-print (str(rawSampleData).replace(" ", ""))
-print("=" * 200)
-print (str(filteredSampleData).replace(" ", ""))
-print("=" * 200)
-print(str(FFTData).replace(" ", ""))
-print("=" * 200)
-print(peakData)
-print("=" * 200)
+# # Print data
+# for index, longList in enumerate(BigBoy):
+#     print("=" * 100)
+#     print("Hydrophone " + str(index + 1))
+#     print(len(longList))
+#     print("=" * 100)
+#     print(longList)
 
-print(stoptTime - startTime)
+# print("=" * 100)
+# print("rawSampleData")
+# print (str(rawSampleData).replace(" ", ""))
+# print("=" * 200)
+# print (str(filteredSampleData).replace(" ", ""))
+# print("=" * 200)
+# print(str(FFTData).replace(" ", ""))
+# print("=" * 200)
+# print(peakData)
+# print("=" * 200)
+
+# print(stoptTime - startTime)

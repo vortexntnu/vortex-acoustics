@@ -4,10 +4,6 @@
 int32_t frequencyData[2];
 
 namespace teensyUDP {
-    void signal_to_client_ready_to_send_data() {
-        
-    }
-
     int32_t* frequency_data_from_client() {
         int32_t frequencyOfInterest;
         int32_t frequencyVariance;
