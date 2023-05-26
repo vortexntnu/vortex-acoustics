@@ -135,7 +135,7 @@ send_frequency_of_interest(10_000, 1000)
 while not check_if_available():
     pass
 
-#print("Passed!")
+print("Passed!")
 
 
 
