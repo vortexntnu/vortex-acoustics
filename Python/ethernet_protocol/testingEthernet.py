@@ -128,7 +128,6 @@ def get_DSP_data():
         print("ERROR: DSP")
         return [0], [0], [0], [0]
 
-
 #rawSampleData, filteredSampleData, FFTData, peakData = get_DSP_data()
 #print(FFTData)
 send_frequency_of_interest(10_000, 1000)
