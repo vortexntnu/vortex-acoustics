@@ -5,23 +5,11 @@ PARENT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__f
 MY_FILE_DIR = f"{PARENT_DIR}/utilities/plot_live_teensy_data/"
 sys.path.append(PARENT_DIR)
 
-from ethernet_protocol import ethernetProtocolTeensy
 from datetime import datetime
 import csv
+
 import time
-
-# Variables ==================================================
-frequencyOfInterest = 20_000 # 20 kHz
-frequencyVariance = 2_000 # 2 kHz
-
-# Setup ethernet protocol
-teensy = ethernetProtocolTeensy.TeensyCommunicationUDP(
-    TEENSY_IP = "10.0.0.111",
-    TEENSY_PORT = 8888,
-    MY_PORT = 9999,
-    MAX_PACKAGE_SIZE_RECEIVED = 65536,
-    TIMEOUT = 10,
-)
+import random
 
 # Create files we will write data to
 dateAndTime = datetime.now()
@@ -37,15 +25,51 @@ with open(f"{MY_FILE_DIR}DSP_data/DSP_{formattedDateAndTime}.csv", "w", encoding
     writer = csv.writer(f)
     writer.writerow(DSPHeader)
 
+# Functions ==================================================
+def randomDataHydrophones(minVal, maxVal):
+    hydrophoneNr = 5
+    lengthOfList = 3072
+    buffer = [[], [], [], [], []]
+
+    for i in range(hydrophoneNr):
+        for u in range(lengthOfList):
+            randomValue = random.randint(minVal, maxVal)
+            buffer[i].append(randomValue)
+    
+    return buffer
+
+def randomDataDSP(minVal, maxVal):
+    lengthOfList = 1024
+    buffer = []
+
+    for i in range(lengthOfList):
+        randomValue = random.randint(minVal, maxVal)
+        buffer.append(randomValue)
+    
+    return buffer
+
+def randomPeaks(minValA, maxValA, minValF, maxValF):
+    lengthOfList = random.randint(0, 100)
+    buffer = []
+
+    for i in range(lengthOfList):
+        tempList = []
+        tempList.append(random.randint(minValA, maxValA))
+        tempList.append(random.randint(minValF, maxValF))
+        tempList.append(random.randint(-1000, 1000))
+
+        buffer.append(tempList)
+    
+    return buffer
+
 # Infinite loop for reading data
 while True:
     try:
-        while not teensy.check_if_available():
-            pass
-        teensy.send_frequency_of_interest(frequencyOfInterest, frequencyVariance)
-        hydrophoneData = teensy.get_raw_hydrophone_data()
-        rawSampleData, filteredSampleData, FFTData, peakData = teensy.get_DSP_data()
-        teensy.send_SKIP() # Once we are done we NEED to send teensy a confirmation code so that it can continue to calculate with the new given information
+        hydrophoneData = randomDataHydrophones(-500, 500)
+        rawSampleData = randomDataDSP(-500, 500)
+        filteredSampleData = randomDataDSP(-1_000, 1_000)
+        FFTData = randomDataDSP(0, 10_000)
+        peakData = randomPeaks(0, 10_000, 0, 400_000)
 
         # Save data to csv files
         with open(f"{MY_FILE_DIR}hydrophone_data/hydrophone_{formattedDateAndTime}.csv", "a", encoding="UTF8", newline="") as f:
@@ -58,4 +82,5 @@ while True:
         print("Data Saved")
     except:
         print("ERROR")
-        time.sleep(1)
+
+    time.sleep(1)

@@ -9,14 +9,14 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import matplotlib.animation as animation
 import pandas as pd
+import ast
 import glob
 import os
-
-import random
 
 # Important variables for later
 SAMPLE_RATE = 430_000 # 430 kHz
 MAX_FREQUENCY_TO_SHOW = 60_000 # 60 kHz
+FPS = 1
 
 # Make a good plot layout ==================================================
 fig = plt.figure()
@@ -42,58 +42,68 @@ filterAxis = fig.add_subplot(gs_dsp[1])
 # Plot type so that the size is dynamic
 plt.tight_layout()
 
-# Get the latest csv file
+# Select nice color pallet for graphs
+colorSoftPurple = (168/255, 140/255, 220/255)
+colorSoftBlue = (135/255, 206/255, 250/255)
+colorSoftGreen = (122/255, 200/255, 122/255)
+
+# Get the latest csv file names
 listOfHydrophoneFiles = glob.glob(f"{MY_FILE_DIR}hydrophone_data/*.csv")
 latestHydrophoneFile = max(listOfHydrophoneFiles, key=os.path.getctime)
-listOfDSPFiles = glob.glob(f"{MY_FILE_DIR}hydrophone_data/*.csv")
+listOfDSPFiles = glob.glob(f"{MY_FILE_DIR}DSP_data/*.csv")
 latestDSPFile = max(listOfDSPFiles, key=os.path.getctime)
-hydrophoneDataFrame = pd.read_csv(latestHydrophoneFile)
-DSPDataFrame = pd.read_csv(latestDSPFile)
 
 def display_live_data(frame):
-    # Variables
-    xHydrophone = []
-    hydrophoneData = [[], [], [], [], []]
-    xFilter = []
-    sampleData = []
-    filterData = []
-    xFFT = []
-    FFTData = []
-    xPeaks = []
-    peaksData = []
+    # Read latest data
+    hydrophoneDataFrame = pd.read_csv(latestHydrophoneFile)
+    DSPDataFrame = pd.read_csv(latestDSPFile)
 
-    # Get hydrophone data
-    for i in range(100):
-        xHydrophone.append(i)
-        hydrophoneData[0].append(random.randint(-100, 100))
-        hydrophoneData[1].append(random.randint(-50, 50))
-        hydrophoneData[2].append(random.randint(-100, 100))
-        hydrophoneData[3].append(random.randint(-100, 100))
-        hydrophoneData[4].append(random.randint(-100, 100))
+    # Get latest hydrophone data
+    hydrophoneData = [[],[],[],[],[]]
+    hydrophoneData[0] = ast.literal_eval(hydrophoneDataFrame["hydrophone1"].tail(1).values[0])
+    hydrophoneData[1] = ast.literal_eval(hydrophoneDataFrame["hydrophone2"].tail(1).values[0])
+    hydrophoneData[2] = ast.literal_eval(hydrophoneDataFrame["hydrophone3"].tail(1).values[0])
+    hydrophoneData[3] = ast.literal_eval(hydrophoneDataFrame["hydrophone4"].tail(1).values[0])
+    hydrophoneData[4] = ast.literal_eval(hydrophoneDataFrame["hydrophone5"].tail(1).values[0])
 
     # Get DSP data
-    for i in range(50):
-        xFilter.append(i)
-        sampleData.append(random.randint(-100, 100))
-        filterData.append(random.randint(-200, 200))
-    for i in range(30):
-        xFFT.append(i)
-        FFTData.append(random.randint(0, 6000))
-    for i in range(10):
-        xPeaks.append(random.randint(0, 30))
-        peaksData.append(random.randint(0, 6000))
+    rawData = ast.literal_eval(DSPDataFrame["raw_samples"].tail(1).values[0])
+    filterData = ast.literal_eval(DSPDataFrame["filtered_samples"].tail(1).values[0])
+    FFTData = ast.literal_eval(DSPDataFrame["FFT"].tail(1).values[0])
+    peaksData = ast.literal_eval(DSPDataFrame["peaks"].tail(1).values[0])
+
+    """
+    Post process DSP data to desired scale and amount
+
+    1. Convert FFTData to its corresponding frequency amount
+    2. Cut out big FFT frequencies out as they are not relevant
+    3. Cut out big peak frequencies as they are not relevant 
+    """
+    sampleLength = len(FFTData)
+    FFTDataFrequency = [(i * (SAMPLE_RATE / sampleLength)) for i in range(sampleLength)]
+
+    maxFrequencyIndex = int(MAX_FREQUENCY_TO_SHOW * sampleLength / SAMPLE_RATE)
+    FFTDataFrequency = FFTDataFrequency[0:maxFrequencyIndex]
+    FFTDataAmplitude = FFTData[0:maxFrequencyIndex]
+
+    peaksData = [peak for peak in peaksData if peak[1] < MAX_FREQUENCY_TO_SHOW]
+    peaksDataAmplitude = [subList[0] for subList in peaksData]
+    peaksDataFrequency = [subList[1] for subList in peaksData]
 
     # Plot hydrophone data
     for i in range(5):
+        xHydrophone = list(range(len(hydrophoneData[i])))
         hydrophoneAxis[i].clear()
-        hydrophoneAxis[i].plot(xHydrophone, hydrophoneData[i], label=f"Hydrophone {i + 1}", color="blue", alpha=0.3)
+        hydrophoneAxis[i].plot(xHydrophone, hydrophoneData[i], label=f"Hydrophone {i + 1}", color=colorSoftBlue, alpha=1)
         hydrophoneAxis[i].legend(loc="upper right", fontsize="xx-small")
     
     # Plot Filter response
+    xRaw = list(range(len(rawData)))
+    xFilter = list(range(len(filterData)))
     filterAxis.clear()
     filterAxis.set_title("Filter response")
-    filterAxis.plot(xFilter, sampleData, label="Raw", color="blue", alpha=0.3)
-    filterAxis.plot(xFilter, filterData, label="Filter", color="green", alpha=0.5)
+    filterAxis.plot(xRaw, rawData, label="Raw", color=colorSoftBlue, alpha=0.5)
+    filterAxis.plot(xFilter, filterData, label="Filter", color=colorSoftGreen, alpha=0.7)
     filterAxis.legend(loc="upper right", fontsize="xx-small")
 
     # Plot FFT data
@@ -101,10 +111,10 @@ def display_live_data(frame):
     FFTAxis.set_title("FFT")
     FFTAxis.set_xlabel("Frequency [kHz]")
     FFTAxis.set_ylabel("Amplitude")
-    FFTAxis.bar(xFFT, FFTData, label="FFT", color="blue", alpha=0.7, width=0.8)
-    FFTAxis.scatter(xPeaks, peaksData, label="Peaks", color="red", alpha=0.7, s=30, linewidths=1.4, marker="x")
+    FFTAxis.bar(FFTDataFrequency, FFTDataAmplitude, label="FFT", color=colorSoftPurple, alpha=1, width=500)
+    FFTAxis.scatter(peaksDataFrequency, peaksDataAmplitude, label="Peaks", color="red", alpha=0.7, s=30, linewidths=1.4, marker="x")
     FFTAxis.legend(loc="upper right", fontsize="xx-small")
 
 # Plotting live data
-ani = animation.FuncAnimation(fig, display_live_data, interval=1000)
+ani = animation.FuncAnimation(fig, display_live_data, interval=1000/FPS)
 plt.show()
