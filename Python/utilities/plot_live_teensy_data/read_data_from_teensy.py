@@ -65,4 +65,6 @@ while True:
         print("Data Saved")
     except:
         print("ERROR")
-        time.sleep(1)
+    
+    # A little pause to not overwhelm the processor
+    time.sleep(0.5)
