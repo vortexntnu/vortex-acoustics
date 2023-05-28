@@ -105,7 +105,7 @@ class TeensyCommunicationUDP:
                 done = True
             else:
                 if (self.test == "Testing"):
-                    print(messageReceived)
+                    print("Message is: " + messageReceived)
                 tempStringList.append(messageReceived)
                 index += 1
 
