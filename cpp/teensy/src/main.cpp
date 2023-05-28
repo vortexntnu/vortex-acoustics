@@ -270,7 +270,7 @@ void communicationTeensy() {
         while (!ethernetModule::UDP_check_if_connected()) {
             ethernetModule::UDP_send_ready_signal(clientIP, clientPort);
             // Necessary delay so that client doesn't get overwhelmed with data
-            delay(100);
+            delay(500);
         }
 
         messageToReceive = ethernetModule::UDP_read_message();
