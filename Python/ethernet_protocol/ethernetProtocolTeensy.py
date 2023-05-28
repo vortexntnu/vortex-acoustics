@@ -95,6 +95,9 @@ class TeensyCommunicationUDP:
             if messageReceived == "READY":
                 self.send_acknowledge_signal()
             elif messageReceived == "DONE":
+                if (self.test == "Testing"):
+                    print("Done message")
+                    print(messageReceived)
                 done = True
             else:
                 if (self.test == "Testing"):
