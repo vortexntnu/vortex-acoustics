@@ -81,7 +81,9 @@ class TeensyCommunicationUDP:
     def get_data(self):
         data = []
         done = False
+        tempStringList = []
         tempString = ""
+        index = 0
 
         while not done:
             # Read data
@@ -97,7 +99,11 @@ class TeensyCommunicationUDP:
             else:
                 if (self.test == "Testing"):
                     print(messageReceived)
-                tempString += messageReceived
+                tempStringList.append(messageReceived)
+                index += 1
+
+        for value in tempStringList:
+            tempString += value
 
         # Try saving string into a integer array, if error -> string empty
         try:
