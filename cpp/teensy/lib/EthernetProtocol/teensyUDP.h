@@ -8,7 +8,7 @@
 #include "ethernetModule.h"
 
 // To not overwhelm the client we need to limit each data pack sent in size
-#define MAX_CLIENT_CAPACITY 500
+#define MAX_CLIENT_CAPACITY 1000
 
 namespace teensyUDP {
 int32_t* frequency_data_from_client();
