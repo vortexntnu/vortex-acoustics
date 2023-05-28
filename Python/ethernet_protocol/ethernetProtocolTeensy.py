@@ -85,8 +85,12 @@ class TeensyCommunicationUDP:
 
         while not done:
             # Read data
+            if self.test == "TEST":
+                print("Reading data")
             rec_data, addr = self.clientSocket.recvfrom(self.MAX_PACKAGE_SIZE_RECEIVED)
             messageReceived = rec_data.decode()
+            if self.test == "TEST":
+                print("Done reading data")
 
             # Check if data we are receiving is a READy signal, sometimes it leaks over to the raw data signal so we need to handle it by sending a new acknowledge signal
             # Else check if data is done sending, else save
@@ -107,6 +111,7 @@ class TeensyCommunicationUDP:
         return data
 
     def get_raw_hydrophone_data(self):
+        self.test = "TEST"
         # Send request
         self.clientSocket.sendto(self.GET_HYDROPHONE_DATA.encode(), self.address)
 
@@ -122,6 +127,7 @@ class TeensyCommunicationUDP:
             return [[], [], [], [], []]
 
     def get_DSP_data(self):
+        self.test = "none"
         # Send request
         self.clientSocket.sendto(self.GET_DSP_DATA.encode(), self.address)
 
