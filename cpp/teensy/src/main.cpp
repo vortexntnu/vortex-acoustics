@@ -269,7 +269,7 @@ void communicationTeensy() {
         // Signal that we are ready to receive requests
         while (!ethernetModule::UDP_check_if_connected()) {
             ethernetModule::UDP_send_ready_signal(clientIP, clientPort);
-            delay(1);
+            delay(100);
         }
 
         messageToReceive = ethernetModule::UDP_read_message();
