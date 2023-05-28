@@ -52,8 +52,11 @@ while True:
             time.sleep(1)
         print("Teensy connected")
         teensy.send_frequency_of_interest(frequencyOfInterest, frequencyVariance)
+        print("Sent frequencies")
         hydrophoneData = teensy.get_raw_hydrophone_data()
+        print("Got Hydrophones")
         rawSampleData, filteredSampleData, FFTData, peakData = teensy.get_DSP_data()
+        print("Got DSP")
         teensy.send_SKIP() # Once we are done we NEED to send teensy a confirmation code so that it can continue to calculate with the new given information
         print("Got all the data :D")
 
@@ -72,9 +75,10 @@ while True:
     except:
         print("ERROR")
     
-    # A little pause to not overwhelm the processor
-    print("Sleeping")
+    # For users to see that the loop is updating
     count += 1
     print(f"Try count: {count}")
     print()
+
+    # A little pause to not overwhelm the processor
     time.sleep(1)
