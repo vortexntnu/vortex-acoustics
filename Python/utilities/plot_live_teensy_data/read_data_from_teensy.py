@@ -53,10 +53,13 @@ while True:
         print("Teensy connected")
         teensy.send_frequency_of_interest(frequencyOfInterest, frequencyVariance)
         print("Sent frequencies")
+        time.sleep(1)
         hydrophoneData = teensy.get_raw_hydrophone_data()
         print("Got Hydrophones")
+        time.sleep(1)
         rawSampleData, filteredSampleData, FFTData, peakData = teensy.get_DSP_data()
         print("Got DSP")
+        time.sleep(1)
         teensy.send_SKIP() # Once we are done we NEED to send teensy a confirmation code so that it can continue to calculate with the new given information
         print("Got all the data :D")
 
