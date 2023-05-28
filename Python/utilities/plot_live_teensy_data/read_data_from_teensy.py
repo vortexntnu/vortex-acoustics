@@ -50,7 +50,6 @@ while True:
             """
             time.sleep(1)
         teensy.send_acknowledge_signal()
-        time.sleep(1)
 
         teensy.send_frequency_of_interest(frequencyOfInterest, frequencyVariance)
         hydrophoneData = teensy.get_raw_hydrophone_data()

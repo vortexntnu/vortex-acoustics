@@ -95,6 +95,7 @@ class TeensyCommunicationUDP:
             # Check if data we are receiving is a READy signal, sometimes it leaks over to the raw data signal so we need to handle it by sending a new request signal
             # Else check if data is done sending, else save
             if messageReceived == "READY":
+                self.send_acknowledge_signal()
                 if (self.requestType == self.GET_HYDROPHONE_DATA):
                     self.clientSocket.sendto(self.GET_HYDROPHONE_DATA.encode(), self.address)
                 if (self.requestType == self.GET_DSP_DATA):
@@ -117,7 +118,7 @@ class TeensyCommunicationUDP:
     def get_raw_hydrophone_data(self):
         # Set request type we sending
         self.requestType = self.GET_DSP_DATA
-        
+
         # Send request
         self.clientSocket.sendto(self.GET_HYDROPHONE_DATA.encode(), self.address)
 
