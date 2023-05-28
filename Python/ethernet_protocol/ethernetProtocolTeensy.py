@@ -1,4 +1,5 @@
 from socket import *
+import time
 
 class TeensyCommunicationUDP:
     # Setup the communications with Teensy on initialization
@@ -40,6 +41,7 @@ class TeensyCommunicationUDP:
     def send_acknowledge_signal(self):
         try:
             self.clientSocket.sendto(self.INITIALIZATION_MESSAGE.encode(), self.address)
+            time.sleep(1)
         except:
             pass
 
@@ -107,8 +109,6 @@ class TeensyCommunicationUDP:
                 done = True
                 break
             else:
-                if (self.test == "Testing"):
-                    print("Message is: " + messageReceived)
                 tempStringList.append(messageReceived)
                 index += 1
 
