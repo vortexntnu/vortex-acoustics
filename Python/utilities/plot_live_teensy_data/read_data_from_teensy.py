@@ -41,7 +41,14 @@ with open(f"{MY_FILE_DIR}DSP_data/DSP_{formattedDateAndTime}.csv", "w", encoding
 while True:
     try:
         while not teensy.check_if_available():
-            pass
+            """
+            IMPORTANT! 
+            DO NOT have "time.sleep(x)" value SMALLER than 1 second!!!
+            This will interrupt sampling by asking teensy if its available to many times
+            If less than 1 second you risc crashing teensy to PC communication O_O
+            """
+            time.sleep(1)
+        
         teensy.send_frequency_of_interest(frequencyOfInterest, frequencyVariance)
         hydrophoneData = teensy.get_raw_hydrophone_data()
         rawSampleData, filteredSampleData, FFTData, peakData = teensy.get_DSP_data()
