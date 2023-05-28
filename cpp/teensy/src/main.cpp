@@ -262,15 +262,13 @@ void communicationTeensy() {
     char* messageToReceive;
     char tempCharA = '0';
     char tempCharB = '0';
-    
+
     // Endless loop until SKIP command is sent from client
     while (true) {
         // wait until a request is sent from client
-        // Signal that we are ready to receive requests
         while (!ethernetModule::UDP_check_if_connected()) {
             ethernetModule::UDP_send_ready_signal(clientIP, clientPort);
             // Necessary delay so that client doesn't get overwhelmed with data
-            delay(500);
         }
 
         messageToReceive = ethernetModule::UDP_read_message();
