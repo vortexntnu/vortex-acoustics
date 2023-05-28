@@ -16,7 +16,13 @@ teensy = ethernetProtocolTeensy.TeensyCommunicationUDP(
 
 while True:
     while not teensy.check_if_available():
-        pass
+        """
+        "IMPORTANT! 
+        DO NOT have "time.sleep(x)" value to SMALLER than 1 second!!!
+        This will interrupt sampling by asking teensy if its available to many times
+        If less than 1 second you risc crashing teensy to PC communication O_O
+        """
+        time.sleep(1)
 
     teensy.send_frequency_of_interest(frequencyOfInterest, frequencyVariance)
     raw, filtered, fft, peaks = teensy.get_DSP_data()

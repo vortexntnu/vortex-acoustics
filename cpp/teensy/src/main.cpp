@@ -165,6 +165,7 @@ void loop() {
     int32_t frequencyOfInterestMin = frequencyOfInterest - frequencyVariance;
     uint8_t found = 0;
     unsigned long samplingStartTime = millis();
+    Serial.println("Started sampling");
     while (!found) {
         // Wait until first ring buffer is filled
         while (!adc::buffer_filled[buffer_to_check])
@@ -221,6 +222,7 @@ void loop() {
         ;
     // Stop Sampling
     adc::stopConversion();
+    Serial.println("Stoped sampling");
 
     // Process data from the ring-buffer
     // active buffer is one further than the last filled one, which is the oldest one now
