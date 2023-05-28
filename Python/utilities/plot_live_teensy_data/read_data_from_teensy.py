@@ -41,7 +41,6 @@ with open(f"{MY_FILE_DIR}DSP_data/DSP_{formattedDateAndTime}.csv", "w", encoding
 count = 0
 while True:
     try:
-        print("Waiting for teensy")
         while not teensy.check_if_available():
             """
             IMPORTANT! 
@@ -50,18 +49,12 @@ while True:
             If less than 1 second you risc crashing teensy to PC communication O_O
             """
             time.sleep(1)
-        print("Teensy connected")
         teensy.send_frequency_of_interest(frequencyOfInterest, frequencyVariance)
-        print("Sent frequencies")
-        time.sleep(1)
         hydrophoneData = teensy.get_raw_hydrophone_data()
-        print("Got Hydrophones")
         time.sleep(1)
         rawSampleData, filteredSampleData, FFTData, peakData = teensy.get_DSP_data()
-        print("Got DSP")
         time.sleep(1)
         teensy.send_SKIP() # Once we are done we NEED to send teensy a confirmation code so that it can continue to calculate with the new given information
-        print("Got all the data :D")
 
         # Save data to csv files
         try:
