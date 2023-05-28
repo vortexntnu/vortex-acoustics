@@ -16,7 +16,7 @@ import os
 # Important variables for later
 SAMPLE_RATE = 430_000 # 430 kHz
 MAX_FREQUENCY_TO_SHOW = 60_000 # 60 kHz
-FPS = 1
+FPS = 0.5
 
 # Make a good plot layout ==================================================
 fig = plt.figure()
@@ -60,11 +60,14 @@ def display_live_data(frame):
 
     # Get latest hydrophone data
     hydrophoneData = [[],[],[],[],[]]
-    hydrophoneData[0] = ast.literal_eval(hydrophoneDataFrame["hydrophone1"].tail(1).values[0])
-    hydrophoneData[1] = ast.literal_eval(hydrophoneDataFrame["hydrophone2"].tail(1).values[0])
-    hydrophoneData[2] = ast.literal_eval(hydrophoneDataFrame["hydrophone3"].tail(1).values[0])
-    hydrophoneData[3] = ast.literal_eval(hydrophoneDataFrame["hydrophone4"].tail(1).values[0])
-    hydrophoneData[4] = ast.literal_eval(hydrophoneDataFrame["hydrophone5"].tail(1).values[0])
+    try:
+        hydrophoneData[0] = ast.literal_eval(hydrophoneDataFrame["hydrophone1"].tail(1).values[0])
+        hydrophoneData[1] = ast.literal_eval(hydrophoneDataFrame["hydrophone2"].tail(1).values[0])
+        hydrophoneData[2] = ast.literal_eval(hydrophoneDataFrame["hydrophone3"].tail(1).values[0])
+        hydrophoneData[3] = ast.literal_eval(hydrophoneDataFrame["hydrophone4"].tail(1).values[0])
+        hydrophoneData[4] = ast.literal_eval(hydrophoneDataFrame["hydrophone5"].tail(1).values[0])
+    except:
+        print("ERROR reading hydrophone data")
 
     # Get DSP data
     rawData = ast.literal_eval(DSPDataFrame["raw_samples"].tail(1).values[0])

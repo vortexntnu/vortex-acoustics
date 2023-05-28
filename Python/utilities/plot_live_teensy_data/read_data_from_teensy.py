@@ -53,18 +53,23 @@ while True:
         hydrophoneData = teensy.get_raw_hydrophone_data()
         rawSampleData, filteredSampleData, FFTData, peakData = teensy.get_DSP_data()
         teensy.send_SKIP() # Once we are done we NEED to send teensy a confirmation code so that it can continue to calculate with the new given information
+        print("Got all the data :D")
 
         # Save data to csv files
-        with open(f"{MY_FILE_DIR}hydrophone_data/hydrophone_{formattedDateAndTime}.csv", "a", encoding="UTF8", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow(hydrophoneData)
+        try:
+            with open(f"{MY_FILE_DIR}hydrophone_data/hydrophone_{formattedDateAndTime}.csv", "a", encoding="UTF8", newline="") as f:
+                writer = csv.writer(f)
+                writer.writerow(hydrophoneData)
 
-        with open(f"{MY_FILE_DIR}DSP_data/DSP_{formattedDateAndTime}.csv", "a", encoding="UTF8", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow([rawSampleData, filteredSampleData, FFTData, peakData])
-        print("Data Saved")
+            with open(f"{MY_FILE_DIR}DSP_data/DSP_{formattedDateAndTime}.csv", "a", encoding="UTF8", newline="") as f:
+                writer = csv.writer(f)
+                writer.writerow([rawSampleData, filteredSampleData, FFTData, peakData])
+            print("Data Saved")
+        except:
+            print("ERROR saving")
     except:
         print("ERROR")
     
     # A little pause to not overwhelm the processor
+    print()
     time.sleep(1)
