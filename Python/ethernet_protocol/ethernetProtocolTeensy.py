@@ -1,4 +1,5 @@
 from socket import *
+import time
 
 class TeensyCommunicationUDP:
     # Setup the communications with Teensy on initialization
@@ -96,6 +97,7 @@ class TeensyCommunicationUDP:
             # Else check if data is done sending, else save
             if messageReceived == "READY":
                 self.send_acknowledge_signal()
+                time.sleep(0.1)
             elif messageReceived == "DONE":
                 done = True
             else:
