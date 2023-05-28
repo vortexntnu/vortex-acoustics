@@ -19,7 +19,7 @@ class TeensyCommunicationUDP:
         self.address = (TEENSY_IP, TEENSY_PORT)
 
         # Code words for communication
-        self.INITIALIZATION_MESSAGE = "HELLO :D" # This is a message only sent to acknowledge that PC is getting data from teensy
+        self.INITIALIZATION_MESSAGE = "HELLO :D" # This is a message only sent once to establish 2 way communication between Teensy and client
         self.SEND_SKIP = "ss"  # Send SKIP command, teensy will stop waiting for data transfer and will continue with its calculations
         self.SEND_FREQUENCY = "sf"  # Send frequency to look for and variance
         self.GET_HYDROPHONE_DATA = "gh"  # Get all 5 hydrophone raw sample data
@@ -34,8 +34,14 @@ class TeensyCommunicationUDP:
         self.clientSocket.settimeout(TIMEOUT)
         self.clientSocket.bind((self.MY_IP, self.MY_PORT))
 
-        # Send initialization message to Teensy
+        # send initialization signal
         self.send_acknowledge_signal()
+    
+    def send_acknowledge_signal(self):
+        try:
+            self.clientSocket.sendto(self.INITIALIZATION_MESSAGE.encode(), self.address)
+        except:
+            pass
 
     def check_if_available(self):
         try:
@@ -50,27 +56,16 @@ class TeensyCommunicationUDP:
                 return False
         except:
             return False
-    
-    def send_acknowledge_signal(self):
-        try:
-            # Send a acknowledge signal
-            self.clientSocket.sendto(self.INITIALIZATION_MESSAGE.encode(), self.address)
-        except:
-            print("Couldn't send SKIP command...")
 
     def send_SKIP(self):
         try:
-            # Send a acknowledge signal to signal that PC is getting signal from Teensy
-            self.send_acknowledge_signal()
-            # Send SKIP signal
+            # Send a request to send frequency data
             self.clientSocket.sendto(self.SEND_SKIP.encode(), self.address)
         except:
             print("Couldn't send SKIP command...")
 
     def send_frequency_of_interest(self, frequencyOfInterest, frequencyVariance):
         try:
-            # Send a acknowledge signal to signal that PC is getting signal from Teensy
-            self.send_acknowledge_signal()
             # Send a request to send frequency data
             self.clientSocket.sendto(self.SEND_FREQUENCY.encode(), self.address)
 
@@ -93,14 +88,17 @@ class TeensyCommunicationUDP:
             rec_data, addr = self.clientSocket.recvfrom(self.MAX_PACKAGE_SIZE_RECEIVED)
             messageReceived = rec_data.decode()
 
-            # Check if data is done sending, else save
-            if messageReceived == "DONE":
+
+            # Check if data we are receiving is a READy signal, sometimes it leaks over to the raw data signal so we need to handle it by sending a new acknowledge signal
+            # Else check if data is done sending, else save
+            if messageReceived == "READY":
+                self.send_acknowledge_signal()
+            elif messageReceived == "DONE":
                 done = True
             else:
                 tempString += messageReceived
 
         # Try saving string into a integer array, if error -> string empty
-        print(tempString)
         try:
             tempString = tempString[0:-1]
             data = list(map(int, tempString.split(",")))
@@ -110,8 +108,6 @@ class TeensyCommunicationUDP:
         return data
 
     def get_raw_hydrophone_data(self):
-        # Send a acknowledge signal to signal that PC is getting signal from Teensy
-        self.send_acknowledge_signal()
         # Send request
         self.clientSocket.sendto(self.GET_HYDROPHONE_DATA.encode(), self.address)
 
@@ -150,4 +146,4 @@ class TeensyCommunicationUDP:
 
             return rawSampleData, filteredSampleData, FFTData, peakData
         except:
-            return "ERROR"
+            return [0], [0], [0], [0]
