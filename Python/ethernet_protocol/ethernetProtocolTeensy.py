@@ -81,37 +81,21 @@ class TeensyCommunicationUDP:
     def get_data(self):
         data = []
         done = False
-        tempStringList = []
         tempString = ""
-        index = 0
 
         while not done:
             # Read data
-            if (self.test == "Testing"):
-                print("Reading data")
             rec_data, addr = self.clientSocket.recvfrom(self.MAX_PACKAGE_SIZE_RECEIVED)
             messageReceived = rec_data.decode()
-            if (self.test == "Testing"):
-                print("Data done reading")
 
             # Check if data we are receiving is a READy signal, sometimes it leaks over to the raw data signal so we need to handle it by sending a new acknowledge signal
             # Else check if data is done sending, else save
             if messageReceived == "READY":
-                if (self.test == "Testing"):
-                    print(messageReceived)
                 self.send_acknowledge_signal()
             elif messageReceived == "DONE":
-                if (self.test == "Testing"):
-                    print("Done message")
-                    print(messageReceived)
                 done = True
-                break
             else:
-                tempStringList.append(messageReceived)
-                index += 1
-
-        for value in tempStringList:
-            tempString += value
+                tempString += messageReceived
 
         # Try saving string into a integer array, if error -> string empty
         try:
@@ -124,7 +108,6 @@ class TeensyCommunicationUDP:
 
     def get_raw_hydrophone_data(self):
         # Send request
-        self.test = "Testing"
         self.clientSocket.sendto(self.GET_HYDROPHONE_DATA.encode(), self.address)
 
         try:
@@ -139,7 +122,6 @@ class TeensyCommunicationUDP:
             return [[], [], [], [], []]
 
     def get_DSP_data(self):
-        self.test = "none"
         # Send request
         self.clientSocket.sendto(self.GET_DSP_DATA.encode(), self.address)
 
