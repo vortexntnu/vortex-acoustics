@@ -20,7 +20,7 @@ teensy = ethernetProtocolTeensy.TeensyCommunicationUDP(
     TEENSY_PORT = 8888,
     MY_PORT = 9999,
     MAX_PACKAGE_SIZE_RECEIVED = 65536,
-    TIMEOUT = 10,
+    TIMEOUT = 1,
 )
 
 # Create files we will write data to
@@ -38,8 +38,10 @@ with open(f"{MY_FILE_DIR}DSP_data/DSP_{formattedDateAndTime}.csv", "w", encoding
     writer.writerow(DSPHeader)
 
 # Infinite loop for reading data
+count = 0
 while True:
     try:
+        print("Waiting for teensy")
         while not teensy.check_if_available():
             """
             IMPORTANT! 
@@ -48,7 +50,7 @@ while True:
             If less than 1 second you risc crashing teensy to PC communication O_O
             """
             time.sleep(1)
-        
+        print("Teensy connected")
         teensy.send_frequency_of_interest(frequencyOfInterest, frequencyVariance)
         hydrophoneData = teensy.get_raw_hydrophone_data()
         rawSampleData, filteredSampleData, FFTData, peakData = teensy.get_DSP_data()
@@ -71,5 +73,8 @@ while True:
         print("ERROR")
     
     # A little pause to not overwhelm the processor
+    print("Sleeping")
+    count += 1
+    print(f"Try count: {count}")
     print()
     time.sleep(1)
