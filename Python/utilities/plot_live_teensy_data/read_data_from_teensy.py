@@ -43,11 +43,11 @@ while True:
         while not teensy.check_if_available():
             """
             IMPORTANT! 
-            DO NOT have "time.sleep(x)" value SMALLER than 0.1 second!!!
+            DO NOT have "time.sleep(x)" value SMALLER than 1 second!!!
             This will interrupt sampling by asking teensy if its available to many times
-            If less than 0.1 second you risc crashing teensy to PC communication O_O
+            If less than 1 second you risc crashing teensy to PC communication O_O
             """
-            time.sleep(0.1)
+            time.sleep(1)
         
         teensy.send_frequency_of_interest(frequencyOfInterest, frequencyVariance)
         hydrophoneData = teensy.get_raw_hydrophone_data()
@@ -67,4 +67,4 @@ while True:
         print("ERROR")
     
     # A little pause to not overwhelm the processor
-    time.sleep(0.1)
+    time.sleep(1)
