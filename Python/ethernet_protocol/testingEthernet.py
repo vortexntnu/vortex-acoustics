@@ -18,7 +18,7 @@ while True:
     while not teensy.check_if_available():
         """
         "IMPORTANT! 
-        DO NOT have "time.sleep(x)" value to SMALLER than 1 second!!!
+        DO NOT have "time.sleep(x)" value SMALLER than 1 second!!!
         This will interrupt sampling by asking teensy if its available to many times
         If less than 1 second you risc crashing teensy to PC communication O_O
         """
