@@ -56,7 +56,9 @@ while True:
         print("Done sending acknowledge")
 
         teensy.send_frequency_of_interest(frequencyOfInterest, frequencyVariance)
+        print("Done with frequencies")
         hydrophoneData = teensy.get_raw_hydrophone_data()
+        print("Done with hydrophones")
         rawSampleData, filteredSampleData, FFTData, peakData = teensy.get_DSP_data()
         teensy.send_SKIP() # Once we are done we NEED to send teensy a confirmation code so that it can continue to calculate with the new given information
         print("Got all data")
