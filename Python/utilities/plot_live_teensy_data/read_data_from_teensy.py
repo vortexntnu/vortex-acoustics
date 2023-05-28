@@ -11,8 +11,8 @@ import csv
 import time
 
 # Variables ==================================================
-frequencyOfInterest = 20_000 # 20 kHz
-frequencyVariance = 2_000 # 2 kHz
+frequencyOfInterest = 30_000 # 20 kHz
+frequencyVariance = 30_000 # 2 kHz
 
 # Setup ethernet protocol
 teensy = ethernetProtocolTeensy.TeensyCommunicationUDP(
