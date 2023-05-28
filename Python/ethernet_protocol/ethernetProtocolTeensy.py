@@ -97,12 +97,15 @@ class TeensyCommunicationUDP:
             # Check if data we are receiving is a READy signal, sometimes it leaks over to the raw data signal so we need to handle it by sending a new acknowledge signal
             # Else check if data is done sending, else save
             if messageReceived == "READY":
+                if (self.test == "Testing"):
+                    print(messageReceived)
                 self.send_acknowledge_signal()
             elif messageReceived == "DONE":
                 if (self.test == "Testing"):
                     print("Done message")
                     print(messageReceived)
                 done = True
+                break
             else:
                 if (self.test == "Testing"):
                     print("Message is: " + messageReceived)
@@ -138,7 +141,7 @@ class TeensyCommunicationUDP:
             return [[], [], [], [], []]
 
     def get_DSP_data(self):
-        self.test = ""
+        self.test = "none"
         # Send request
         self.clientSocket.sendto(self.GET_DSP_DATA.encode(), self.address)
 
