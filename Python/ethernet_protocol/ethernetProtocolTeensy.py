@@ -35,7 +35,8 @@ class TeensyCommunicationUDP:
         self.clientSocket.bind((self.MY_IP, self.MY_PORT))
 
         # Send initialization message to Teensy
-        self.clientSocket.sendto(self.INITIALIZATION_MESSAGE.encode(), self.address)
+        #self.clientSocket.sendto(self.INITIALIZATION_MESSAGE.encode(), self.address)
+        #print("DONE INIT!")
 
     def check_if_available(self):
         try:
