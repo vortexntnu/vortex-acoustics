@@ -23,5 +23,15 @@ teensy = ethernetProtocolTeensy.TeensyCommunicationUDP(
     TIMEOUT = 10,
 )
 
-teensy.send_frequency_of_interest(frequencyOfInterest, frequencyVariance)
-print(teensy.address)
+while not teensy.check_if_available():
+    pass
+
+#teensy.send_acknowledge_signal()
+#time.sleep(1)
+#teensy.send_frequency_of_interest(frequencyOfInterest, frequencyVariance)
+print("=====================")
+print("=====================")
+print("=====================")
+print("WE TEST JESJES \n=")
+print(teensy.get_DSP_data())
+#teensy.send_SKIP()
