@@ -121,7 +121,7 @@ class TeensyCommunicationUDP:
 
             return allHydrophoneData
         except:
-            return "ERROR"
+            return [[], [], [], [], []]
 
     def get_DSP_data(self):
         # Send request

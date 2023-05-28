@@ -16,7 +16,7 @@ import os
 # Important variables for later
 SAMPLE_RATE = 430_000 # 430 kHz
 MAX_FREQUENCY_TO_SHOW = 60_000 # 60 kHz
-FPS = 0.5
+FPS = 1
 
 # Make a good plot layout ==================================================
 fig = plt.figure()
@@ -55,8 +55,10 @@ latestDSPFile = max(listOfDSPFiles, key=os.path.getctime)
 
 def display_live_data(frame):
     # Read latest data
+    print("Reading data")
     hydrophoneDataFrame = pd.read_csv(latestHydrophoneFile)
     DSPDataFrame = pd.read_csv(latestDSPFile)
+    print("Data read finish")
 
     # Get latest hydrophone data
     hydrophoneData = [[],[],[],[],[]]
@@ -70,10 +72,17 @@ def display_live_data(frame):
         print("ERROR reading hydrophone data")
 
     # Get DSP data
-    rawData = ast.literal_eval(DSPDataFrame["raw_samples"].tail(1).values[0])
-    filterData = ast.literal_eval(DSPDataFrame["filtered_samples"].tail(1).values[0])
-    FFTData = ast.literal_eval(DSPDataFrame["FFT"].tail(1).values[0])
-    peaksData = ast.literal_eval(DSPDataFrame["peaks"].tail(1).values[0])
+    rawData = []
+    filterData = []
+    FFTData = []
+    peaksData = []
+    try:
+        rawData = ast.literal_eval(DSPDataFrame["raw_samples"].tail(1).values[0])
+        filterData = ast.literal_eval(DSPDataFrame["filtered_samples"].tail(1).values[0])
+        FFTData = ast.literal_eval(DSPDataFrame["FFT"].tail(1).values[0])
+        peaksData = ast.literal_eval(DSPDataFrame["peaks"].tail(1).values[0])
+    except:
+        print("ERROR reading DSP data")
 
     """
     Post process DSP data to desired scale and amount
@@ -96,7 +105,7 @@ def display_live_data(frame):
         peaksDataAmplitude = [subList[0] for subList in peaksData]
         peaksDataFrequency = [subList[1] for subList in peaksData]
     except:
-        pass
+        print("ERROR processing DSP data")
 
     # Plot hydrophone data
     for i in range(5):
