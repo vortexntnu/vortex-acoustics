@@ -34,8 +34,14 @@ class TeensyCommunicationUDP:
         self.clientSocket.settimeout(TIMEOUT)
         self.clientSocket.bind((self.MY_IP, self.MY_PORT))
 
-        # Send initialization message to Teensy
-        self.clientSocket.sendto(self.INITIALIZATION_MESSAGE.encode(), self.address)
+        # send initialization signal
+        self.send_acknowledge_signal()
+    
+    def send_acknowledge_signal(self):
+        try:
+            self.clientSocket.sendto(self.INITIALIZATION_MESSAGE.encode(), self.address)
+        except:
+            pass
 
     def check_if_available(self):
         try:
@@ -82,8 +88,12 @@ class TeensyCommunicationUDP:
             rec_data, addr = self.clientSocket.recvfrom(self.MAX_PACKAGE_SIZE_RECEIVED)
             messageReceived = rec_data.decode()
 
-            # Check if data is done sending, else save
-            if messageReceived == "DONE":
+
+            # Check if data we are receiving is a READy signal, sometimes it leaks over to the raw data signal so we need to handle it by sending a new acknowledge signal
+            # Else check if data is done sending, else save
+            if messageReceived == "READY":
+                self.send_acknowledge_signal()
+            elif messageReceived == "DONE":
                 done = True
             else:
                 tempString += messageReceived
@@ -136,4 +146,4 @@ class TeensyCommunicationUDP:
 
             return rawSampleData, filteredSampleData, FFTData, peakData
         except:
-            return "ERROR"
+            return [0], [0], [0], [0]
