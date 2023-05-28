@@ -90,13 +90,13 @@ class TeensyCommunicationUDP:
 
             # Check if data we are receiving is a READy signal, sometimes it leaks over to the raw data signal so we need to handle it by sending a new acknowledge signal
             # Else check if data is done sending, else save
-            if (self.test == "Testing"):
-                print(messageReceived)
             if messageReceived == "READY":
                 self.send_acknowledge_signal()
             elif messageReceived == "DONE":
                 done = True
             else:
+                if (self.test == "Testing"):
+                    print(messageReceived)
                 tempString += messageReceived
 
         # Try saving string into a integer array, if error -> string empty
