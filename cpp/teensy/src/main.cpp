@@ -144,6 +144,7 @@ void setup() {
 
 void loop() {
     // Sampling (START) ====================================================================================================
+    Serial.println("Started sampling");
     // Start sampling ONLY use BLOCKING, others are not implemented
     adc::startConversion(sample_period, adc::BLOCKING);
     // Start sampling into the buffer
@@ -165,7 +166,6 @@ void loop() {
     int32_t frequencyOfInterestMin = frequencyOfInterest - frequencyVariance;
     uint8_t found = 0;
     unsigned long samplingStartTime = millis();
-    Serial.println("Started sampling");
     while (!found) {
         // Wait until first ring buffer is filled
         while (!adc::buffer_filled[buffer_to_check])
@@ -263,13 +263,17 @@ void communicationTeensy() {
     char tempCharA = '0';
     char tempCharB = '0';
 
+    // Send signal that we are ready
+    while (!ethernetModule::UDP_check_if_connected()) {
+        ethernetModule::UDP_send_ready_signal(clientIP, clientPort);
+        // Necessary delay so that client doesn't get overwhelmed with data
+        delay(100);
+    }
+
     // Endless loop until SKIP command is sent from client
     while (true) {
         // wait until a request is sent from client
-        while (!ethernetModule::UDP_check_if_connected()) {
-            ethernetModule::UDP_send_ready_signal(clientIP, clientPort);
-            // Necessary delay so that client doesn't get overwhelmed with data
-        }
+        while (!ethernetModule::UDP_check_if_connected());
 
         messageToReceive = ethernetModule::UDP_read_message();
         tempCharA = messageToReceive[0];

@@ -20,7 +20,7 @@
 #define FREQUENCY_LIMIT 60000
 
 // A manual variable to filter out small peaks that don't manage to get over the threshold, so called "fake peaks"
-#define PEAK_THRESHOLD 200
+#define PEAK_THRESHOLD 30
 
 q15_t* filter_butterwort_9th_order_50kHz(int16_t* samplesRaw);
 q15_t* filter_butterwort_2th_order_50kHz(int16_t* samplesRaw);
