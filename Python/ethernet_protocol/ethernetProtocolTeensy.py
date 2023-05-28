@@ -26,9 +26,6 @@ class TeensyCommunicationUDP:
         self.GET_HYDROPHONE_DATA = "gh"  # Get all 5 hydrophone raw sample data
         self.GET_DSP_DATA = "gd"  # Get Digital Signal Processing data -> raw data, filtered data, FFT data and peak data
 
-        # Variable for later use when we want to know what request we are sending
-        self.requestType = "None"
-
         # Get PC IP
         pcHostname = gethostname()
         self.MY_IP = gethostbyname(pcHostname)
@@ -92,16 +89,9 @@ class TeensyCommunicationUDP:
             rec_data, addr = self.clientSocket.recvfrom(self.MAX_PACKAGE_SIZE_RECEIVED)
             messageReceived = rec_data.decode()
 
-            # Check if data we are receiving is a READy signal, sometimes it leaks over to the raw data signal so we need to handle it by sending a new request signal
+            # Check if data we are receiving is a READy signal, sometimes it leaks over to the raw data signal so we need to handle it by just ignoring it
             # Else check if data is done sending, else save
             if messageReceived == "READY":
-                #self.send_acknowledge_signal()
-                # if (self.requestType == self.GET_HYDROPHONE_DATA):
-                #     self.clientSocket.sendto(self.GET_HYDROPHONE_DATA.encode(), self.address)
-                # if (self.requestType == self.GET_DSP_DATA):
-                #     self.clientSocket.sendto(self.GET_DSP_DATA.encode(), self.address)
-                #print(messageReceived)
-                #time.sleep(1)
                 pass
             elif messageReceived == "DONE":
                 done = True
@@ -118,9 +108,6 @@ class TeensyCommunicationUDP:
         return data
 
     def get_raw_hydrophone_data(self):
-        # Set request type we sending
-        self.requestType = self.GET_HYDROPHONE_DATA
-
         # Send request
         self.clientSocket.sendto(self.GET_HYDROPHONE_DATA.encode(), self.address)
 
@@ -136,9 +123,6 @@ class TeensyCommunicationUDP:
             return [[], [], [], [], []]
 
     def get_DSP_data(self):
-        # Set request type we sending
-        self.requestType = self.GET_DSP_DATA
-
         # Send request
         self.clientSocket.sendto(self.GET_DSP_DATA.encode(), self.address)
 
