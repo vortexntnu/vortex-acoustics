@@ -49,19 +49,13 @@ while True:
             If less than 1 second you risc crashing teensy to PC communication O_O
             """
             time.sleep(1)
-        
-        print("Sending acknowledege")
         teensy.send_acknowledge_signal()
         time.sleep(1)
-        print("Done sending acknowledge")
 
         teensy.send_frequency_of_interest(frequencyOfInterest, frequencyVariance)
-        print("Done with frequencies")
         hydrophoneData = teensy.get_raw_hydrophone_data()
-        print("Done with hydrophones")
         rawSampleData, filteredSampleData, FFTData, peakData = teensy.get_DSP_data()
         teensy.send_SKIP() # Once we are done we NEED to send teensy a confirmation code so that it can continue to calculate with the new given information
-        print("Got all data")
 
         # Save data to csv files
         try:
