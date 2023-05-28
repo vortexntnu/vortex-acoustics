@@ -41,9 +41,9 @@ with open(f"{MY_FILE_DIR}DSP_data/DSP_{formattedDateAndTime}.csv", "w", encoding
 count = 0
 while True:
     try:
-        while not teensy.check_if_available():
+        while (not teensy.check_if_available()):
             """
-            IMPORTANT! 
+            IMPORTANT!
             DO NOT have "time.sleep(x)" value SMALLER than 1 second!!!
             This will interrupt sampling by asking teensy if its available to many times
             If less than 1 second you risc crashing teensy to PC communication O_O
@@ -51,14 +51,11 @@ while True:
             time.sleep(1)
         teensy.send_acknowledge_signal()
         
-        print("Acknowledge")
         teensy.send_frequency_of_interest(frequencyOfInterest, frequencyVariance)
-        print("Frequency")
         hydrophoneData = teensy.get_raw_hydrophone_data()
-        print("Hydrophone")
         rawSampleData, filteredSampleData, FFTData, peakData = teensy.get_DSP_data()
         teensy.send_SKIP() # Once we are done we NEED to send teensy a confirmation code so that it can continue to calculate with the new given information
-
+        
         # Save data to csv files
         try:
             with open(f"{MY_FILE_DIR}hydrophone_data/hydrophone_{formattedDateAndTime}.csv", "a", encoding="UTF8", newline="") as f:
