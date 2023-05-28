@@ -96,8 +96,8 @@ class TeensyCommunicationUDP:
                 done = True
             else:
                 tempString += messageReceived
-                
-        if (self.test == "testing"):
+
+        if (self.test == "Testing"):
             print(tempString)
 
         # Try saving string into a integer array, if error -> string empty
