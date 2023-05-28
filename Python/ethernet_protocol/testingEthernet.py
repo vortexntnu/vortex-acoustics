@@ -133,12 +133,13 @@ def get_DSP_data():
         return [0], [0], [0], [0]
 
 
-# rawSampleData, filteredSampleData, FFTData, peakData = get_DSP_data()
-# print(FFTData)
-send_frequency_of_interest(10_000, 1000)
+#send_frequency_of_interest(10_000, 1000)
+
+
 
 while not check_if_available():
     pass
+send_SKIP()
 
 print("Passed!")
 
