@@ -70,6 +70,7 @@ q15_t* filter_butterwort_9th_order_50kHz(int16_t* samplesRaw) {
         filtering, as it is more clean and convenient.*/
         for (int k = 0; k < fOrder + 1; k++) {
             input_influence += bFilterCoeffs[k] * (samplesRaw[i - k]);
+            input_influence += bFilterCoeffs[k] * (samplesRaw[i - k]);
         }
 
         float influenceTotalFloat = output_influence + input_influence;
@@ -211,6 +212,7 @@ we return the peaks:
 */
 std::vector<std::vector<q31_t>> peak_detection(q15_t* resultsRaw, q15_t* results) {
     // Dynamically allocate the 2D array
+    q31_t peaks[SAMPLE_LENGTH][2];
     q31_t peaks[SAMPLE_LENGTH][2];
 
     /*
