@@ -1,15 +1,16 @@
-from socket import *
 import time
+from socket import *
+
 
 class TeensyCommunicationUDP:
     # Setup the communications with Teensy on initialization
     def __init__(
-            self,
-            TEENSY_IP = "10.0.0.111",
-            TEENSY_PORT = 8888,  # (non-privileged ports are > 1023)
-            MY_PORT = 9999,
-            MAX_PACKAGE_SIZE_RECEIVED = 65536,
-            TIMEOUT = 10,  # Wait period before giving up on communications [seconds], Remember teensy takes time to calculate everything)
+        self,
+        TEENSY_IP="10.0.0.111",
+        TEENSY_PORT=8888,  # (non-privileged ports are > 1023)
+        MY_PORT=9999,
+        MAX_PACKAGE_SIZE_RECEIVED=65536,
+        TIMEOUT=10,  # Wait period before giving up on communications [seconds], Remember teensy takes time to calculate everything)
     ):
         # Teensy networking Setup
         self.TEENSY_IP = TEENSY_IP
@@ -20,7 +21,7 @@ class TeensyCommunicationUDP:
         self.address = (TEENSY_IP, TEENSY_PORT)
 
         # Code words for communication
-        self.INITIALIZATION_MESSAGE = "HELLO :D" # This is a message only sent once to establish 2 way communication between Teensy and client
+        self.INITIALIZATION_MESSAGE = "HELLO :D"  # This is a message only sent once to establish 2 way communication between Teensy and client
         self.SEND_SKIP = "ss"  # Send SKIP command, teensy will stop waiting for data transfer and will continue with its calculations
         self.SEND_FREQUENCY = "sf"  # Send frequency to look for and variance
         self.GET_HYDROPHONE_DATA = "gh"  # Get all 5 hydrophone raw sample data
@@ -37,7 +38,7 @@ class TeensyCommunicationUDP:
 
         # send initialization signal
         self.send_acknowledge_signal()
-    
+
     def send_acknowledge_signal(self):
         try:
             self.clientSocket.sendto(self.INITIALIZATION_MESSAGE.encode(), self.address)
