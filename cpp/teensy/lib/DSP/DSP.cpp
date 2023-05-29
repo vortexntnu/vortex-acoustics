@@ -26,7 +26,7 @@ const float32_t bFilterCoeffs[fOrder + 1] = {0.00000545381633879714, 0.000049084
 const float32_t aFilterCoeffs2[fOrder2] = {0.00101196462632, -0.00035885208947};
 const float32_t bFilterCoeffs2[fOrder2 + 1] = {0.000086700190740, 0.000173400381481, 0.000086700190740};
 
-// Coefficients for 1th order filter, 430 kHz sampling rate, 50 kHz cut-off calculated manually with the help of this research paper 
+// Coefficients for 1th order filter, 430 kHz sampling rate, 50 kHz cut-off calculated manually with the help of this research paper
 // https://www.researchgate.net/publication/338022014_Digital_Implementation_of_Butterworth_First-Order_Filter_Type_IIR
 const float32_t aFilterCoeffs1[] = {1.0, -0.44669};
 const float32_t bFilterCoeffs1[] = {0.27665, 0.27665};

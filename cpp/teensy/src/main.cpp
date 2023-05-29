@@ -292,7 +292,8 @@ void communicationTeensy() {
     // Endless loop until SKIP command is sent from client
     while (true) {
         // wait until a request is sent from client
-        while (!ethernetModule::UDP_check_if_connected());
+        while (!ethernetModule::UDP_check_if_connected())
+            ;
 
         messageToReceive = ethernetModule::UDP_read_message();
         tempCharA = messageToReceive[0];
@@ -329,4 +330,3 @@ void communicationTeensy() {
     }
     ethernetModule::UDP_clean_message_memory();
 }
-
