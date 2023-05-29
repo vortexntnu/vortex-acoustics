@@ -68,8 +68,6 @@ int32_t frequencyVariance = 0;   // +-0 Hz
 // Variables for data transmission ==========
 uint8_t* clientIP;
 uint16_t clientPort;
-uint8_t* clientIP;
-uint16_t clientPort;
 void communicationTeensy();
 
 void setup() {

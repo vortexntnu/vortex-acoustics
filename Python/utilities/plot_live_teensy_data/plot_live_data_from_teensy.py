@@ -133,8 +133,8 @@ def display_live_data(frame):
         xHydrophone = list(range(len(hydrophoneData[i])))
         hydrophoneAxis[i].clear()
         hydrophoneAxis[i].plot(
-            xHydrophone[0:-1:10],
-            hydrophoneData[i][0:-1:10],
+            xHydrophone,
+            hydrophoneData[i],
             label=f"Hydrophone {i + 1}",
             color=colorSoftBlue,
             alpha=1,

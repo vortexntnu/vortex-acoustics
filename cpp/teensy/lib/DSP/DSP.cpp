@@ -213,7 +213,6 @@ we return the peaks:
 std::vector<std::vector<q31_t>> peak_detection(q15_t* resultsRaw, q15_t* results) {
     // Dynamically allocate the 2D array
     q31_t peaks[SAMPLE_LENGTH][2];
-    q31_t peaks[SAMPLE_LENGTH][2];
 
     /*
     Once we allocated the memory to the 2d array, the memory that we have
