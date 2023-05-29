@@ -16,7 +16,7 @@ import os
 # Important variables for later
 SAMPLE_RATE = 430_000 # 430 kHz
 MAX_FREQUENCY_TO_SHOW = 60_000 # 60 kHz
-FPS = 1
+FPS = 2
 
 # Make a good plot layout ==================================================
 fig = plt.figure()
@@ -55,10 +55,8 @@ latestDSPFile = max(listOfDSPFiles, key=os.path.getctime)
 
 def display_live_data(frame):
     # Read latest data
-    print("Reading data")
     hydrophoneDataFrame = pd.read_csv(latestHydrophoneFile)
     DSPDataFrame = pd.read_csv(latestDSPFile)
-    print("Data read finish")
 
     # Get latest hydrophone data
     hydrophoneData = [[],[],[],[],[]]
@@ -111,7 +109,7 @@ def display_live_data(frame):
     for i in range(5):
         xHydrophone = list(range(len(hydrophoneData[i])))
         hydrophoneAxis[i].clear()
-        hydrophoneAxis[i].plot(xHydrophone, hydrophoneData[i], label=f"Hydrophone {i + 1}", color=colorSoftBlue, alpha=1)
+        hydrophoneAxis[i].plot(xHydrophone[0:-1:10], hydrophoneData[i][0:-1:10], label=f"Hydrophone {i + 1}", color=colorSoftBlue, alpha=1)
         hydrophoneAxis[i].legend(loc="upper right", fontsize="xx-small")
     
     # Plot Filter response
