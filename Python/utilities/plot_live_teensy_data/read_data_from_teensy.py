@@ -18,6 +18,10 @@ from ethernet_protocol import ethernetProtocolTeensy
 frequencyOfInterest = 30_000  # 20 kHz
 frequencyVariance = 30_000  # 2 kHz
 
+# Timeout variables
+# DON'T have timeout less than < 10 seconds, this WILL BRICK TEENSY!!!
+timeoutMax = 10
+
 # Setup ethernet protocol
 teensy = ethernetProtocolTeensy.TeensyCommunicationUDP(
     TEENSY_IP="10.0.0.111",
@@ -61,6 +65,7 @@ with open(
 count = 0
 while True:
     try:
+        timeStart = time.time()
         while not teensy.check_if_available():
             """
             IMPORTANT!
@@ -68,7 +73,10 @@ while True:
             This will interrupt sampling by asking teensy if its available to many times
             If less than 1 second you risc crashing teensy to PC communication O_O
             """
+            print("Pause time: " + str(time.time() - timeStart))
             time.sleep(1)
+            if time.time() - timeStart > timeoutMax:
+                break
         teensy.send_acknowledge_signal()
 
         teensy.send_frequency_of_interest(frequencyOfInterest, frequencyVariance)

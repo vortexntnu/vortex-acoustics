@@ -46,13 +46,11 @@ unsigned long endTime;
 // to be safe should be a bit under 1500. If it sampled more than 1500 for some reason, the data gathered will be inconsistent.
 uint16_t number_samples = SAMPLE_LENGTH * 3;
 float sample_period = 2.3; // >= MIN_SAMP_PERIOD_TIMER
-float sample_period = 2.3; // >= MIN_SAMP_PERIOD_TIMER
 int16_t samplesRawHydrophone1[SAMPLE_LENGTH * 3];
 int16_t samplesRawHydrophone2[SAMPLE_LENGTH * 3];
 int16_t samplesRawHydrophone3[SAMPLE_LENGTH * 3];
 int16_t samplesRawHydrophone4[SAMPLE_LENGTH * 3];
 int16_t samplesRawHydrophone5[SAMPLE_LENGTH * 3];
-#define SAMPLING_TIMEOUT 10000 // [10 s] If sampling takes to long before finding a frequency of interest we exit the loop and later try again
 #define SAMPLING_TIMEOUT 10000 // [10 s] If sampling takes to long before finding a frequency of interest we exit the loop and later try again
 
 // Variables for Digital Signal Processing ==========
@@ -76,7 +74,6 @@ void communicationTeensy();
 
 void setup() {
     Serial.begin(9600);
-    delay(1000); // 1 second pause for giving time to enter serial monitor
     delay(1000); // 1 second pause for giving time to enter serial monitor
     Serial.println("1 - Serial connected");
     Serial.println();
@@ -112,7 +109,6 @@ void setup() {
 
     // Digital Signal Processing Setup (START) ====================================================================================================
     // Fill up buffers with 0s first to not get unexpected errors
-    samplesFiltered = filter_butterwort_1th_order_50kHz(samplesRawForDSP);
     samplesFiltered = filter_butterwort_1th_order_50kHz(samplesRawForDSP);
     FFTResultsRaw = FFT_raw(samplesFiltered);
     FFTResults = FFT_mag(FFTResultsRaw);
@@ -188,7 +184,6 @@ void loop() {
         // Digital Signal Processing (START) ====================================================================================================
         // Filter raw samples
         samplesFiltered = filter_butterwort_1th_order_50kHz(samplesRawForDSP);
-        samplesFiltered = filter_butterwort_1th_order_50kHz(samplesRawForDSP);
 
         // Preform FFT calculations on filtered samples
         FFTResultsRaw = FFT_raw(samplesFiltered);
@@ -251,13 +246,7 @@ void loop() {
             samplesRawHydrophone3[index] = (int16_t)adc::channel_buff_ptr[3][bufferIndex][u];
             samplesRawHydrophone4[index] = (int16_t)adc::channel_buff_ptr[4][bufferIndex][u];
             samplesRawHydrophone5[index] = (int16_t)adc::channel_buff_ptr[0][bufferIndex][u];
-            samplesRawHydrophone1[index] = (int16_t)adc::channel_buff_ptr[1][bufferIndex][u];
-            samplesRawHydrophone2[index] = (int16_t)adc::channel_buff_ptr[2][bufferIndex][u];
-            samplesRawHydrophone3[index] = (int16_t)adc::channel_buff_ptr[3][bufferIndex][u];
-            samplesRawHydrophone4[index] = (int16_t)adc::channel_buff_ptr[4][bufferIndex][u];
-            samplesRawHydrophone5[index] = (int16_t)adc::channel_buff_ptr[0][bufferIndex][u];
         }
-        bufferIndex = (bufferIndex + 1) % BUFFER_PER_CHANNEL;
         bufferIndex = (bufferIndex + 1) % BUFFER_PER_CHANNEL;
     }
     // Clean ring-buffers
