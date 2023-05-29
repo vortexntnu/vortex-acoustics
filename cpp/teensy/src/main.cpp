@@ -229,6 +229,7 @@ void loop() {
     uint8_t bufferIndex = adc::active_buffer;
     bufferIndex = (bufferIndex + 1) % BUFFER_PER_CHANNEL;
     bufferIndex = (bufferIndex + 1) % BUFFER_PER_CHANNEL;
+    bufferIndex = (bufferIndex + 1) % BUFFER_PER_CHANNEL;
     // Saving data into array we will use further down the line
     uint16_t index = 0;
     for (uint8_t i = 0; i < BUFFER_PER_CHANNEL; i++) {
