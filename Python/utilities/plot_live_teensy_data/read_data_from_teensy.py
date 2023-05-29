@@ -15,7 +15,8 @@ frequencyOfInterest = 30_000 # 20 kHz
 frequencyVariance = 30_000 # 2 kHz
 
 # Timeout variables
-timeoutMax = 10
+# DON'T have timeout less than < 10 seconds, this WILL BRICK TEENSY!!!
+timeoutMax = 10 
 
 # Setup ethernet protocol
 teensy = ethernetProtocolTeensy.TeensyCommunicationUDP(
