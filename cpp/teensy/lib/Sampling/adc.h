@@ -118,19 +118,6 @@ const int DB15 = CORE_PIN27_BIT; // GPIO 1.31
 #define MIN_SAMP_PERIOD_TIMER 11
 #define MIN_SAMP_PERIOD_DMA 10
 
-// Ringbuffers to store data, one for each channel (not yet implemented)
-extern RingBuffer_16bit ChannelA0;
-extern RingBuffer_16bit ChannelA1;
-extern RingBuffer_16bit ChannelB0;
-extern RingBuffer_16bit ChannelB1;
-extern RingBuffer_16bit ChannelC0;
-
-extern RingBuffer_32bit ChannelA0_DMA;
-
-extern RingBuffer_32bit sampleTime;
-
-static uint16_t sampleData[N_CHANNELS]; // array where the measurements will be stored before put into ringbuffer
-
 // * new way
 #define SAMPLE_LENGTH_ADC 1024
 #define BUFFER_PER_CHANNEL 3
@@ -151,6 +138,7 @@ extern buffer_ptr channel_buff_ptr[5];
 
 volatile extern uint8_t active_buffer;                     // to know which one is being filled, [0, BUFFER_PER_CHANNEL-1]
 volatile extern uint8_t buffer_filled[BUFFER_PER_CHANNEL]; // to know which have been filled with new values
+volatile extern uint32_t overall_buffer_count;
 
 void init();                   // inits pins
 void setup();                  // setup the ADC
