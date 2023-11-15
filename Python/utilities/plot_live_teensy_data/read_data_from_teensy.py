@@ -5,7 +5,7 @@ import sys
 PARENT_DIR = os.path.dirname(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 )
-MY_FILE_DIR = f"{PARENT_DIR}/utilities/plot_live_teensy_data/"
+MY_FILE_DIR = os.path.join(PARENT_DIR, "utilities", "plot_live_teensy_data")
 sys.path.append(PARENT_DIR)
 
 import csv
@@ -20,7 +20,7 @@ frequencyVariance = 30_000  # 2 kHz
 
 # Timeout variables
 # DON'T have timeout less than < 10 seconds, this WILL BRICK TEENSY!!!
-timeoutMax = 10
+timeoutMax = 60
 
 # Setup ethernet protocol
 teensy = ethernetProtocolTeensy.TeensyCommunicationUDP(
@@ -44,8 +44,8 @@ hydrophoneDataHeader = [
 DSPHeader = ["raw_samples", "filtered_samples", "FFT", "peaks"]
 
 with open(
-    f"{MY_FILE_DIR}hydrophone_data/hydrophone_{formattedDateAndTime}.csv",
-    "w",
+    os.path.join(MY_FILE_DIR, "hydrophone_data", f"hydrophone_{formattedDateAndTime}.csv"),
+    "w+",
     encoding="UTF8",
     newline="",
 ) as f:
@@ -53,7 +53,7 @@ with open(
     writer.writerow(hydrophoneDataHeader)
 
 with open(
-    f"{MY_FILE_DIR}DSP_data/DSP_{formattedDateAndTime}.csv",
+    os.path.join(MY_FILE_DIR, "DSP_data", f"DSP_{formattedDateAndTime}.csv"),
     "w",
     encoding="UTF8",
     newline="",
@@ -87,7 +87,7 @@ while True:
         # Save data to csv files
         try:
             with open(
-                f"{MY_FILE_DIR}hydrophone_data/hydrophone_{formattedDateAndTime}.csv",
+                os.path.join(MY_FILE_DIR, "hydrophone_data", f"hydrophone_{formattedDateAndTime}.csv"),
                 "a",
                 encoding="UTF8",
                 newline="",
@@ -96,7 +96,7 @@ while True:
                 writer.writerow(hydrophoneData)
 
             with open(
-                f"{MY_FILE_DIR}DSP_data/DSP_{formattedDateAndTime}.csv",
+                os.path.join(MY_FILE_DIR, "DSP_data", f"DSP_{formattedDateAndTime}.csv"),
                 "a",
                 encoding="UTF8",
                 newline="",

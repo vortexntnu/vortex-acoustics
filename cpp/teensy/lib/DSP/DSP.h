@@ -22,13 +22,19 @@
 // A manual variable to filter out small peaks that don't manage to get over the threshold, so called "fake peaks"
 #define PEAK_THRESHOLD 30
 
-q15_t* filter_butterwort_9th_order_50kHz(int16_t* samplesRaw);
-q15_t* filter_butterwort_2th_order_50kHz(int16_t* samplesRaw);
-q15_t* filter_butterwort_1th_order_50kHz(int16_t* samplesRaw);
+namespace DigitalSignalProcessing {
+    q15_t* filter_butterwort_9th_order_50kHz(int16_t* samplesRaw);
+    q15_t* filter_butterwort_2th_order_50kHz(int16_t* samplesRaw);
+    q15_t* filter_butterwort_1th_order_50kHz(int16_t* samplesRaw);
 
-q15_t* FFT_raw(q15_t* samples);
-q15_t* FFT_mag(q15_t* resultsRaw);
+    q15_t* FFT_raw(q15_t* samples);
+    q15_t* FFT_mag(q15_t* resultsRaw);
 
-std::vector<std::vector<q31_t>> peak_detection(q15_t* resultsRaw, q15_t* results);
+    std::vector<std::vector<q31_t>> peak_detection(q15_t* resultsRaw, q15_t* results);
 
-float32_t phaseQ31_to_radianFloat32(q31_t phaseQ15);
+    float32_t phaseQ31_to_radianFloat32(q31_t phaseQ15);
+
+    // Making sure the inside functions are seen
+    q15_t q15_divide(q15_t a, q15_t b);
+    q15_t q15_taylor_atan(q15_t x);
+}

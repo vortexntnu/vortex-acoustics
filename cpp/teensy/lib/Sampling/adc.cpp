@@ -180,7 +180,7 @@ void init() {
 
 // set up sampling
 void setup() {
-    clock::setup(); /// the clockfrequency needs to be defined somewhere, does it need to be called also if adc is not init()
+    clock_ADC::setup(); /// the clockfrequency needs to be defined somewhere, does it need to be called also if adc is not init()
     PIT::setup();
 
     active_buffer = 0;
@@ -200,7 +200,7 @@ void setup() {
 void startConversion(float sample_period_us, ADC_sample_mode sample_mode) {
     // Serial.println("Starting conversion");
     // ? do it in one call?
-    // PIT::setUpPeriodicISR(triggerConversion, clock::get_clockcycles_micro(1000000), PIT::PIT_0);
+    // PIT::setUpPeriodicISR(triggerConversion, clock_ADC::get_clockcycles_micro(1000000), PIT::PIT_0);
     // value found by trial and error.
 
     sample_index = 0;
@@ -239,7 +239,7 @@ void startConversion(float sample_period_us, ADC_sample_mode sample_mode) {
     // {
     //     sample_period_us = MIN_SAMPLING_PERIOD;
     // }
-    PIT::setUpPeriodicISR(triggerConversion, clock::get_clockcycles_micro(bounded_period), PIT::PIT_0);
+    PIT::setUpPeriodicISR(triggerConversion, clock_ADC::get_clockcycles_micro(bounded_period), PIT::PIT_0);
 
     PIT::startPeriodic(PIT::PIT_0); // will call triggerConversion
     stopwatch = elapsedMicros();    // to see how much time per sample(in average)
