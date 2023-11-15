@@ -109,4 +109,4 @@ void UDP_send_message(char* UDPReplyBuffer, int16_t sizeOfMessage, int16_t start
 void UDP_clean_message_memory() {
     memset(UDPReceiveBuffer, 0, UDP_TX_PACKET_MAX_SIZE); //clear out the packetBuffer array
 }
-}
+} // namespace ethernetModule

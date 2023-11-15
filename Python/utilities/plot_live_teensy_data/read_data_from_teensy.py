@@ -44,7 +44,9 @@ hydrophoneDataHeader = [
 DSPHeader = ["raw_samples", "filtered_samples", "FFT", "peaks"]
 
 with open(
-    os.path.join(MY_FILE_DIR, "hydrophone_data", f"hydrophone_{formattedDateAndTime}.csv"),
+    os.path.join(
+        MY_FILE_DIR, "hydrophone_data", f"hydrophone_{formattedDateAndTime}.csv"
+    ),
     "w+",
     encoding="UTF8",
     newline="",
@@ -87,7 +89,11 @@ while True:
         # Save data to csv files
         try:
             with open(
-                os.path.join(MY_FILE_DIR, "hydrophone_data", f"hydrophone_{formattedDateAndTime}.csv"),
+                os.path.join(
+                    MY_FILE_DIR,
+                    "hydrophone_data",
+                    f"hydrophone_{formattedDateAndTime}.csv",
+                ),
                 "a",
                 encoding="UTF8",
                 newline="",
@@ -96,7 +102,9 @@ while True:
                 writer.writerow(hydrophoneData)
 
             with open(
-                os.path.join(MY_FILE_DIR, "DSP_data", f"DSP_{formattedDateAndTime}.csv"),
+                os.path.join(
+                    MY_FILE_DIR, "DSP_data", f"DSP_{formattedDateAndTime}.csv"
+                ),
                 "a",
                 encoding="UTF8",
                 newline="",
