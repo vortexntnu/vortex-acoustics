@@ -82,7 +82,7 @@ void setup() {
     Why? I have no Idea, some memory magic probably =_=
     */
     // Ethernet init
-    Serial.print("2 - ");
+    Serial.print("2 - Ethernet Configuration");
     ethernetModule::UDP_init();
     Serial.println();
     // Ethernet Setup PART 1 (STOP) ====================================================================================================
@@ -107,10 +107,10 @@ void setup() {
 
     // Digital Signal Processing Setup (START) ====================================================================================================
     // Fill up buffers with 0s first to not get unexpected errors
-    samplesFiltered = filter_butterwort_1th_order_50kHz(samplesRawForDSP);
-    FFTResultsRaw = FFT_raw(samplesFiltered);
-    FFTResults = FFT_mag(FFTResultsRaw);
-    peaks = peak_detection(FFTResultsRaw, FFTResults);
+    samplesFiltered = DigitalSignalProcessing::filter_butterwort_9th_order_50kHz(samplesRawForDSP);
+    FFTResultsRaw = DigitalSignalProcessing::FFT_raw(samplesFiltered);
+    FFTResults = DigitalSignalProcessing::FFT_mag(FFTResultsRaw);
+    peaks = DigitalSignalProcessing::peak_detection(FFTResultsRaw, FFTResults);
     lengthOfPeakArray = peaks[0][0];
     Serial.println("4 - DSP Setup Complete");
     Serial.println();
@@ -147,7 +147,6 @@ void setup() {
 
 void loop() {
     // Sampling (START) ====================================================================================================
-    Serial.println("Started sampling");
     // Start sampling ONLY use BLOCKING, others are not implemented
     adc::startConversion(sample_period, adc::BLOCKING);
     // Start sampling into the buffer
@@ -181,14 +180,14 @@ void loop() {
 
         // Digital Signal Processing (START) ====================================================================================================
         // Filter raw samples
-        samplesFiltered = filter_butterwort_1th_order_50kHz(samplesRawForDSP);
+        samplesFiltered = DigitalSignalProcessing::filter_butterwort_1th_order_50kHz(samplesRawForDSP);
 
         // Preform FFT calculations on filtered samples
-        FFTResultsRaw = FFT_raw(samplesFiltered);
-        FFTResults = FFT_mag(FFTResultsRaw);
+        FFTResultsRaw = DigitalSignalProcessing::FFT_raw(samplesFiltered);
+        FFTResults = DigitalSignalProcessing::FFT_mag(FFTResultsRaw);
 
         // Get peaks of frequencies that might be of interest and their useful information like amplitude, frequency and phase
-        peaks = peak_detection(FFTResultsRaw, FFTResults);
+        peaks = DigitalSignalProcessing::peak_detection(FFTResultsRaw, FFTResults);
 
         /*
         Since we are storing the length of the array in the first index, we do not start from 0 in the array when printing out. 
@@ -203,7 +202,6 @@ void loop() {
         phaseQ31_to_radianFloat32(peaks[x][2]);
         */
         // Digital Signal Processing (STOP) ====================================================================================================
-
         // Check if any of the peaks are of interest
         for (int i = 1; i < lengthOfPeakArray; i++) {
             int32_t peakFrequency = peaks[i][1];
@@ -212,7 +210,6 @@ void loop() {
                 found = 1;
             }
         }
-
         // Increment buffer to check
         buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
 
@@ -222,8 +219,7 @@ void loop() {
         }
     }
     // After finding peaks of interest let the last sampling sequence finish
-    while (!adc::buffer_filled[buffer_to_check])
-        ;
+    // while (!adc::buffer_filled[buffer_to_check]);
     // Stop Sampling
     adc::stopConversion();
     Serial.println("Stoped sampling");

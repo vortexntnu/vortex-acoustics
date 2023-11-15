@@ -5,7 +5,7 @@ import sys
 PARENT_DIR = os.path.dirname(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 )
-MY_FILE_DIR = f"{PARENT_DIR}/utilities/plot_live_teensy_data/"
+MY_FILE_DIR = os.path.join(PARENT_DIR, "utilities", "plot_live_teensy_data")
 sys.path.append(PARENT_DIR)
 
 import ast
@@ -58,9 +58,9 @@ colorSoftBlue = (135 / 255, 206 / 255, 250 / 255)
 colorSoftGreen = (122 / 255, 200 / 255, 122 / 255)
 
 # Get the latest csv file names
-listOfHydrophoneFiles = glob.glob(f"{MY_FILE_DIR}hydrophone_data/*.csv")
+listOfHydrophoneFiles = glob.glob(os.path.join(MY_FILE_DIR, "hydrophone_data", "*.csv"))
 latestHydrophoneFile = max(listOfHydrophoneFiles, key=os.path.getctime)
-listOfDSPFiles = glob.glob(f"{MY_FILE_DIR}DSP_data/*.csv")
+listOfDSPFiles = glob.glob(os.path.join(MY_FILE_DIR, "DSP_data", "*.csv"))
 latestDSPFile = max(listOfDSPFiles, key=os.path.getctime)
 
 

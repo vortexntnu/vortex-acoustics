@@ -3,8 +3,8 @@
 #include "Arduino.h"
 #endif
 
-/// @brief to activate the clock
-namespace clock {
+/// @brief to activate the clock_ADC
+namespace clock_ADC {
 extern uint32_t PITclockFreq; //// init in the .cpp but no values given !!!
 void dumpClockRegisters();
 void setup();
@@ -13,4 +13,4 @@ void setup();
 uint32_t get_clockcycles_micro(float microseconds);
 // clockcycles for nanoseconds to use in the PITs
 uint32_t get_clockcycles_nano(float nanoseconds);
-}; // namespace clock
+}; // namespace clock_ADC
