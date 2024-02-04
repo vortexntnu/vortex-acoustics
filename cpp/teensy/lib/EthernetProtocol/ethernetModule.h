@@ -5,6 +5,7 @@
 namespace ethernetModule {
 void UDP_init();
 
+// TODO: rename
 int16_t UDP_check_if_connected();
 
 uint8_t* get_remoteIP();

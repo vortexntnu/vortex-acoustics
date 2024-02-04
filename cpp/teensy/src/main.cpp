@@ -62,17 +62,19 @@ std::vector<std::vector<q31_t>> peaks;
 int16_t lengthOfPeakArray;
 
 // Variables for Peak Detection ==========
-int32_t frequencyOfInterest = 0; // 0 Hz
-int32_t frequencyVariance = 0;   // +-0 Hz
+int32_t frequencyOfInterest = 40000; // 0 Hz
+int32_t frequencyVariance = 3000;   // +-0 Hz
 
 // Variables for data transmission ==========
 uint8_t* clientIP;
 uint16_t clientPort;
 void communicationTeensy();
+void setupTeensyCommunication();
+void sendDataToClient();
 
 void setup() {
     Serial.begin(9600);
-    delay(1000); // 1 second pause for giving time to enter serial monitor
+    delay(15000); // 1 second pause for giving time to enter serial monitor
     Serial.println("1 - Serial connected");
     Serial.println();
 
@@ -81,9 +83,9 @@ void setup() {
     NOTE: This code HAS to come befor "Sampling Setup", otherwise some values are configured incorrectly
     Why? I have no Idea, some memory magic probably =_=
     */
-    // Ethernet init
-    Serial.print("2 - Ethernet Configuration");
-    ethernetModule::UDP_init();
+    // Ethernet init.-
+    Serial.println("2 - Ethernet Configuration");
+    //ethernetModule::UDP_init();
     Serial.println();
     // Ethernet Setup PART 1 (STOP) ====================================================================================================
 
@@ -125,19 +127,27 @@ void setup() {
     Otherwise when client request some data, the data we are pointing to has not been setup yet
     This will cause Teensy to look for data that doesn't exist and will crash the system O_O    
     */
+
     // Wait until someone is connected and get their IP and Port address
+    /*
     Serial.println("5 - Waiting for client connection...");
     while (!ethernetModule::UDP_check_if_connected())
         ;
+
     clientIP = ethernetModule::get_remoteIP();
     clientPort = ethernetModule::get_remotePort();
+    
+    Serial.println(*clientIP);
+    Serial.println(clientPort);
     // Wait until client sends SKIP request to indicate they are ready to start receiving data
     Serial.println("5 - Waiting for client configuration...");
-    communicationTeensy();
+    setupTeensyCommunication();
     Serial.println("5 - Client CONNECTED");
     Serial.println();
+    */
     // Ethernet Setup PART 2 (STOP) ====================================================================================================
 
+    delay(1000);
     Serial.println();
     Serial.println("==================================================");
     Serial.println("SETUP COMPLETE :D");
@@ -148,9 +158,11 @@ void setup() {
 void loop() {
     // Sampling (START) ====================================================================================================
     // Start sampling ONLY use BLOCKING, others are not implemented
+    Serial.println("Started sampling");
+    unsigned long count = 0;
     adc::startConversion(sample_period, adc::BLOCKING);
     // Start sampling into the buffer
-    uint8_t buffer_to_check = adc::active_buffer;
+    uint8_t buffer_to_check = (adc::active_buffer + 2) % BUFFER_PER_CHANNEL;
 
     /*
     !IMPORTANT!
@@ -164,14 +176,34 @@ void loop() {
 
     If sampling takes to long to find a peak we exit the loop and try again later
     */
+
     int32_t frequencyOfInterestMax = frequencyOfInterest + frequencyVariance;
     int32_t frequencyOfInterestMin = frequencyOfInterest - frequencyVariance;
     uint8_t found = 0;
+
     unsigned long samplingStartTime = millis();
     while (!found) {
+        count++;
         // Wait until first ring buffer is filled
-        while (!adc::buffer_filled[buffer_to_check])
-            ;
+        // while (!adc::buffer_filled[buffer_to_check]);
+        // When system doesn't work this debugs 1, 1, 0
+        // Would have thought it was 1, 1, 1 ??
+        unsigned long debugingTimer = millis();
+        while (!adc::buffer_filled[buffer_to_check]) {
+             
+            if ((debugingTimer + 1000) < millis()) {
+            
+            Serial.print("Debuger: ");
+            Serial.print(buffer_to_check);
+            // Serial.print(adc::sample_index);
+            Serial.print(adc::buffer_filled[0]);Serial.print(", ");
+            Serial.print(adc::buffer_filled[1]);Serial.print(", ");
+            Serial.print(adc::buffer_filled[2]);
+            Serial.println();
+            debugingTimer = millis();
+            } 
+            
+        }
 
         // Save raw sampled data
         for (uint16_t i = 0; i < SAMPLE_LENGTH; i++) {
@@ -207,7 +239,7 @@ void loop() {
             int32_t peakFrequency = peaks[i][1];
             if ((peakFrequency < frequencyOfInterestMax) && (peakFrequency > frequencyOfInterestMin)) {
                 found = 1;
-                found = 1;
+                // Serial.println("Found peaks");
             }
         }
         // Increment buffer to check
@@ -215,6 +247,7 @@ void loop() {
 
         // Check if sampling has taken to long and if so exit the loop and try again later
         if ((millis() - samplingStartTime) > SAMPLING_TIMEOUT) {
+            // Serial.println("Sampling timed out");
             break;
         }
     }
@@ -222,7 +255,11 @@ void loop() {
     // while (!adc::buffer_filled[buffer_to_check]);
     // Stop Sampling
     adc::stopConversion();
-    Serial.println("Stoped sampling");
+    Serial.println("Stopped sampling");
+    Serial.print("Sample count: ");
+    Serial.println(count);
+    Serial.print("Average sample time: ");
+    Serial.println((millis() - samplingStartTime) / count);
 
     // Process data from the ring-buffer
     // active buffer is one further than the last filled one, which is the oldest one now
@@ -253,17 +290,105 @@ void loop() {
 
     // Send data (START) ====================================================================================================
     Serial.println("Waiting for clients requests...");
-    communicationTeensy();
+    //sendDataToClient();
+    delay(3000);
     Serial.println("Data transfer complete");
     Serial.println();
     // Send data (STOP) ====================================================================================================
 }
 
+// Split into two functions, one for init and one for continous sending of data
+// This function waits sends the ready signal, and then waits and sees which signals are received.
+// The correct way to use this is to first send frequency data signal, and then skip
+void setupTeensyCommunication() {
+    char* messageToReceive;
+    char tempCharA = '0';
+    char tempCharB = '0';
+
+    // Send signal that we are ready
+    // delay(100);
+    ethernetModule::UDP_send_ready_signal(clientIP, clientPort);
+    // Necessary delay so that client doesn't get overwhelmed with data
+
+    while (true) {
+        while (!ethernetModule::UDP_check_if_connected())
+            ;
+
+        messageToReceive = ethernetModule::UDP_read_message();
+        tempCharA = messageToReceive[0];
+        tempCharB = messageToReceive[1];
+
+        if ((tempCharA == 's') && (tempCharB == 's')) {
+            break;
+        }
+
+        // sf - Send Frequency data
+        if ((tempCharA == 's') && (tempCharB == 'f')) {
+            int32_t* frequencyDataFromClient;
+            frequencyDataFromClient = teensyUDP::frequency_data_from_client();
+            frequencyOfInterest = frequencyDataFromClient[0];
+            frequencyVariance = frequencyDataFromClient[1];
+        }
+    }
+    ethernetModule::UDP_clean_message_memory();
+}
+
+/*
+    Simplify:
+     - Send frequencies at beginning, no sf, no skip signals, just list of frequencies
+     - List of frequencies should 
+     - Constantly send data no matter if the client is ready or not, just use a interval so the user is not
+       overwhelmed
+     - 
+*/
+
+// This function sends data to the client by waiting for incoming signals, and sending the corresponding data
+void sendDataToClient() {
+    char* messageToReceive;
+    char tempCharA = '0';
+    char tempCharB = '0';
+
+    while (true) {
+        // Wait for message to come in
+        while (!ethernetModule::UDP_check_if_connected())
+            ;    
+
+        messageToReceive = ethernetModule::UDP_read_message();
+        tempCharA = messageToReceive[0];
+        tempCharB = messageToReceive[1];
+
+        if ((tempCharA == 's') && (tempCharB == 's')) {
+            break;
+        }
+
+        // gh - Get Hydrophone data
+        if ((tempCharA == 'g') && (tempCharB == 'h')) {
+            teensyUDP::send_hydrophone_data(samplesRawHydrophone1, (SAMPLE_LENGTH * 3));
+            teensyUDP::send_hydrophone_data(samplesRawHydrophone2, (SAMPLE_LENGTH * 3));
+            teensyUDP::send_hydrophone_data(samplesRawHydrophone3, (SAMPLE_LENGTH * 3));
+            teensyUDP::send_hydrophone_data(samplesRawHydrophone4, (SAMPLE_LENGTH * 3));
+            teensyUDP::send_hydrophone_data(samplesRawHydrophone5, (SAMPLE_LENGTH * 3));
+        }
+
+        // gd - Get Digital Signal Processing (DSP) data
+        if ((tempCharA == 'g') && (tempCharB == 'd')) {
+            teensyUDP::send_samples_raw_data(samplesRawForDSP, SAMPLE_LENGTH);
+            teensyUDP::send_samples_filtered_data(samplesFiltered, SAMPLE_LENGTH);
+            teensyUDP::send_FFT_data(FFTResults, SAMPLE_LENGTH);
+            teensyUDP::send_peak_data(peaks, lengthOfPeakArray);
+        }
+    }
+
+    ethernetModule::UDP_clean_message_memory();
+}
+
+/*
 void communicationTeensy() {
     // Necessary ethernet variables ==========
     char* messageToReceive;
     char tempCharA = '0';
     char tempCharB = '0';
+    // pinMode
 
     // Send signal that we are ready
     while (!ethernetModule::UDP_check_if_connected()) {
@@ -313,3 +438,4 @@ void communicationTeensy() {
     }
     ethernetModule::UDP_clean_message_memory();
 }
+*/
