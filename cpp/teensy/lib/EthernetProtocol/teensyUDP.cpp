@@ -5,27 +5,59 @@ int32_t frequencyData[2];
 
 namespace teensyUDP {
 int32_t* frequency_data_from_client() {
-    int32_t frequencyOfInterest;
-    int32_t frequencyVariance;
+    int32_t frequenciesOfInterest[10];
+    int32_t frequencyVariances[10];
 
-    // Read frequency client is interested in
-    while (!ethernetModule::UDP_check_if_connected())
-        ;
-    frequencyOfInterest = atoi(ethernetModule::UDP_read_message());
-    ethernetModule::UDP_clean_message_memory();
+    for (int i = 0; i < 10; i++) {
+        while (!ethernetModule::UDP_check_if_connected());
+        char* frequencyMessage = ethernetModule::UDP_read_message();
 
-    // Read frequency variance client wants
-    while (!ethernetModule::UDP_check_if_connected())
-        ;
-    frequencyVariance = atoi(ethernetModule::UDP_read_message());
-    ethernetModule::UDP_clean_message_memory();
+        std::stringstream ss(frequencyMessage);        
+        
+        std::string substr;
+        std::getline(ss, substr, ',');
 
-    // Save data to a array
-    frequencyData[0] = frequencyOfInterest;
-    frequencyData[1] = frequencyVariance;
+        frequenciesOfInterest[i] = std::stoi(substr);
+    
+        std::getline(ss, substr, ',');
+
+        frequencyVariances[i] = std::stoi(substr);
+    }
+
+
+
+
+    // char* variances = ethernetModule::UDP_read_message();
+    // Serial.println(variances);
+
+    // for (int i = 0; i < 10; i++) {
+
+    // }
+
+
+
+
+    // int32_t frequencyOfInterest;
+    // int32_t frequencyVariance;
+
+    // // Read frequency client is interested in
+    // while (!ethernetModule::UDP_check_if_connected())
+    //     ;
+    // frequencyOfInterest = atoi(ethernetModule::UDP_read_message());
+    // ethernetModule::UDP_clean_message_memory();
+
+    // // Read frequency variance client wants
+    // while (!ethernetModule::UDP_check_if_connected())
+    //     ;
+    // frequencyVariance = atoi(ethernetModule::UDP_read_message());
+    // ethernetModule::UDP_clean_message_memory();
+
+    // // Save data to a array
+    // frequencyData[0] = frequencyOfInterest;
+    // frequencyData[1] = frequencyVariance;
 
     // Return frequency data
-    return frequencyData;
+    return 0;
 }
 
 void send_data_16Bit(int16_t* data, int16_t lengthOfData) {

@@ -4,6 +4,8 @@
 #include <NativeEthernet.h>
 #include <NativeEthernetUdp.h>
 #include <vector>
+#include <string>
+#include <sstream>
 
 #include "ethernetModule.h"
 

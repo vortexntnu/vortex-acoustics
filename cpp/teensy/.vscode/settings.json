@@ -34,5 +34,6 @@
         "utility": "cpp",
         "typeinfo": "cpp",
         "string": "cpp"
-    }
+    },
+    "cmake.configureOnOpen": false
 }
