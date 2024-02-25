@@ -84,9 +84,12 @@ void setup() {
     Why? I have no Idea, some memory magic probably =_=
     */
     // Ethernet init
+    /*
     Serial.println("2 - Ethernet Configuration");
     ethernetModule::UDP_init();
     Serial.println();
+    */
+
     // Ethernet Setup PART 1 (STOP) ====================================================================================================
 
     // Sampling Setup (START) ====================================================================================================
@@ -128,6 +131,7 @@ void setup() {
     This will cause Teensy to look for data that doesn't exist and will crash the system O_O    
     */
     // Wait until someone is connected and get their IP and Port address
+    /*
     Serial.println("5 - Waiting for client connection...");
     while (!ethernetModule::UDP_check_if_connected());
 
@@ -138,8 +142,9 @@ void setup() {
     Serial.println("5 - Client CONNECTED");
     Serial.println();
     // Ethernet Setup PART 2 (STOP) ====================================================================================================
+    */
 
-    delay(5000);
+    // delay(5000);
     Serial.println();
     Serial.println("==================================================");
     Serial.println("SETUP COMPLETE :D");
@@ -168,14 +173,26 @@ void loop() {
     int32_t frequencyOfInterestMax = frequencyOfInterest + frequencyVariance;
     int32_t frequencyOfInterestMin = frequencyOfInterest - frequencyVariance;
     unsigned long samplingStartTime = millis();
+    unsigned long dbgStartTimer1 = millis() - 1000;
+    unsigned long dbgStartTimer2 = millis() - 1000;
     while (!found) {
         // Start sampling into the buffer
         // Sampling ONLY using BLOCKING parameter, others are not implemented
+        
         adc::startConversion(sample_period, adc::BLOCKING);
 
+        if (millis() - dbgStartTimer1 >= 1000) {
+            Serial.println("Dbg1");
+            dbgStartTimer1 = millis();
+        }
+       
         // Wait until ring buffer is filled
         while (!adc::buffer_filled[buffer_to_check]);
 
+        if (millis() - dbgStartTimer2 >= 1000) {
+            Serial.println("Dbg2");
+            dbgStartTimer2 = millis();
+        }
         // Save raw sampled data
         for (uint16_t i = 0; i < SAMPLE_LENGTH; i++) {
             samplesRawForDSP[i] = (int16_t)adc::channel_buff_ptr[1][buffer_to_check][i];
