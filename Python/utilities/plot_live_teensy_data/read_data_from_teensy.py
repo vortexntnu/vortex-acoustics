@@ -46,6 +46,7 @@ teensy = ethernetProtocolTeensy.TeensyCommunicationUDP(
     TIMEOUT=1,
 )
 
+
 # Create files we will write data to
 dateAndTime = datetime.now()
 formattedDateAndTime = dateAndTime.strftime("%Y_%m_%d___%H_%M_%S")
@@ -78,7 +79,6 @@ with open(
 
 def setup_teensy_communication():
     timeStart = time.time()
-    teensy.send_acknowledge_signal()
 
     # Wait for READY signal
     while not teensy.check_if_available():
@@ -143,7 +143,6 @@ while True:
 
     # A little pause to not overwhelm the processor
     time.sleep(1)
-
 
 
 
