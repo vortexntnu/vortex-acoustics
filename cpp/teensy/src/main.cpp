@@ -84,7 +84,7 @@ void setup() {
     Why? I have no Idea, some memory magic probably =_=
     */
     // Ethernet init
-    Serial.print("2 - Ethernet Configuration");
+    Serial.println("2 - Ethernet Configuration");
     ethernetModule::UDP_init();
     Serial.println();
     // Ethernet Setup PART 1 (STOP) ====================================================================================================
@@ -130,7 +130,7 @@ void setup() {
     // Wait until someone is connected and get their IP and Port address
     Serial.println("5 - Waiting for client connection...");
     while (!ethernetModule::UDP_check_if_connected());
-    
+
     clientIP = ethernetModule::get_remoteIP();
     clientPort = ethernetModule::get_remotePort();
     Serial.println("5 - Waiting for client configuration...");

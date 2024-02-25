@@ -1,7 +1,7 @@
 import time
 from socket import *
-
-
+import netifaces as ni
+ 
 class TeensyCommunicationUDP:
     # Setup the communications with Teensy on initialization
     def __init__(
@@ -28,8 +28,9 @@ class TeensyCommunicationUDP:
         self.GET_DSP_DATA = "gd"  # Get Digital Signal Processing data -> raw data, filtered data, FFT data and peak data
 
         # Get PC IP
-        pcHostname = gethostname()
-        self.MY_IP = gethostbyname(pcHostname)
+        self.MY_IP = self.get_ip()
+
+        print(self.MY_IP)
 
         # Socket setup
         self.clientSocket = socket(AF_INET, SOCK_DGRAM)
@@ -39,10 +40,28 @@ class TeensyCommunicationUDP:
         # send initialization signal
         self.send_acknowledge_signal()
 
+    # stackoverflow <3
+    # https://stackoverflow.com/questions/166506/finding-local-ip-addresses-using-pythons-stdlib
+    def get_ip(self):
+        s = socket(AF_INET, SOCK_DGRAM)
+        s.settimeout(0)
+        try:
+            # doesn't even have to be reachable
+            s.connect((self.TEENSY_IP, 1))
+            IP = s.getsockname()[0]
+        except Exception:
+            IP = '127.0.0.1'
+        finally:
+            s.close()
+        
+        return IP
+
     def send_acknowledge_signal(self):
         try:
             self.clientSocket.sendto(self.INITIALIZATION_MESSAGE.encode(), self.address)
+            print("DEBUGING: Sent scknowledge packsge")
         except:
+            print("DEBUGING: FAILED to send acknowledge package")
             pass
 
     def check_if_available(self):
@@ -176,3 +195,4 @@ class TeensyCommunicationUDP:
             return rawSampleData, filteredSampleData, FFTData, peakData
         except:
             return [0], [0], [0], [0]
+

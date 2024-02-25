@@ -5,24 +5,24 @@ int32_t frequencyData[2];
 
 namespace teensyUDP {
 int32_t* frequency_data_from_client() {
-    int32_t frequenciesOfInterest[10];
-    int32_t frequencyVariances[10];
+    // int32_t frequenciesOfInterest[10];
+    // int32_t frequencyVariances[10];
 
-    for (int i = 0; i < 10; i++) {
-        while (!ethernetModule::UDP_check_if_connected());
-        char* frequencyMessage = ethernetModule::UDP_read_message();
+    // for (int i = 0; i < 10; i++) {
+    //     while (!ethernetModule::UDP_check_if_connected());
+    //     char* frequencyMessage = ethernetModule::UDP_read_message();
 
-        std::stringstream ss(frequencyMessage);        
+    //     std::stringstream ss(frequencyMessage);        
         
-        std::string substr;
-        std::getline(ss, substr, ',');
+    //     std::string substr;
+    //     std::getline(ss, substr, ',');
 
-        frequenciesOfInterest[i] = std::stoi(substr);
+    //     frequenciesOfInterest[i] = std::stoi(substr);
     
-        std::getline(ss, substr, ',');
+    //     std::getline(ss, substr, ',');
 
-        frequencyVariances[i] = std::stoi(substr);
-    }
+    //     frequencyVariances[i] = std::stoi(substr);
+    // }
 
 
 
