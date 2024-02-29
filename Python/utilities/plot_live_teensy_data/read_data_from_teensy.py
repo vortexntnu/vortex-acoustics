@@ -15,21 +15,19 @@ from datetime import datetime
 from ethernet_protocol import ethernetProtocolTeensy
 
 # Variables ==================================================
-# These lists HAVE to be ten entries long
-# Also the lack of snake case is making me suicidal
-# Or maybe just the lack of concistency
-# format [(FREQUENCY, VARIANCE), ...]
+# This list has to be exactly ten entries long
+# format [(FREQUENCY, FREQUENCY_VARIANCE), ...]
 frequenciesOfInterest = [
-    (1, 2), 
-    (2, 3), 
-    (3, 4), 
-    (4, 5), 
-    (5, 6), 
-    (6, 7), 
-    (7, 8), 
-    (8, 9), 
-    (9, 10), 
-    (10, 11)
+    (40_000, 1000), 
+    (20_000, 1000), 
+    (0, 0), 
+    (0, 0), 
+    (0, 0), 
+    (0, 0), 
+    (0, 0), 
+    (0, 0), 
+    (0, 0), 
+    (0, 0)
 ] 
 
 

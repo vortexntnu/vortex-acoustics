@@ -11,9 +11,10 @@
 
 // To not overwhelm the client we need to limit each data pack sent in size
 #define MAX_CLIENT_CAPACITY 100
+#define FREQUENCY_LIST_LENGTH 10
 
 namespace teensyUDP {
-int32_t* frequency_data_from_client();
+int32_t* frequency_data_from_client(int32_t *frequenciesOfInterest, int32_t* frequencyVariances);
 
 void send_data_16Bit(int16_t* data, int16_t lengthOfData);
 void send_data_32Bit(int32_t* data, int32_t lengthOfData);

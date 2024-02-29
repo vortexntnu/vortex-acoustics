@@ -94,21 +94,12 @@ class TeensyCommunicationUDP:
             # Format (CSV): xxx,x,xx,x...,x (frequency list comes first, then variances)
             assert len(frequenciesOfInterest) == 10, "List of frequencies has to be ten entries long!"
 
-            # frequenciesMessage = ""
-            # variancesMessage = ""
-
             # ten messages in total, one message for each entry to work around the max packet size
             # Change to for 0..10 for maximum safety??
             for (frequency, variance) in frequenciesOfInterest:
                 frequency_variance_msg = f"{str(frequency)},{str(variance)},"
 
                 self.clientSocket.sendto(frequency_variance_msg.encode(), self.address)
-            
-
-            # frequencyData = str(frequenciesMessage).encode()
-            # varianceData = str(variancesMessage).encode()
-            # Send data
-
         except:
             print("Couldn't send Frequency data...")
 

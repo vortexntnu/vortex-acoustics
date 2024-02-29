@@ -62,11 +62,8 @@ std::vector<std::vector<q31_t>> peaks;
 int16_t lengthOfPeakArray;
 
 // Variables for Peak Detection ==========
-int32_t frequenciesOfInterest[FREQUENCY_LIST_LENGTH] = {40000, 20000, 0, 0, 0, 0, 0, 0, 0, 0}; // 0 Hz
-int32_t frequencyVariances[FREQUENCY_LIST_LENGTH] = {1000, 1000, 0, 0, 0, 0, 0, 0, 0, 0};   // +-0 Hz
-
-int32_t frequenciesOfInterestMax[FREQUENCY_LIST_LENGTH];
-int32_t frequenciesOfInterestMin[FREQUENCY_LIST_LENGTH];
+int32_t frequencyOfInterest = 40000; // 0 Hz
+int32_t frequencyVariance = 3000;   // +-0 Hz
 
 // Variables for data transmission ==========
 uint8_t* clientIP;
@@ -87,9 +84,11 @@ void setup() {
     Why? I have no Idea, some memory magic probably =_=
     */
     // Ethernet init
+    /*
     Serial.println("2 - Ethernet Configuration");
     ethernetModule::UDP_init();
     Serial.println();
+    */
 
     // Ethernet Setup PART 1 (STOP) ====================================================================================================
 
@@ -132,16 +131,18 @@ void setup() {
     This will cause Teensy to look for data that doesn't exist and will crash the system O_O    
     */
     // Wait until someone is connected and get their IP and Port address
+    /*
     Serial.println("5 - Waiting for client connection...");
     while (!ethernetModule::UDP_check_if_connected());
 
     clientIP = ethernetModule::get_remoteIP();
     clientPort = ethernetModule::get_remotePort();
     Serial.println("5 - Waiting for client configuration...");
-    // setupTeensyCommunication();
+    setupTeensyCommunication();
     Serial.println("5 - Client CONNECTED");
     Serial.println();
     // Ethernet Setup PART 2 (STOP) ====================================================================================================
+    */
 
     // delay(5000);
     Serial.println();
@@ -149,11 +150,6 @@ void setup() {
     Serial.println("SETUP COMPLETE :D");
     Serial.println("==================================================");
     Serial.println();
-
-    for (int i = 0; i < FREQUENCY_LIST_LENGTH; i++) {
-        frequenciesOfInterestMax[i] = frequenciesOfInterest[i] + frequencyVariances[i];
-        frequenciesOfInterestMin[i] = frequenciesOfInterest[i] - frequencyVariances[i];
-    }
 }
 
 void loop() {
@@ -174,16 +170,29 @@ void loop() {
 
     uint8_t found = 0;
     uint8_t buffer_to_check = adc::active_buffer;
+    int32_t frequencyOfInterestMax = frequencyOfInterest + frequencyVariance;
+    int32_t frequencyOfInterestMin = frequencyOfInterest - frequencyVariance;
     unsigned long samplingStartTime = millis();
+    unsigned long dbgStartTimer1 = millis() - 1000;
+    unsigned long dbgStartTimer2 = millis() - 1000;
     while (!found) {
         // Start sampling into the buffer
         // Sampling ONLY using BLOCKING parameter, others are not implemented
         
         adc::startConversion(sample_period, adc::BLOCKING);
+
+        if (millis() - dbgStartTimer1 >= 1000) {
+            Serial.println("Dbg1");
+            dbgStartTimer1 = millis();
+        }
        
         // Wait until ring buffer is filled
         while (!adc::buffer_filled[buffer_to_check]);
 
+        if (millis() - dbgStartTimer2 >= 1000) {
+            Serial.println("Dbg2");
+            dbgStartTimer2 = millis();
+        }
         // Save raw sampled data
         for (uint16_t i = 0; i < SAMPLE_LENGTH; i++) {
             samplesRawForDSP[i] = (int16_t)adc::channel_buff_ptr[1][buffer_to_check][i];
@@ -216,21 +225,13 @@ void loop() {
         
 
         // Check if any of the peaks are of interest
-        // Serial.println(lengthOfPeakArray);
-        // for (int i = 0; i < FREQUENCY_LIST_LENGTH; i++) {
-            int32_t frequencyOfInterestMax = frequenciesOfInterestMax[0];
-            // if (frequencyOfInterestMax == 0) { continue; }
-            int32_t frequencyOfInterestMin = frequenciesOfInterestMin[0];
-
-            for (int i = 1; i < lengthOfPeakArray; i++) {
-                int32_t peakFrequency = peaks[i][1];
-                if ((peakFrequency < frequencyOfInterestMax) && (peakFrequency > frequencyOfInterestMin)) {
-                    found = 1;
-                    Serial.println("Found peak frequency");
-                    break;
-                }
+        for (int i = 1; i < lengthOfPeakArray; i++) {
+            int32_t peakFrequency = peaks[i][1];
+            if ((peakFrequency < frequencyOfInterestMax) && (peakFrequency > frequencyOfInterestMin)) {
+                found = 1;
+                found = 1;
             }
-        // }
+        }
         // Increment buffer to check
         buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
 
@@ -293,44 +294,91 @@ void loop() {
 
 // Ditch the send skip stuff, just initialize with a "ready" message, then get the list of frequencies from the client
 void setupTeensyCommunication() {
+    // char* messageToReceive;
+    // char tempCharA = '0';
+    // char tempCharB = '0';
+
+    // Send signal that we are ready
+    // delay(100);
     ethernetModule::UDP_send_ready_signal(clientIP, clientPort);
     // After this, the client and teensy are connected
 
     while (!ethernetModule::UDP_check_if_connected())
         ;
 
-    teensyUDP::frequency_data_from_client(frequenciesOfInterest, frequencyVariances);
+    teensyUDP::frequency_data_from_client();
 
-    // for (int i = 0; i < 10; i++) {
-    //     Serial.print("Frequency: ");
-    //     Serial.println(frequenciesOfInterest[i]);
-
-    //     Serial.print("Variance: ");
-    //     Serial.println(frequencyVariances[i]);
-    // }
 
     ethernetModule::UDP_clean_message_memory();
+
+
+    // while (true) {    
+        // while (!ethernetModule::UDP_check_if_connected())
+        //     ;
+        
+        // messageToReceive = ethernetModule::UDP_read_message();
+        // tempCharA = messageToReceive[0];
+        // tempCharB = messageToReceive[1];
+
+        // if ((tempCharA == 's') && (tempCharB == 's')) {
+        //     break;
+        // }
+
+        // // sf - Send Frequency data
+        // if ((tempCharA == 's') && (tempCharB == 'f')) {
+        //     int32_t* frequencyDataFromClient;
+        //     frequencyDataFromClient = teensyUDP::frequency_data_from_client();
+        //     frequencyOfInterest = frequencyDataFromClient[0];
+        //     frequencyVariance = frequencyDataFromClient[1];
+        // }
+    // }
 }
 
 /*
     Simplify:
-     - Constantly send data no matter if the client is ready or not, just use an interval so the user is not
+     - Send frequencies at beginning, no sf, no skip signals, just list of frequencies
+     - List of frequencies should 
+     - Constantly send data no matter if the client is ready or not, just use a interval so the user is not
        overwhelmed
      - 
 */
 
 // This function sends data to the client by waiting for incoming signals, and sending the corresponding data
 void sendDataToClient() {
-    teensyUDP::send_hydrophone_data(samplesRawHydrophone1, (SAMPLE_LENGTH * 3));
-    teensyUDP::send_hydrophone_data(samplesRawHydrophone2, (SAMPLE_LENGTH * 3));
-    teensyUDP::send_hydrophone_data(samplesRawHydrophone3, (SAMPLE_LENGTH * 3));
-    teensyUDP::send_hydrophone_data(samplesRawHydrophone4, (SAMPLE_LENGTH * 3));
-    teensyUDP::send_hydrophone_data(samplesRawHydrophone5, (SAMPLE_LENGTH * 3));
+    char* messageToReceive;
+    char tempCharA = '0';
+    char tempCharB = '0';
 
-    teensyUDP::send_samples_raw_data(samplesRawForDSP, SAMPLE_LENGTH);
-    teensyUDP::send_samples_filtered_data(samplesFiltered, SAMPLE_LENGTH);
-    teensyUDP::send_FFT_data(FFTResults, SAMPLE_LENGTH);
-    teensyUDP::send_peak_data(peaks, lengthOfPeakArray);
+    while (true) {
+        // Wait for message to come in
+        while (!ethernetModule::UDP_check_if_connected())
+            ;    
+
+        messageToReceive = ethernetModule::UDP_read_message();
+        tempCharA = messageToReceive[0];
+        tempCharB = messageToReceive[1];
+
+        if ((tempCharA == 's') && (tempCharB == 's')) {
+            break;
+        }
+
+        // gh - Get Hydrophone data
+        if ((tempCharA == 'g') && (tempCharB == 'h')) {
+            teensyUDP::send_hydrophone_data(samplesRawHydrophone1, (SAMPLE_LENGTH * 3));
+            teensyUDP::send_hydrophone_data(samplesRawHydrophone2, (SAMPLE_LENGTH * 3));
+            teensyUDP::send_hydrophone_data(samplesRawHydrophone3, (SAMPLE_LENGTH * 3));
+            teensyUDP::send_hydrophone_data(samplesRawHydrophone4, (SAMPLE_LENGTH * 3));
+            teensyUDP::send_hydrophone_data(samplesRawHydrophone5, (SAMPLE_LENGTH * 3));
+        }
+
+        // gd - Get Digital Signal Processing (DSP) data
+        if ((tempCharA == 'g') && (tempCharB == 'd')) {
+            teensyUDP::send_samples_raw_data(samplesRawForDSP, SAMPLE_LENGTH);
+            teensyUDP::send_samples_filtered_data(samplesFiltered, SAMPLE_LENGTH);
+            teensyUDP::send_FFT_data(FFTResults, SAMPLE_LENGTH);
+            teensyUDP::send_peak_data(peaks, lengthOfPeakArray);
+        }
+    }
 
     ethernetModule::UDP_clean_message_memory();
 }
