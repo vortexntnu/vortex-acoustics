@@ -24,4 +24,6 @@ void send_samples_raw_data(int16_t* samplesRaw, int16_t lengthOfData);
 void send_samples_filtered_data(q15_t* samplesFiltered, int16_t lengthOfData);
 void send_FFT_data(q15_t* FFTdata, int16_t lengthOfData);
 void send_peak_data(std::vector<std::vector<q31_t>> peakData, int16_t lengthOfPeakList);
+void send_tdoa_data(double* tdoaData, int8_t lengthOfData = 5);
+void send_location_data(double* locationData, int8_t lengthOfData = 3);
 } // namespace teensyUDP

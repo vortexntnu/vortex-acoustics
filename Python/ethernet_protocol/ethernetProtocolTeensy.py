@@ -101,7 +101,7 @@ class TeensyCommunicationUDP:
 
                 self.clientSocket.sendto(frequency_variance_msg.encode(), self.address)
         except:
-            print("Couldn't send Frequency data...")
+            print("Couldn't send Frequency data")
 
 
 
@@ -141,8 +141,10 @@ class TeensyCommunicationUDP:
         # Try saving string into a integer array, if error -> string empty
         try:
             tempString = tempString[0:-1]
-            data = list(map(int, tempString.split(",")))
-        except:
+            data = list(map(float, tempString.split(","))) # This may not be safe
+        except Exception as e:
+            print("get_data raised exception: ")
+            print(e)
             data = [0]
 
         return data
@@ -174,6 +176,8 @@ class TeensyCommunicationUDP:
             - Filtered samples
             - FFT
             - Peaks
+            - time difference of arrival data
+            - sound location data
             """
             rawSampleData = self.get_data()
             filteredSampleData = self.get_data()
@@ -183,7 +187,13 @@ class TeensyCommunicationUDP:
             peakDataRaw = self.get_data()
             peakData = [peakDataRaw[i : i + 3] for i in range(0, len(peakDataRaw), 3)]
 
-            return rawSampleData, filteredSampleData, FFTData, peakData
-        except:
-            return [0], [0], [0], [0]
+            tdoaData = self.get_data()
+            soundLocationData = self.get_data()
+
+
+            return rawSampleData, filteredSampleData, FFTData, peakData, tdoaData, soundLocationData
+        except Exception as e:
+            print("get_DSP_data raised exception: ")
+            print(e)
+            return [0], [0], [0], [0], [0], [0]
 
