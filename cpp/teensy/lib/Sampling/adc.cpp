@@ -93,6 +93,11 @@ volatile uint16_t sample_index;
 volatile uint8_t buffer_filled[BUFFER_PER_CHANNEL]; // to know which have been filled with new values
 volatile uint32_t overall_buffer_count;
 
+
+int32_t debugTimer;
+
+
+
 elapsedMicros stopwatch;
 uint32_t clk_cyc = 0;
 
@@ -189,6 +194,7 @@ void setup() {
         buffer_filled[i] = 0; // no sampling yet
     }
 
+    debugTimer = millis();
     // ! connect beginRead() to BUSY/INT interrupt -> is done in trigger_conversion()
 }
 
@@ -299,8 +305,11 @@ void triggerConversion() {
 
 void read_loop() {
     // timestamps[active_buffer][sample_index] = ARM_DWT_CYCCNT - clk_cyc;
-    if (stop_sampling)
+
+
+    if (stop_sampling) {
         return;
+    }
     NVIC_DISABLE_IRQ(IRQ_PIT);
     // detachInterrupt(BUSYINT_ARDUINO_PIN);
 
@@ -328,6 +337,14 @@ void read_loop() {
     // stopwatch = elapsedMicros();
     sample_index++;
     if (sample_index >= SAMPLE_LENGTH_ADC) {
+        // if (millis() - debugTimer > 1000) {
+        //     Serial.print("sample index: ");
+        //     Serial.print(sample_index);
+        //     // Serial.print(", filled: ");
+        //     // Serial.println(adc::buffer_filled[buffer_to_check]);
+
+        //     debugTimer = millis();
+        // }
 
         // unsigned long time_to_read = stopwatch;
 

@@ -1,8 +1,11 @@
 #include "ethernetModule.h"
 
 // Networking variables
-byte macAddressTeensy[] = {0xDE, 0xED, 0xBE, 0xEE, 0xFE, 0xED};
+byte macAddressTeensy[] = {0x00, 0x00, 0xBE, 0xEE, 0xFE, 0xED};
 IPAddress ipAddressTeensy(10, 0, 0, 111);
+IPAddress dnsTeensy(10, 0, 0, 1);
+IPAddress defautGatewayTeensy(10, 0, 0, 1);
+IPAddress subnetMaskTeensy(255, 255, 255, 0);
 unsigned int localPort = 8888;
 
 // buffers for receiving and sending data
@@ -14,18 +17,17 @@ EthernetUDP Udp;
 namespace ethernetModule {
 void UDP_init() {
     // Configure pins for Teensy
-    Ethernet.init(20);
+    // Ethernet.init(20);
 
     // Start the ethernet connection
     Ethernet.begin(macAddressTeensy, ipAddressTeensy);
 
-    // Check for Ethernet hardware present
-    if (Ethernet.hardwareStatus() == EthernetNoHardware) {
-        Serial.println("Ethernet shield was not found.  Sorry, can't run without hardware. :(");
-    }
-    if (Ethernet.linkStatus() == LinkOFF) {
-        Serial.println("Ethernet cable is not connected.");
-    }
+    // Ethernet.setLocalIP(ipAddressTeensy);
+    // Ethernet.setMACAddress(macAddressTeensy);
+    // Ethernet.setDnsServerIP(dnsTeensy);
+    // Ethernet.setGatewayIP(defautGatewayTeensy);
+    // Ethernet.setSubnetMask(subnetMaskTeensy);
+
     // Check for Ethernet hardware present
     if (Ethernet.hardwareStatus() == EthernetNoHardware) {
         Serial.println("Ethernet shield was not found.  Sorry, can't run without hardware. :(");

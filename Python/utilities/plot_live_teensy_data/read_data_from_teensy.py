@@ -105,8 +105,8 @@ def get_data_from_teensy():
     rawSampleData, filteredSampleData, FFTData, peakData, tdoaData, soundLocationData = teensy.get_DSP_data()
     # teensy.send_SKIP()
 
-    print(tdoaData);
-    print(soundLocationData);
+    # print(tdoaData);
+    # print(soundLocationData);
 
     try:
         with open(
