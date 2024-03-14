@@ -12,14 +12,14 @@ import csv
 import time
 from datetime import datetime
 
-from ethernet_protocol import ethernetProtocolTeensy
+from ethernet_protocol.ethernetProtocolTeensy import TeensyCommunicationUDP
 
 # Variables ==================================================
 # This list has to be exactly ten entries long
 # format [(FREQUENCY, FREQUENCY_VARIANCE), ...]
 frequenciesOfInterest = [
-    (40_000, 1000), 
-    (20_000, 1000), 
+    (40_000, 3000), 
+    (20_000, 3000), 
     (0, 0), 
     (0, 0), 
     (0, 0), 
@@ -27,7 +27,7 @@ frequenciesOfInterest = [
     (0, 0), 
     (0, 0), 
     (0, 0), 
-    (0, 0)
+    (100, 200)
 ] 
 
 
@@ -36,12 +36,12 @@ frequenciesOfInterest = [
 timeoutMax = 60
 
 # Setup ethernet protocol
-teensy = ethernetProtocolTeensy.TeensyCommunicationUDP(
+teensy = TeensyCommunicationUDP(
     TEENSY_IP="10.0.0.111",
     TEENSY_PORT=8888,
     MY_PORT=9999,
     MAX_PACKAGE_SIZE_RECEIVED=65536,
-    TIMEOUT=1,
+    TIMEOUT=0.5,
 )
 
 
@@ -95,52 +95,68 @@ def setup_teensy_communication():
             # Start over
             setup_teensy_communication()
 
+    # teensy.send_acknowledge_signal();
+    # teensy.send_acknowledge_signal();
+    # teensy.send_acknowledge_signal();
+    # teensy.send_acknowledge_signal();
+
+    # time.sleep(1);
     print("READY signal received, sending frequencies...")
     teensy.send_frequencies_of_interest(frequenciesOfInterest)
     # teensy.send_frequency_of_interest(frequencyOfInterest, frequencyVariance)
     # teensy.send_SKIP()  # Once we are done we NEED to send teensy a confirmation code so that it can continue to calculate with the new given information
-        
+
 def get_data_from_teensy():
-    hydrophoneData = teensy.get_raw_hydrophone_data()
-    rawSampleData, filteredSampleData, FFTData, peakData, tdoaData, soundLocationData = teensy.get_DSP_data()
+    # hydrophoneData = teensy.get_raw_hydrophone_data()
+    # rawSampleData, filteredSampleData, FFTData, peakData, tdoaData, soundLocationData = teensy.get_DSP_data()
     # teensy.send_SKIP()
+
+    teensy.get_message()
+
+    print(teensy.fft_data)
+    # print(teensy.location_data)
+            
+    # soundLocationData = teensy.get_data()
 
     # print(tdoaData);
     # print(soundLocationData);
 
-    try:
-        with open(
-            os.path.join(MY_FILE_DIR, "hydrophone_data", f"hydrophone_{formattedDateAndTime}.csv"),
-            "a",
-            encoding="UTF8",
-            newline="",
-        ) as f:
-            writer = csv.writer(f)
-            writer.writerow(hydrophoneData)
-
-        with open(
-            os.path.join(MY_FILE_DIR, "DSP_data", f"DSP_{formattedDateAndTime}.csv"),
-            "a",
-            encoding="UTF8",
-            newline="",
-        ) as f:
-            writer = csv.writer(f)
-            writer.writerow([rawSampleData, filteredSampleData, FFTData, peakData])
-        print("Data Saved")
-    except:
-        print("ERROR saving data")
+    # try:
+    #     with open(
+    #         os.path.join(MY_FILE_DIR, "hydrophone_data", f"hydrophone_{formattedDateAndTime}.csv"),
+    #         "a",
+    #         encoding="UTF8",
+    #         newline="",
+    #     ) as f:
+    #         writer = csv.writer(f)
+    #         writer.writerow(hydrophoneData)
+# TODO: Finish data transfer
+    #     with open(
+    #         os.path.join(MY_FILE_DIR, "DSP_data", f"DSP_{formattedDateAndTime}.csv"),
+    #         "a",
+    #         encoding="UTF8",
+    #         newline="",
+    #     ) as f:
+    #         writer = csv.writer(f)
+    #         writer.writerow([rawSampleData, filteredSampleData, FFTData, peakData])
+    #     print("Data Saved")
+    # except:
+    #     print("ERROR saving data")
 
 # initialize stuff
 setup_teensy_communication()
 
+# time.sleep(1);
+
 while True:
     try:
-        print("Receiving data from teensy...")
+        # print("Receiving data from teensy...")
         get_data_from_teensy()
-    except:
+    except Exception as e:
         print("ERROR: Receiving data did not work")
+        print(e)
 
-    print();
 
     # A little pause to not overwhelm the processor
-    time.sleep(1)
+    # This is needed to sync up with teensy's data transfer
+    # time.sleep(0.1)

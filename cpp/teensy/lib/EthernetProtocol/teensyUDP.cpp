@@ -1,15 +1,23 @@
 #include "teensyUDP.h"
 
-// Variables
-// int32_t frequencyData[2];
+// MESSAGE FORMATs
+// MSG|hydr1|hydr2|...|samples_raw|samples_filtered|FFtRes|peaks|tdoa|location|
+// Maybe
+
+/*
+
+Question:
+How do we prevent the case where the python script is reading data, and then teensy sends new data mid read?
+
+
+*/
+
 
 namespace teensyUDP {
-int32_t* frequency_data_from_client(int32_t *frequenciesOfInterest, int32_t* frequencyVariances) {
-    // int32_t frequenciesOfInterest[10];
-    // int32_t frequencyVariances[10];
-
+void frequency_data_from_client(int32_t *frequenciesOfInterest, int32_t* frequencyVariances) {
     for (int i = 0; i < FREQUENCY_LIST_LENGTH; i++) {
-        // NOTE: to self, while loop has to be at the end othewise the first element does not get read
+        while (!ethernetModule::UDP_check_if_connected());
+
         char* frequencyMessage = ethernetModule::UDP_read_message();
         char* token;
 
@@ -18,32 +26,7 @@ int32_t* frequency_data_from_client(int32_t *frequenciesOfInterest, int32_t* fre
         frequenciesOfInterest[i] = atoi(token);
         frequencyVariances[i] = atoi(strtok(NULL, ","));
 
-        while (!ethernetModule::UDP_check_if_connected());
     }
-
-
-
-    // int32_t frequencyOfInterest;
-    // int32_t frequencyVariance;
-
-    // // Read frequency client is interested in
-    // while (!ethernetModule::UDP_check_if_connected())
-    //     ;
-    // frequencyOfInterest = atoi(ethernetModule::UDP_read_message());
-    // ethernetModule::UDP_clean_message_memory();
-
-    // // Read frequency variance client wants
-    // while (!ethernetModule::UDP_check_if_connected())
-    //     ;
-    // frequencyVariance = atoi(ethernetModule::UDP_read_message());
-    // ethernetModule::UDP_clean_message_memory();
-
-    // // Save data to a array
-    // frequencyData[0] = frequencyOfInterest;
-    // frequencyData[1] = frequencyVariance;
-
-    // Return frequency data
-    return 0;
 }
 
 void send_data_16Bit(int16_t* data, int16_t lengthOfData) {
@@ -85,8 +68,8 @@ void send_data_16Bit(int16_t* data, int16_t lengthOfData) {
         ethernetModule::UDP_send_message(dataBuffer, index, amountLeftToSend);
     }
     // Send "DONE" as a signal, to signal that data transfer is finished
-    char finishingData[] = "DONE";
-    ethernetModule::UDP_send_message(finishingData, 4, 0);
+    // char finishingData[] = "DONE";
+    // ethernetModule::UDP_send_message(finishingData, 4, 0);
 
     // Free up allocated space since we don't use it anymore
     free(dataBuffer);
@@ -131,8 +114,8 @@ void send_data_32Bit(int32_t* data, int32_t lengthOfData) {
         ethernetModule::UDP_send_message(dataBuffer, index, amountLeftToSend);
     }
     // Send "DONE" as a signal, to signal that data transfer is finished
-    char finishingData[] = "DONE";
-    ethernetModule::UDP_send_message(finishingData, 4, 0);
+    // char finishingData[] = "DONE";
+    // ethernetModule::UDP_send_message(finishingData, 4, 0);
 
     // Free up allocated space since we don't use it anymore
     free(dataBuffer);
@@ -177,19 +160,30 @@ void send_data_64Bit(double* data, int32_t lengthOfData) {
         ethernetModule::UDP_send_message(dataBuffer, index, amountLeftToSend);
     }
     // Send "DONE" as a signal, to signal that data transfer is finished
-    char finishingData[] = "DONE";
-    ethernetModule::UDP_send_message(finishingData, 4, 0);
+    // char finishingData[] = "DONE";
+    // ethernetModule::UDP_send_message(finishingData, 4, 0);
 
     // Free up allocated space since we don't use it anymore
     free(dataBuffer);
 }
 
-void send_hydrophone_data(int16_t* hydrophone, int16_t lengthOfData) { send_data_16Bit(hydrophone, lengthOfData); }
 
-void send_samples_raw_data(int16_t* samplesRaw, int16_t lengthOfData) { send_data_16Bit(samplesRaw, lengthOfData); }
+void send_hydrophone_data(int16_t* hydrophone, int16_t lengthOfData) { 
+    // send_type_message("RAW", 3);
+    send_data_16Bit(hydrophone, lengthOfData); 
+}
+
+void send_samples_raw_data(int16_t* samplesRaw, int16_t lengthOfData) { 
+    char message[] = "RAW";
+    ethernetModule::UDP_send_message(message, 3, 0);
+    send_data_16Bit(samplesRaw, lengthOfData); 
+}
 
 void send_samples_filtered_data(q15_t* samplesFiltered, int16_t lengthOfData) {
     // Convert to correct datatype before sending
+    char message[] = "FILTERED";
+    ethernetModule::UDP_send_message(message, 8, 0);
+
     int16_t tempSamplesFilteredBuffer[lengthOfData];
     for (int i = 0; i < lengthOfData; i++) {
         tempSamplesFilteredBuffer[i] = (int16_t)samplesFiltered[i];
@@ -198,6 +192,8 @@ void send_samples_filtered_data(q15_t* samplesFiltered, int16_t lengthOfData) {
 }
 
 void send_FFT_data(q15_t* FFTdata, int16_t lengthOfData) {
+    char message[] = "FFT";
+    ethernetModule::UDP_send_message(message, 3, 0);
     // Convert to correct datatype before sending
     int16_t tempFFTBuffer[lengthOfData];
     for (int i = 0; i < lengthOfData; i++) {
@@ -207,6 +203,8 @@ void send_FFT_data(q15_t* FFTdata, int16_t lengthOfData) {
 }
 
 void send_peak_data(std::vector<std::vector<q31_t>> peakData, int16_t lengthOfPeakList) {
+    char message[] = "PEAK";
+    ethernetModule::UDP_send_message(message, 4, 0);
     // Only send peaks if there is some useful peak data
     if (lengthOfPeakList < 2) {
         int32_t peakDataProcessed[1] = {0};
@@ -226,7 +224,15 @@ void send_peak_data(std::vector<std::vector<q31_t>> peakData, int16_t lengthOfPe
     }
 }
 
-void send_tdoa_data(double* tdoaData, int8_t lengthOfData = 5) { send_data_64Bit(tdoaData, lengthOfData); }
+void send_tdoa_data(double* tdoaData, int8_t lengthOfData = 5) { 
+    char message[] = "TDOA";
+    ethernetModule::UDP_send_message(message, 4, 0);
+    send_data_64Bit(tdoaData, lengthOfData); 
+}
 
-void send_location_data(double* locationData, int8_t lengthOfData = 3) { send_data_64Bit(locationData, lengthOfData); }
+void send_location_data(double* locationData, int8_t lengthOfData = 3) { 
+    char message[] = "LOCATION";
+    ethernetModule::UDP_send_message(message, 8, 0);
+    send_data_64Bit(locationData, lengthOfData); 
+}
 } // namespace teensyUDP

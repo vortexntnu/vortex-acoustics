@@ -14,10 +14,12 @@
 #define FREQUENCY_LIST_LENGTH 10
 
 namespace teensyUDP {
-int32_t* frequency_data_from_client(int32_t *frequenciesOfInterest, int32_t* frequencyVariances);
+void frequency_data_from_client(int32_t *frequenciesOfInterest, int32_t* frequencyVariances);
 
 void send_data_16Bit(int16_t* data, int16_t lengthOfData);
 void send_data_32Bit(int32_t* data, int32_t lengthOfData);
+void send_data_64Bit(double* data, int32_t lengthOfData);
+void send_type_message(char* typeMessage, uint8_t messageLength);
 
 void send_hydrophone_data(int16_t* hydrophone, int16_t lengthOfData);
 void send_samples_raw_data(int16_t* samplesRaw, int16_t lengthOfData);

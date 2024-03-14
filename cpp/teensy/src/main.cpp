@@ -52,7 +52,6 @@ int16_t samplesRawHydrophone3[SAMPLE_LENGTH * 3];
 int16_t samplesRawHydrophone4[SAMPLE_LENGTH * 3];
 int16_t samplesRawHydrophone5[SAMPLE_LENGTH * 3];
 #define SAMPLING_TIMEOUT 10000 // [10 s] If sampling takes to long before finding a frequency of interest we exit the loop and later try again
-#define BUFFER_TIMEOUT 100 // [0.1 s] If buffer takes to long time to fill up with values exit the buffer sample loop and later try again
 
 // Variables for Digital Signal Processing ==========
 int16_t samplesRawForDSP[SAMPLE_LENGTH];
@@ -61,17 +60,17 @@ q15_t* FFTResultsRaw;
 q15_t* FFTResults;
 std::vector<std::vector<q31_t>> peaks;
 int16_t lengthOfPeakArray;
-double timeDifferenceOfArrival[5]; // X, Y, Z
+double timeDifferenceOfArrival[5];
 double soundLocation[3]; // X, Y, Z
 // Variables for Peak Detection ==========
-int32_t frequenciesOfInterest[FREQUENCY_LIST_LENGTH] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; // 0 Hz
-int32_t frequencyVariances[FREQUENCY_LIST_LENGTH] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};   // +-0 Hz
+int32_t frequenciesOfInterest[FREQUENCY_LIST_LENGTH] = {40000, 0, 0, 0, 0, 0, 0, 0, 0, 0}; // 0 Hz
+int32_t frequencyVariances[FREQUENCY_LIST_LENGTH] = {3000, 0, 0, 0, 0, 0, 0, 0, 0, 0};   // +-0 Hz
 
 int32_t frequenciesOfInterestMax[FREQUENCY_LIST_LENGTH];
 int32_t frequenciesOfInterestMin[FREQUENCY_LIST_LENGTH];
 
 // Variables for data transmission ==========
-#define DATA_SEND_PAUSE 0
+#define DATA_SEND_PAUSE 1000
 int32_t lastSendTime = 0;
 uint8_t* clientIP;
 uint16_t clientPort;
@@ -94,6 +93,9 @@ void setup() {
     Serial.print("2 - Ethernet Configuration");
     ethernetModule::UDP_init(); // This breaks everything
     Serial.println();
+    // delay(2000);
+    // What
+    // So it decided to work today????
     // Ethernet Setup PART 1 (STOP) ====================================================================================================
 
     // Sampling Setup (START) ====================================================================================================
@@ -136,7 +138,8 @@ void setup() {
     */
     // Wait until someone is connected and get their IP and Port address
     Serial.println("5 - Waiting for client connection...");
-    while (!ethernetModule::UDP_check_if_connected());
+    while (!ethernetModule::UDP_check_if_connected())
+        ;
 
     clientIP = ethernetModule::get_remoteIP();
     clientPort = ethernetModule::get_remotePort();
@@ -174,52 +177,30 @@ void loop() {
     */
     Serial.println("Start Sampling");
 
+    int buffer_timer;
     uint8_t found = 0;
-    uint8_t buffer_to_check = adc::active_buffer;
+    uint8_t buffer_to_check = 0;
     unsigned long samplingStartTime = millis(); // For sampling timeout, in case we sample for to long, we want to break the loop
-    unsigned long bufferStartTime = millis(); // For buffer timeout, in case the buffer stutters we want to make sure we can handle the error nd restart the sampling into the buffer
-    // unsigned long printBeforeTimer = millis() + 2000;
-    // unsigned long printAfterTimer = millis() + 500;
     while (!found) {
-        Serial.println("Debuging God help me not this hsit again");
-        Serial.println(buffer_to_check);
-        Serial.println(adc::active_buffer);
-        delay(1000);
+        
+        // delay(1000);
         // Start sampling into the buffer
-        // Sampling ONLY using BLOCKING parameter, others are not implemented
         adc::startConversion(sample_period, adc::BLOCKING);
-
         // Wait until ring buffer is filled
-        // NOTE: The code is not good, so sometimes the buffer stutters and doesent recognize it is filled
-        // Why? I dont know. But something in sampling code probably goes out of memory bound
-        // So the solution is that we have a timout handler, usually sampling takes a few milliseconds to complete, if it goes over 100 ms it is safe to say it has crashed, so we just time it out
+        buffer_timer = millis();
         while (!adc::buffer_filled[buffer_to_check]) {
-            if (millis() - bufferStartTime > BUFFER_TIMEOUT) {
-                Serial.print("Time: ");
-                Serial.println(millis() - bufferStartTime);
-                Serial.println("Buffer timed out");
-                Serial.print("sample_index:   ");Serial.println(adc::sample_index);
-                
-
-                // Restart timer
-                bufferStartTime = millis();
+            if (millis() - buffer_timer > SAMPLING_TIMEOUT) {
+                Serial.print("Stopped waiting for ring buffer to fill");
                 break;
             }
         }
-        
-        // Stop sampling into the buffer
-        adc::stopConversion();
-        
-        Serial.println("Debuging Thank you iyts not this");
-        delay(1000);
+        // Iterate buffer to check
+        // Stop sampling data
 
         // Save raw sampled data
         for (uint16_t i = 0; i < SAMPLE_LENGTH; i++) {
             samplesRawForDSP[i] = (int16_t)adc::channel_buff_ptr[1][buffer_to_check][i];
         }
-
-        // Increment buffer to check
-        buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
 
         // Digital Signal Processing (START) ====================================================================================================
         // Filter raw samples
@@ -245,59 +226,33 @@ void loop() {
         phaseQ31_to_radianFloat32(peaks[x][2]);
         */
         // Digital Signal Processing (STOP) ====================================================================================================
-        
 
-        // Check if any of the peaks are of interest
-        // TODO: David plz all frequency of interest not only 1, JA helt enig compy pasete ikke bruke for loop, det er for pyser bruker for lite flash minne
+
         for (int i = 1; i < lengthOfPeakArray; i++) {
             int32_t peakFrequency = peaks[i][1];
-            // Serial.print("Debuging: Peaks: ");Serial.print(frequenciesOfInterestMin[0]);Serial.print(" < ");Serial.print(peakFrequency);Serial.print(" < ");Serial.print(frequenciesOfInterestMax[0]);
             // Serial.println();
-            // delay(1000);
-            if ((peakFrequency < frequenciesOfInterestMax[0]) && (peakFrequency > frequenciesOfInterestMin[0])) {
-                found = 1;
+            for (int i = 0; i < FREQUENCY_LIST_LENGTH; i++) {
+                if ((peakFrequency < frequenciesOfInterestMax[i]) && (peakFrequency > frequenciesOfInterestMin[i])) {
+                    found = 1;
+                }
             }
         }
-        // // Increment buffer to check
-        // buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
 
-        // // Stop sampling
-        // adc::stopConversion();
-        
-        
+        buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
+
+        adc::stopConversion();
+
         // Check if sampling has taken to long and if so exit the loop and try again later
         if (millis() - samplingStartTime > SAMPLING_TIMEOUT) {
-            Serial.print("Time: ");
-            Serial.println(millis() - samplingStartTime);
             Serial.println("Sampling timed out");
             break;
         }
     }
 
-    // if (millis() - printAfterTimer > 500) {
-    // Serial.println("Exited loop");
-    // printAfterTimer = millis();
-    // }
 
-    // After finding peaks of interest let the last sampling sequence finish
-    // dELETE THIS (sTART) -----
-    Serial.println("Debuging AFTER: Started Sampling...");
-    delay(1000);
-    // dELETE THIS (STOP) -----
 
     adc::startConversion(sample_period, adc::BLOCKING);
-    while (!adc::buffer_filled[buffer_to_check]) {
-        if (millis() - bufferStartTime > BUFFER_TIMEOUT) {
-            Serial.print("Time: ");
-            Serial.println(millis() - bufferStartTime);
-            Serial.println("Buffer timed out");
-            Serial.print("sample_index:   ");Serial.println(adc::sample_index);
-            
-            // Restart timer
-            bufferStartTime = millis();
-            break;
-        }
-    }
+    while (!adc::buffer_filled[buffer_to_check]);
     buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
     adc::stopConversion();
     Serial.println("Stoped sampling");
@@ -327,20 +282,22 @@ void loop() {
         adc::buffer_filled[i] = 0;
     }
 
-    // dELETE THIS (sTART) -----
-    Serial.println("Debuging AFTER: Hydrophone data:");
-    for (int i = 0; i < SAMPLE_LENGTH*BUFFER_PER_CHANNEL; i++) {
-        Serial.print(samplesRawHydrophone1[i]);Serial.print(", ");
-    }
-    Serial.println();
-    delay(5000);
-    // dELETE THIS (STOP) -----
+    timeDifferenceOfArrival[0] = 1.0;
+    timeDifferenceOfArrival[1] = 2.0;
+    timeDifferenceOfArrival[2] = 3.0;
+    timeDifferenceOfArrival[3] = 4.0;
+    timeDifferenceOfArrival[4] = 5.0;
+
+    soundLocation[0] = 7.0;
+    soundLocation[1] = 8.0;
+    soundLocation[2] = 9.0;
+
     // Sampling (STOP) ====================================================================================================
 
     // Send data (START) ====================================================================================================
     Serial.println("Waiting for clients requests...");
-    sendDataToClient();
-    delay(3000);
+    sendDataToClient(); 
+    delay(500);
     Serial.println("Data transfer complete");
     Serial.println();
     // Send data (STOP) ====================================================================================================
@@ -350,11 +307,8 @@ void loop() {
 // Ditch the send skip stuff, just initialize with a "ready" message, then get the list of frequencies from the client
 void setupTeensyCommunication() {
     ethernetModule::UDP_send_ready_signal(clientIP, clientPort);
+
     // After this, the client and teensy are connected
-
-    while (!ethernetModule::UDP_check_if_connected())
-        ;
-
     teensyUDP::frequency_data_from_client(frequenciesOfInterest, frequencyVariances);
 
     ethernetModule::UDP_clean_message_memory();
@@ -370,15 +324,18 @@ void sendDataToClient() {
     if (millis() - lastSendTime < DATA_SEND_PAUSE) { return; }
     lastSendTime = millis();
     
-    teensyUDP::send_hydrophone_data(samplesRawHydrophone1, (SAMPLE_LENGTH * 3));
-    teensyUDP::send_hydrophone_data(samplesRawHydrophone2, (SAMPLE_LENGTH * 3));
-    teensyUDP::send_hydrophone_data(samplesRawHydrophone3, (SAMPLE_LENGTH * 3));
-    teensyUDP::send_hydrophone_data(samplesRawHydrophone4, (SAMPLE_LENGTH * 3));
-    teensyUDP::send_hydrophone_data(samplesRawHydrophone5, (SAMPLE_LENGTH * 3));
+    Serial.println("Sent data");
+
+    // teensyUDP::send_hydrophone_data(samplesRawHydrophone1, (SAMPLE_LENGTH * 3));
+    // teensyUDP::send_hydrophone_data(samplesRawHydrophone2, (SAMPLE_LENGTH * 3));
+    // teensyUDP::send_hydrophone_data(samplesRawHydrophone3, (SAMPLE_LENGTH * 3));
+    // teensyUDP::send_hydrophone_data(samplesRawHydrophone4, (SAMPLE_LENGTH * 3));
+    // teensyUDP::send_hydrophone_data(samplesRawHydrophone5, (SAMPLE_LENGTH * 3));
 
     teensyUDP::send_samples_raw_data(samplesRawForDSP, SAMPLE_LENGTH);
     teensyUDP::send_samples_filtered_data(samplesFiltered, SAMPLE_LENGTH);
     teensyUDP::send_FFT_data(FFTResults, SAMPLE_LENGTH);
+        
     teensyUDP::send_peak_data(peaks, lengthOfPeakArray);
     
     teensyUDP::send_tdoa_data(timeDifferenceOfArrival);

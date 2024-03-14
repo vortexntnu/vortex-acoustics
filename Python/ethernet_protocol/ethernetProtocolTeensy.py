@@ -1,6 +1,8 @@
 import time
 from socket import *
 import netifaces as ni
+from enum import Enum
+import errno
  
 class TeensyCommunicationUDP:
     # Setup the communications with Teensy on initialization
@@ -10,7 +12,7 @@ class TeensyCommunicationUDP:
         TEENSY_PORT=8888,  # (non-privileged ports are > 1023)
         MY_PORT=9999,
         MAX_PACKAGE_SIZE_RECEIVED=65536,
-        TIMEOUT=10,  # Wait period before giving up on communications [seconds], Remember teensy takes time to calculate everything)
+        TIMEOUT=1,  # Wait period before giving up on communications [seconds], Remember teensy takes time to calculate everything)
     ):
         # Teensy networking Setup
         self.TEENSY_IP = TEENSY_IP
@@ -36,9 +38,19 @@ class TeensyCommunicationUDP:
         self.clientSocket = socket(AF_INET, SOCK_DGRAM)
         self.clientSocket.settimeout(TIMEOUT)
         self.clientSocket.bind((self.MY_IP, self.MY_PORT))
+        self.clientSocket.setblocking(False)
 
         # send initialization signal
         self.send_acknowledge_signal()
+
+        self.data_target = DataTarget.NONE
+
+        self.samples_raw = []
+        self.samples_filtered = []
+        self.fft_data = []
+        self.peak_data = []
+        self.tdoa_data = []
+        self.location_data = []
 
     # stackoverflow <3
     # https://stackoverflow.com/questions/166506/finding-local-ip-addresses-using-pythons-stdlib
@@ -99,6 +111,7 @@ class TeensyCommunicationUDP:
             for (frequency, variance) in frequenciesOfInterest:
                 frequency_variance_msg = f"{str(frequency)},{str(variance)},"
 
+                # print(self.address);
                 self.clientSocket.sendto(frequency_variance_msg.encode(), self.address)
         except:
             print("Couldn't send Frequency data")
@@ -129,11 +142,7 @@ class TeensyCommunicationUDP:
             rec_data, addr = self.clientSocket.recvfrom(self.MAX_PACKAGE_SIZE_RECEIVED)
             messageReceived = rec_data.decode()
 
-            # Check if data we are receiving is a READy signal, sometimes it leaks over to the raw data signal so we need to handle it by just ignoring it
-            # Else check if data is done sending, else save
-            if messageReceived == "READY":
-                pass
-            elif messageReceived == "DONE":
+            if messageReceived == "DONE":
                 done = True
             else:
                 tempString += messageReceived
@@ -141,7 +150,8 @@ class TeensyCommunicationUDP:
         # Try saving string into a integer array, if error -> string empty
         try:
             tempString = tempString[0:-1]
-            data = list(map(float, tempString.split(","))) # This may not be safe
+            # data = list(map(float, tempString.split(","))) # This may not be safe )
+            data = list(map(float, tempString.split(",")))
         except Exception as e:
             print("get_data raised exception: ")
             print(e)
@@ -151,22 +161,23 @@ class TeensyCommunicationUDP:
 
     def get_raw_hydrophone_data(self):
         # Send request
-        self.clientSocket.sendto(self.GET_HYDROPHONE_DATA.encode(), self.address)
+        # self.clientSocket.sendto(self.GET_HYDROPHONE_DATA.encode(), self.address)
 
         try:
             # Read response from Teensy 5 times because of 5 hydrophones
             allHydrophoneData = [[], [], [], [], []]
-            hydrophoneNr = 0
-            while hydrophoneNr < 5:
-                allHydrophoneData[hydrophoneNr] = self.get_data()
-                hydrophoneNr += 1
+            for i in range(5):
+                allHydrophoneData[i] = self.get_data()
+            
             return allHydrophoneData
-        except:
+        except Exception as e:
+            print("get_raw_hydrophone_data raised exception: ")
+            print(e)
             return [[], [], [], [], []]
 
     def get_DSP_data(self):
         # Send request
-        self.clientSocket.sendto(self.GET_DSP_DATA.encode(), self.address)
+        # self.clientSocket.sendto(self.GET_DSP_DATA.encode(), self.address)
 
         try:
             """
@@ -197,3 +208,118 @@ class TeensyCommunicationUDP:
             print(e)
             return [0], [0], [0], [0], [0], [0]
 
+    def get_raw_data(self):
+        try:
+            rec_data, _ = self.clientSocket.recvfrom(self.MAX_PACKAGE_SIZE_RECEIVED)
+            messageReceived = rec_data.decode()
+            return messageReceived
+        except error as e: # `error` is really `socket.error`
+            if e.errno == errno.EWOULDBLOCK:
+                # print("No data")
+                pass
+            else:
+                print("Socket error: ", e)
+
+    def parse_message(self, message):
+        return list(map(float, message.split(",")))
+
+    def get_message(self):
+        data = self.get_raw_data()
+
+        if data == None:
+            return
+
+        if data == "RAW":
+            self.data_target = DataTarget.SAMPLES_RAW
+            self.samples_raw = []
+            return
+        elif data == "FILTERED":
+            self.data_target = DataTarget.SAMPLES_FILTERED
+            self.samples_filtered = []
+            return
+        elif data == "FFT":
+            self.data_target = DataTarget.FFT
+            self.fft_data = []
+            return
+        elif data == "PEAK":
+            self.data_target = DataTarget.PEAK
+            self.peak_data = []
+            return
+        elif data == "TDOA":
+            self.data_target = DataTarget.TDOA
+            self.tdoa_data = []
+            return
+        elif data == "LOCATION":
+            self.data_target = DataTarget.LOCATION
+            self.location_data = []
+            return
+
+        data = self.parse_message(data)
+
+        match self.data_target:
+            case DataTarget.NONE:
+                pass
+            case DataTarget.SAMPLES_RAW:
+                self.samples_raw.extend(data)
+            case DataTarget.SAMPLES_FILTERED:
+                self.samples_filtered.extend(data)
+            case DataTarget.FFT:
+                self.fft_data.extend(data)
+            case DataTarget.PEAK:
+                self.peak_data.extend(data)
+            case DataTarget.TDOA:
+                self.tdoa_data.extend(data)
+            case DataTarget.LOCATION:
+                self.location_data.extend(data)
+
+        
+
+
+        # if self.data_target == DataTarget.NONE:
+
+
+        # else:
+        #     return None, MessageType.NONE
+
+
+
+        
+        # data = []
+        # done = False
+        # tempString = ""
+
+        # while not done:
+        #     # Read data
+        #     rec_data, addr = self.clientSocket.recvfrom(self.MAX_PACKAGE_SIZE_RECEIVED)
+        #     messageReceived = rec_data.decode()
+
+        #     if messageReceived == "DONE":
+        #         done = True
+        #     else:
+        #         tempString += messageReceived
+
+        # # Try saving string into a integer array, if error -> string empty
+        # try:
+        #     tempString = tempString[0:-1]
+        #     # data = list(map(float, tempString.split(","))) # This may not be safe )
+        #     data = list(map(float, tempString.split(",")))
+        # except Exception as e:
+        #     print("get_data raised exception: ")
+        #     print(e)
+        #     data = [0]
+
+        # return data
+    
+
+class DataTarget(Enum):
+    NONE = 0,
+    SAMPLES_RAW = 1,
+    SAMPLES_FILTERED = 2,
+    FFT = 3,
+    PEAK = 4,
+    TDOA = 5,
+    LOCATION = 6,
+
+# class DataObject:
+#     def __init__(self) -> None:
+#         pass
