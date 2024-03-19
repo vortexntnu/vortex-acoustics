@@ -1,11 +1,11 @@
 #include "ethernetModule.h"
 
 // Networking variables
-byte macAddressTeensy[] = {0x00, 0x00, 0xBE, 0xEE, 0xFE, 0xED};
+byte macAddressTeensy[] = {0x00, 0x01, 0xBE, 0xEE, 0xFE, 0xED};
 IPAddress ipAddressTeensy(10, 0, 0, 111);
-IPAddress dnsTeensy(10, 0, 0, 1);
-IPAddress defautGatewayTeensy(10, 0, 0, 1);
-IPAddress subnetMaskTeensy(255, 255, 255, 0);
+// IPAddress dnsTeensy(10, 0, 0, 1);
+// IPAddress defautGatewayTeensy(10, 0, 0, 1);
+// IPAddress subnetMaskTeensy(255, 255, 255, 0);
 unsigned int localPort = 8888;
 
 // buffers for receiving and sending data
@@ -29,6 +29,7 @@ void UDP_init() {
     // Ethernet.setSubnetMask(subnetMaskTeensy);
 
     // Check for Ethernet hardware present
+    delay(1000);  // Ethernet link status needs some time to connect 
     if (Ethernet.hardwareStatus() == EthernetNoHardware) {
         Serial.println("Ethernet shield was not found.  Sorry, can't run without hardware. :(");
     }

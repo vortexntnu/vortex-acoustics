@@ -45,7 +45,7 @@ unsigned long endTime;
 // Variables for Sampling ==========
 // to be safe should be a bit under 1500. If it sampled more than 1500 for some reason, the data gathered will be inconsistent.
 uint16_t number_samples = SAMPLE_LENGTH * 3;
-float sample_period = 2.3; // >= MIN_SAMP_PERIOD_TIMER
+float sample_period = 2.4; // >= MIN_SAMP_PERIOD_BLOCKING, Recomended: 2.4
 int16_t samplesRawHydrophone1[SAMPLE_LENGTH * 3];
 int16_t samplesRawHydrophone2[SAMPLE_LENGTH * 3];
 int16_t samplesRawHydrophone3[SAMPLE_LENGTH * 3];
@@ -189,10 +189,10 @@ void loop() {
         // Wait until ring buffer is filled
         buffer_timer = millis();
         while (!adc::buffer_filled[buffer_to_check]) {
-            if (millis() - buffer_timer > SAMPLING_TIMEOUT) {
-                Serial.print("Stopped waiting for ring buffer to fill");
-                break;
-            }
+            // if (millis() - buffer_timer > SAMPLING_TIMEOUT) {
+            //     Serial.print("Stopped waiting for ring buffer to fill");
+            //     break;
+            // }
         }
         // Iterate buffer to check
         // Stop sampling data
@@ -249,15 +249,14 @@ void loop() {
         }
     }
 
-
-
+    // Even though 
     adc::startConversion(sample_period, adc::BLOCKING);
     while (!adc::buffer_filled[buffer_to_check]);
     buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
     adc::stopConversion();
     Serial.println("Stoped sampling");
 
-    // Process data from the ring-buffer sx
+    // Process data from the ring-buffers
     // active buffer is one further than the last filled one, which is the oldest one now
     uint8_t bufferIndex = adc::active_buffer;
     bufferIndex = (bufferIndex + 1) % BUFFER_PER_CHANNEL;
@@ -281,6 +280,9 @@ void loop() {
     for (uint8_t i = 0; i < BUFFER_PER_CHANNEL; i++) {
         adc::buffer_filled[i] = 0;
     }
+    // Sampling (STOP) ====================================================================================================
+
+
 
     timeDifferenceOfArrival[0] = 1.0;
     timeDifferenceOfArrival[1] = 2.0;
@@ -292,12 +294,12 @@ void loop() {
     soundLocation[1] = 8.0;
     soundLocation[2] = 9.0;
 
-    // Sampling (STOP) ====================================================================================================
+    
 
     // Send data (START) ====================================================================================================
     Serial.println("Waiting for clients requests...");
     // sendDataToClient(); 
-    delay(3000);
+    delay(1000);
     Serial.println("Data transfer complete");
     Serial.println();
     // Send data (STOP) ====================================================================================================
@@ -316,7 +318,7 @@ void setupTeensyCommunication() {
 
 /*
     Simplify:
-     - Constantly send data no matter if the client is ready or not, just use an interval so the user is not
+     - Constantly send data no matter if the client is ready or not , just use an interval so the user is not
        overwhelmed
 */
 
