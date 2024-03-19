@@ -296,8 +296,8 @@ void loop() {
 
     // Send data (START) ====================================================================================================
     Serial.println("Waiting for clients requests...");
-    sendDataToClient(); 
-    delay(500);
+    // sendDataToClient(); 
+    delay(3000);
     Serial.println("Data transfer complete");
     Serial.println();
     // Send data (STOP) ====================================================================================================
