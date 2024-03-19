@@ -1,0 +1,4 @@
+A handy ROS2 node to record data from acoustic PCB
+OBS!: Make sure the Acoustics Interface Node is running
+
+Use acoustics_data/display_acoustics_data_live.py to display data in real time while it is being saved into the .csv file through the ROS2 node

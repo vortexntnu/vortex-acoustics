@@ -286,6 +286,7 @@ void loop() {
 
 
     // Multilateration (START) ====================================================================================================
+    // TODO: It is up to you my student finish acoustics for us T^T
     Serial.println("2 - MULTILATERATION: Started the Calculations");
     timeDifferenceOfArrival[0] = 1.0;
     timeDifferenceOfArrival[1] = 2.0;
