@@ -319,6 +319,7 @@ namespace DigitalSignalProcessing {
         // Start with 1 because length of the list is in the first element
         // Again, we need to find a better way to return length of the array then
         // putting it in the first element of the array :/
+        // UPDATE: We use vectors now, this is obsoslete, the problem is solved YAY :) but we were to lazy to delete this extra element and feature lol. so it just exists, plz fix in future and delerte this extra kebgt fucked up shit man jesjes
         int tempCount = 1;
 
         q15_t real = 0;

@@ -155,8 +155,10 @@ void send_data_64Bit(double* data, int32_t lengthOfData) {
 }
 
 
-void send_hydrophone_data(int16_t* hydrophone, int16_t lengthOfData, char* hydrophone_message) { 
-    ethernetModule::UDP_send_message(hydrophone_message, 12, 0);
+void send_hydrophone_data(int16_t* hydrophone, int16_t lengthOfData, char hydrophone_num) { 
+    char message[] = "HYDROPHONE_x";
+    message[11] = hydrophone_num;
+    ethernetModule::UDP_send_message(message, 12, 0);
 
     send_data_16Bit(hydrophone, lengthOfData); 
 }

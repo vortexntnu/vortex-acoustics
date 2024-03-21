@@ -304,13 +304,12 @@ void loop() {
 
     // Send data (START) ====================================================================================================
     Serial.println("3 - DATA SEND: Start sending data");
-    teensyUDP::send_hydrophone_data(samplesRawHydrophone1, SAMPLE_LENGTH * BUFFER_PER_CHANNEL, "HYDROPHONE_1");
-    teensyUDP::send_hydrophone_data(samplesRawHydrophone2, SAMPLE_LENGTH * BUFFER_PER_CHANNEL, "HYDROPHONE_2");
-    teensyUDP::send_hydrophone_data(samplesRawHydrophone3, SAMPLE_LENGTH * BUFFER_PER_CHANNEL, "HYDROPHONE_3");
-    teensyUDP::send_hydrophone_data(samplesRawHydrophone4, SAMPLE_LENGTH * BUFFER_PER_CHANNEL, "HYDROPHONE_4");
-    teensyUDP::send_hydrophone_data(samplesRawHydrophone5, SAMPLE_LENGTH * BUFFER_PER_CHANNEL, "HYDROPHONE_5");
+    teensyUDP::send_hydrophone_data(samplesRawHydrophone1, SAMPLE_LENGTH * BUFFER_PER_CHANNEL, '1');
+    teensyUDP::send_hydrophone_data(samplesRawHydrophone2, SAMPLE_LENGTH * BUFFER_PER_CHANNEL, '2');
+    teensyUDP::send_hydrophone_data(samplesRawHydrophone3, SAMPLE_LENGTH * BUFFER_PER_CHANNEL, '3');
+    teensyUDP::send_hydrophone_data(samplesRawHydrophone4, SAMPLE_LENGTH * BUFFER_PER_CHANNEL, '4');
+    teensyUDP::send_hydrophone_data(samplesRawHydrophone5, SAMPLE_LENGTH * BUFFER_PER_CHANNEL, '5');
     
-    teensyUDP::send_samples_raw_data(samplesRawForDSP, SAMPLE_LENGTH);
     teensyUDP::send_samples_filtered_data(samplesFiltered, SAMPLE_LENGTH);
     teensyUDP::send_FFT_data(FFTResultsMagnified, SAMPLE_LENGTH);
         
@@ -330,6 +329,6 @@ void loop() {
 
 
     // A small delay for debugging (Delete later)
-    delay(1000);
+    // delay(1000);
 }
 

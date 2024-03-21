@@ -14,10 +14,18 @@ endif()
 find_package(rclpy REQUIRED)
 find_package(std_msgs REQUIRED)
 
+ament_python_install_package(acoustics_interface)
+
 # Install launch files.
 install(DIRECTORY
   launch
   DESTINATION share/${PROJECT_NAME}
+)
+
+# Executables
+install(PROGRAMS
+  ${PROJECT_NAME}/acoustics_interface_node.py
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 ament_package()

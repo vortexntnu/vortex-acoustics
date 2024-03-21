@@ -21,7 +21,7 @@ void send_data_32Bit(int32_t* data, int32_t lengthOfData);
 void send_data_64Bit(double* data, int32_t lengthOfData);
 void send_type_message(char* typeMessage, uint8_t messageLength);
 
-void send_hydrophone_data(int16_t* hydrophone, int16_t lengthOfData, char* hydrophone_message);
+void send_hydrophone_data(int16_t* hydrophone, int16_t lengthOfData, char hydrophone_message);
 void send_samples_raw_data(int16_t* samplesRaw, int16_t lengthOfData);
 void send_samples_filtered_data(q15_t* samplesFiltered, int16_t lengthOfData);
 void send_FFT_data(q15_t* FFTdata, int16_t lengthOfData);

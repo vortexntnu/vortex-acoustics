@@ -11,20 +11,9 @@ import time
 # Variables ==================================================
 # This list has to be exactly ten entries long
 # format [(FREQUENCY, FREQUENCY_VARIANCE), ...]
-frequenciesOfInterest = [
-    (40_000, 3000), 
-    (20_000, 3000), 
-    (0, 0), 
-    (0, 0), 
-    (0, 0), 
-    (0, 0), 
-    (0, 0), 
-    (0, 0), 
-    (0, 0), 
-    (0, 0)
-] 
 
-# MAX_TRIES = 200
+
+MAX_TRIES = 200
 
 class AcousticsData:
     def __init__(self) -> None:
@@ -49,25 +38,28 @@ class TeensyCommunicationUDP:
 
     clientSocket = socket(AF_INET, SOCK_DGRAM)
 
-    timeoutMax = 10
-    data_string = "" # Internal
-    data_target = "" # Also internal :)
+    _timeoutMax = 10
+    _data_string = ""
+    _data_target = ""
     acoustics_data = {
-        "HYDROPHONE_1": [],
-        "HYDROPHONE_2": [],
-        "HYDROPHONE_3": [],
-        "HYDROPHONE_4": [],
-        "HYDROPHONE_5": [],
-        "SAMPLES_RAW": [],
-        "SAMPLES_FILTERED": [],
-        "FFT": [],
-        "PEAK": [],
-        "TDOA": [],
-        "LOCATION": []
+        "HYDROPHONE_1": [0],
+        "HYDROPHONE_2": [0],
+        "HYDROPHONE_3": [0],
+        "HYDROPHONE_4": [0],
+        "HYDROPHONE_5": [0],
+        "SAMPLES_FILTERED": [0],
+        "FFT": [0],
+        "PEAK": [0],
+        "TDOA": [0],
+        "LOCATION": [0]
     }
 
     @classmethod
-    def init_communication(cls):
+    def init_communication(cls, frequenciesOfInterest):
+        assert len(frequenciesOfInterest) == 10, "Frequency list has to have exactly 10 entries"
+        
+        _frequenciesOfInterest = frequenciesOfInterest
+
         cls.MY_IP = cls.get_ip()
 
         # Socket setup
@@ -90,7 +82,7 @@ class TeensyCommunicationUDP:
             print("Did not receive READY signal. Will wait.")
             time.sleep(1)
             
-            if time.time() - timeStart > cls.timeoutMax:
+            if time.time() - timeStart > cls._timeoutMax:
                 print("Gave up on receiving READY. Sending acknowledge signal again")
                 # Start over
                 timeStart = time.time()
@@ -101,29 +93,43 @@ class TeensyCommunicationUDP:
 
     @classmethod
     def fetch_data(cls):
-        data = cls.get_raw_data()
-        
-        if data == None:
-            return
+        i = 0
 
-        if data not in cls.acoustics_data.keys():
-            cls.data_string += data
-        else:
-            cls.write_to_target()
-            cls.data_target = data
+        while True:
+            data = cls.get_raw_data()
+            
+            if data == None:
+                return
 
+            if data not in cls.acoustics_data.keys():
+                cls._data_string += data
+            else:
+                print(data)
+                cls.write_to_target()
+                cls._data_target = data
+
+            # Ah yes, my good friend code safety
+            i += 1
+
+            if i > 1000:
+                i = 0
+                print("Max tries exceeded")
+                break
 
     @classmethod
     def write_to_target(cls):
-        # print(data_target)
-        if cls.data_target == "TDOA" or cls.data_target == "LOCATION":
+        if cls._data_target == "TDOA" or cls._data_target == "LOCATION":
             data = cls.parse_data_string(is_float=True)
         else:
             data = cls.parse_data_string(is_float=False)
 
-        cls.acoustics_data[cls.data_target] = data
+        if data == None: 
+            cls._data_string = ""
+            return
+
+        cls.acoustics_data[cls._data_target] = data
         
-        cls.data_string = ""
+        cls._data_string = ""
 
     @classmethod
     def get_raw_data(cls) -> str | None:
@@ -133,23 +139,22 @@ class TeensyCommunicationUDP:
             return messageReceived
         except error as e: # `error` is really `socket.error`
             if e.errno == errno.EWOULDBLOCK:
-                # print("No data")
                 pass
             else:
                 print("Socket error: ", e)
 
     @classmethod
     def parse_data_string(cls, is_float: bool):
-        if cls.data_string == '': return
+        if cls._data_string == '': return
         
         try:
             # Format data from CSV string to floats, ignore last value
             if is_float:
-                return list(map(float, cls.data_string.split(",")[:-1]))
+                return list(map(float, cls._data_string.split(",")[:-1]))
             else:
-                return list(map(int, cls.data_string.split(",")[:-1]))
+                return list(map(int, cls._data_string.split(",")[:-1]))
         except Exception as e:
-            print(f"The string '{cls.data_string}' caused an error when parsing")
+            print(f"The string '{cls._data_string}' caused an error when parsing")
             print(f"The exception was: {e}")
 
     # stackoverflow <3
@@ -182,7 +187,7 @@ class TeensyCommunicationUDP:
     @classmethod
     def check_if_available(cls):
         try:
-            # i = 0
+            i = 0
             while True:
                 # Read data
                 message = cls.get_raw_data()
@@ -194,13 +199,12 @@ class TeensyCommunicationUDP:
                 if message == "READY":
                     return True
                 
-                # Don't think this is necessary, but maybe?
-                # i += 1
+                i += 1
 
-                # if i > MAX_TRIES:
-                #     i = 0
-                #     print("Max tries exceeded")
-                #     break
+                if i > 200:
+                    i = 0
+                    print("Max tries exceeded")
+                    break
         except Exception as e:
             print(f"check_if_available rased exception: {e}")
             return False
