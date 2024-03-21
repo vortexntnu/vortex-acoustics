@@ -4,9 +4,15 @@
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float32MultiArray, Int32MultiArray
+from ament_index_python.packages import get_package_share_directory
 
 # Python libraries
 import array
+
+# Custom libraries
+from acoustics_data_record_lib import AcousticsDataRecordLib
+
+
 
 class AcousticsDataRecordNode(Node):
     def __init__(self):
@@ -16,9 +22,10 @@ class AcousticsDataRecordNode(Node):
         TDOADataSize = 5 # TDOA (Time Difference Of Arrival) has 5 hydrophones it has times for
         positionDataSize = 3 # position only has X, Y, Z basicaly 3 elements
 
-        # Start the node
+        # Initialize ROS2 node
         super().__init__('acoustics_data_record_node')
 
+        # Initialize Subscribers ----------
         # Start listening to Hydrophone data
         self.subscriberHydrophone1 = self.create_subscription(
             Int32MultiArray,
@@ -92,10 +99,37 @@ class AcousticsDataRecordNode(Node):
             5)
         self.positionData = array.array("f", [0.0] * positionDataSize)
 
+        # Initialize logger ----------
+        # Get package directory location
+        ros2_package_directory_location = get_package_share_directory("acoustics_data_record")
+        ros2_package_directory_location = ros2_package_directory_location + "/../../../../" # go back to workspace
+        #ros2_package_directory_location = ros2_package_directory_location + "src/vortex-asv/acoustics/acoustics_data_record/" # Navigate to this package
+        ros2_package_directory_location = ros2_package_directory_location + "src/acoustics/acoustics_data_record/" # Navigate to this package
+        
+        # Make blackbox loging file
+        self.acoustics_data_record = AcousticsDataRecordLib(
+            ROS2_PACKAGE_DIRECTORY = ros2_package_directory_location
+        )
+
         # Logs all the newest data 1 time(s) per second
-        DATA_LOGING_RATE = 1.0
+        DATA_LOGING_RATE = 1.0 # Change if needed
         timer_period = 1.0/DATA_LOGING_RATE
         self.logger_timer = self.create_timer(timer_period, self.logger)
+
+        # Debuging ----------
+        self.get_logger().info(
+            "Started logging data for topics: \n"
+            "/acoustics/hydrophone1 [Int32MultiArray] \n"
+            "/acoustics/hydrophone2 [Int32MultiArray] \n"
+            "/acoustics/hydrophone3 [Int32MultiArray] \n"
+            "/acoustics/hydrophone4 [Int32MultiArray] \n"
+            "/acoustics/hydrophone5 [Int32MultiArray] \n"
+            "/acoustics/filter_response [Int32MultiArray] \n"
+            "/acoustics/fft [Int32MultiArray] \n"
+            "/acoustics/peaks [Int32MultiArray] \n"
+            "/acoustics/time_difference_of_arrival [Float32MultiArray] \n"
+            "/acoustics/position [Float32MultiArray] \n"
+        )
 
     # Callback methods for diffrenet topics
     def hydrophone1_callback(self, msg):
@@ -130,17 +164,26 @@ class AcousticsDataRecordNode(Node):
     
     # The logger that logs all the data
     def logger(self):
-        # Debugging
-        #self.get_logger().info(f"Hydrophone1: {self.hydropone1Data}, {self.hydropone2Data}, {self.hydropone3Data}, {self.hydropone4Data} {self.hydropone5Data}")
-        #self.get_logger().info(f"DSP: {self.filterResponseData}, {self.FFTData}, {self.peaksData}")
-        self.get_logger().info(f"DSP: {self.TDOAData}, {self.positionData}")
-        
+        self.acoustics_data_record.log_data_to_csv_file(
+            hydrophone1=self.hydropone1Data,
+            hydrophone2=self.hydropone2Data,
+            hydrophone3=self.hydropone3Data,
+            hydrophone4=self.hydropone4Data,
+            hydrophone5=self.hydropone5Data,
+
+            filter_response=self.filterResponseData,
+            fft=self.FFTData,
+            peaks=self.peaksData,
+
+            tdoa=self.TDOAData,
+            position=self.positionData,
+        )
 
 
 
-def main(args=None):
+def main():
     # Initialize ROS2
-    rclpy.init(args=args)
+    rclpy.init()
 
     # Start the ROS2 node and continue forever until exit
     acoustics_data_record_node = AcousticsDataRecordNode()
