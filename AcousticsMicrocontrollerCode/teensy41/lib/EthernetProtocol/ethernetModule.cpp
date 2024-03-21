@@ -61,6 +61,7 @@ uint16_t get_remotePort() {
 
 void UDP_send_ready_signal(uint8_t* remoteIPArray, uint16_t remotePort) {
     // Variables
+    
     char UDPReplyBuffer[] = "READY";
     byte tempByte;
 
@@ -74,6 +75,7 @@ void UDP_send_ready_signal(uint8_t* remoteIPArray, uint16_t remotePort) {
         Udp.write(tempByte);
     }
     Udp.endPacket();
+    Serial.println("Sent ready signal");
 }
 
 char* UDP_read_message() {
@@ -103,4 +105,4 @@ void UDP_send_message(char* UDPReplyBuffer, int16_t sizeOfMessage, int16_t start
 void UDP_clean_message_memory() {
     memset(UDPReceiveBuffer, 0, UDP_TX_PACKET_MAX_SIZE); //clear out the packetBuffer array
 }
-}
+} //ethernetModule

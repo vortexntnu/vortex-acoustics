@@ -16,7 +16,9 @@ How do we prevent the case where the python script is reading data, and then tee
 namespace teensyUDP {
 void frequency_data_from_client(int32_t *frequenciesOfInterest, int32_t* frequencyVariances) {
     for (int i = 0; i < FREQUENCY_LIST_LENGTH; i++) {
-        while (!ethernetModule::UDP_check_if_connected());
+        while (!ethernetModule::UDP_check_if_connected()) {
+            // Serial.println("Waiting for frequency info");
+        }
 
         char* frequencyMessage = ethernetModule::UDP_read_message();
         char* token;
@@ -26,6 +28,7 @@ void frequency_data_from_client(int32_t *frequenciesOfInterest, int32_t* frequen
         frequenciesOfInterest[i] = atoi(token);
         frequencyVariances[i] = atoi(strtok(NULL, ","));
 
+        Serial.print(frequenciesOfInterest[i]); Serial.print(", "); Serial.println(frequencyVariances[i]);
     }
 }
 
@@ -234,5 +237,14 @@ void send_location_data(double* locationData, int8_t lengthOfData = 3) {
     char message[] = "LOCATION";
     ethernetModule::UDP_send_message(message, 8, 0);
     send_data_64Bit(locationData, lengthOfData); 
+}
+
+void setupTeensyCommunication(int32_t *frequenciesOfInterest, int32_t* frequencyVariances) {
+    ethernetModule::UDP_send_ready_signal(ethernetModule::get_remoteIP(), ethernetModule::get_remotePort());
+
+    // After this, the client and teensy are connected
+    teensyUDP::frequency_data_from_client(frequenciesOfInterest, frequencyVariances);
+
+    ethernetModule::UDP_clean_message_memory();
 }
 } // namespace teensyUDP

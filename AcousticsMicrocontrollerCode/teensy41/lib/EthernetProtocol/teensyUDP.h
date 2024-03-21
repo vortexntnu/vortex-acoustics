@@ -28,4 +28,6 @@ void send_FFT_data(q15_t* FFTdata, int16_t lengthOfData);
 void send_peak_data(std::vector<std::vector<q31_t>> peakData, int16_t lengthOfPeakList);
 void send_tdoa_data(double* tdoaData, int8_t lengthOfData = 5);
 void send_location_data(double* locationData, int8_t lengthOfData = 3);
+
+void setupTeensyCommunication(int32_t *frequenciesOfInterest, int32_t* frequencyVariances);
 } // namespace teensyUDP

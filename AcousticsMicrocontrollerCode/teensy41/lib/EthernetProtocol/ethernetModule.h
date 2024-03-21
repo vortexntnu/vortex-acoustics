@@ -1,8 +1,11 @@
 #include <Arduino.h>
 #include <NativeEthernet.h>
 #include <NativeEthernetUdp.h>
+// #include <teensyUDP.h> // UUUUUh
 
 namespace ethernetModule {
+#define DATA_SEND_PAUSE 1000 // [ms]
+
 void UDP_init();
 
 int16_t UDP_check_if_connected();

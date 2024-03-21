@@ -13,7 +13,7 @@ How the code works:
 - Sends all the frequency of interest DSP data, Hydrophone recorded signal data and Multilaterated data back to the Client
 - The infinite loop continues 
 
-Code written by: Vortex NTNU
+Code written by: Vortex NTNUs
 All rights reserved to: Vortex NTNU
 License: MIT
 */
@@ -76,8 +76,6 @@ double soundLocation[3]; // X, Y, Z [m]
 // Variables for data transmission ==========
 #define DATA_SEND_PAUSE 1000 // [ms]
 int32_t lastSendTime = 0;
-uint8_t* clientIP;
-uint16_t clientPort;
 void setupTeensyCommunication();
 void sendDataToClient();
 
@@ -98,19 +96,22 @@ void setup() {
     NOTE: This code NEEDS to come befor "Sampling Setup", otherwise some PINS and values are configured incorrectly in in Comunications
     Why? I have no Idea, some configuration of the ISP protocol clock timer and PINS that both Comuniaction and Sampling codes uses from what it seems, probably... =_=
     */
+
+
+
     // Ethernet init
     Serial.println("2 - Ethernet Setup");
     ethernetModule::UDP_init();
 
+    // delay(20000); //  Test stuff
+
     // Wait until someone is connected and get their IP and Port address
     Serial.println("Waiting for client connection...");
     while (!ethernetModule::UDP_check_if_connected());
-    clientIP = ethernetModule::get_remoteIP();
-    clientPort = ethernetModule::get_remotePort();
 
     // Wait for client input into what frequencies we sould detect and send sound signals of
     Serial.println("Waiting for client configuration...");
-    setupTeensyCommunication();
+    teensyUDP::setupTeensyCommunication(frequenciesOfInterest, frequencyVariances);
 
     for (int i = 0; i < FREQUENCY_LIST_LENGTH; i++) {
         frequenciesOfInterestMax[i] = frequenciesOfInterest[i] + frequencyVariances[i];
@@ -226,6 +227,7 @@ void loop() {
         for (int i = 1; i < lengthOfPeakArray; i++) {
             int32_t peakFrequency = peaks[i][1];
             // Serial.println();
+            // Serial.println("Found peak");
             for (int i = 0; i < FREQUENCY_LIST_LENGTH; i++) {
                 if ((peakFrequency < frequenciesOfInterestMax[i]) && (peakFrequency > frequenciesOfInterestMin[i])) {
                     found = 1;
@@ -300,55 +302,10 @@ void loop() {
     Serial.println("2 - MULTILATERATION: Got the results");
     // Multilateration (STOP) ====================================================================================================
 
-    
+
 
     // Send data (START) ====================================================================================================
     Serial.println("3 - DATA SEND: Start sending data");
-    sendDataToClient(); 
-    Serial.println("3 - DATA SEND: Data sent sucsesfully");
-    // Send data (STOP) ====================================================================================================
-
-
-
-    Serial.println();
-    Serial.println("--------------------------------------------------");
-    Serial.println();
-
-
-
-    // A small delay for debugging (Delete later)
-    delay(1000);
-}
-
-
-// Ditch the send skip stuff, just initialize with a "ready" message, then get the list of frequencies from the client
-void setupTeensyCommunication() {
-    ethernetModule::UDP_send_ready_signal(clientIP, clientPort);
-
-    // After this, the client and teensy are connected
-    teensyUDP::frequency_data_from_client(frequenciesOfInterest, frequencyVariances);
-
-    ethernetModule::UDP_clean_message_memory();
-}
-
-/*
-    Simplify:
-     - Constantly send data no matter if the client is ready or not , just use an interval so the user is not
-       overwhelmed
-*/
-
-void sendDataToClient() {
-    if (millis() - lastSendTime < DATA_SEND_PAUSE) { return; }
-    lastSendTime = millis();
-    
-    Serial.println("Sent data");
-
-    // teensyUDP::send_hydrophone_data(samplesRawHydrophone1, (SAMPLE_LENGTH * 3));
-    // teensyUDP::send_hydrophone_data(samplesRawHydrophone2, (SAMPLE_LENGTH * 3));
-    // teensyUDP::send_hydrophone_data(samplesRawHydrophone3, (SAMPLE_LENGTH * 3));
-    // teensyUDP::send_hydrophone_data(samplesRawHydrophone4, (SAMPLE_LENGTH * 3));
-    // teensyUDP::send_hydrophone_data(samplesRawHydrophone5, (SAMPLE_LENGTH * 3));
-
     teensyUDP::send_samples_raw_data(samplesRawForDSP, SAMPLE_LENGTH);
     teensyUDP::send_samples_filtered_data(samplesFiltered, SAMPLE_LENGTH);
     teensyUDP::send_FFT_data(FFTResultsMagnified, SAMPLE_LENGTH);
@@ -359,5 +316,16 @@ void sendDataToClient() {
     teensyUDP::send_location_data(soundLocation);
 
     ethernetModule::UDP_clean_message_memory();
+    Serial.println("3 - DATA SEND: Data sent sucsessfully");
+    // Send data (STOP) ====================================================================================================
+
+
+    Serial.println();
+    Serial.println("--------------------------------------------------");
+    Serial.println();
+
+
+    // A small delay for debugging (Delete later)
+    delay(1000);
 }
 
