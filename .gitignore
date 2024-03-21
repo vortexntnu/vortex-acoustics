@@ -37,7 +37,6 @@ dox/
 vortex_acoustics
 html/
 latex/
-*.txt
 *.asv
 *.fda
 
