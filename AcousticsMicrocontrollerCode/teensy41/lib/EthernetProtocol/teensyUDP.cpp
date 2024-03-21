@@ -1,18 +1,5 @@
 #include "teensyUDP.h"
 
-// MESSAGE FORMATs
-// MSG|hydr1|hydr2|...|samples_raw|samples_filtered|FFtRes|peaks|tdoa|location|
-// Maybe
-
-/*
-
-Question:
-How do we prevent the case where the python script is reading data, and then teensy sends new data mid read?
-
-
-*/
-
-
 namespace teensyUDP {
 void frequency_data_from_client(int32_t *frequenciesOfInterest, int32_t* frequencyVariances) {
     for (int i = 0; i < FREQUENCY_LIST_LENGTH; i++) {
@@ -70,9 +57,6 @@ void send_data_16Bit(int16_t* data, int16_t lengthOfData) {
         index -= amountLeftToSend;
         ethernetModule::UDP_send_message(dataBuffer, index, amountLeftToSend);
     }
-    // Send "DONE" as a signal, to signal that data transfer is finished
-    // char finishingData[] = "DONE";
-    // ethernetModule::UDP_send_message(finishingData, 4, 0);
 
     // Free up allocated space since we don't use it anymore
     free(dataBuffer);
@@ -171,21 +155,22 @@ void send_data_64Bit(double* data, int32_t lengthOfData) {
 }
 
 
-void send_hydrophone_data(int16_t* hydrophone, int16_t lengthOfData) { 
-    // send_type_message("RAW", 3);
+void send_hydrophone_data(int16_t* hydrophone, int16_t lengthOfData, char* hydrophone_message) { 
+    ethernetModule::UDP_send_message(hydrophone_message, 12, 0);
+
     send_data_16Bit(hydrophone, lengthOfData); 
 }
 
 void send_samples_raw_data(int16_t* samplesRaw, int16_t lengthOfData) { 
-    char message[] = "RAW";
-    ethernetModule::UDP_send_message(message, 3, 0);
+    char message[] = "SAMPLES_RAW";
+    ethernetModule::UDP_send_message(message, 11, 0);
     send_data_16Bit(samplesRaw, lengthOfData); 
 }
 
 void send_samples_filtered_data(q15_t* samplesFiltered, int16_t lengthOfData) {
     // Convert to correct datatype before sending
-    char message[] = "FILTERED";
-    ethernetModule::UDP_send_message(message, 8, 0);
+    char message[] = "SAMPLES_FILTERED";
+    ethernetModule::UDP_send_message(message, 16, 0);
 
     int16_t tempSamplesFilteredBuffer[lengthOfData];
     for (int i = 0; i < lengthOfData; i++) {

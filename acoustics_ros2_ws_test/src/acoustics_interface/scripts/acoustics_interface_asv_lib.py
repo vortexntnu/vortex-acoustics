@@ -13,7 +13,7 @@ import time
 # format [(FREQUENCY, FREQUENCY_VARIANCE), ...]
 frequenciesOfInterest = [
     (40_000, 3000), 
-    (0, 0), 
+    (20_000, 3000), 
     (0, 0), 
     (0, 0), 
     (0, 0), 
@@ -24,16 +24,7 @@ frequenciesOfInterest = [
     (0, 0)
 ] 
 
-MAX_TRIES = 200
-
-class DataTarget(Enum):
-    NONE = 0,
-    SAMPLES_RAW = 1,
-    SAMPLES_FILTERED = 2,
-    FFT = 3,
-    PEAK = 4,
-    TDOA = 5,
-    LOCATION = 6,
+# MAX_TRIES = 200
 
 class AcousticsData:
     def __init__(self) -> None:
@@ -58,11 +49,22 @@ class TeensyCommunicationUDP:
 
     clientSocket = socket(AF_INET, SOCK_DGRAM)
 
-    data_target = DataTarget.NONE
-    data = AcousticsData()
     timeoutMax = 10
     data_string = "" # Internal
-    msg_types = ["RAW", "FILTERED", "FFT", "PEAK", "TDOA", "LOCATION"]
+    data_target = "" # Also internal :)
+    acoustics_data = {
+        "HYDROPHONE_1": [],
+        "HYDROPHONE_2": [],
+        "HYDROPHONE_3": [],
+        "HYDROPHONE_4": [],
+        "HYDROPHONE_5": [],
+        "SAMPLES_RAW": [],
+        "SAMPLES_FILTERED": [],
+        "FFT": [],
+        "PEAK": [],
+        "TDOA": [],
+        "LOCATION": []
+    }
 
     @classmethod
     def init_communication(cls):
@@ -98,10 +100,57 @@ class TeensyCommunicationUDP:
         cls.send_frequencies_of_interest(frequenciesOfInterest)
 
     @classmethod
-    def get_data_from_teensy(cls):
-        cls.get_message()
+    def fetch_data(cls):
+        data = cls.get_raw_data()
+        
+        if data == None:
+            return
 
-        # print(cls.data.samples_raw)
+        if data not in cls.acoustics_data.keys():
+            cls.data_string += data
+        else:
+            cls.write_to_target()
+            cls.data_target = data
+
+
+    @classmethod
+    def write_to_target(cls):
+        # print(data_target)
+        if cls.data_target == "TDOA" or cls.data_target == "LOCATION":
+            data = cls.parse_data_string(is_float=True)
+        else:
+            data = cls.parse_data_string(is_float=False)
+
+        cls.acoustics_data[cls.data_target] = data
+        
+        cls.data_string = ""
+
+    @classmethod
+    def get_raw_data(cls) -> str | None:
+        try:
+            rec_data, _ = cls.clientSocket.recvfrom(cls.MAX_PACKAGE_SIZE_RECEIVED)
+            messageReceived = rec_data.decode()
+            return messageReceived
+        except error as e: # `error` is really `socket.error`
+            if e.errno == errno.EWOULDBLOCK:
+                # print("No data")
+                pass
+            else:
+                print("Socket error: ", e)
+
+    @classmethod
+    def parse_data_string(cls, is_float: bool):
+        if cls.data_string == '': return
+        
+        try:
+            # Format data from CSV string to floats, ignore last value
+            if is_float:
+                return list(map(float, cls.data_string.split(",")[:-1]))
+            else:
+                return list(map(int, cls.data_string.split(",")[:-1]))
+        except Exception as e:
+            print(f"The string '{cls.data_string}' caused an error when parsing")
+            print(f"The exception was: {e}")
 
     # stackoverflow <3
     # https://stackoverflow.com/questions/166506/finding-local-ip-addresses-using-pythons-stdlib
@@ -175,86 +224,4 @@ class TeensyCommunicationUDP:
         except:
             print("Couldn't send Frequency data")
 
-    @classmethod
-    def get_raw_data(cls) -> str | None:
-        try:
-            rec_data, _ = cls.clientSocket.recvfrom(cls.MAX_PACKAGE_SIZE_RECEIVED)
-            messageReceived = rec_data.decode()
-            return messageReceived
-        except error as e: # `error` is really `socket.error`
-            if e.errno == errno.EWOULDBLOCK:
-                # print("No data")
-                pass
-            else:
-                print("Socket error: ", e)
 
-    @classmethod
-    def parse_data_string(cls, float: bool):
-        if cls.data_string == '': 
-            print("empty")
-            return
-        
-        try:
-            # Format data from CSV string to floats, ignore last value
-            return list(map(float, cls.data_string.split(",")[:-1]))
-            # if float:
-            # else:
-            #     return list(map(int, cls.data_string.split(",")[:-1]))
-        except Exception as e:
-            print(f"The string '{cls.data_string}' caused an error when parsing")
-            print(f"The exception was: {e}")
-
-    @classmethod
-    def get_message(cls):
-        data = cls.get_raw_data()
-        
-        if data == None:
-            return
-
-        if data not in cls.msg_types:
-            cls.data_string += data
-        else:
-            cls.write_to_target()
-
-            # print(data)
-
-            if data == "RAW":
-                cls.data_target = DataTarget.SAMPLES_RAW
-            elif data == "FILTERED":
-                cls.data_target = DataTarget.SAMPLES_FILTERED
-            elif data == "FFT":
-                cls.data_target = DataTarget.FFT
-            elif data == "PEAK":
-                cls.data_target = DataTarget.PEAK
-            elif data == "TDOA":
-                cls.data_target = DataTarget.TDOA
-            elif data == "LOCATION":
-                cls.data_target = DataTarget.LOCATION
-        
-
-    @classmethod
-    def write_to_target(cls):
-        cls.data_string = ""
-        data = cls.parse_data_string(float=False)
-        print(data)
-
-        match cls.data_target:
-            case DataTarget.NONE:
-                pass
-            case DataTarget.SAMPLES_RAW:
-                cls.data.samples_raw = data
-            case DataTarget.SAMPLES_FILTERED:
-                # data = cls.parse_data_string(float=False)
-                cls.data.samples_filtered = data
-            case DataTarget.FFT:
-                # data = cls.parse_data_string(float=False)
-                cls.data.fft = data
-            case DataTarget.PEAK:
-                # data = cls.parse_data_string(float=False)
-                cls.data.peak = data
-            case DataTarget.TDOA:
-                # data = cls.parse_data_string(float=True)
-                cls.data.tdoa = data
-            case DataTarget.LOCATION:
-                # data = cls.parse_data_string(float=True)
-                cls.data.location = data

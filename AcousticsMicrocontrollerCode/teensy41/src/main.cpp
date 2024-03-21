@@ -238,17 +238,15 @@ void loop() {
             Serial.println("1 - SAMPLING: Frequency of interest found");
         }
 
+        buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
+        adc::stopConversion();
         // Check if sampling has taken to long and if so exit the loop and try again later
         if (millis() - samplingStartTime > SAMPLING_TIMEOUT) {
             Serial.println("1 - SAMPLING: !WARNING! Sampling timed out");
-            buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
-            adc::stopConversion();
             break;
         }
 
         // Iterate into the next ring buffer and stop sampling for this round
-        buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
-        adc::stopConversion();
     }
 
     // We make sure the last buffer that we are interested in is filled before continuing
@@ -306,6 +304,12 @@ void loop() {
 
     // Send data (START) ====================================================================================================
     Serial.println("3 - DATA SEND: Start sending data");
+    teensyUDP::send_hydrophone_data(samplesRawHydrophone1, SAMPLE_LENGTH * BUFFER_PER_CHANNEL, "HYDROPHONE_1");
+    teensyUDP::send_hydrophone_data(samplesRawHydrophone2, SAMPLE_LENGTH * BUFFER_PER_CHANNEL, "HYDROPHONE_2");
+    teensyUDP::send_hydrophone_data(samplesRawHydrophone3, SAMPLE_LENGTH * BUFFER_PER_CHANNEL, "HYDROPHONE_3");
+    teensyUDP::send_hydrophone_data(samplesRawHydrophone4, SAMPLE_LENGTH * BUFFER_PER_CHANNEL, "HYDROPHONE_4");
+    teensyUDP::send_hydrophone_data(samplesRawHydrophone5, SAMPLE_LENGTH * BUFFER_PER_CHANNEL, "HYDROPHONE_5");
+    
     teensyUDP::send_samples_raw_data(samplesRawForDSP, SAMPLE_LENGTH);
     teensyUDP::send_samples_filtered_data(samplesFiltered, SAMPLE_LENGTH);
     teensyUDP::send_FFT_data(FFTResultsMagnified, SAMPLE_LENGTH);
