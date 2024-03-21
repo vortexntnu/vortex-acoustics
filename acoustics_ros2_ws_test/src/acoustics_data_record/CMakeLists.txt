@@ -20,4 +20,9 @@ install(DIRECTORY
   DESTINATION share/${PROJECT_NAME}
 )
 
+install(PROGRAMS
+  ${PROJECT_NAME}/acoustics_data_record_node.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 ament_package()
