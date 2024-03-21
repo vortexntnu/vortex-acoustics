@@ -8,22 +8,6 @@ import errno
 import time
 
 
-# Variables ==================================================
-# This list has to be exactly ten entries long
-# format [(FREQUENCY, FREQUENCY_VARIANCE), ...]
-
-
-MAX_TRIES = 200
-
-class AcousticsData:
-    def __init__(self) -> None:
-        self.samples_raw = []
-        self.samples_filtered = []
-        self.fft = []
-        self.peak = []
-        self.tdoa = []
-        self.location = []
-
 class TeensyCommunicationUDP:
     # Teensy networking Setup
     TEENSY_IP = "10.0.0.111"

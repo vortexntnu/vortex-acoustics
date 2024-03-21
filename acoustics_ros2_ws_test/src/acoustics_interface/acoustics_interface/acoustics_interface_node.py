@@ -27,7 +27,7 @@ class AcousticsInterfaceNode(Node):
         self._timer2 = self.create_timer(0.001, self.update_data)
 
         # This list has to be exactly ten entries long
-        # format [(FREQUENCY, FREQUENCY_VARIANCE), ...]
+        # format [(FREQUENCY, FREQUENCY_VARIANCE), ...] 
         frequenciesOfInterest = [
             (0, 0), 
             (0, 0), 
