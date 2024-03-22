@@ -20,13 +20,13 @@ class AcousticsDataRecordLib:
         self.csv_headers = [
             "Time",
 
-            "Hydrophpne 1",
-            "Hydrophpne 2",
-            "Hydrophpne 3",
-            "Hydrophpne 4",
-            "Hydrophpne 5",
+            "Hydrophone1",
+            "Hydrophone2",
+            "Hydrophone3",
+            "Hydrophone4",
+            "Hydrophone5",
 
-            "Filter Response",
+            "FilterResponse",
             "FFT",
             "Peaks",
 
