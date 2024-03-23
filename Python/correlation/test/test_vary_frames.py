@@ -2,6 +2,7 @@
 Provides the possibility to change frames.
 Plot the signals together with the correlated signals, and find the accuracy of the result.
 """
+
 import correlation.correlation as correl
 import matplotlib.pyplot as plt
 import numpy as np

@@ -1,5 +1,6 @@
 """ Provides tests to demonstrate usage of modules inside package
 """
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
