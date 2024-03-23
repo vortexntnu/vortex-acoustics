@@ -70,11 +70,12 @@ int32_t frequenciesOfInterestMax[FREQUENCY_LIST_LENGTH]; // 0 Hz
 int32_t frequenciesOfInterestMin[FREQUENCY_LIST_LENGTH]; // 0 Hz
 
 // Variables for Multilateration ==========
-double timeDifferenceOfArrival[5]; // time difference for hydrophone 1, 2, 3, 4, 5 [s]
-double soundLocation[3]; // X, Y, Z [m]
+#define TDOA_DATA_LENGHT 5 // TODO: Should be moved into multilateration library once that is operational
+#define POSITION_DATA_LENGHT 3 // TODO: Should be moved into multilateration library once that is operational
+double timeDifferenceOfArrival[TDOA_DATA_LENGHT]; // time difference for hydrophone 1, 2, 3, 4, 5 [s]
+double soundLocation[POSITION_DATA_LENGHT]; // X, Y, Z [m]
 
 // Variables for data transmission ==========
-#define DATA_SEND_PAUSE 1000 // [ms]
 int32_t lastSendTime = 0;
 void setupTeensyCommunication();
 void sendDataToClient();
@@ -315,8 +316,8 @@ void loop() {
         
     teensyUDP::send_peak_data(peaks, lengthOfPeakArray);
     
-    teensyUDP::send_tdoa_data(timeDifferenceOfArrival);
-    teensyUDP::send_location_data(soundLocation);
+    teensyUDP::send_tdoa_data(timeDifferenceOfArrival, TDOA_DATA_LENGHT);
+    teensyUDP::send_location_data(soundLocation, POSITION_DATA_LENGHT);
 
     ethernetModule::UDP_clean_message_memory();
     Serial.println("3 - DATA SEND: Data sent sucsessfully");

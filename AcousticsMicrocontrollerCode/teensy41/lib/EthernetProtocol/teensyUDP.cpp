@@ -3,9 +3,7 @@
 namespace teensyUDP {
 void frequency_data_from_client(int32_t *frequenciesOfInterest, int32_t* frequencyVariances) {
     for (int i = 0; i < FREQUENCY_LIST_LENGTH; i++) {
-        while (!ethernetModule::UDP_check_if_connected()) {
-            // Serial.println("Waiting for frequency info");
-        }
+        while (!ethernetModule::UDP_check_if_connected());
 
         char* frequencyMessage = ethernetModule::UDP_read_message();
         char* token;
@@ -100,9 +98,6 @@ void send_data_32Bit(int32_t* data, int32_t lengthOfData) {
         index -= amountLeftToSend;
         ethernetModule::UDP_send_message(dataBuffer, index, amountLeftToSend);
     }
-    // Send "DONE" as a signal, to signal that data transfer is finished
-    // char finishingData[] = "DONE";
-    // ethernetModule::UDP_send_message(finishingData, 4, 0);
 
     // Free up allocated space since we don't use it anymore
     free(dataBuffer);
@@ -146,9 +141,6 @@ void send_data_64Bit(double* data, int32_t lengthOfData) {
         index -= amountLeftToSend;
         ethernetModule::UDP_send_message(dataBuffer, index, amountLeftToSend);
     }
-    // Send "DONE" as a signal, to signal that data transfer is finished
-    // char finishingData[] = "DONE";
-    // ethernetModule::UDP_send_message(finishingData, 4, 0);
 
     // Free up allocated space since we don't use it anymore
     free(dataBuffer);
@@ -214,13 +206,13 @@ void send_peak_data(std::vector<std::vector<q31_t>> peakData, int16_t lengthOfPe
     }
 }
 
-void send_tdoa_data(double* tdoaData, int8_t lengthOfData = 5) { 
+void send_tdoa_data(double* tdoaData, int8_t lengthOfData) { 
     char message[] = "TDOA";
     ethernetModule::UDP_send_message(message, 4, 0);
     send_data_64Bit(tdoaData, lengthOfData); 
 }
 
-void send_location_data(double* locationData, int8_t lengthOfData = 3) { 
+void send_location_data(double* locationData, int8_t lengthOfData) { 
     char message[] = "LOCATION";
     ethernetModule::UDP_send_message(message, 8, 0);
     send_data_64Bit(locationData, lengthOfData); 
