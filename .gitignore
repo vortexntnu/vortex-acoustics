@@ -37,7 +37,6 @@ dox/
 vortex_acoustics
 html/
 latex/
-*.txt
 *.asv
 *.fda
 
@@ -320,3 +319,4 @@ fabric.properties
 # CodeStream plugin
 # https://plugins.jetbrains.com/plugin/12206-codestream
 .idea/codestream.xml
+

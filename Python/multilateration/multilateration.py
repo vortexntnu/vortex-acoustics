@@ -1,7 +1,6 @@
 """Estimates position of sound source in xy-coordinates based on time difference of arrival between hydrophones.
 """
 
-
 import multilateration.parameters as param
 import numpy as np
 from signal_generation.positioning import find_maximum_distance

@@ -1,9 +1,0 @@
-This Folder is for getting data from Teensy once it is set up  with ethernet cable and is sampling some REAL data
-Use this folder to start reading and displaying data Teensy is gathering and analyze the signals
-This folder provides live data feedback on graphical display and data storage for later analysis
-
-1. Make sure Teensy has power and is connected with ethernet cable
-2. Run "read_data_from_teensy.py" file
-3. Run "plot_live_data_from_teensy.py" file
-
-Read more here: https://vortex.a2hosted.com/index.php/Teensy_communication
