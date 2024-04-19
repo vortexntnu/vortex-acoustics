@@ -20,7 +20,7 @@
 #define FREQUENCY_LIMIT 60000
 
 // A manual variable to filter out small peaks that don't manage to get over the threshold, so called "fake peaks"
-#define PEAK_THRESHOLD 30
+#define PEAK_THRESHOLD 1000
 
 namespace DigitalSignalProcessing {
     q15_t* filter_butterwort_9th_order_50kHz(int16_t* samplesRaw);
