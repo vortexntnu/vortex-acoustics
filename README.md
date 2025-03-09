@@ -1,3 +1,9 @@
+### AcousticsMicrocontrollerCode
+The source code used for the multilateration running on the Teensy 4.1 is placed in `cpp/teensy/`.
+
+### AcousticsInterface
+Interface to comunicate with acoustics frimware through Ethernet on same subnet and then pulish everything on ROS2 netwrok that then can be recorded, stored and ploted live and for later use
+
 # Acoustics
 Repository to analyze signals from three (3) different hydrophones and estimate the positioning of a pinger in XY-coordinates.
 
@@ -23,9 +29,6 @@ Files with a short description:
   TRILITERATION: Mantains functions to estimate the sound source's position
 
   ANALYZE_DATA: Defines a class hydrophone which wraps the data-analyzis for each hydrophone
-
-### Teensy
-The source code used for the multilateration running on the Teensy 4.1 is placed in `cpp/teensy/`.
 
 #### Build Status
 [![Build PlatformIO project](https://github.com/vortexntnu/acoustics/actions/workflows/build-platformio.yml/badge.svg)](https://github.com/vortexntnu/acoustics/actions/workflows/build-platformio.yml)
