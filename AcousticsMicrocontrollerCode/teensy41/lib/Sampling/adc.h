@@ -120,7 +120,7 @@ const int DB15 = CORE_PIN27_BIT; // GPIO 1.31
 
 // * new way
 #define SAMPLE_LENGTH_ADC 1024
-#define BUFFER_PER_CHANNEL 3
+#define BUFFER_PER_CHANNEL 6
 typedef int16_t (*buffer_ptr)[SAMPLE_LENGTH_ADC]; // the number of rows will be specified when creating variable
 typedef int16_t sample_buff_3_1024[BUFFER_PER_CHANNEL][SAMPLE_LENGTH_ADC];
 typedef int32_t time_buff_3_1024[BUFFER_PER_CHANNEL][SAMPLE_LENGTH_ADC];

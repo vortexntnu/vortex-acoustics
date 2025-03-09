@@ -152,13 +152,26 @@ void send_hydrophone_data(int16_t* hydrophone, int16_t lengthOfData, char hydrop
     message[11] = hydrophone_num;
     ethernetModule::UDP_send_message(message, 12, 0);
 
-    send_data_16Bit(hydrophone, lengthOfData); 
+    // Convert to correct datatype before sending
+    int16_t tempHydrophoneBuffer[lengthOfData];
+    for (int i = 0; i < lengthOfData; i++) {
+        tempHydrophoneBuffer[i] = (int16_t)hydrophone[i];
+    }
+
+    send_data_16Bit(tempHydrophoneBuffer, lengthOfData); 
 }
 
 void send_samples_raw_data(int16_t* samplesRaw, int16_t lengthOfData) { 
     char message[] = "SAMPLES_RAW";
     ethernetModule::UDP_send_message(message, 11, 0);
-    send_data_16Bit(samplesRaw, lengthOfData); 
+
+    // Convert to correct datatype before sending
+    int16_t tempSamplesRawBuffer[lengthOfData];
+    for (int i = 0; i < lengthOfData; i++) {
+        tempSamplesRawBuffer[i] = (int16_t)samplesRaw[i];
+    }
+
+    send_data_16Bit(tempSamplesRawBuffer, lengthOfData); 
 }
 
 void send_samples_filtered_data(q15_t* samplesFiltered, int16_t lengthOfData) {
