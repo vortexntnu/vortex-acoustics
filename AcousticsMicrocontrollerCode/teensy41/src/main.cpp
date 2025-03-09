@@ -47,13 +47,12 @@ License: MIT
 
 // Variables for Sampling ==========
 float sample_period = 2.4; // >= MIN_SAMP_PERIOD_BLOCKING, Recomended: 2.4
-uint16_t number_samples = SAMPLE_LENGTH * 3;
 #define SAMPLING_TIMEOUT 10000 // [ms]
-int16_t samplesRawHydrophone1[SAMPLE_LENGTH * 3];
-int16_t samplesRawHydrophone2[SAMPLE_LENGTH * 3];
-int16_t samplesRawHydrophone3[SAMPLE_LENGTH * 3];
-int16_t samplesRawHydrophone4[SAMPLE_LENGTH * 3];
-int16_t samplesRawHydrophone5[SAMPLE_LENGTH * 3];
+int16_t samplesRawHydrophone1[SAMPLE_LENGTH * BUFFER_PER_CHANNEL];
+int16_t samplesRawHydrophone2[SAMPLE_LENGTH * BUFFER_PER_CHANNEL];
+int16_t samplesRawHydrophone3[SAMPLE_LENGTH * BUFFER_PER_CHANNEL];
+int16_t samplesRawHydrophone4[SAMPLE_LENGTH * BUFFER_PER_CHANNEL];
+int16_t samplesRawHydrophone5[SAMPLE_LENGTH * BUFFER_PER_CHANNEL];
 
 // Variables for Digital Signal Processing ==========
 int16_t samplesRawForDSP[SAMPLE_LENGTH];
@@ -136,10 +135,7 @@ void setup() {
     adc::config(ADC_reg_config);
     adc::setup();
 
-    // Double check that the number of samples we want to take in doesn't overflow the ADC ring buffer space
-    if (number_samples > 3 * SAMPLE_LENGTH) {
-        number_samples = 3 * SAMPLE_LENGTH;
-    }
+
     Serial.println("Sampling Setup complete");
     Serial.println();
     // Sampling Setup (STOP) ====================================================================================================
@@ -186,11 +182,14 @@ void loop() {
     Serial.println("1 - SAMPLING: Start Sampling");
 
     uint8_t found = 0;
-    uint8_t buffer_to_check = 0; // Reset buffer to start filling to 0
+    uint8_t buffer_to_check = 0; // Reset buffer to start filling to 0 // this is the NOW buffer
     unsigned long samplingStartTime = millis(); // For sampling timeout, in case we sample for to long, we want to break the loop
+
+    // Start sampling ADC data imediately
+    adc::startConversion(sample_period, adc::BLOCKING);
+
     while (!found) {
         // Start sampling into the buffer and wait until the latest one is filled before moving on and leting it continue to fill up into the next buffer
-        adc::startConversion(sample_period, adc::BLOCKING);
         while (!adc::buffer_filled[buffer_to_check]);
 
         // Save raw sampled data from ADC
@@ -235,15 +234,15 @@ void loop() {
                 }
             }
         }
+        
         if (found) {
-            Serial.println("1 - SAMPLING: Frequency of interest found");
+            //Serial.println("1 - SAMPLING: Frequency of interest found");
         }
 
         buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
-        adc::stopConversion();
         // Check if sampling has taken to long and if so exit the loop and try again later
         if (millis() - samplingStartTime > SAMPLING_TIMEOUT) {
-            Serial.println("1 - SAMPLING: !WARNING! Sampling timed out");
+            //Serial.println("1 - SAMPLING: !WARNING! Sampling timed out");
             break;
         }
 
@@ -252,16 +251,23 @@ void loop() {
 
     // We make sure the last buffer that we are interested in is filled before continuing
     // This ensures we have the not only the data signal of the peak, but also what happens after the peaks in the signal frequency we are interested in
-    adc::startConversion(sample_period, adc::BLOCKING);
+    // adc::startConversion(sample_period, adc::BLOCKING);
     while (!adc::buffer_filled[buffer_to_check]);
     buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
+
+    while (!adc::buffer_filled[buffer_to_check]);
+    buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
+
+    while (!adc::buffer_filled[buffer_to_check]);
+    buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
+
+    // Stop ADC sampling once we have every ring buffer sampled
     adc::stopConversion();
     Serial.println("1 - SAMPLING: Stoped sampling");
 
     // Process data from the ring buffers
     // active buffer is one further than the last filled one, which is the oldest one now thats why we iterate with one
     uint8_t bufferIndex = adc::active_buffer;
-    bufferIndex = (bufferIndex + 1) % BUFFER_PER_CHANNEL;
     // Saving finished processed and sampled Hyfrophone data
     uint16_t index = 0;
     for (uint8_t i = 0; i < BUFFER_PER_CHANNEL; i++) {
@@ -277,6 +283,7 @@ void loop() {
         }
         bufferIndex = (bufferIndex + 1) % BUFFER_PER_CHANNEL;
     }
+
     // Clean ring buffers
     // this is done so that next time we can add new data into the ring buffers withouth getting errors
     for (uint8_t i = 0; i < BUFFER_PER_CHANNEL; i++) {
