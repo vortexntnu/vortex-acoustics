@@ -1,7 +1,7 @@
 #pragma once
 
 #include "arm_math.h"
-#include <Arduino.h>
+// #include <Arduino.h>
 
 const int32_t NUM_HYDROPHONES = 5;
 const int32_t NUM_DIMENSIONS = 3;
