@@ -252,14 +252,11 @@ void loop() {
     // We make sure the last buffer that we are interested in is filled before continuing
     // This ensures we have the not only the data signal of the peak, but also what happens after the peaks in the signal frequency we are interested in
     // adc::startConversion(sample_period, adc::BLOCKING);
-    while (!adc::buffer_filled[buffer_to_check]);
-    buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
 
-    while (!adc::buffer_filled[buffer_to_check]);
-    buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
-
-    while (!adc::buffer_filled[buffer_to_check]);
-    buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
+    for (uint8_t i = 0; i < 3; i++){ // This is how many buffers we want to send after the aktive_buffer in each ringbuffer
+        while (!adc::buffer_filled[buffer_to_check]);
+        buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
+    }
 
     // Stop ADC sampling once we have every ring buffer sampled
     adc::stopConversion();
@@ -271,7 +268,7 @@ void loop() {
     // Saving finished processed and sampled Hyfrophone data
     uint16_t index = 0;
     for (uint8_t i = 0; i < BUFFER_PER_CHANNEL; i++) {
-        // Combine all 3 buffers from chanels into one BIG array
+        // Combine all buffers from chanels into one BIG array
         for (uint16_t u = 0; u < SAMPLE_LENGTH; u++) {
             index = (SAMPLE_LENGTH * i) + u;
 
