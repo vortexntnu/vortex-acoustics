@@ -11,7 +11,7 @@
 
 int main(){
     Pos pos(1, 2, 3);
-    std::cout << pos.x << "\n";
+    std::cout << pos;
 
     return 0;
 }

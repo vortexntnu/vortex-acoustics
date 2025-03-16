@@ -85,7 +85,7 @@ VectorXd vectorToEigenVector(const vector<double>& b) {
 
 
 
-Pos::Pos(std::vector<float32_t> pos) x(pos.at(0)), y(pos.at(1)), z(pos.at(2)){
+Pos::Pos(std::vector<float32_t> pos): x(pos.at(0)), y(pos.at(1)), z(pos.at(2)){
     if (pos.size() >= 4){
         dist(pos[3])
         if (pos.size() > 4){
@@ -94,4 +94,10 @@ Pos::Pos(std::vector<float32_t> pos) x(pos.at(0)), y(pos.at(1)), z(pos.at(2)){
     }
     else{ arm_sqrt_f32(x*x+y*y+z*z, &dist); }
 
+}
+
+
+std::ostream& operator <<(std::ostream& os, Pos& pos){
+    std::cout << "x: " << pos.x << ", y: " << pos.y << ", z: " << pos.z << ", distance: " << pos.dist;
+    return os;
 }
