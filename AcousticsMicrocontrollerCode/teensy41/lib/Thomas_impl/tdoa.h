@@ -1,7 +1,7 @@
-#pragma once
-
+#ifndef TDOA_H
+#define TDOA_H
 #include <vector>
-#include "arm_math.h"
+#include "/home/thomas/acoustics_ws/src/vortex-acoustics/AcousticsMicrocontrollerCode/teensy41/lib/Include/arm_math.h"
 #include <iostream>
 
 
@@ -18,10 +18,12 @@ class Pos {
         Pos(std::vector<float32_t> pos);
 };
 
-std::ostream& operator <<(std::ostream& os, Pos& pos);
+std::ostream& operator <<(std::ostream& os, const Pos& pos);
 
 
 
 
 
-std::vector<double> multilateration(std::vector<Pos> hydrophone_array, std::vector<double> TDOA);
+std::vector<float32_t> multilateration(std::vector<Pos> hydrophone_array, std::vector<float32_t> TDOA);
+
+#endif

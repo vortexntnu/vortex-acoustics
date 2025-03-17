@@ -3,19 +3,16 @@
 #include <numeric>
 #include "corelation.h"
 
-
-
-
-
-
-std::vector<double> normalize_vector(const std::vector<double>& v) {
-    double magnitude = 0.0;
+std::vector<float32_t> normalize_vector(const std::vector<float32_t>& v) {
+    float32_t magnitude = 0.0;
     
     // Compute the magnitude (Euclidean norm)
-    for (double val : v) {
+    for (float32_t val : v) {
         magnitude += val * val;
     }
-    magnitude = std::sqrt(magnitude);
+    // magnitude = sqrt(magnitude);
+    arm_sqrt_f32(magnitude, &magnitude);
+
 
     // Avoid division by zero
     if (magnitude == 0) {
@@ -23,9 +20,9 @@ std::vector<double> normalize_vector(const std::vector<double>& v) {
     }
 
     // Normalize each component
-    std::vector<double> v_norm;
-    for (double val : v) {
-        v_norm.push_back(val / magnitude);
+    std::vector<float32_t> v_norm(v.size());
+    for (size_t i = 0; i < v.size(); i++) {
+        v_norm[i] = v[i]/magnitude;
     }
 
     return v_norm;
@@ -38,26 +35,25 @@ std::vector<double> normalize_vector(const std::vector<double>& v) {
 
 
 
-// Does not find the center (Have alredy done it in still_brute_force_but_better_best_crosscorelation_lag)
-double std_deveation(std::vector<double> x){
+// // Does not find the center (Have alredy done it in still_brute_force_but_better_best_crosscorelation_lag)
+// float32_t std_deveation(std::vector<float32_t> x){
+//     int size = x.size();
+//     float32_t sum = 0;
+//     for (int i = 0; i < size; i++){
+//         sum += x.at(i)*x.at(i);
+//     }
+//     float32_t deviation;
+//     arm_status status = arm_sqrt_f32(sum/size, &deviation); // if you want to do something if the sqrt fails, be my guest. I am to lazy
+//     return deviation;
+// }
+
+
+
+
+float32_t correlation(std::vector <float32_t> x, std::vector <float32_t> y, float32_t stdev_x, float32_t stdev_y){
     int size = x.size();
 
-    double sum = 0;
-
-    for (int i = 0; i < size; i++){
-        sum += x.at(i)*x.at(i);
-    }
-
-    return std::sqrt(sum/size);
-}
-
-
-
-
-double correlation(std::vector <double> x, std::vector <double> y, double stdev_x, double stdev_y){
-    int size = x.size();
-
-    double covariance = 0;
+    float32_t covariance = 0;
 
     for (int i = 0; i < size; i++){
         covariance += x.at(i)*y.at(i);
@@ -70,17 +66,35 @@ double correlation(std::vector <double> x, std::vector <double> y, double stdev_
 
 
 
-std::vector <double> still_brute_force_but_better_best_crosscorelation_lag(std::vector <double> x, std::vector <double> y){
+std::vector <float32_t> still_brute_force_but_better_best_crosscorelation_lag(std::vector <float32_t> x, std::vector <float32_t> y){
     
+    size_t size_x = x.size();
+    size_t size_y = y.size();
 
-    // finding mean center of the signals
-    double mean_x = std::accumulate(x.begin(), x.end(), 0.0) / x.size();
-    double mean_y = std::accumulate(y.begin(), y.end(), 0.0) / y.size();
-    for(double &num: x) {num -= mean_x;};
-    for(double &num: y) {num -= mean_y;};
+    if (size_x == 0 || size_y == 0) {
+        return {};  // Return empty vector if input is invalid
+    }
+    float32_t mean_x, mean_y;
+    arm_mean_f32(x.data(), size_x, &mean_x);
+    arm_mean_f32(y.data(), size_y, &mean_y);
 
-    double stdev_x = std_deveation(x);
-    double stdev_y = std_deveation(y);
+    for(float32_t &num: x) {num -= mean_x;};
+    for(float32_t &num: y) {num -= mean_y;};
+
+    float32_t stdev_x, stdev_y;
+    arm_std_f32(x.data(), size_x, &stdev_x);
+    arm_std_f32(y.data(), size_y, &stdev_y);
+
+
+    // // finding mean center of the signals
+    // float32_t mean_x = std::accumulate(x.begin(), x.end(), 0.0) / x.size();
+    // float32_t mean_y = std::accumulate(y.begin(), y.end(), 0.0) / y.size();
+    // for(float32_t &num: x) {num -= mean_x;};
+    // for(float32_t &num: y) {num -= mean_y;};
+    // float32_t stdev_x = std_deveation(x);
+    // float32_t stdev_y = std_deveation(y);
+
+
 
     int size = x.size();
 
@@ -92,10 +106,10 @@ std::vector <double> still_brute_force_but_better_best_crosscorelation_lag(std::
     y.insert(y.begin(), zeros_to_add, 0); // add many zeros to the front
 
 
-    std::vector <double> x_to_sum;
-    std::vector <double> y_to_sum;
+    std::vector <float32_t> x_to_sum;
+    std::vector <float32_t> y_to_sum;
 
-    std::vector <double> correlation_vect;
+    std::vector <float32_t> correlation_vect;
 
 
     for (int i = 0; i < (max_lag-1); i++){
