@@ -1,40 +1,62 @@
-# Define the project name. Used mainly in the end file name
-PROJECT = thomas_impl
+# Project settings
+PROJECT      := thomas_impl
+TARGET       := $(PROJECT)
+BUILD_DIR    := _build
 
-# Define the compiler to be used. (This compiler is the standard for ARM CORTEX MCUs) 
-CC = arm-none-eabi-g++
+# Defime the compiler and linker to be used, compiler is arm gnu g++ here since the code is in C++. Use arm gnu gcc for C code base
+# The linker is the same for both C++ and C code so no need to change that. 
+# You have to make sure that the compiler is both installed and added to PATH in order for this to work
+# If you have the compiler/linker installed but not added to path, change this by providing the exact path to where you compiler and linker is. 
+CXX          := arm-none-eabi-g++
+OBJCOPY      := arm-none-eabi-objcopy
 
-# Define the path for the h files to be included in the compiling stage
-INCLUDE_DIRS = -I ./
+# Find all .cpp source files in the project folder by running wildcard command
+SRC         := $(wildcard *.cpp)
+# Create a list of object files in the build directory (e.g., _build/<file_name>.o)
+OBJ         := $(patsubst %.cpp, $(BUILD_DIR)/%.o, $(SRC))
 
-# Runs a shell script that would find all available c source files to compile
-SRC := $(shell find . -type f -name '*.cpp')
+# External include path to libraries outside of this folder. 
+# The path is defined in relative position to this folder. 
+# If for any reason the folder structure changes, you will need to make sure that this relative path
+# Will still work or change it according to the new changes. 
+# If you change it. DONT use absolute path as in ~/home/<user_name>/.....etc since that will only work 
+# On your pc alone as others have different user names, might have a different file structure entirely, and can download the project in a different path.
+EXTERNAL_INC := -I ../Include
 
+# Compiler flags: optimization, debugging, MCU settings, and include paths
+CXXFLAGS    := -O2 -g3 -mcpu=cortex-m7 -mthumb -mfpu=fpv5-d16 \
+               -Wall -Werror -ffunction-sections -fdata-sections $(EXTERNAL_INC)
 
-# First part finds all the .h files to be linked. Second part defines the path to the external libraries to be linked (if not defined here then must be defined when including the library itself)
-INCLUDE := $(shell find . -type f -name '*.h') -I /home/thomas/acoustics_ws/src/vortex-acoustics/AcousticsMicrocontrollerCode/teensy41/lib/Include
+# Linker flags: keep the same target settings and enable garbage collection of unused sections
+LDFLAGS     := -O2 -g3 -mcpu=cortex-m7 -mthumb -Wl,--gc-sections -specs=nosys.specs
 
-# Defines the compiler flags: The MCU CPU type, mthumb sets the arm architecture to thumb, set the floating point unit, float type, additional compiler flags for optimization, include files
-CFLAGS = -mcpu=cortex-m7 -mthumb -mfpu=fpv5-d16 -mfloat-abi=softfp -Wall -O2 $(INCLUDE_DIRS)
+# Libraries to link (add -L flags if libraries are in a nonstandard path)
+LIBS        := -lc -lnosys -lm
 
-# Defines the linker flagsØ The MCU CPU, mthmb sets the arm architecture to thumb, the include files
-LDFLAGS = -mcpu=cortex-m7 -mthumb $(INCLUDE) 
+# Default target: build the ELF and then the HEX file.
+all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex
 
-# Define object files as "<name_of_compiled_c_file>.o"
-OBJ = $(SRC:.cpp=.o)
+# Ensure the build directory exists by running the provided command.
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
 
-# Run compilation; generate the output files to the relevant c files
-%.o: %.cpp
-	$(CC) $(CFLAGS) -c $< -o $@
+# Rule: compile each .cpp file into an object file in the build directory.
+$(BUILD_DIR)/%.o: %.cpp | $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# Generate the ELF (Executable and Linked Format) file from the available/to be linked output files (.o files)
-$(PROJECT).elf: $(OBJ)
-	$(CC) $(LDFLAGS) $< -o $@ 
+# Rule: link all object files into the final ELF executable.
+$(BUILD_DIR)/$(TARGET).elf: $(OBJ)
+	$(CXX) $(LDFLAGS) $^ $(LIBS) -o $@
 
-compile: $(SRC)
-	$(CC) $(CFLAGS) -c $^ -o $(PROJECT).o
+# Rule: create a HEX file from the ELF executable.
+$(BUILD_DIR)/$(TARGET).hex: $(BUILD_DIR)/$(TARGET).elf
+	$(OBJCOPY) -O ihex $< $@
 
-all: $(PROJECT).elf
+# Clean up build directory
+clean:
+	rm -rf $(BUILD_DIR)
 
-#clean: 
-#	rm -f $(OBJ)
+.PHONY: all clean
+
+# In case you have problems with either repurposing or editing this file
+# Contact Ibrahim F. Abdalaal for help

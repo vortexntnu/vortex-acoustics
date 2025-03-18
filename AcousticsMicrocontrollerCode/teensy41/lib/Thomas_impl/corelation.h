@@ -1,7 +1,7 @@
 #ifndef CORELATION_H
 #define CORELATION_H
 #include <vector>
-#include "/home/thomas/acoustics_ws/src/vortex-acoustics/AcousticsMicrocontrollerCode/teensy41/lib/Include/arm_math.h"
+#include "arm_math.h"
 
 
 
