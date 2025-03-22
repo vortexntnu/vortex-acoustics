@@ -1,6 +1,5 @@
 #include <vector>
 #include <cmath>
-#include <numeric>
 #include "corelation.h"
 
 std::vector<float32_t> normalize_vector(const std::vector<float32_t>& v) {
@@ -35,7 +34,7 @@ std::vector<float32_t> normalize_vector(const std::vector<float32_t>& v) {
 
 
 
-// // Does not find the center (Have alredy done it in still_brute_force_but_better_best_crosscorelation_lag)
+// Does not find the center (Have alredy done it in still_brute_force_but_better_best_crosscorelation_lag)
 // float32_t std_deveation(std::vector<float32_t> x){
 //     int size = x.size();
 //     float32_t sum = 0;
@@ -86,7 +85,7 @@ std::vector <float32_t> still_brute_force_but_better_best_crosscorelation_lag(st
     arm_std_f32(y.data(), size_y, &stdev_y);
 
 
-    // // finding mean center of the signals
+    // finding mean center of the signals
     // float32_t mean_x = std::accumulate(x.begin(), x.end(), 0.0) / x.size();
     // float32_t mean_y = std::accumulate(y.begin(), y.end(), 0.0) / y.size();
     // for(float32_t &num: x) {num -= mean_x;};
