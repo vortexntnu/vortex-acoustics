@@ -2,6 +2,8 @@
 #include <fstream>
 #include <vector>
 #include "cross.h"
+#include <random>
+#include "multi.h"
 
 #include "matplotlib-cpp/matplotlibcpp.h"
 namespace plt = matplotlibcpp;
@@ -17,19 +19,24 @@ std::vector<double> add_time_lag(std::vector<double> x, int n){
 }
 
 
-int random(int upper, int lower){
-    // Seed with a real random value, if available
+
+std::vector<double> add_noise(std::vector<double> x, int n){
+    
     std::random_device r;
- 
-    // Choose a random mean between 1 and 6
     std::default_random_engine e1(r());
-    std::uniform_int_distribution<int> uniform_dist(1, 6);
-    return uniform_dist(e1);
+
+
+    
+    // Add noise to each element of the signal
+    for (auto &value : x) {
+        std::uniform_int_distribution<int> uniform_dist(-std::abs(n), std::abs(n));
+        int mean = uniform_dist(e1);
+        value += mean;
+    }
+    
+    return x;
 }
 
-std::vector<double> add_noice(std::vector<double>& x, int n){
-
-}
 
 std::vector<double> read_csv(const std::string& path){
     std::vector<double> values;
@@ -81,10 +88,18 @@ bool write_csv(const std::string &path, const std::vector<double>& vect) {
 
 int main(){
 
+    // main is allways zero
+    std::vector<Pos> hydrophone_array = {
+        {1.0, 1.0, 1.0},
+        {1.2, 0.8, 1.1}, 
+        {0.9, 1.3, 1.2},
+        {1.1, 1.4, 0.9}
+    };
+
 
 
     std::vector<double> fake_x = read_csv("signal_values/hydrophone_0.csv");
-    std::vector<double> fake_y = add_time_lag(fake_x, 2124);
+    std::vector<double> fake_y = add_noise(add_time_lag(fake_x, 2124), 20000);
 
 
 
@@ -96,7 +111,6 @@ int main(){
     
     std::vector<double>val = still_brute_force_but_better_best_crosscorelation_lag(fake_x, fake_y);
 
-    std::ofstream file("signal_values/corr_values.csv");
 
 
 
@@ -111,8 +125,6 @@ int main(){
     plt::plot(time, val);
 
     plt::show();
-
-    file << val;
     
     
     return 0;
