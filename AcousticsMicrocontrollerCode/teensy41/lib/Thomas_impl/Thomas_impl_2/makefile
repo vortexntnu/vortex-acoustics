@@ -1,35 +1,24 @@
-# Compiler
-CXX = g++
+# Compiler and flags
+CXX       = g++
+CXXFLAGS  = -std=c++11 -I. -I./matplotlib-cpp $(shell python3-config --includes)
+# Use python3-config to get most linker flags, and add -lpython3.10 if it's not already included.
+LDFLAGS   = $(shell python3-config --ldflags) -lpython3.10
 
-# Include paths (modify the Eigen path as needed)
-INCLUDES = -I/usr/include/eigen3
+# Source files and target
+SOURCES         := $(wildcard *.cpp)
+OBJECTS   = $(SOURCES:.cpp=.o)
+TARGET    = main
 
-# Compiler Flags
-CXXFLAGS = -Wall -Wextra -std=c++17 -O2 $(INCLUDES)
-
-# Source files
-SRCS = main.cpp cross.cpp
-
-# Object files
-OBJS = $(SRCS:.cpp=.o)
-
-# Executable name
-TARGET = Thomas_impl_2
-
-# Default rule
 all: $(TARGET)
 
-# Build the executable
-$(TARGET): $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJS)
+# Linking step
+$(TARGET): $(OBJECTS)
+	$(CXX) $(OBJECTS) -o $@ $(LDFLAGS)
 
-# Compile source files into object files
+# Compile step
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# Clean rule
+# Clean build artifacts
 clean:
-	rm -f $(OBJS) $(TARGET)
-
-# Rebuild rule
-rebuild: clean all
+	rm -f $(OBJECTS) $(TARGET)

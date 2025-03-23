@@ -1,5 +1,5 @@
 #include <vector>
-#include <cmath>
+#include <arm_math.h>
 #include "corelation.h"
 
 std::vector<float32_t> normalize_vector(const std::vector<float32_t>& v) {
@@ -26,8 +26,6 @@ std::vector<float32_t> normalize_vector(const std::vector<float32_t>& v) {
 
     return v_norm;
 }
-
-
 
 
 
