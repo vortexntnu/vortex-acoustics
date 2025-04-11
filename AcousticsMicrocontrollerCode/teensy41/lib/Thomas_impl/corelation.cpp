@@ -1,30 +1,64 @@
 #include <vector>
+#include <algorithm>
 #include <arm_math.h>
 #include "corelation.h"
+#include <Arduino.h>
 
-std::vector<float32_t> normalize_vector(const std::vector<float32_t>& v) {
-    float32_t magnitude = 0.0;
-    
-    // Compute the magnitude (Euclidean norm)
-    for (float32_t val : v) {
-        magnitude += val * val;
+
+
+
+
+// Custom correlation with 64-bit accumulation to avoid overflow.
+
+// signal1 and signal2 are arrays of length n.
+
+// 'result' must have space for (2*n - 1) elements.
+
+// simple correlation
+void crosscorelation(const int* signal1, const int* signal2, int size, int* result) {
+    // Use convolution to corelate the signals
+    // This is because all signals are LTI system
+    // This makes it possible that corelation and convolution are the same
+    // Convolution is a lot easier to do than corelation itself
+    // Works the same tested :)
+    int outputLength = 2 * size - 1;
+    for (int lag = 0; lag < outputLength; lag++) {
+        int64_t sum = 0;
+        for (int i = 0; i < size; i++) {
+            int idx = lag + i;
+            int val = 0;
+            // Zero padding: valid indices for signal2 are [n-1, n-1+n-1]
+            if (idx > size && idx < 2*size) {
+                int j = idx - size;
+                val = signal2[j];
+            }
+            sum += (int64_t)signal1[i] * val;
+        }
+
+    // Divide by 1000 with rounding (add half of 1000) to minimize precision loss
+    result[lag] = (int)((sum + 500) / 1000);
+  }
+}
+ 
+
+
+int find_peak_index(int32_t* signal, int size) {
+    // If the signal is empty, return 0 
+    if (size == 0) {
+        return 0;
     }
-    // magnitude = sqrt(magnitude);
-    arm_sqrt_f32(magnitude, &magnitude);
 
+    int peakIndex = 0;
+    int peakValue = signal[0];
 
-    // Avoid division by zero
-    if (magnitude == 0) {
-        return v;  
+    // Loop through the signal starting from the first element.
+    for (int i = 1; i < size; ++i) {
+        if (signal[i] > peakValue) {
+            peakValue = signal[i];
+            peakIndex = i;
+        }
     }
-
-    // Normalize each component
-    std::vector<float32_t> v_norm(v.size());
-    for (size_t i = 0; i < v.size(); i++) {
-        v_norm[i] = v[i]/magnitude;
-    }
-
-    return v_norm;
+    return peakIndex;
 }
 
 
@@ -32,92 +66,108 @@ std::vector<float32_t> normalize_vector(const std::vector<float32_t>& v) {
 
 
 
-// Does not find the center (Have alredy done it in still_brute_force_but_better_best_crosscorelation_lag)
-// float32_t std_deveation(std::vector<float32_t> x){
-//     int size = x.size();
-//     float32_t sum = 0;
-//     for (int i = 0; i < size; i++){
-//         sum += x.at(i)*x.at(i);
-//     }
-//     float32_t deviation;
-//     arm_status status = arm_sqrt_f32(sum/size, &deviation); // if you want to do something if the sqrt fails, be my guest. I am to lazy
-//     return deviation;
-// }
+// Compute a cross-correlation lag between two signals using a brute-force approach.
+void crosscorelation_2(const int* x, const int* y, const int size, int32_t* result){
 
+    
+    int output_size = 2*size-1;
 
+    // makes a new arrays with twise-1 the length of the original for correlation.
+    int long_x[output_size] = {0}; 
+    int long_y[output_size] = {0};
 
-
-float32_t correlation(std::vector <float32_t> x, std::vector <float32_t> y, float32_t stdev_x, float32_t stdev_y){
-    int size = x.size();
-
-    float32_t covariance = 0;
-
-    for (int i = 0; i < size; i++){
-        covariance += x.at(i)*y.at(i);
+    for (int i = 0; i < size; i++) {
+        long_x[i] = x[i];
+        long_y[size + i-1] = y[i];
     }
 
-    covariance /= size;
+    
 
-    return covariance/(stdev_x*stdev_y);
+    
+    for (int i = 0; i < (output_size); i++){
+        result[i] = 0; // To make it ready for input
+
+        // this shifts every element in x one space to the right starting from the back
+        for (int j = output_size-1; j > 0; j--){
+            long_x[j] = long_x[j - 1];
+        }
+        long_x[0] = 0;
+
+
+
+        for (int k = 0; k < output_size; k++){
+            result[i] += long_x[k]*long_y[k];
+        }
+    }
+             
+        
 }
 
 
 
-std::vector <float32_t> still_brute_force_but_better_best_crosscorelation_lag(std::vector <float32_t> x, std::vector <float32_t> y){
-    
-    size_t size_x = x.size();
-    size_t size_y = y.size();
 
-    if (size_x == 0 || size_y == 0) {
-        return {};  // Return empty vector if input is invalid
+
+
+void arm_correlation(const int *pSrcA_int, uint32_t srcALen,
+                     const int *pSrcB_int, uint32_t srcBLen,
+                     int32_t *pDst_int)
+{
+    // Allocate temporary float arrays for inputs.
+    float32_t *pSrcA = (float32_t *) malloc(srcALen * sizeof(float32_t));
+    float32_t *pSrcB = (float32_t *) malloc(srcBLen * sizeof(float32_t));
+    if (pSrcA == NULL || pSrcB == NULL) {
+        if (pSrcA) free(pSrcA);
+        if (pSrcB) free(pSrcB);
+        return;
     }
-    float32_t mean_x, mean_y;
-    arm_mean_f32(x.data(), size_x, &mean_x);
-    arm_mean_f32(y.data(), size_y, &mean_y);
 
-    for(float32_t &num: x) {num -= mean_x;};
-    for(float32_t &num: y) {num -= mean_y;};
-
-    float32_t stdev_x, stdev_y;
-    arm_std_f32(x.data(), size_x, &stdev_x);
-    arm_std_f32(y.data(), size_y, &stdev_y);
-
-
-    // finding mean center of the signals
-    // float32_t mean_x = std::accumulate(x.begin(), x.end(), 0.0) / x.size();
-    // float32_t mean_y = std::accumulate(y.begin(), y.end(), 0.0) / y.size();
-    // for(float32_t &num: x) {num -= mean_x;};
-    // for(float32_t &num: y) {num -= mean_y;};
-    // float32_t stdev_x = std_deveation(x);
-    // float32_t stdev_y = std_deveation(y);
-
-
-
-    int size = x.size();
-
-    int max_lag = 2*size;
-
-
-    x.resize(max_lag); // add many zeros to the end
-    int zeros_to_add = max_lag - size;
-    y.insert(y.begin(), zeros_to_add, 0); // add many zeros to the front
-
-
-    std::vector <float32_t> x_to_sum;
-    std::vector <float32_t> y_to_sum;
-
-    std::vector <float32_t> correlation_vect;
-
-
-    for (int i = 0; i < (max_lag-1); i++){
-
-
-
-        x.insert(x.begin(), x.back());
-        x.pop_back();
-
-        correlation_vect.push_back(correlation(x, y, mean_x, mean_y));
+    // Convert the integer input arrays to float arrays.
+    for (uint32_t i = 0; i < srcALen; i++) {
+        pSrcA[i] = (float32_t)pSrcA_int[i];
     }
-    return correlation_vect;
-    
+    for (uint32_t i = 0; i < srcBLen; i++) {
+        pSrcB[i] = (float32_t)pSrcB_int[i];
+    }
+
+    // Output length for correlation
+    uint32_t outLen = srcALen + srcBLen - 1;
+    float32_t *pDst = (float32_t *) malloc(outLen * sizeof(float32_t));
+    if (pDst == NULL) {
+        free(pSrcA);
+        free(pSrcB);
+        return;
+    }
+
+    // Compute correlation using the CMSIS-DSP function:
+    arm_correlate_f32(pSrcA, srcALen, pSrcB, srcBLen, pDst);
+
+    // Determine the maximum absolute value from the correlation output.
+    // This is used to compute the scaling factor.
+    float32_t maxVal = 0.0f;
+    for (uint32_t i = 0; i < outLen; i++) {
+        float32_t absVal = fabsf(pDst[i]);
+        if (absVal > maxVal) {
+            maxVal = absVal;
+        }
+    }
+
+    // If maxVal is zero then no scaling is needed.
+    if (maxVal == 0.0f) {
+        maxVal = 1.0f;
+    }
+
+    // Calculate the scale factor so that the maximum value maps to INT32_MAX.
+    // INT32_MAX is 2147483647.
+    float32_t scale = 2147483647.0f / maxVal;
+
+    // Convert the scaled float correlation result to int32_t.
+    // This step prevents overflow/clipping by ensuring the scaled values fit within int32_t.
+    for (uint32_t i = 0; i < outLen; i++) {
+        pDst_int[i] = (int32_t)(pDst[i] * scale);
+    }
+
+    // Clean up: free the dynamically allocated memory.
+    free(pDst);
+    free(pSrcA);
+    free(pSrcB);
 }

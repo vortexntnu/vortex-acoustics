@@ -1,46 +1,41 @@
-# Compiler and Flags
+# Compiler
 CXX = g++
-CXXFLAGS = -Wall -Wextra -std=c++17 -Iinclude
-
-# Target executable
-TARGET = build/main
+CXXFLAGS = -Wall -Wextra -std=c++17 -Iinclude -Ilib -Ilib/TheoreticalTDOACalculator
 
 # Directories
 SRC_DIR = src
+LIB_DIR = lib
 BUILD_DIR = build
-INCLUDE_DIR = include
 
-# Source files
-SRCS = $(SRC_DIR)/main.cpp $(SRC_DIR)/multilateration_simulator.cpp
+# Find all .cpp files in src/ and lib/ (recursively)
+SRC_FILES = $(shell find $(SRC_DIR) $(LIB_DIR) -name "*.cpp")
 
-# Object files
-OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/multilateration_simulator.o
+# Generate object file names in the build/ directory
+OBJ_FILES = $(patsubst %.cpp, $(BUILD_DIR)/%.o, $(SRC_FILES))
 
-# Default target
+# Output binary name
+TARGET = main.out
+
+# Default target (builds the project)
 all: $(TARGET)
 
-# Link the executable
-$(TARGET): $(OBJS) | $(BUILD_DIR)
-	@echo "Linking..."
+# Compile the main executable
+$(TARGET): $(OBJ_FILES)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
-# Compile source files into object files
-$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(BUILD_DIR)
-	@echo "Compiling $<..."
+# Rule to compile all source files into object files
+$(BUILD_DIR)/%.o: %.cpp | $(BUILD_DIR)
+	mkdir -p $(@D)  # Create subdirectories if needed
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# Create build directory if it doesn't exist
+# Ensure build directory exists
 $(BUILD_DIR):
-	@mkdir -p $(BUILD_DIR)
+	mkdir -p $(BUILD_DIR)
 
-# Clean up build files
-clean:
-	@echo "Cleaning up..."
-	rm -rf $(BUILD_DIR)
-
-# Run the program
+# Run the program after building
 run: all
 	./$(TARGET)
 
-# Phony targets
-.PHONY: all clean run
+# Clean up build files
+clean:
+	rm -rf $(BUILD_DIR) $(TARGET)

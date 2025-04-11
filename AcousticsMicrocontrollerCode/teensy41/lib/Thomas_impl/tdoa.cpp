@@ -1,22 +1,30 @@
 
-#include <iostream>
 #include <vector>
 #include "tdoa.h"
+#include <Arduino.h>
+#include <string>
 
 
-using namespace std;
+// calculate it for testing
+float32_t calculate_tdoa(Pos pos, Pos pinger_pos, float32_t v){
+    Pos relative_pos(pos.x-pinger_pos.x,pos.y-pinger_pos.y,pos.z-pinger_pos.z);
+    return (1/v)*(relative_pos.dist-pinger_pos.dist);
+}
 
 
-std::vector<float32_t> multilateration(std::vector<Pos> hydrophone_array, std::vector<float32_t> TDOA){
+
+
+// All this just to solve A*x=b
+Pos tdoa_multilateration(std::vector<Pos> hydrophone_array, std::vector<float32_t> TDOA){
     // Firs element in hydrophone is zero
     // The first element in TDOA is the timedifference between the main and first hydrophone in hydrophone array,
     // the second element for the main and second hydrophone and so on.
 
 
     if (TDOA.size() < 4 || hydrophone_array.size() < 4) {
-        std::cout << "Error: Not enough hydrophones or TDOA values for multilateration.\n";
         return std::vector<float32_t>(4, 0.0f);  // Return zero vector
     }
+
 
 
     //d == c*TDOA
@@ -59,6 +67,7 @@ std::vector<float32_t> multilateration(std::vector<Pos> hydrophone_array, std::v
     arm_matrix_instance_f32 result_vect;
     arm_mat_init_f32(&result_vect, 4, 1, resulting_data);
     std::vector<float32_t> result_vect_format(4, 0.0f); // for returning
+    
 
 
     arm_status status =  arm_mat_inverse_f32(&A, &A_inverse);
@@ -66,6 +75,7 @@ std::vector<float32_t> multilateration(std::vector<Pos> hydrophone_array, std::v
 
     if (status == ARM_MATH_SUCCESS){
         status = arm_mat_mult_f32(&A_inverse, &b, &result_vect);
+
 
         if (status == ARM_MATH_SUCCESS){
             // Store the result in a std::vector
@@ -75,8 +85,7 @@ std::vector<float32_t> multilateration(std::vector<Pos> hydrophone_array, std::v
         }
     }
 
-    return result_vect_format; // this will return all zeros if some calculationes failed
-
+    return Pos(result_vect_format); // this will return all zeros if some calculationes failed
 }
 
 
@@ -84,18 +93,18 @@ std::vector<float32_t> multilateration(std::vector<Pos> hydrophone_array, std::v
 
 
 Pos::Pos(std::vector<float32_t> pos): x(pos.at(0)), y(pos.at(1)), z(pos.at(2)){
-    if (pos.size() >= 4){
-        dist = pos[3];
-        if (pos.size() > 4){
-            std::cout << pos.size()-4 << " values where not used" << std::endl;
-        }
-    }
-    else{ arm_sqrt_f32(x*x+y*y+z*z, &dist); }
+    arm_sqrt_f32(x*x+y*y+z*z, &dist);
 
 }
 
 
-std::ostream& operator <<(std::ostream& os, const Pos& pos){
-    os << "x: " << pos.x << ", y: " << pos.y << ", z: " << pos.z << ", distance: " << pos.dist;
-    return os;
+void Pos::display(){
+    Serial.println();
+    Serial.println("Position info: ");
+    Serial.print("x: ");Serial.print(x, 5);Serial.print(", y: "); Serial.print(y, 5);Serial.print(", z: "); Serial.print(z, 5); Serial.print(", distance: "); Serial.print(dist, 5);
+    Serial.println();
+    Pos dir = (*this).direction();
+    Serial.println("Direction: ");
+    Serial.print("x: ");Serial.print(dir.x, 5);Serial.print(", y: "); Serial.print(dir.y, 5);Serial.print(", z: "); Serial.print(dir.z, 5); Serial.print(", distance: "); Serial.println(dir.dist);
+    Serial.println();
 }
