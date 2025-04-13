@@ -7,7 +7,7 @@
 
 
 
-
+namespace Multilateration{
 // Custom correlation with 64-bit accumulation to avoid overflow.
 
 // signal1 and signal2 are arrays of length n.
@@ -107,7 +107,7 @@ void crosscorelation_2(const int* x, const int* y, const int size, int32_t* resu
 
 
 
-
+// Converts int arrays to float32_t, to do arm correlation the only correlation part is this arm_correlate_f32(pSrcA, srcALen, pSrcB, srcBLen, pDst);
 void arm_correlation(const int *pSrcA_int, uint32_t srcALen,
                      const int *pSrcB_int, uint32_t srcBLen,
                      int32_t *pDst_int)
@@ -170,4 +170,8 @@ void arm_correlation(const int *pSrcA_int, uint32_t srcALen,
     free(pDst);
     free(pSrcA);
     free(pSrcB);
+}
+
+
+
 }

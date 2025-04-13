@@ -31,3 +31,7 @@ void computeA(int32_t TdoaArray[], float32_t* AData);
 void computeB(int32_t TdoaArray[], const Position hydrophonePositions[], float32_t* BData);
 
 arm_status leastSquareEstimation(const arm_matrix_instance_f32* pA, const arm_matrix_instance_f32* pB, Position* pSourcePosition);
+
+
+
+
