@@ -17,16 +17,10 @@ float32_t calculate_tdoa(Pos pos, Pos pinger_pos, float32_t v){
 
 
 // All this just to solve A*x=b like this x = A⁻¹b
-Pos tdoa_multilateration(const std::vector<Pos>& hydrophone_array, const std::vector<float32_t>& TDOA){
+Pos tdoa_multilateration(const Pos hydrophone_pos_array[NUM_HYDROPHONES], const std::vector<float32_t>& TDOA){
     // Firs element in hydrophone is zero
     // The first element in TDOA is the timedifference between the main and first hydrophone in hydrophone array,
     // the second element for the main and second hydrophone and so on.
-
-    if (TDOA.size() < 4 || hydrophone_array.size() < 5) {
-        Serial.println("Error: hydrophone array must be  5 elements long (first is main (can be (0, 0, 0)))"); // remove when finished testing
-        return Pos(0, 0, 0);
-    }
-
 
 
     //d == c*TDOA
@@ -39,19 +33,19 @@ Pos tdoa_multilateration(const std::vector<Pos>& hydrophone_array, const std::ve
 
 
     float32_t A_data[4 * 4] = {
-        hydrophone_array.at(1).x, hydrophone_array.at(1).y, hydrophone_array.at(1).z, -distances.at(0),
-        hydrophone_array.at(2).x, hydrophone_array.at(2).y, hydrophone_array.at(2).z, -distances.at(1),
-        hydrophone_array.at(3).x, hydrophone_array.at(3).y, hydrophone_array.at(3).z, -distances.at(2),
-        hydrophone_array.at(4).x, hydrophone_array.at(4).y, hydrophone_array.at(4).z, -distances.at(3)
+        hydrophone_pos_array[1].x, hydrophone_pos_array[1].y, hydrophone_pos_array[1].z, -distances[0],
+        hydrophone_pos_array[2].x, hydrophone_pos_array[2].y, hydrophone_pos_array[2].z, -distances[1],
+        hydrophone_pos_array[3].x, hydrophone_pos_array[3].y, hydrophone_pos_array[3].z, -distances[2],
+        hydrophone_pos_array[4].x, hydrophone_pos_array[4].y, hydrophone_pos_array[4].z, -distances[3]
     };
     
     auto square = [](float32_t x) -> float32_t { return x * x; };
 
     float32_t b_data[4] = {
-        0.5f * (square(hydrophone_array.at(1).x) + square(hydrophone_array.at(1).y) + square(hydrophone_array.at(1).z) - square(distances.at(0))),
-        0.5f * (square(hydrophone_array.at(2).x) + square(hydrophone_array.at(2).y) + square(hydrophone_array.at(2).z) - square(distances.at(1))),
-        0.5f * (square(hydrophone_array.at(3).x) + square(hydrophone_array.at(3).y) + square(hydrophone_array.at(3).z) - square(distances.at(2))),
-        0.5f * (square(hydrophone_array.at(4).x) + square(hydrophone_array.at(4).y) + square(hydrophone_array.at(4).z) - square(distances.at(3)))
+        0.5f * (square(hydrophone_pos_array[1].x) + square(hydrophone_pos_array[1].y) + square(hydrophone_pos_array[1].z) - square(distances[0])),
+        0.5f * (square(hydrophone_pos_array[2].x) + square(hydrophone_pos_array[2].y) + square(hydrophone_pos_array[2].z) - square(distances[1])),
+        0.5f * (square(hydrophone_pos_array[3].x) + square(hydrophone_pos_array[3].y) + square(hydrophone_pos_array[3].z) - square(distances[2])),
+        0.5f * (square(hydrophone_pos_array[4].x) + square(hydrophone_pos_array[4].y) + square(hydrophone_pos_array[4].z) - square(distances[3]))
     };
 
 

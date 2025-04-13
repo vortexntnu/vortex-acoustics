@@ -45,8 +45,7 @@ class Pos {
         void display(); // This is just for testing
 };
 
-
-const std::vector<Pos> hydrophonePositions = {
+const Pos hydrophonePositions[NUM_HYDROPHONES] {
     {0.0, 0.0, 0.0},
     {1.0, 1.0, 1.0},
     {1.2, 0.8, 1.1},
@@ -58,7 +57,7 @@ const std::vector<Pos> hydrophonePositions = {
 float32_t calculate_tdoa(Pos pos, Pos pinger_pos, float32_t v);
 
 
-Pos tdoa_multilateration(const std::vector<Pos>& hydrophone_array, const std::vector<float32_t>& TDOA);
+Pos tdoa_multilateration(const Pos hydrophone_pos_array[NUM_HYDROPHONES], const std::vector<float32_t>& TDOA);
 
 Pos find_pinger(int hydrophone_value_array[NUM_HYDROPHONES][HYDROPHONE_DATA_SIZE], const int sampling_frequency);
 

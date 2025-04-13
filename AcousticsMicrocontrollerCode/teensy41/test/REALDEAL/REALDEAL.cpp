@@ -302,6 +302,11 @@ void loop() {
     soundLocation[0] = 7.0;
     soundLocation[1] = 8.0;
     soundLocation[2] = 9.0;
+
+    
+
+
+
     Serial.println("2 - MULTILATERATION: Got the results");
     // Multilateration (STOP) ====================================================================================================
 
