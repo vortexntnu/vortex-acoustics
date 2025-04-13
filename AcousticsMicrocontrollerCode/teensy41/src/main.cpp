@@ -116,7 +116,7 @@ void loop() {
             }
         }
 
-        Multilateration::Pos pinger = Multilateration::find_pinger(hydrophone_data_array, SAMPLE_RATE);
+        Multilateration::Pos pinger = Multilateration::find_pinger(hydrophone_data_array, TDOA_VALUES, SAMPLE_RATE);
         Serial.println("Calculated: ");
         pinger.display();
     }

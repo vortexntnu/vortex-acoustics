@@ -19,8 +19,8 @@
 const float32_t SOUND_SPEED = 1500.0; //[m/s]
 const int SAMPLING_FREQ = 300000;     //[Hz]
 
-// double TDOA_VALUES[TDOA_DATA_LENGHT]; // time difference between hydrophone 0 and 1, 2, 3, 4 [s]
-// double soundLocation[NUM_DIMENSIONS]; // Pinger position
+inline double TDOA_VALUES[TDOA_DATA_LENGHT]; // time difference between hydrophone 0 and 1, 2, 3, 4 [s]
+inline double soundLocation[NUM_DIMENSIONS]; // Pinger position
 
 
 
@@ -57,8 +57,8 @@ const Pos hydrophonePositions[NUM_HYDROPHONES] {
 float32_t calculate_tdoa(Pos pos, Pos pinger_pos, float32_t v);
 
 
-Pos tdoa_multilateration(const Pos hydrophone_pos_array[NUM_HYDROPHONES], const std::vector<float32_t>& TDOA);
+Pos tdoa_multilateration(const Pos hydrophone_pos_array[NUM_HYDROPHONES], const double TDOA[TDOA_DATA_LENGHT]);
 
-Pos find_pinger(int hydrophone_value_array[NUM_HYDROPHONES][HYDROPHONE_DATA_SIZE], const int sampling_frequency);
+Pos find_pinger(int hydrophone_value_array[NUM_HYDROPHONES][HYDROPHONE_DATA_SIZE], double TDOA[TDOA_DATA_LENGHT], const int sampling_frequency);
 
 }

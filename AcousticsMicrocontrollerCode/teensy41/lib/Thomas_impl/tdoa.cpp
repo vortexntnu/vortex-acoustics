@@ -17,7 +17,7 @@ float32_t calculate_tdoa(Pos pos, Pos pinger_pos, float32_t v){
 
 
 // All this just to solve A*x=b like this x = A⁻¹b
-Pos tdoa_multilateration(const Pos hydrophone_pos_array[NUM_HYDROPHONES], const std::vector<float32_t>& TDOA){
+Pos tdoa_multilateration(const Pos hydrophone_pos_array[NUM_HYDROPHONES], const double TDOA[TDOA_DATA_LENGHT]){
     // Firs element in hydrophone is zero
     // The first element in TDOA is the timedifference between the main and first hydrophone in hydrophone array,
     // the second element for the main and second hydrophone and so on.
@@ -26,9 +26,9 @@ Pos tdoa_multilateration(const Pos hydrophone_pos_array[NUM_HYDROPHONES], const 
     //d == c*TDOA
     float32_t const c = 1500;
 
-    std::vector<float32_t> distances = TDOA;
-    for (size_t i = 0; i < distances.size(); i++){
-        distances.at(i) *= c;
+    double distances[TDOA_DATA_LENGHT];
+    for (size_t i = 0; i < TDOA_DATA_LENGHT; i++){
+        distances[i] = c*TDOA[i];
     };
 
 
@@ -103,9 +103,7 @@ Pos multilateration_least_square(const std::vector<Pos>& hydrophones,
 
 
 
-Pos find_pinger(int hydrophone_value_array[NUM_HYDROPHONES][HYDROPHONE_DATA_SIZE], const int sampling_frequency){
-
-    std::vector<float32_t> calculated_TDOA;
+Pos find_pinger(int hydrophone_value_array[NUM_HYDROPHONES][HYDROPHONE_DATA_SIZE], double TDOA[TDOA_DATA_LENGHT], const int sampling_frequency){
 
     for (int i = 0; i < TDOA_DATA_LENGHT; i++) {
 
@@ -122,10 +120,10 @@ Pos find_pinger(int hydrophone_value_array[NUM_HYDROPHONES][HYDROPHONE_DATA_SIZE
         double tdoa = ((float)(peek_index - HYDROPHONE_DATA_SIZE)/sampling_frequency);
 
 
-        calculated_TDOA.push_back(tdoa);
+        TDOA[i] = tdoa;
     }
 
-    Pos pinger = tdoa_multilateration(hydrophonePositions, calculated_TDOA);
+    Pos pinger = tdoa_multilateration(hydrophonePositions, TDOA);
     Serial.println("Calculated: ");
     pinger.display();
     return pinger;
