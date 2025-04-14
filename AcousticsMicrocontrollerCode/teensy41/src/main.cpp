@@ -1,3 +1,4 @@
+
 /*
 Main Firmware code for Acoustics PCB
 
@@ -18,14 +19,14 @@ All rights reserved to: Vortex NTNU
 License: MIT
 */
 
+
+
 // CMSIS Libraries
-#include "arm_const_structs.h"
-#include "arm_math.h"
+#include "Include/arm_const_structs.h"
+#include "Include/arm_math.h"
 
 // Arduino Libraries
 #include <Arduino.h>
-#include <algorithm>
-#include <cstdint>
 #include <vector>
 
 // Sampling Analog to Digital Converter (ADC) Libraries
@@ -43,15 +44,16 @@ License: MIT
 #include "ethernetModule.h"
 #include "teensyUDP.h"
 
+
+
 // Variables for Sampling ==========
-float sample_period = 2.4;     // >= MIN_SAMP_PERIOD_BLOCKING, Recomended: 2.4
+float sample_period = 2.4; // >= MIN_SAMP_PERIOD_BLOCKING, Recomended: 2.4
 #define SAMPLING_TIMEOUT 10000 // [ms]
-#define RAW_HYDROPHONE_LENGTH (SAMPLE_LENGTH * BUFFER_PER_CHANNEL)
-int16_t samplesRawHydrophone1[RAW_HYDROPHONE_LENGTH];
-int16_t samplesRawHydrophone2[RAW_HYDROPHONE_LENGTH];
-int16_t samplesRawHydrophone3[RAW_HYDROPHONE_LENGTH];
-int16_t samplesRawHydrophone4[RAW_HYDROPHONE_LENGTH];
-int16_t samplesRawHydrophone5[RAW_HYDROPHONE_LENGTH];
+int16_t samplesRawHydrophone1[SAMPLE_LENGTH * BUFFER_PER_CHANNEL];
+int16_t samplesRawHydrophone2[SAMPLE_LENGTH * BUFFER_PER_CHANNEL];
+int16_t samplesRawHydrophone3[SAMPLE_LENGTH * BUFFER_PER_CHANNEL];
+int16_t samplesRawHydrophone4[SAMPLE_LENGTH * BUFFER_PER_CHANNEL];
+int16_t samplesRawHydrophone5[SAMPLE_LENGTH * BUFFER_PER_CHANNEL];
 
 // Variables for Digital Signal Processing ==========
 int16_t samplesRawForDSP[SAMPLE_LENGTH];
@@ -62,21 +64,23 @@ std::vector<std::vector<q31_t>> peaks;
 int16_t lengthOfPeakArray;
 
 // Variables for Peak Detection ==========
-int32_t frequenciesOfInterest[FREQUENCY_LIST_LENGTH];    // 0 Hz
-int32_t frequencyVariances[FREQUENCY_LIST_LENGTH];       // +-0 Hz
+int32_t frequenciesOfInterest[FREQUENCY_LIST_LENGTH]; // 0 Hz
+int32_t frequencyVariances[FREQUENCY_LIST_LENGTH]; // +-0 Hz
 int32_t frequenciesOfInterestMax[FREQUENCY_LIST_LENGTH]; // 0 Hz
 int32_t frequenciesOfInterestMin[FREQUENCY_LIST_LENGTH]; // 0 Hz
 
 // Variables for Multilateration ==========
-#define TDOA_DATA_LENGHT 5                        // TODO: Should be moved into multilateration library once that is operational
-#define POSITION_DATA_LENGHT 3                    // TODO: Should be moved into multilateration library once that is operational
+#define TDOA_DATA_LENGHT 5 // TODO: Should be moved into multilateration library once that is operational
+#define POSITION_DATA_LENGHT 3 // TODO: Should be moved into multilateration library once that is operational
 double timeDifferenceOfArrival[TDOA_DATA_LENGHT]; // time difference for hydrophone 1, 2, 3, 4, 5 [s]
-double soundLocation[POSITION_DATA_LENGHT];       // X, Y, Z [m]
+double soundLocation[POSITION_DATA_LENGHT]; // X, Y, Z [m]
 
 // Variables for data transmission ==========
 int32_t lastSendTime = 0;
 void setupTeensyCommunication();
 void sendDataToClient();
+
+
 
 void setup() {
     // Debugging Setup (START) ====================================================================================================
@@ -86,11 +90,15 @@ void setup() {
     Serial.println();
     // Debugging Setup (STOP) ====================================================================================================
 
+
+
     // Ethernet Setup (START) ====================================================================================================
     /*
     NOTE: This code NEEDS to come befor "Sampling Setup", otherwise some PINS and values are configured incorrectly in in Comunications
     Why? I have no Idea, some configuration of the ISP protocol clock timer and PINS that both Comuniaction and Sampling codes uses from what it seems, probably... =_=
     */
+
+
 
     // Ethernet init
     Serial.println("2 - Ethernet Setup");
@@ -100,8 +108,7 @@ void setup() {
 
     // Wait until someone is connected and get their IP and Port address
     Serial.println("Waiting for client connection...");
-    while (!ethernetModule::UDP_check_if_connected())
-        ;
+    while (!ethernetModule::UDP_check_if_connected());
 
     // Wait for client input into what frequencies we sould detect and send sound signals of
     Serial.println("Waiting for client configuration...");
@@ -115,6 +122,8 @@ void setup() {
     Serial.println();
     // Ethernet Setup (STOP) ====================================================================================================
 
+
+
     // Sampling Setup (START) ====================================================================================================
     // initializing ADC before being able to use it
     Serial.println("3 - Sampling Setup");
@@ -127,9 +136,12 @@ void setup() {
     adc::config(ADC_reg_config);
     adc::setup();
 
+
     Serial.println("Sampling Setup complete");
     Serial.println();
     // Sampling Setup (STOP) ====================================================================================================
+
+
 
     // Digital Signal Processing Setup (START) ====================================================================================================
     Serial.println("4 - DSP Setup");
@@ -143,12 +155,16 @@ void setup() {
     Serial.println();
     // Digital Signal Processing Setup (STOP) ====================================================================================================
 
+
+
     Serial.println();
     Serial.println("==================================================");
     Serial.println("SETUP COMPLETE :D");
     Serial.println("==================================================");
     Serial.println();
 }
+
+
 
 void loop() {
     // Sampling (START) ====================================================================================================
@@ -167,7 +183,7 @@ void loop() {
     Serial.println("1 - SAMPLING: Start Sampling");
 
     uint8_t found = 0;
-    uint8_t buffer_to_check = 0;                // Reset buffer to start filling to 0 // this is the NOW buffer
+    uint8_t buffer_to_check = 0; // Reset buffer to start filling to 0 // this is the NOW buffer
     unsigned long samplingStartTime = millis(); // For sampling timeout, in case we sample for to long, we want to break the loop
 
     // Start sampling ADC data imediately
@@ -175,8 +191,7 @@ void loop() {
 
     while (!found) {
         // Start sampling into the buffer and wait until the latest one is filled before moving on and leting it continue to fill up into the next buffer
-        while (!adc::buffer_filled[buffer_to_check])
-            ;
+        while (!adc::buffer_filled[buffer_to_check]);
 
         // Save raw sampled data from ADC
         for (uint16_t i = 0; i < SAMPLE_LENGTH; i++) {
@@ -220,7 +235,7 @@ void loop() {
                 }
             }
         }
-
+        
         if (found) {
             //Serial.println("1 - SAMPLING: Frequency of interest found");
         }
@@ -238,12 +253,14 @@ void loop() {
     // We make sure the last buffer that we are interested in is filled before continuing
     // This ensures we have the not only the data signal of the peak, but also what happens after the peaks in the signal frequency we are interested in
     // adc::startConversion(sample_period, adc::BLOCKING);
+    while (!adc::buffer_filled[buffer_to_check]);
+    buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
 
-    for (uint8_t i = 0; i < 3; i++) { // This is how many buffers we want to send after the aktive_buffer in each ringbuffer
-        while (!adc::buffer_filled[buffer_to_check])
-            ;
-        buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
-    }
+    while (!adc::buffer_filled[buffer_to_check]);
+    buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
+
+    while (!adc::buffer_filled[buffer_to_check]);
+    buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
 
     // Stop ADC sampling once we have every ring buffer sampled
     adc::stopConversion();
@@ -255,7 +272,7 @@ void loop() {
     // Saving finished processed and sampled Hyfrophone data
     uint16_t index = 0;
     for (uint8_t i = 0; i < BUFFER_PER_CHANNEL; i++) {
-        // Combine all buffers from chanels into one BIG array
+        // Combine all 3 buffers from chanels into one BIG array
         for (uint16_t u = 0; u < SAMPLE_LENGTH; u++) {
             index = (SAMPLE_LENGTH * i) + u;
 
@@ -275,52 +292,24 @@ void loop() {
     }
     // Sampling (STOP) ====================================================================================================
 
+
+
     // Multilateration (START) ====================================================================================================
     // TODO: It is up to you my student finish acoustics for us T^T
     Serial.println("2 - MULTILATERATION: Started the Calculations");
-
-    timeDifferenceOfArrival[0] = 0;
-
-    const int max_lag = 2 * RAW_HYDROPHONE_LENGTH - 1;  // Total number of possible shifts
-    int16_t correlation_array[2 * RAW_HYDROPHONE_LENGTH - 1];
-    if (arm_correlate(samplesRawHydrophone1, RAW_HYDROPHONE_LENGTH, samplesRawHydrophone2, RAW_HYDROPHONE_LENGTH, correlation_array)) {
-        Serial.println("your cooked");
-    }
-    int peak_index = find_peak_index(correlation_array, max_lag);
-
-    timeDifferenceOfArrival[1] = peak_index - RAW_HYDROPHONE_LENGTH/SAMPLING;
-      
-    if (arm_correlate(samplesRawHydrophone1, RAW_HYDROPHONE_LENGTH, samplesRawHydrophone3, RAW_HYDROPHONE_LENGTH, correlation_array)) {
-        Serial.println("your cooked");
-    }
-
-    peak_index = find_peak_index(correlation_array, max_lag);
-
-    timeDifferenceOfArrival[2] = peak_index - RAW_HYDROPHONE_LENGTH/SAMPLING;
-
-    if (arm_correlate(samplesRawHydrophone1, RAW_HYDROPHONE_LENGTH, samplesRawHydrophone4, RAW_HYDROPHONE_LENGTH, correlation_array)) {
-        Serial.println("your cooked");
-    }
-
-    peak_index = find_peak_index(correlation_array, max_lag);
-
-    timeDifferenceOfArrival[3] = peak_index - RAW_HYDROPHONE_LENGTH/SAMPLING;
-
-    if (arm_correlate(samplesRawHydrophone1, RAW_HYDROPHONE_LENGTH, samplesRawHydrophone5, RAW_HYDROPHONE_LENGTH, correlation_array)) {
-        Serial.println("your cooked");
-    }
-
-    peak_index = find_peak_index(correlation_array, max_lag);
-
-    timeDifferenceOfArrival[4] = peak_index - RAW_HYDROPHONE_LENGTH/SAMPLING;
-
-    soundLocation = tdoa_multilateration(hydrophone_array, timeDifferenceOfArrival);
+    timeDifferenceOfArrival[0] = 1.0;
+    timeDifferenceOfArrival[1] = 2.0;
+    timeDifferenceOfArrival[2] = 3.0;
+    timeDifferenceOfArrival[3] = 4.0;
+    timeDifferenceOfArrival[4] = 5.0;
 
     soundLocation[0] = 7.0;
     soundLocation[1] = 8.0;
     soundLocation[2] = 9.0;
     Serial.println("2 - MULTILATERATION: Got the results");
     // Multilateration (STOP) ====================================================================================================
+
+
 
     // Send data (START) ====================================================================================================
     Serial.println("3 - DATA SEND: Start sending data");
@@ -329,12 +318,12 @@ void loop() {
     teensyUDP::send_hydrophone_data(samplesRawHydrophone3, SAMPLE_LENGTH * BUFFER_PER_CHANNEL, '3');
     teensyUDP::send_hydrophone_data(samplesRawHydrophone4, SAMPLE_LENGTH * BUFFER_PER_CHANNEL, '4');
     teensyUDP::send_hydrophone_data(samplesRawHydrophone5, SAMPLE_LENGTH * BUFFER_PER_CHANNEL, '5');
-
+    
     teensyUDP::send_samples_filtered_data(samplesFiltered, SAMPLE_LENGTH);
     teensyUDP::send_FFT_data(FFTResultsMagnified, SAMPLE_LENGTH);
-
+        
     teensyUDP::send_peak_data(peaks, lengthOfPeakArray);
-
+    
     teensyUDP::send_tdoa_data(timeDifferenceOfArrival, TDOA_DATA_LENGHT);
     teensyUDP::send_location_data(soundLocation, POSITION_DATA_LENGHT);
 
@@ -342,9 +331,11 @@ void loop() {
     Serial.println("3 - DATA SEND: Data sent sucsessfully");
     // Send data (STOP) ====================================================================================================
 
+
     Serial.println();
     Serial.println("--------------------------------------------------");
     Serial.println();
+
 
     // A small delay for debugging (Delete later)
     // delay(1000);
