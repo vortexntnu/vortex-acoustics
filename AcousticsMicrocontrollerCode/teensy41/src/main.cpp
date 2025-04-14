@@ -25,15 +25,18 @@ License: MIT
 
 // Arduino Libraries
 #include <Arduino.h>
+#include <cstddef>
 #include <cstdint>
 #include <vector>
 
 // Sampling Analog to Digital Converter (ADC) Libraries
 #include "GPT.h"
 #include "adc.h"
+#include "arm_math.h"
 #include "clock.h"
 #include "gpio.h"
 #include "gpio_interrupt.h"
+#include "multilateration.h"
 #include "pit.h"
 
 // Digital Signal Processing (DSP) Libraries
@@ -44,6 +47,7 @@ License: MIT
 #include "teensy_udp.h"
 
 #define RAW_HYDROPHONE_SIZE (SAMPLE_LENGTH * BUFFER_PER_CHANNEL)
+#define MAX_LAG (2 * RAW_HYDROPHONE_SIZE - 1)
 
 // Variables for Sampling ==========
 float sample_period = 2.4;     // >= MIN_SAMP_PERIOD_BLOCKING, Recomended: 2.4
@@ -69,10 +73,10 @@ int32_t frequenciesOfInterestMax[FREQUENCY_LIST_LENGTH]; // 0 Hz
 int32_t frequenciesOfInterestMin[FREQUENCY_LIST_LENGTH]; // 0 Hz
 
 // Variables for Multilateration ==========
-#define TDOA_DATA_LENGTH 5                        // TODO: Should be moved into multilateration library once that is operational
-#define POSITION_DATA_LENGTH 3                    // TODO: Should be moved into multilateration library once that is operational
-double timeDifferenceOfArrival[TDOA_DATA_LENGTH]; // time difference for hydrophone 1, 2, 3, 4, 5 [s]
-double soundLocation[POSITION_DATA_LENGTH];       // X, Y, Z [m]
+#define TDOA_DATA_LENGTH 5                           // TODO: Should be moved into multilateration library once that is operational
+#define POSITION_DATA_LENGTH 3 + 1                   // TODO: Should be moved into multilateration library once that is operational
+float32_t timeDifferenceOfArrival[TDOA_DATA_LENGTH]; // time difference for hydrophone 1, 2, 3, 4, 5 [s]
+float32_t soundLocation[POSITION_DATA_LENGTH];       // X, Y, Z [m]
 
 // Variables for data transmission ==========
 int32_t lastSendTime = 0;
@@ -85,7 +89,7 @@ void setup() {
     delay(5000); //  pause to giving time to enter serial monitor
     Serial.println("1 - Debuging Setup");
     Serial.println();
-  
+
     // Debugging Setup (STOP) ====================================================================================================
 
     // Ethernet Setup (START) ====================================================================================================
@@ -282,15 +286,34 @@ void loop() {
     // Multilateration (START) ====================================================================================================
     // TODO: It is up to you my student finish acoustics for us T^T
     Serial.println("2 - MULTILATERATION: Started the Calculations");
-    timeDifferenceOfArrival[0] = 1.0;
-    timeDifferenceOfArrival[1] = 2.0;
-    timeDifferenceOfArrival[2] = 3.0;
-    timeDifferenceOfArrival[3] = 4.0;
-    timeDifferenceOfArrival[4] = 5.0;
 
-    soundLocation[0] = 7.0;
-    soundLocation[1] = 8.0;
-    soundLocation[2] = 9.0;
+    timeDifferenceOfArrival[0] = 0;
+
+    q15_t correlation_array[MAX_LAG];
+    arm_correlate_q15(samplesRawHydrophone1, RAW_HYDROPHONE_SIZE, samplesRawHydrophone2, RAW_HYDROPHONE_SIZE, correlation_array);
+    size_t peek_idx = find_peak_index(correlation_array, MAX_LAG);
+
+    timeDifferenceOfArrival[1] = ((float32_t)(peek_idx - RAW_HYDROPHONE_SIZE) / SAMPLE_RATE);
+
+    arm_correlate_q15(samplesRawHydrophone1, RAW_HYDROPHONE_SIZE, samplesRawHydrophone3, RAW_HYDROPHONE_SIZE, correlation_array);
+    peek_idx = find_peak_index(correlation_array, MAX_LAG);
+
+    timeDifferenceOfArrival[2] = ((float32_t)(peek_idx - RAW_HYDROPHONE_SIZE) / SAMPLE_RATE);
+
+    arm_correlate_q15(samplesRawHydrophone1, RAW_HYDROPHONE_SIZE, samplesRawHydrophone4, RAW_HYDROPHONE_SIZE, correlation_array);
+    peek_idx = find_peak_index(correlation_array, MAX_LAG);
+
+    timeDifferenceOfArrival[3] = ((float32_t)(peek_idx - RAW_HYDROPHONE_SIZE) / SAMPLE_RATE);
+
+    arm_correlate_q15(samplesRawHydrophone1, RAW_HYDROPHONE_SIZE, samplesRawHydrophone5, RAW_HYDROPHONE_SIZE, correlation_array);
+    peek_idx = find_peak_index(correlation_array, MAX_LAG);
+
+    timeDifferenceOfArrival[4] = ((float32_t)(peek_idx - RAW_HYDROPHONE_SIZE) / SAMPLE_RATE);
+
+    if (tdoa_multilateration(hydrophonePositions, timeDifferenceOfArrival + 1, soundLocation)) {
+      Serial.println("Multilateration failed");
+    }
+
     Serial.println("2 - MULTILATERATION: Got the results");
     // Multilateration (STOP) ====================================================================================================
 
@@ -308,8 +331,8 @@ void loop() {
 
     // send_peak_data(peaks, lengthOfPeakArray);
 
-    send_data_udp(timeDifferenceOfArrival, sizeof(double) * TDOA_DATA_LENGTH);
-    send_data_udp(soundLocation, sizeof(double) * POSITION_DATA_LENGTH);
+    send_data_udp(timeDifferenceOfArrival, sizeof(float32_t) * TDOA_DATA_LENGTH);
+    send_data_udp(soundLocation, sizeof(float32_t) * POSITION_DATA_LENGTH);
 
     UDP_clean_message_memory();
     Serial.println("3 - DATA SEND: Data sent sucsessfully");

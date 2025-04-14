@@ -1,7 +1,21 @@
-#pragma once
+#ifndef MULTILATERATION_H
+#define MULTILATERATION_H
 
+
+
+
+
+
+#include <stddef.h>
 #include "arm_math.h"
 // #include <Arduino.h>
+
+#ifdef __cplusplus
+
+extern "C"{
+
+
+#endif // __cplusplus
 
 const int32_t NUM_HYDROPHONES = 5;
 const int32_t NUM_DIMENSIONS = 3;
@@ -9,25 +23,27 @@ const int32_t NUM_DIMENSIONS = 3;
 const float32_t SOUND_SPEED = 1480.0; //[m/s]
 const int SAMPLING_FREQ = 300000;     //[Hz]
 
-struct Position {
-    float32_t X;
-    float32_t Y;
-    float32_t Z;
-};
 
 // OBS: use same x, y, z system as autonomous
-const Position hydrophonePositions[NUM_HYDROPHONES] = {
-    {-0.11, 0.31, 0.10}, // Hyd0 {x,y,z}
-    {0.11, 0.31, 0.10},  // Hyd1 {x,y,z}
-    {0.0, -0.24, 0.0},   // Hyd2 {x,y,z}
-    {0.5, -0.1, 0.4},    // Hyd3 {x,y,z}
-    {0.4, 0.0, -0.4}     // Hyd4 {x,y,z}
+const float32_t hydrophonePositions[NUM_HYDROPHONES][NUM_DIMENSIONS] = {
+    {-0.11f, 0.31f, 0.10f}, // Hydrophone 0: {x, y, z}
+    {0.11f, 0.31f, 0.10f},  // Hydrophone 1: {x, y, z}
+    {0.0f, -0.24f, 0.0f},   // Hydrophone 2: {x, y, z}
+    {0.5f, -0.1f, 0.4f},    // Hydrophone 3: {x, y, z}
+    {0.4f, 0.0f, -0.4f}     // Hydrophone 4: {x, y, z}
 };
 
-arm_status calculatePingerPosition(int32_t TdoaArray[], const Position hydrophonePositions[], const arm_matrix_instance_f32* pA, const arm_matrix_instance_f32* pB, Position* pSourcePosition);
 
-void initialComputationA(float32_t* AData, const Position hydrophonePositions[]);
-void computeA(int32_t TdoaArray[], float32_t* AData);
-void computeB(int32_t TdoaArray[], const Position hydrophonePositions[], float32_t* BData);
+size_t find_peak_index(q15_t* signal, int size);
 
-arm_status leastSquareEstimation(const arm_matrix_instance_f32* pA, const arm_matrix_instance_f32* pB, Position* pSourcePosition);
+
+arm_status tdoa_multilateration(const float32_t hydrophone_array[4][3], const float32_t TDOA[4], float32_t* result); 
+
+#ifdef __cplusplus
+
+}
+
+#endif // __cplusplus
+
+
+#endif // !MULTILATERATION_H
