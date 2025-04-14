@@ -17,7 +17,7 @@ class AcousticsDataRecordNode(Node):
     def __init__(self):
         # Variables for setting upp logging correctly
         hydrophone_data_size = (
-            (2**10) * 3
+            (2**10) * 6
         )  # 1 hydrophone buffer is 2^10 long, Each hydrophone data has 3 buffers full of this data
         dsp_data_size = 2**10  # DSP (Digital Signal Processing) has 2^10 long data
         tdoa_data_size = (

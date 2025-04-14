@@ -77,18 +77,19 @@ class AcousticsDataRecordLib:
                 ]
             )
 
-        #Making another CSV that is more readable
-            df = pd.DataFrame({
-                'Hydrophone 1': hydrophone1,
-                'Hydrophone 2': hydrophone2,
-                'Hydrophone 3': hydrophone3,
-                'Hydrophone 4': hydrophone4,
-                'Hydrophone 5': hydrophone5
-            })
+        #This made the code crash because of different array lengths...
+        # #Making another CSV that is more readable
+        #     df = pd.DataFrame({
+        #         'Hydrophone 1': hydrophone1,
+        #         'Hydrophone 2': hydrophone2,
+        #         'Hydrophone 3': hydrophone3,
+        #         'Hydrophone 4': hydrophone4,
+        #         'Hydrophone 5': hydrophone5
+        #     })
 
-            readable_dir = os.path.join(self.ros2package_directory, "readable_acoustics_data")
-            os.makedirs(readable_dir, exist_ok=True)
+        #     readable_dir = os.path.join(self.ros2package_directory, "readable_acoustics_data")
+        #     os.makedirs(readable_dir, exist_ok=True)
 
-            output_path = os.path.join(readable_dir, "readable_" + self.data_file_name)
-            df.to_csv(output_path, index=False)
-            print(f"📄 Readable CSV saved to: {output_path}")
+        #     output_path = os.path.join(readable_dir, "readable_" + self.data_file_name)
+        #     df.to_csv(output_path, index=False)
+        #     print(f"📄 Readable CSV saved to: {output_path}")
