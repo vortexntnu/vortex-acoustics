@@ -251,7 +251,6 @@ void loop() {
 
     // We make sure the last buffer that we are interested in is filled before continuing
     // This ensures we have the not only the data signal of the peak, but also what happens after the peaks in the signal frequency we are interested in
-    // adc::startConversion(sample_period, adc::BLOCKING);
     while (!adc::buffer_filled[buffer_to_check]);
     buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
 
@@ -263,7 +262,7 @@ void loop() {
 
     // Stop ADC sampling once we have every ring buffer sampled
     adc::stopConversion();
-    Serial.println("1 - SAMPLING: Stoped sampling");
+    Serial.println("1 - SAMPLING: Stopped sampling");
 
     // Process data from the ring buffers
     // active buffer is one further than the last filled one, which is the oldest one now thats why we iterate with one
@@ -339,4 +338,3 @@ void loop() {
     // A small delay for debugging (Delete later)
     // delay(1000);
 }
-

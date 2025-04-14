@@ -1,6 +1,8 @@
 # Python Libraries
 import csv
 import time
+import pandas as pd
+import os
 from datetime import datetime
 
 
@@ -8,11 +10,15 @@ class AcousticsDataRecordLib:
     def __init__(self, ros2_package_directory=""):
         # Global variables for .csv file manipulation ----------
         # Get the path for the directory where we will store our data
+        self.ros2package_directory = ros2_package_directory
+
         self.acoustics_data_directory = ros2_package_directory + "acoustics_data/"
 
         timestamp = time.strftime('%Y-%m-%d_%H:%M:%S')
-        data_file_name = 'acoustics_data_' + timestamp + '.csv'
-        self.data_file_location = self.acoustics_data_directory + data_file_name
+        self.data_file_name = 'acoustics_data_' + timestamp + '.csv'
+        
+        self.data_file_location = self.acoustics_data_directory + self.data_file_name
+
 
         self.csv_headers = [
             "Time",
@@ -32,6 +38,8 @@ class AcousticsDataRecordLib:
         with open(self.data_file_location, mode="w", newline="") as csv_file:
             writer = csv.writer(csv_file)
             writer.writerow(self.csv_headers)
+
+
 
     # Methods for external uses ----------
     def log_data_to_csv_file(
