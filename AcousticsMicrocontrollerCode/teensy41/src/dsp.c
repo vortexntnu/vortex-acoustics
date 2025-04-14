@@ -2,6 +2,7 @@
 
 #include "Include/arm_math.h"
 #include "Include/arm_const_structs.h"
+#include "dsp.h"
 #include <stdlib.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -67,11 +68,6 @@ const uint32_t doBitReverse = 1;
 
 // Constants in q_15 format done right
 const q15_t PI_q15 = (q15_t)(PI * (1 << 15) + 0.5);
-
-
-
-
-
 
 
 static q15_t q15_divide(q15_t a, q15_t b) {
@@ -337,12 +333,6 @@ we return the peaks:
     - Phase shift
 */
 
-typedef struct {
-    size_t index;      // FFT bin index (optional, for debugging)
-    q31_t amplitude;   // Peak amplitude (converted to Q31)
-    q31_t frequency;   // Frequency (in Hz, represented in Q31 if needed)
-    q15_t phase;       // Phase shift in Q15 format
-} Peak;
 
 /*
  * peak_detection():

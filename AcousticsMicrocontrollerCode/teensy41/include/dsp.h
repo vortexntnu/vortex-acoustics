@@ -1,7 +1,5 @@
-#include "arm_const_structs.h"
-#include "arm_math.h"
-#include <Arduino.h>
-#include <vector>
+#include "Include/arm_const_structs.h"
+#include "Include/arm_math.h"
 
 // How fast the ADC samples, important to know for FFT, the max is 510 kHz, HOWEVER for some reason ADC can not go max, real value is lower at:
 #define SAMPLE_RATE 430000 // 430.0 kHz
@@ -22,19 +20,21 @@
 // A manual variable to filter out small peaks that don't manage to get over the threshold, so called "fake peaks"
 #define PEAK_THRESHOLD 1000
 
-namespace DigitalSignalProcessing {
-    q15_t* filter_butterwort_9th_order_50kHz(int16_t* samplesRaw);
-    q15_t* filter_butterwort_2th_order_50kHz(int16_t* samplesRaw);
-    q15_t* filter_butterwort_1th_order_50kHz(int16_t* samplesRaw);
+typedef struct {
+    size_t index;    // FFT bin index (optional, for debugging)
+    q31_t amplitude; // Peak amplitude (converted to Q31)
+    q31_t frequency; // Frequency (in Hz, represented in Q31 if needed)
+    q15_t phase;     // Phase shift in Q15 format
+} Peak;
 
-    q15_t* FFT_raw(q15_t* samples);
-    q15_t* FFT_mag(q15_t* resultsRaw);
+q15_t* filter_butterwort_9th_order_50kHz(int16_t* samplesRaw);
+q15_t* filter_butterwort_2th_order_50kHz(int16_t* samplesRaw);
+q15_t* filter_butterwort_1th_order_50kHz(int16_t* samplesRaw);
 
-    std::vector<std::vector<q31_t>> peak_detection(q15_t* resultsRaw, q15_t* results);
+q15_t* FFT_raw(q15_t* samples);
+q15_t* FFT_mag(q15_t* resultsRaw);
 
-    float32_t phaseQ31_to_radianFloat32(q31_t phaseQ15);
+Peak* peak_detection(const q15_t *resultsRaw, const q15_t *results, size_t *out_num_peaks); 
 
-    // Making sure the inside functions are seen
-    q15_t q15_divide(q15_t a, q15_t b);
-    q15_t q15_taylor_atan(q15_t x);
-}
+float32_t phaseQ31_to_radianFloat32(q31_t phaseQ15);
+
