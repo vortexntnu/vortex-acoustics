@@ -1,9 +1,11 @@
-#include "teensyUDP.h"
+#include "EthernetProtocol/teensyUDP.h"
+#include <cstdint>
 
 namespace teensyUDP {
-void frequency_data_from_client(int32_t *frequenciesOfInterest, int32_t* frequencyVariances) {
+void frequency_data_from_client(int32_t* frequenciesOfInterest, int32_t* frequencyVariances) {
     for (int i = 0; i < FREQUENCY_LIST_LENGTH; i++) {
-        while (!ethernetModule::UDP_check_if_connected());
+        while (!ethernetModule::UDP_check_if_connected())
+            ;
 
         char* frequencyMessage = ethernetModule::UDP_read_message();
         char* token;
@@ -13,7 +15,21 @@ void frequency_data_from_client(int32_t *frequenciesOfInterest, int32_t* frequen
         frequenciesOfInterest[i] = atoi(token);
         frequencyVariances[i] = atoi(strtok(NULL, ","));
 
-        Serial.print(frequenciesOfInterest[i]); Serial.print(", "); Serial.println(frequencyVariances[i]);
+        Serial.print(frequenciesOfInterest[i]);
+        Serial.print(", ");
+        Serial.println(frequencyVariances[i]);
+    }
+}
+
+
+void send_data(void* data, uint32_t length) {
+    uint8_t *data_ptr = (uint8_t*)data;
+    uint32_t offset = 0;
+    
+    while (offset < length) {
+        uint32_t chunk = (length - offset > MAX_CLIENT_CAPACITY) ? MAX_CLIENT_CAPACITY : (length - offset);
+        ethernetModule::UDP_send_message_raw(data_ptr + offset, chunk);
+        offset += chunk;
     }
 }
 
@@ -146,8 +162,7 @@ void send_data_64Bit(double* data, int32_t lengthOfData) {
     free(dataBuffer);
 }
 
-
-void send_hydrophone_data(int16_t* hydrophone, int16_t lengthOfData, char hydrophone_num) { 
+void send_hydrophone_data(int16_t* hydrophone, int16_t lengthOfData, char hydrophone_num) {
     char message[] = "HYDROPHONE_x";
     message[11] = hydrophone_num;
     ethernetModule::UDP_send_message(message, 12, 0);
@@ -158,10 +173,10 @@ void send_hydrophone_data(int16_t* hydrophone, int16_t lengthOfData, char hydrop
         tempHydrophoneBuffer[i] = (int16_t)hydrophone[i];
     }
 
-    send_data_16Bit(tempHydrophoneBuffer, lengthOfData); 
+    send_data_16Bit(tempHydrophoneBuffer, lengthOfData);
 }
 
-void send_samples_raw_data(int16_t* samplesRaw, int16_t lengthOfData) { 
+void send_samples_raw_data(int16_t* samplesRaw, int16_t lengthOfData) {
     char message[] = "SAMPLES_RAW";
     ethernetModule::UDP_send_message(message, 11, 0);
 
@@ -171,7 +186,7 @@ void send_samples_raw_data(int16_t* samplesRaw, int16_t lengthOfData) {
         tempSamplesRawBuffer[i] = (int16_t)samplesRaw[i];
     }
 
-    send_data_16Bit(tempSamplesRawBuffer, lengthOfData); 
+    send_data_16Bit(tempSamplesRawBuffer, lengthOfData);
 }
 
 void send_samples_filtered_data(q15_t* samplesFiltered, int16_t lengthOfData) {
@@ -219,19 +234,19 @@ void send_peak_data(std::vector<std::vector<q31_t>> peakData, int16_t lengthOfPe
     }
 }
 
-void send_tdoa_data(double* tdoaData, int8_t lengthOfData) { 
+void send_tdoa_data(double* tdoaData, int8_t lengthOfData) {
     char message[] = "TDOA";
     ethernetModule::UDP_send_message(message, 4, 0);
-    send_data_64Bit(tdoaData, lengthOfData); 
+    send_data_64Bit(tdoaData, lengthOfData);
 }
 
-void send_location_data(double* locationData, int8_t lengthOfData) { 
+void send_location_data(double* locationData, int8_t lengthOfData) {
     char message[] = "LOCATION";
     ethernetModule::UDP_send_message(message, 8, 0);
-    send_data_64Bit(locationData, lengthOfData); 
+    send_data_64Bit(locationData, lengthOfData);
 }
 
-void setupTeensyCommunication(int32_t *frequenciesOfInterest, int32_t* frequencyVariances) {
+void setupTeensyCommunication(int32_t* frequenciesOfInterest, int32_t* frequencyVariances) {
     ethernetModule::UDP_send_ready_signal(ethernetModule::get_remoteIP(), ethernetModule::get_remotePort());
 
     // After this, the client and teensy are connected

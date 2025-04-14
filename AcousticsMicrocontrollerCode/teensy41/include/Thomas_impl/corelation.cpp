@@ -1,12 +1,8 @@
-#include <vector>
-#include <algorithm>
-#include <arm_math.h>
 #include "corelation.h"
 #include <Arduino.h>
-
-
-
-
+#include <algorithm>
+#include <arm_math.h>
+#include <vector>
 
 // Custom correlation with 64-bit accumulation to avoid overflow.
 
@@ -28,22 +24,20 @@ void crosscorelation(const int* signal1, const int* signal2, int size, int* resu
             int idx = lag + i;
             int val = 0;
             // Zero padding: valid indices for signal2 are [n-1, n-1+n-1]
-            if (idx > size && idx < 2*size) {
+            if (idx > size && idx < 2 * size) {
                 int j = idx - size;
                 val = signal2[j];
             }
             sum += (int64_t)signal1[i] * val;
         }
 
-    // Divide by 1000 with rounding (add half of 1000) to minimize precision loss
-    result[lag] = (int)((sum + 500) / 1000);
-  }
+        // Divide by 1000 with rounding (add half of 1000) to minimize precision loss
+        result[lag] = (int)((sum + 500) / 1000);
+    }
 }
- 
-
 
 int find_peak_index(int32_t* signal, int size) {
-    // If the signal is empty, return 0 
+    // If the signal is empty, return 0
     if (size == 0) {
         return 0;
     }
@@ -61,63 +55,44 @@ int find_peak_index(int32_t* signal, int size) {
     return peakIndex;
 }
 
-
-
-
-
-
 // Compute a cross-correlation lag between two signals using a brute-force approach.
-void crosscorelation_2(const int* x, const int* y, const int size, int32_t* result){
+void crosscorelation_2(const int* x, const int* y, const int size, int32_t* result) {
 
-    
-    int output_size = 2*size-1;
+    int output_size = 2 * size - 1;
 
     // makes a new arrays with twise-1 the length of the original for correlation.
-    int long_x[output_size] = {0}; 
+    int long_x[output_size] = {0};
     int long_y[output_size] = {0};
 
     for (int i = 0; i < size; i++) {
         long_x[i] = x[i];
-        long_y[size + i-1] = y[i];
+        long_y[size + i - 1] = y[i];
     }
 
-    
-
-    
-    for (int i = 0; i < (output_size); i++){
+    for (int i = 0; i < (output_size); i++) {
         result[i] = 0; // To make it ready for input
 
         // this shifts every element in x one space to the right starting from the back
-        for (int j = output_size-1; j > 0; j--){
+        for (int j = output_size - 1; j > 0; j--) {
             long_x[j] = long_x[j - 1];
         }
         long_x[0] = 0;
 
-
-
-        for (int k = 0; k < output_size; k++){
-            result[i] += long_x[k]*long_y[k];
+        for (int k = 0; k < output_size; k++) {
+            result[i] += long_x[k] * long_y[k];
         }
     }
-             
-        
 }
 
-
-
-
-
-
-void arm_correlation(const int *pSrcA_int, uint32_t srcALen,
-                     const int *pSrcB_int, uint32_t srcBLen,
-                     int32_t *pDst_int)
-{
+void arm_correlation(const int* pSrcA_int, uint32_t srcALen, const int* pSrcB_int, uint32_t srcBLen, int32_t* pDst_int) {
     // Allocate temporary float arrays for inputs.
-    float32_t *pSrcA = (float32_t *) malloc(srcALen * sizeof(float32_t));
-    float32_t *pSrcB = (float32_t *) malloc(srcBLen * sizeof(float32_t));
+    float32_t* pSrcA = (float32_t*)malloc(srcALen * sizeof(float32_t));
+    float32_t* pSrcB = (float32_t*)malloc(srcBLen * sizeof(float32_t));
     if (pSrcA == NULL || pSrcB == NULL) {
-        if (pSrcA) free(pSrcA);
-        if (pSrcB) free(pSrcB);
+        if (pSrcA)
+            free(pSrcA);
+        if (pSrcB)
+            free(pSrcB);
         return;
     }
 
@@ -131,7 +106,7 @@ void arm_correlation(const int *pSrcA_int, uint32_t srcALen,
 
     // Output length for correlation
     uint32_t outLen = srcALen + srcBLen - 1;
-    float32_t *pDst = (float32_t *) malloc(outLen * sizeof(float32_t));
+    float32_t* pDst = (float32_t*)malloc(outLen * sizeof(float32_t));
     if (pDst == NULL) {
         free(pSrcA);
         free(pSrcB);
@@ -170,4 +145,13 @@ void arm_correlation(const int *pSrcA_int, uint32_t srcALen,
     free(pDst);
     free(pSrcA);
     free(pSrcB);
+}
+
+int arm_correlation_q15(const q15_t* pSrcA, uint32_t srcALen, const q15_t* pSrcB, uint32_t srcBLen, q15_t* pDst_int) {
+
+    arm_status status = arm_correlate_q15(pSrcA, srcALen, pSrcB, srcBLen, pDst_int);
+    if (status != ARM_MATH_SUCCESS) {
+        return -1;
+    }
+    return 0;
 }

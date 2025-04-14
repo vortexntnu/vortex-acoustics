@@ -1,4 +1,5 @@
 #include "ethernetModule.h"
+#include <cstdint>
 
 // Networking variables
 byte macAddressTeensy[] = {0x00, 0x01, 0xBE, 0xEE, 0xFE, 0xED};
@@ -99,6 +100,15 @@ void UDP_send_message(char* UDPReplyBuffer, int16_t sizeOfMessage, int16_t start
         tempByte = (byte)UDPReplyBuffer[i];
         Udp.write(tempByte);
     }
+    Udp.endPacket();
+}
+
+void UDP_send_message_raw(void* UDPReplyBuffer, uint32_t sizeOfMessage){
+    IPAddress remoteIP = Udp.remoteIP();
+    uint16_t remotePort = Udp.remotePort();
+
+    Udp.beginPacket(remoteIP, remotePort);
+    Udp.write((const uint8_t*)data, dataSize);
     Udp.endPacket();
 }
 

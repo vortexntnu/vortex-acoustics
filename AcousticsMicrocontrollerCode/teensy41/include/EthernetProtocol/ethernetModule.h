@@ -16,5 +16,7 @@ char* UDP_read_message();
 
 void UDP_send_message(char* UDPReplyBuffer, int16_t sizeOfMessage, int16_t startIndexForMessage);
 
+void UDP_send_message_raw(void* UDPReplyBuffer, uint32_t sizeOfMessage);
+
 void UDP_clean_message_memory();
 } // namespace ethernetModule

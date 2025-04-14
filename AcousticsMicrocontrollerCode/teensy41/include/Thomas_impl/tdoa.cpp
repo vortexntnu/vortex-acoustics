@@ -30,7 +30,7 @@ Pos tdoa_multilateration(std::vector<Pos> hydrophone_array, std::vector<float32_
     //d == c*TDOA
     float32_t const c = 1500;
 
-    std::vector<float32_t> distances = TDOA;
+    std::array<float32_t, 4> distances = TDOA;
     for (size_t i = 0; i < distances.size(); i++){
         distances.at(i) *= c;
     };
@@ -78,14 +78,10 @@ Pos tdoa_multilateration(std::vector<Pos> hydrophone_array, std::vector<float32_
 
 
         if (status == ARM_MATH_SUCCESS){
-            // Store the result in a std::vector
-            for (int i = 0; i < 4; i++) {
-                result_vect_format[i] = resulting_data[i];
-            }
         }
     }
 
-    return Pos(result_vect_format); // this will return all zeros if some calculationes failed
+    return resulting_data;
 }
 
 
