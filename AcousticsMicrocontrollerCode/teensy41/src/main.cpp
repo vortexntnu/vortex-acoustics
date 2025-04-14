@@ -191,8 +191,7 @@ void loop() {
     while (!found) {
         // Start sampling into the buffer and wait until the latest one is filled before moving on and leting it continue to fill up into the next buffer
         while (!adc::buffer_filled[buffer_to_check]);
-        buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
-while (!adc::buffer_filled[buffer_to_check]);
+
         // Save raw sampled data from ADC
         for (uint16_t i = 0; i < SAMPLE_LENGTH; i++) {
             samplesRawForDSP[i] = (int16_t)adc::channel_buff_ptr[1][buffer_to_check][i];
@@ -260,7 +259,7 @@ while (!adc::buffer_filled[buffer_to_check]);
     buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
 
     while (!adc::buffer_filled[buffer_to_check]);
-    // buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
+    buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
 
     // Stop ADC sampling once we have every ring buffer sampled
     adc::stopConversion();
