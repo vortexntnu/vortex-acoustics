@@ -85,6 +85,7 @@ void setup() {
     delay(5000); //  pause to giving time to enter serial monitor
     Serial.println("1 - Debuging Setup");
     Serial.println();
+  
     // Debugging Setup (STOP) ====================================================================================================
 
     // Ethernet Setup (START) ====================================================================================================
@@ -218,12 +219,12 @@ void loop() {
         }
 
         // Clean up the allocated peaks array when done.
-        free(peaks);
+        // free(peaks);
 
         // Take further actions depending on whether a frequency of interest was found
         if (found) {
-        } 
-               buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
+        }
+        buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
         // Check if sampling has taken to long and if so exit the loop and try again later
         if (millis() - samplingStartTime > SAMPLING_TIMEOUT) {
             //Serial.println("1 - SAMPLING: !WARNING! Sampling timed out");
