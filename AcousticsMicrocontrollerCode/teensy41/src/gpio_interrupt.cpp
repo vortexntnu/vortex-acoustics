@@ -1,4 +1,4 @@
-#include "gpioInterrupt.h"
+#include "gpio_interrupt.h"
 #include "core_pins.h"
 
 namespace gpioInterrupt {

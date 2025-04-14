@@ -1,7 +1,7 @@
 #pragma once
 #include "core_pins.h"
 #include "imxrt.h"
-#include "ringBuffer.h"
+#include "ring_buffer.h"
 
 extern uint8_t DMA_test_variable;
 

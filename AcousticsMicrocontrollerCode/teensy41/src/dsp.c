@@ -28,12 +28,12 @@
 // A manual variable to filter out small peaks that don't manage to get over the threshold, so called "fake peaks"
 #define PEAK_THRESHOLD 1000
 
+#define fOrder  9
+#define fOrder2  2
 
 // We do not care about frequencies up to 510k Hz, so we define a variable for
 // indexes of indexes, go to the h file
 const q15_t samplesOfInterest = FREQUENCY_LIMIT * SAMPLE_LENGTH / SAMPLE_RATE;
-const int fOrder = 9;
-const int fOrder2 = 2;
 
 /*
 Coefficients for filter found at https://www.meme.net.au/butterworth.html,
@@ -322,17 +322,6 @@ q15_t *FFT_mag(q15_t *resultsRaw) {
   return results;
 }
 
-/*
-We will be returning q31_t datatypes as
-the frequency numbers become too great to
-handle for q15_t
-Here we take inn FFT response and return the peaks we find
-we return the peaks:
-    - Amplitude
-    - Frequency
-    - Phase shift
-*/
-
 
 /*
  * peak_detection():
@@ -447,4 +436,3 @@ Peak* peak_detection(const q15_t *resultsRaw, const q15_t *results, size_t *out_
         return final_peaks;
     }
 }
-

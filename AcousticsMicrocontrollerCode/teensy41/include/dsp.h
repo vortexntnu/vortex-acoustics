@@ -1,5 +1,5 @@
-#include "Include/arm_const_structs.h"
-#include "Include/arm_math.h"
+#ifndef DSP_H
+#define DSP_H
 
 // How fast the ADC samples, important to know for FFT, the max is 510 kHz, HOWEVER for some reason ADC can not go max, real value is lower at:
 #define SAMPLE_RATE 430000 // 430.0 kHz
@@ -20,6 +20,17 @@
 // A manual variable to filter out small peaks that don't manage to get over the threshold, so called "fake peaks"
 #define PEAK_THRESHOLD 1000
 
+#ifdef __cplusplus
+
+extern "C"{
+
+#endif // __cplusplus
+
+#include "Include/arm_const_structs.h"
+#include "Include/arm_math.h"
+
+
+
 typedef struct {
     size_t index;    // FFT bin index (optional, for debugging)
     q31_t amplitude; // Peak amplitude (converted to Q31)
@@ -38,3 +49,8 @@ Peak* peak_detection(const q15_t *resultsRaw, const q15_t *results, size_t *out_
 
 float32_t phaseQ31_to_radianFloat32(q31_t phaseQ15);
 
+#ifdef __cplusplus
+}
+#endif // __cplusplus
+
+#endif // !DSP_H

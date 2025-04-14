@@ -1,4 +1,4 @@
-#include "PIT.h"
+#include "pit.h"
 
 #include <Arduino.h>
 

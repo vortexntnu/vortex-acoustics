@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <NativeEthernet.h>
 #include <NativeEthernetUdp.h>
-#include <stdint.h>
+#include <cstdint>
 
 void UDP_init();
 

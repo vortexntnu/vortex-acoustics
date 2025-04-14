@@ -2,10 +2,10 @@
 #include "Arduino.h"
 #include "DMAChannel.h"
 #include "GPT.h"
-#include "PIT.h"
+#include "pit.h"
 #include "clock.h"
 #include "gpio.h"
-#include "gpioInterrupt.h"
+#include "gpio_interrupt.h"
 
 // used to link Quad timers to DMA channels
 extern "C" void xbar_connect(unsigned int input, unsigned int output); // in pwm.c

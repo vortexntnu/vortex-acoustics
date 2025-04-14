@@ -1,4 +1,4 @@
-#include "EthernetProtocol/ethernetModule.h"
+#include "ethernet_module.h"
 
 
 byte macAddressTeensy[] = {0x00, 0x01, 0xBE, 0xEE, 0xFE, 0xED};
@@ -86,7 +86,7 @@ char* UDP_read_message() {
 }
 
 
-void UDP_send_message_raw(void* UDPReplyBuffer, uint32_t sizeOfMessage){
+void UDP_send_message_raw(void* data, uint32_t dataSize){
     IPAddress remoteIP = Udp.remoteIP();
     uint16_t remotePort = Udp.remotePort();
 
