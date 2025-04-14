@@ -295,19 +295,47 @@ void loop() {
     // Multilateration (START) ====================================================================================================
     // TODO: It is up to you my student finish acoustics for us T^T
     Serial.println("2 - MULTILATERATION: Started the Calculations");
-    timeDifferenceOfArrival[0] = 1.0;
-    timeDifferenceOfArrival[1] = 2.0;
-    timeDifferenceOfArrival[2] = 3.0;
-    timeDifferenceOfArrival[3] = 4.0;
-    timeDifferenceOfArrival[4] = 5.0;
+    Serial.println();
+    Serial.println("--------------------------------");
+    
+    {
+        Multilateration::Pos real_pinger_pos(-3, 6, 2);
+        Serial.println("Real: ");
+        real_pinger_pos.display();
+        
 
-    soundLocation[0] = 7.0;
-    soundLocation[1] = 8.0;
-    soundLocation[2] = 9.0;
+        std::vector<float32_t> TDOA;
+
+        // Testing
+        for (int i = 0; i < TDOA_DATA_LENGHT; i++){
+            TDOA.push_back(Multilateration::calculate_tdoa(Multilateration::hydrophonePositions[i+1], real_pinger_pos, 1500));
+        }
+
+        int hydrophone_data_array[NUM_HYDROPHONES][HYDROPHONE_DATA_SIZE] = {0};
+
+        for (int i = 0; i < HYDROPHONE_DATA_SIZE; i++){
+            hydrophone_data_array[0][i]=hydrophone0[i];
+        }
+        
+
+        for (int i = 0; i < NUM_HYDROPHONES-1; i++) {
+            int timelaged_array[HYDROPHONE_DATA_SIZE];
+            add_timelag_array(hydrophone0, HYDROPHONE_DATA_SIZE, TDOA[i], SAMPLE_RATE, timelaged_array);
+            
+            for (int j = 0; j < HYDROPHONE_DATA_SIZE; j++){
+                hydrophone_data_array[i+1][j] = timelaged_array[j];
+            }
+        }
+
+        Multilateration::Pos pinger = Multilateration::find_pinger(hydrophone_data_array, TDOA_VALUES, SAMPLE_RATE);
+        Serial.println("Calculated: ");
+        pinger.display();
+    }
+
+    Serial.println("--------------------------------");
+    Serial.println();
     Serial.println("2 - MULTILATERATION: Got the results");
     // Multilateration (STOP) ====================================================================================================
-
-
 
     // Send data (START) ====================================================================================================
     Serial.println("3 - DATA SEND: Start sending data");
