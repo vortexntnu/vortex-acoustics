@@ -1,8 +1,8 @@
 #include <Arduino.h>
 #include <NativeEthernet.h>
 #include <NativeEthernetUdp.h>
+#include <stdint.h>
 
-namespace ethernetModule {
 void UDP_init();
 
 int16_t UDP_check_if_connected();
@@ -19,4 +19,3 @@ void UDP_send_message(char* UDPReplyBuffer, int16_t sizeOfMessage, int16_t start
 void UDP_send_message_raw(void* UDPReplyBuffer, uint32_t sizeOfMessage);
 
 void UDP_clean_message_memory();
-} // namespace ethernetModule

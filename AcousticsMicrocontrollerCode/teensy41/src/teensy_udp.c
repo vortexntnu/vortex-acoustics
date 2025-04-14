@@ -1,4 +1,4 @@
-#include "EthernetProtocol/ethernetModule.h"
+#include "teensyUDP.h"
 
 
 void frequency_data_from_client(int32_t* frequenciesOfInterest, int32_t* frequencyVariances) {
@@ -6,7 +6,7 @@ void frequency_data_from_client(int32_t* frequenciesOfInterest, int32_t* frequen
         while (!UDP_check_if_connected())
             ;
 
-        char* frequencyMessage = ethernetModule::UDP_read_message();
+        char* frequencyMessage = UDP_read_message();
         char* token;
 
         token = strtok(frequencyMessage, ",");
@@ -36,7 +36,7 @@ void send_data(void* data, uint32_t length) {
 
 
 void setupTeensyCommunication(int32_t* frequenciesOfInterest, int32_t* frequencyVariances) {
-    UDP_send_ready_signal(ethernetModule::get_remoteIP(), ethernetModule::get_remotePort());
+    UDP_send_ready_signal(get_remoteIP(), get_remotePort());
 
     // After this, the client and teensy are connected
     frequency_data_from_client(frequenciesOfInterest, frequencyVariances);
