@@ -251,7 +251,6 @@ void loop() {
 
     // We make sure the last buffer that we are interested in is filled before continuing
     // This ensures we have the not only the data signal of the peak, but also what happens after the peaks in the signal frequency we are interested in
-    // adc::startConversion(sample_period, adc::BLOCKING);
     while (!adc::buffer_filled[buffer_to_check]);
     buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
 
