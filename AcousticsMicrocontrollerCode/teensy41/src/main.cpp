@@ -25,6 +25,7 @@ License: MIT
 // Arduino Libraries
 #include <Arduino.h>
 #include <cstddef>
+#include <cstring>
 #include <vector>
 
 // Sampling Analog to Digital Converter (ADC) Libraries
@@ -218,8 +219,8 @@ void loop() {
             int32_t peakFrequency = peaks[i][1];
             // Serial.println();
             // Serial.println("Found peak");
-            for (int i = 0; i < FREQUENCY_LIST_LENGTH; i++) {
-                if ((peakFrequency < frequenciesOfInterestMax[i]) && (peakFrequency > frequenciesOfInterestMin[i])) {
+            for (int j = 0; j < FREQUENCY_LIST_LENGTH; j++) {
+                if ((peakFrequency < frequenciesOfInterestMax[j]) && (peakFrequency > frequenciesOfInterestMin[j])) {
                     found = 1;
                 }
             }
@@ -272,6 +273,7 @@ void loop() {
             samplesRawHydrophone3[index] = (int16_t)adc::channel_buff_ptr[3][bufferIndex][u];
             samplesRawHydrophone4[index] = (int16_t)adc::channel_buff_ptr[4][bufferIndex][u];
             samplesRawHydrophone5[index] = (int16_t)adc::channel_buff_ptr[0][bufferIndex][u];
+            
         }
         bufferIndex = (bufferIndex + 1) % BUFFER_PER_CHANNEL;
     }
@@ -281,6 +283,7 @@ void loop() {
     for (uint8_t i = 0; i < BUFFER_PER_CHANNEL; i++) {
         adc::buffer_filled[i] = 0;
     }
+    
     // Sampling (STOP) ====================================================================================================
 
     // Multilateration (START) ====================================================================================================
@@ -310,6 +313,7 @@ void loop() {
     if (tdoa_multilateration(hydrophonePositions + 1, timeDifferenceOfArrival + 1, soundLocation)) {
         Serial.println("Multilateration failed");
     }
+    
 
     Serial.println("2 - MULTILATERATION: Got the results");
     // Multilateration (STOP) ====================================================================================================
