@@ -24,6 +24,7 @@ void frequency_data_from_client(int32_t* frequenciesOfInterest, int32_t* frequen
 // The teensy is little endian, this means that
 // LSB comes first
 void send_data_udp(void* data, uint32_t length) {
+    
     uint8_t *data_ptr = (uint8_t*)data;
     uint32_t offset = 0;
     

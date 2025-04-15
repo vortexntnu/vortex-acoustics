@@ -2,6 +2,28 @@
 
 
 #include "acoustics_interface_driver.h"
+#include <stdint.h>
+
+#define SAMPLE_LENGTH 1024
+#define BUFFER_PER_CHANNEL 6
+#define RAW_HYDROPHONE_SIZE (SAMPLE_LENGTH * BUFFER_PER_CHANNEL)
+
+int16_t samples_raw_hydrophone1[RAW_HYDROPHONE_SIZE];
+int16_t samples_raw_hydrophone2[RAW_HYDROPHONE_SIZE];
+int16_t samples_raw_hydrophone3[RAW_HYDROPHONE_SIZE];
+int16_t samples_raw_hydrophone4[RAW_HYDROPHONE_SIZE];
+int16_t samples_raw_hydrophone5[RAW_HYDROPHONE_SIZE];
+
+int16_t samples_filtered[SAMPLE_LENGTH];
+int16_t fft_magnified[2 * SAMPLE_LENGTH];
+
+
+int32_t peaks[10];
+
+float time_difference_of_arrival[4];
+float pinger_position[3];
+
+
 
 
 
@@ -135,7 +157,7 @@ void send_frequencies_of_interest(TeensyCommunicationUDP *comm,
 void fetch_data(TeensyCommunicationUDP *comm) {
   int attempts = 0;
   while (attempts < 1000) {
-    char buffer[1024] = {0};
+    uint8_t buffer[1024] = {0};
     socklen_t addrlen = sizeof(comm->teensy_addr);
     int n = recvfrom(comm->client_socket, buffer, sizeof(buffer) - 1, 0,
                      (struct sockaddr *)&comm->teensy_addr, &addrlen);
@@ -143,7 +165,10 @@ void fetch_data(TeensyCommunicationUDP *comm) {
       break;
     }
     buffer[n] = '\0';
-    printf("Received: %s\n", buffer);
     attempts++;
   }
-}
+
+
+
+
+
