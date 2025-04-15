@@ -1,0 +1,6 @@
+
+CompileFlags:
+  Add: 
+    - -I/home/nathaniel/acoustics_ws/src/vortex-acoustics/AcousticsInterface/acoustics_interface/include/
+    - -Wall
+    - -Wextra

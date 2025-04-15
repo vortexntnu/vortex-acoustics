@@ -1,8 +1,21 @@
 
 
-
 #include "acoustics_interface_driver.h"
+#include <arpa/inet.h>
+#include <assert.h>
+#include <errno.h>
+#include <ifaddrs.h>
+#include <netdb.h>
+#include <netinet/in.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <time.h>
+#include <unistd.h>
 
 #define SAMPLE_LENGTH 1024
 #define BUFFER_PER_CHANNEL 6
@@ -14,45 +27,44 @@ int16_t samples_raw_hydrophone3[RAW_HYDROPHONE_SIZE];
 int16_t samples_raw_hydrophone4[RAW_HYDROPHONE_SIZE];
 int16_t samples_raw_hydrophone5[RAW_HYDROPHONE_SIZE];
 
+int16_t *samples_raw_hydrophones[5] = {
+    samples_raw_hydrophone1, samples_raw_hydrophone2, samples_raw_hydrophone3,
+    samples_raw_hydrophone4, samples_raw_hydrophone5};
+
 int16_t samples_filtered[SAMPLE_LENGTH];
 int16_t fft_magnified[2 * SAMPLE_LENGTH];
-
 
 int32_t peaks[10];
 
 float time_difference_of_arrival[4];
 float pinger_position[3];
 
-
-
-
-
 char *get_local_ip(void) {
-    struct ifaddrs *ifaddr, *ifa;
-    static char ip[INET_ADDRSTRLEN] = "127.0.0.1";  // Default IP
+  struct ifaddrs *ifaddr, *ifa;
+  static char ip[INET_ADDRSTRLEN] = "127.0.0.1"; // Default IP
 
-    if (getifaddrs(&ifaddr) == -1) {
-        perror("getifaddrs");
-        return ip;
-    }
-
-    for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
-        if (ifa->ifa_addr == NULL)
-            continue;
-
-        if (ifa->ifa_addr->sa_family == AF_INET) {
-            if (strcmp(ifa->ifa_name, "lo") == 0)
-                continue;
-
-            struct sockaddr_in *addr = (struct sockaddr_in *)ifa->ifa_addr;
-            if (inet_ntop(AF_INET, &(addr->sin_addr), ip, INET_ADDRSTRLEN) != NULL) {
-                break;
-            }
-        }
-    }
-
-    freeifaddrs(ifaddr);
+  if (getifaddrs(&ifaddr) == -1) {
+    perror("getifaddrs");
     return ip;
+  }
+
+  for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
+    if (ifa->ifa_addr == NULL)
+      continue;
+
+    if (ifa->ifa_addr->sa_family == AF_INET) {
+      if (strcmp(ifa->ifa_name, "lo") == 0)
+        continue;
+
+      struct sockaddr_in *addr = (struct sockaddr_in *)ifa->ifa_addr;
+      if (inet_ntop(AF_INET, &(addr->sin_addr), ip, INET_ADDRSTRLEN) != NULL) {
+        break;
+      }
+    }
+  }
+
+  freeifaddrs(ifaddr);
+  return ip;
 }
 
 int init_communication(TeensyCommunicationUDP *comm, FrequencyInterest freq[],
@@ -121,7 +133,6 @@ void send_acknowledge_signal(TeensyCommunicationUDP *comm) {
   }
 }
 
-
 int check_if_ready(TeensyCommunicationUDP *comm) {
   char buffer[1024] = {0};
   socklen_t addrlen = sizeof(comm->teensy_addr);
@@ -167,8 +178,18 @@ void fetch_data(TeensyCommunicationUDP *comm) {
     buffer[n] = '\0';
     attempts++;
   }
+}
 
-
-
-
-
+void handle_data(uint8_t *buffer, int length) {
+  static uint16_t msg_num = 0;
+  static uint16_t offset = 0;
+  if (msg_num < 5) {
+    memcpy(samples_raw_hydrophones[msg_num] + offset, buffer, length);
+    offset += length;
+    if (offset == RAW_HYDROPHONE_SIZE) {
+      msg_num += 1;
+      offset = 0;
+    }
+  }
+  
+}

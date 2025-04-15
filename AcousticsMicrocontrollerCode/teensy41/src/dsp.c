@@ -3,11 +3,6 @@
 #include "Include/arm_math.h"
 #include "Include/arm_const_structs.h"
 #include "dsp.h"
-#include <stdlib.h>
-#include <stdint.h>
-#include <stddef.h>
-#include <string.h>  // for memset()
-#include <stdio.h>   // for debugging prints, if needed
 
 // How fast the ADC samples, important to know for FFT, the max is 510 kHz, HOWEVER for some reason ADC can not go max, real value is lower at:
 #define SAMPLE_RATE 430000 // 430.0 kHz
@@ -210,35 +205,6 @@ q15_t *filter_butterwort_2th_order_50kHz(int16_t *samplesRaw) {
   return samples;
 }
 
-q15_t *filter_butterwort_1th_order_50kHz(int16_t *samplesRaw) {
-  // Create array to store the filtered samples
-  static q15_t samples[SAMPLE_LENGTH];
-  int16_t i = 1;
-  static q15_t input[2] = {0, 0};  // Buffer for previous inputs
-  static q15_t output[2] = {0, 0}; // Buffer for previous outputs
-  q15_t inputTotal = 0;
-  q15_t outputTotal = 0;
-
-  for (int index = 0; index < SAMPLE_LENGTH; index++) {
-    // shift the old samples
-    input[i - 1] = input[i];
-    output[i - 1] = output[i];
-
-    // get the new input
-    input[i] = (q15_t)samplesRaw[index] * FILTER_AMPLIFICATION;
-
-    // calculate the new output
-    inputTotal =
-        bFilterCoeffs1[0] * input[i - 0] + bFilterCoeffs1[1] * input[i - 1];
-    outputTotal = aFilterCoeffs1[1] * output[i - 1];
-    output[i] = inputTotal - outputTotal;
-    output[i] = aFilterCoeffs1[0] * output[i - 0];
-
-    // store the new output
-    samples[index] = output[i];
-  }
-  return samples;
-}
 
 
 q15_t *filter_butterworth_1st_order_50kHz(const int16_t *samplesRaw) {
@@ -338,7 +304,7 @@ Peak* peak_detection(const q15_t *resultsRaw, const q15_t *results, size_t *out_
     size_t candidate_count = 0;
 
     // Allocate worst-case candidate array (each bin might be a candidate)
-    Peak *candidates = malloc(SAMPLE_LENGTH * sizeof(Peak));
+    Peak *candidates = (Peak *) malloc(SAMPLE_LENGTH * sizeof(Peak));
     if (!candidates) {
         *out_num_peaks = 0;
         return NULL;
@@ -359,7 +325,7 @@ Peak* peak_detection(const q15_t *resultsRaw, const q15_t *results, size_t *out_
     }
 
     // Prepare to compute a median from the first samplesOfInterest values of 'results'.
-    q15_t *resultsSort = malloc(samplesOfInterest * sizeof(q15_t));
+    q15_t *resultsSort = (q15_t *) malloc(samplesOfInterest * sizeof(q15_t));
     if (!resultsSort) {
         free(candidates);
         *out_num_peaks = 0;
@@ -391,7 +357,7 @@ Peak* peak_detection(const q15_t *resultsRaw, const q15_t *results, size_t *out_
 
     // Allocate the final peaks array.
     // Worst-case, all candidates are valid.
-    Peak *final_peaks = malloc(candidate_count * sizeof(Peak));
+    Peak *final_peaks = (Peak *) malloc(candidate_count * sizeof(Peak));
     if (!final_peaks) {
         free(candidates);
         *out_num_peaks = 0;
@@ -428,7 +394,7 @@ Peak* peak_detection(const q15_t *resultsRaw, const q15_t *results, size_t *out_
         *out_num_peaks = 0;
         return NULL;
     } else {
-        Peak *resized = realloc(final_peaks, final_count * sizeof(Peak));
+        Peak *resized = (Peak *) realloc(final_peaks, final_count * sizeof(Peak));
         if (resized != NULL) {
             final_peaks = resized;
         }

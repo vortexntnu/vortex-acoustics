@@ -20,14 +20,20 @@
 // A manual variable to filter out small peaks that don't manage to get over the threshold, so called "fake peaks"
 #define PEAK_THRESHOLD 1000
 
+#include "Include/arm_const_structs.h"
+#include "Include/arm_math.h"
+#include <stdlib.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <string.h>  // for memset()
+#include <stdio.h>   // for debugging prints, if needed
+
 #ifdef __cplusplus
 
 extern "C"{
 
 #endif // __cplusplus
 
-#include "Include/arm_const_structs.h"
-#include "Include/arm_math.h"
 
 
 
