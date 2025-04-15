@@ -20,7 +20,7 @@
 
 // OBS: use same x, y, z system as autonomous
 const float32_t hydrophonePositions[NUM_HYDROPHONES][NUM_DIMENSIONS] = {
-    {-0.11f, 0.31f, 0.10f}, // Hydrophone 0: {x, y, z}
+    {0.00f, 0.00f, 0.00f}, // Hydrophone 0: {x, y, z}
     {0.11f, 0.31f, 0.10f},  // Hydrophone 1: {x, y, z}
     {0.0f, -0.24f, 0.0f},   // Hydrophone 2: {x, y, z}
     {0.5f, -0.1f, 0.4f},    // Hydrophone 3: {x, y, z}
