@@ -26,6 +26,7 @@ License: MIT
 
 // Arduino Libraries
 #include <Arduino.h>
+#include <cstddef>
 #include <vector>
 
 // Sampling Analog to Digital Converter (ADC) Libraries
@@ -39,20 +40,26 @@ License: MIT
 // Digital Signal Processing (DSP) Libraries
 #include "DSP.h"
 
+
+// Multilateration
+#include "correlation.h"
+#include "multilateration.h"
+
+
 // Libraries for Ethernet
 #include "ethernetModule.h"
 #include "teensyUDP.h"
 
-
+#define RAW_HYDROPHONE_SIZE (SAMPLE_LENGTH * BUFFER_PER_CHANNEL)
 
 // Variables for Sampling ==========
 float sample_period = 2.4; // >= MIN_SAMP_PERIOD_BLOCKING, Recomended: 2.4
 #define SAMPLING_TIMEOUT 10000 // [ms]
-int16_t samplesRawHydrophone1[SAMPLE_LENGTH * BUFFER_PER_CHANNEL];
-int16_t samplesRawHydrophone2[SAMPLE_LENGTH * BUFFER_PER_CHANNEL];
-int16_t samplesRawHydrophone3[SAMPLE_LENGTH * BUFFER_PER_CHANNEL];
-int16_t samplesRawHydrophone4[SAMPLE_LENGTH * BUFFER_PER_CHANNEL];
-int16_t samplesRawHydrophone5[SAMPLE_LENGTH * BUFFER_PER_CHANNEL];
+int16_t samplesRawHydrophone1[RAW_HYDROPHONE_SIZE];
+int16_t samplesRawHydrophone2[RAW_HYDROPHONE_SIZE];
+int16_t samplesRawHydrophone3[RAW_HYDROPHONE_SIZE];
+int16_t samplesRawHydrophone4[RAW_HYDROPHONE_SIZE];
+int16_t samplesRawHydrophone5[RAW_HYDROPHONE_SIZE];
 
 // Variables for Digital Signal Processing ==========
 int16_t samplesRawForDSP[SAMPLE_LENGTH];
@@ -70,9 +77,9 @@ int32_t frequenciesOfInterestMin[FREQUENCY_LIST_LENGTH]; // 0 Hz
 
 // Variables for Multilateration ==========
 #define TDOA_DATA_LENGHT 5 // TODO: Should be moved into multilateration library once that is operational
-#define POSITION_DATA_LENGHT 3 // TODO: Should be moved into multilateration library once that is operational
-double timeDifferenceOfArrival[TDOA_DATA_LENGHT]; // time difference for hydrophone 1, 2, 3, 4, 5 [s]
-double soundLocation[POSITION_DATA_LENGHT]; // X, Y, Z [m]
+#define POSITION_DATA_LENGHT 3+1 // TODO: Should be moved into multilateration library once that is operational
+float32_t timeDifferenceOfArrival[TDOA_DATA_LENGHT]; // time difference for hydrophone 1, 2, 3, 4, 5 [s]
+float32_t soundLocation[POSITION_DATA_LENGHT]; // X, Y, Z [m]
 
 // Variables for data transmission ==========
 int32_t lastSendTime = 0;
@@ -295,15 +302,34 @@ void loop() {
     // Multilateration (START) ====================================================================================================
     // TODO: It is up to you my student finish acoustics for us T^T
     Serial.println("2 - MULTILATERATION: Started the Calculations");
-    timeDifferenceOfArrival[0] = 1.0;
-    timeDifferenceOfArrival[1] = 2.0;
-    timeDifferenceOfArrival[2] = 3.0;
-    timeDifferenceOfArrival[3] = 4.0;
-    timeDifferenceOfArrival[4] = 5.0;
 
-    soundLocation[0] = 7.0;
-    soundLocation[1] = 8.0;
-    soundLocation[2] = 9.0;
+    
+    timeDifferenceOfArrival[0]  = 0;
+
+    size_t peek_idx;
+  
+    peek_idx = size_t findLag(samplesRawHydrophone1, samplesRawHydrophone2, RAW_HYDROPHONE_SIZE);
+
+    timeDifferenceOfArrival[1] = ((float32_t)(peek_idx - RAW_HYDROPHONE_SIZE) / SAMPLE_RATE);
+
+    peek_idx = size_t findLag(samplesRawHydrophone1, samplesRawHydrophone3, RAW_HYDROPHONE_SIZE);
+
+    timeDifferenceOfArrival[2] = ((float32_t)(peek_idx - RAW_HYDROPHONE_SIZE) / SAMPLE_RATE);
+
+    peek_idx = size_t findLag(samplesRawHydrophone1, samplesRawHydrophone4, RAW_HYDROPHONE_SIZE);
+
+    timeDifferenceOfArrival[3] = ((float32_t)(peek_idx - RAW_HYDROPHONE_SIZE) / SAMPLE_RATE);
+
+    peek_idx = size_t findLag(samplesRawHydrophone1, samplesRawHydrophone5, RAW_HYDROPHONE_SIZE);
+
+    timeDifferenceOfArrival[4] = ((float32_t)(peek_idx - RAW_HYDROPHONE_SIZE) / SAMPLE_RATE);
+
+      
+    
+    if (tdoa_multilateration(hydrophonePositions, timeDifferenceOfArrival + 1, soundLocation)) {
+      Serial.println("Multilateration failed");
+    }
+
     Serial.println("2 - MULTILATERATION: Got the results");
     // Multilateration (STOP) ====================================================================================================
 
@@ -311,11 +337,11 @@ void loop() {
 
     // Send data (START) ====================================================================================================
     Serial.println("3 - DATA SEND: Start sending data");
-    teensyUDP::send_hydrophone_data(samplesRawHydrophone1, SAMPLE_LENGTH * BUFFER_PER_CHANNEL, '1');
-    teensyUDP::send_hydrophone_data(samplesRawHydrophone2, SAMPLE_LENGTH * BUFFER_PER_CHANNEL, '2');
-    teensyUDP::send_hydrophone_data(samplesRawHydrophone3, SAMPLE_LENGTH * BUFFER_PER_CHANNEL, '3');
-    teensyUDP::send_hydrophone_data(samplesRawHydrophone4, SAMPLE_LENGTH * BUFFER_PER_CHANNEL, '4');
-    teensyUDP::send_hydrophone_data(samplesRawHydrophone5, SAMPLE_LENGTH * BUFFER_PER_CHANNEL, '5');
+    teensyUDP::send_hydrophone_data(samplesRawHydrophone1, RAW_HYDROPHONE_SIZE, '1');
+    teensyUDP::send_hydrophone_data(samplesRawHydrophone2, RAW_HYDROPHONE_SIZE, '2');
+    teensyUDP::send_hydrophone_data(samplesRawHydrophone3, RAW_HYDROPHONE_SIZE, '3');
+    teensyUDP::send_hydrophone_data(samplesRawHydrophone4, RAW_HYDROPHONE_SIZE, '4');
+    teensyUDP::send_hydrophone_data(samplesRawHydrophone5, RAW_HYDROPHONE_SIZE, '5');
     
     teensyUDP::send_samples_filtered_data(samplesFiltered, SAMPLE_LENGTH);
     teensyUDP::send_FFT_data(FFTResultsMagnified, SAMPLE_LENGTH);

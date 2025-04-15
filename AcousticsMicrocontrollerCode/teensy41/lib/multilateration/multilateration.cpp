@@ -1,96 +1,57 @@
 #include "multilateration.h"
 
-arm_status calculatePingerPosition(int32_t TdoaArray[], const Position hydrophonePositions[], const arm_matrix_instance_f32* pA, const arm_matrix_instance_f32* pB, Position* pSourcePosition) {
-    computeA(TdoaArray, pA->pData);
-    computeB(TdoaArray, hydrophonePositions, pB->pData);
 
-    arm_status Status = leastSquareEstimation(pA, pB, pSourcePosition);
 
-    return Status;
+static inline float32_t square(float32_t x) {
+    return x * x;
 }
 
-arm_status leastSquareEstimation(const arm_matrix_instance_f32* pA, const arm_matrix_instance_f32* pB, Position* pSourcePosition) {
-    arm_matrix_instance_f32 Atrans;
-    Atrans.numCols = NUM_HYDROPHONES - 1;
-    Atrans.numRows = NUM_DIMENSIONS + 1;
-    Atrans.pData = new float32_t[(NUM_HYDROPHONES - 1) * (NUM_DIMENSIONS + 1)];
-    arm_status Status = arm_mat_trans_f32(pA, &Atrans);
-    if (Status != ARM_MATH_SUCCESS) {
-        return Status;
+
+arm_status tdoa_multilateration(const float32_t hydrophone_array[4][3], const float32_t TDOA[4], float32_t* result) {
+
+    // Speed of sound in water.
+    const float32_t c = 1500.0f;
+
+    // Compute distances = c * TDOA for each hydrophone.
+    float32_t distances[4];
+    for (size_t i = 0; i < 4; i++) {
+        distances[i] = TDOA[i] * c;
     }
 
-    arm_matrix_instance_f32 AtransXA;
-    AtransXA.numCols = NUM_HYDROPHONES - 1;
-    AtransXA.numRows = NUM_HYDROPHONES - 1;
-    AtransXA.pData = new float32_t[(NUM_HYDROPHONES - 1) * (NUM_HYDROPHONES - 1)];
-    const arm_matrix_instance_f32* pAtrans = &Atrans;
-    Status = arm_mat_mult_f32(pAtrans, pA, &AtransXA);
-    if (Status != ARM_MATH_SUCCESS) {
-        return Status;
+    // Build the A matrix (4x4) from hydrophone positions and distances.
+    float32_t A_data[4 * 4] = {
+        hydrophone_array[0][0], hydrophone_array[0][1], hydrophone_array[0][2], -distances[0],
+        hydrophone_array[1][0], hydrophone_array[1][1], hydrophone_array[1][2], -distances[1],
+        hydrophone_array[2][0], hydrophone_array[2][1], hydrophone_array[2][2], -distances[2],
+        hydrophone_array[3][0], hydrophone_array[3][1], hydrophone_array[3][2], -distances[3]
+    };
+
+    // Build the b vector (4x1) using the formula:
+    // b[i] = 0.5 * (x_i^2 + y_i^2 + z_i^2 - d_i^2)
+    float32_t b_data[4] = {
+        0.5f * ( square(hydrophone_array[0][0]) + square(hydrophone_array[0][1]) + square(hydrophone_array[0][2]) - square(distances[0]) ),
+        0.5f * ( square(hydrophone_array[1][0]) + square(hydrophone_array[1][1]) + square(hydrophone_array[1][2]) - square(distances[1]) ),
+        0.5f * ( square(hydrophone_array[2][0]) + square(hydrophone_array[2][1]) + square(hydrophone_array[2][2]) - square(distances[2]) ),
+        0.5f * ( square(hydrophone_array[3][0]) + square(hydrophone_array[3][1]) + square(hydrophone_array[3][2]) - square(distances[3]) )
+    };
+
+    // Declare matrix instances.
+    arm_matrix_instance_f32 A, b, A_inverse, result_vect;
+    float32_t A_inverse_data[4 * 4];
+
+    // Initialize the matrices.
+    arm_mat_init_f32(&A, 4, 4, A_data);
+    arm_mat_init_f32(&b, 4, 1, b_data);
+    arm_mat_init_f32(&A_inverse, 4, 4, A_inverse_data);
+    arm_mat_init_f32(&result_vect, 4, 1, result);
+
+    // Invert A to get A_inverse.
+    arm_status status = arm_mat_inverse_f32(&A, &A_inverse);
+    if (status == ARM_MATH_SUCCESS) {
+        // Multiply A_inverse and b to solve for x.
+        status = arm_mat_mult_f32(&A_inverse, &b, &result_vect);
+        // (Optional: you might want to handle status differently if multiplication fails.)
     }
 
-    arm_matrix_instance_f32 AtransXAinv;
-    AtransXAinv.numCols = NUM_HYDROPHONES - 1;
-    AtransXAinv.numRows = NUM_HYDROPHONES - 1;
-    AtransXAinv.pData = new float32_t[(NUM_HYDROPHONES - 1) * (NUM_HYDROPHONES - 1)];
-    const arm_matrix_instance_f32* pAtransXA = &AtransXA;
-    Status = arm_mat_inverse_f32(pAtransXA, &AtransXAinv);
-    if (Status != ARM_MATH_SUCCESS) {
-        return Status;
-    }
-
-    arm_matrix_instance_f32 AtransXAinvXAtrans;
-    AtransXAinvXAtrans.numCols = NUM_HYDROPHONES - 1;
-    AtransXAinvXAtrans.numRows = NUM_HYDROPHONES - 1;
-    AtransXAinvXAtrans.pData = new float32_t[(NUM_HYDROPHONES - 1) * (NUM_HYDROPHONES - 1)];
-    const arm_matrix_instance_f32* pAtransAinv = &AtransXAinv;
-    Status = arm_mat_mult_f32(pAtransAinv, pAtrans, &AtransXAinvXAtrans);
-    if (Status != ARM_MATH_SUCCESS) {
-        return Status;
-    }
-
-    arm_matrix_instance_f32 Result = {NUM_HYDROPHONES - 1, 1, new float32_t[NUM_HYDROPHONES]};
-
-    const arm_matrix_instance_f32* pAtransXAinvXAtrans = &AtransXAinvXAtrans;
-    Status = arm_mat_mult_f32(pAtransXAinvXAtrans, pB, &Result);
-    if (Status != ARM_MATH_SUCCESS) {
-        return Status;
-    }
-
-    pSourcePosition->X = *(Result.pData);
-    pSourcePosition->Y = *(Result.pData + 1);
-    pSourcePosition->Z = *(Result.pData + 2);
-
-    delete[] Atrans.pData;
-    delete[] AtransXA.pData;
-    delete[] AtransXAinv.pData;
-    delete[] AtransXAinvXAtrans.pData;
-    delete[] Result.pData;
-
-    return Status;
-}
-
-void initialComputationA(float32_t* AData, const Position hydrophonePositions[]) {
-    for (int i = 0; i < (NUM_HYDROPHONES - 1); i++) {
-        *(AData + i * (NUM_HYDROPHONES - 1) + 0) = hydrophonePositions[0].X - hydrophonePositions[i + 1].X;
-        *(AData + i * (NUM_HYDROPHONES - 1) + 1) = hydrophonePositions[0].Y - hydrophonePositions[i + 1].Y;
-        *(AData + i * (NUM_HYDROPHONES - 1) + 2) = hydrophonePositions[0].Z - hydrophonePositions[i + 1].Z;
-        *(AData + i * (NUM_HYDROPHONES - 1) + 3) = 0.0;
-    }
-}
-
-void computeA(int32_t TdoaArray[], float32_t* AData) {
-    /*
-    This function only updates the last columns of the matrix.
-    The rest of the columns remain constant after initialComputationA() is run.
-    */
-    for (int i = 0; i < (NUM_HYDROPHONES - 1); i++) {
-        *(AData + i * (NUM_HYDROPHONES - 1) + 3) = TdoaArray[i] * SOUND_SPEED / SAMPLING_FREQ;
-    }
-}
-
-void computeB(int32_t TdoaArray[], const Position hydrophonePositions[], float32_t* Bdata) {
-    for (int i = 0; i < (NUM_HYDROPHONES - 1); i++) {
-        *(Bdata + i) = 0.5 * (pow(hydrophonePositions[0].X, 2) - pow(hydrophonePositions[i + 1].X, 2) + pow(hydrophonePositions[0].Y, 2) - pow(hydrophonePositions[i + 1].Y, 2) + pow(hydrophonePositions[0].Z, 2) - pow(hydrophonePositions[i + 1].Z, 2) + pow(TdoaArray[i] * SOUND_SPEED / SAMPLING_FREQ, 2));
-    }
+    return status;
 }
