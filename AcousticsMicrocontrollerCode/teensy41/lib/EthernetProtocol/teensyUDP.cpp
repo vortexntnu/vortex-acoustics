@@ -146,6 +146,50 @@ void send_data_64Bit(double* data, int32_t lengthOfData) {
     free(dataBuffer);
 }
 
+void send_data_float(float32_t* data, int32_t lengthOfData) {
+    // 32 bit
+    // for an int32_t, max length is about 15 (maybe 16?) digits plus decimal point plus null terminator
+    int8_t doubleTypeMaxLength = 11;
+    char str[doubleTypeMaxLength];
+
+    // Allocate memory to data buffer to be sent later on
+    char* dataBuffer = (char*)malloc(lengthOfData * doubleTypeMaxLength * sizeof(char));
+
+    // Format char data into a list of format "x,xxx,x,xxx,....,xx"
+    int32_t index = 0;
+    for (int32_t i = 0; i < lengthOfData; i++) {
+        // convert raw samples int to a string in decimal format
+        snprintf(str, doubleTypeMaxLength, "%.10f", data[i]); // should maybe work?? Idk  Yea it works :)
+        // Convert string to char and save it into buffer we send later
+        // Loop until string is empty
+        for (int u = 0; str[u] != '\0'; u++) {
+            dataBuffer[index] = str[u];
+            index++;
+        }
+        dataBuffer[index] = ',';
+        index++;
+    }
+
+    // Send data in intervals to not overwhelm Client
+    int amountLeftToSend = 0;
+    while (amountLeftToSend < index) {
+        // Before sending the whole big interval, just double check that all of the registers are filled up, else skip
+        if ((amountLeftToSend + MAX_CLIENT_CAPACITY) < index) {
+            ethernetModule::UDP_send_message(dataBuffer, MAX_CLIENT_CAPACITY, amountLeftToSend);
+        }
+        amountLeftToSend += MAX_CLIENT_CAPACITY;
+    }
+    // There will be MOST of the time some data left unsent since it was too small for the big buffer, send the rest through here
+    if (amountLeftToSend != index) {
+        amountLeftToSend -= MAX_CLIENT_CAPACITY;
+        index -= amountLeftToSend;
+        ethernetModule::UDP_send_message(dataBuffer, index, amountLeftToSend);
+    }
+
+    // Free up allocated space since we don't use it anymore
+    free(dataBuffer);
+}
+
 
 void send_hydrophone_data(int16_t* hydrophone, int16_t lengthOfData, char hydrophone_num) { 
     char message[] = "HYDROPHONE_x";
@@ -219,16 +263,16 @@ void send_peak_data(std::vector<std::vector<q31_t>> peakData, int16_t lengthOfPe
     }
 }
 
-void send_tdoa_data(double* tdoaData, int8_t lengthOfData) { 
+void send_tdoa_data(float32_t* tdoaData, int8_t lengthOfData) { 
     char message[] = "TDOA";
     ethernetModule::UDP_send_message(message, 4, 0);
-    send_data_64Bit(tdoaData, lengthOfData); 
+    send_data_float(tdoaData, lengthOfData); 
 }
 
-void send_location_data(double* locationData, int8_t lengthOfData) { 
+void send_location_data(float32_t* locationData, int8_t lengthOfData) { 
     char message[] = "LOCATION";
     ethernetModule::UDP_send_message(message, 8, 0);
-    send_data_64Bit(locationData, lengthOfData); 
+    send_data_float(locationData, lengthOfData); 
 }
 
 void setupTeensyCommunication(int32_t *frequenciesOfInterest, int32_t* frequencyVariances) {
