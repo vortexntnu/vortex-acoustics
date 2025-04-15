@@ -291,23 +291,23 @@ void loop() {
 
     size_t peak_idx;
 
-    peak_idx = findLag(samplesRawHydrophone1, samplesRawHydrophone2, RAW_HYDROPHONE_SIZE);
+    peak_idx = findLag(samplesRawHydrophone2, samplesRawHydrophone1, RAW_HYDROPHONE_SIZE);
 
     timeDifferenceOfArrival[1] = ((float32_t)(peak_idx - RAW_HYDROPHONE_SIZE) / SAMPLE_RATE);
 
-    peak_idx = findLag(samplesRawHydrophone1, samplesRawHydrophone3, RAW_HYDROPHONE_SIZE);
+    peak_idx = findLag(samplesRawHydrophone2, samplesRawHydrophone3, RAW_HYDROPHONE_SIZE);
 
     timeDifferenceOfArrival[2] = ((float32_t)(peak_idx - RAW_HYDROPHONE_SIZE) / SAMPLE_RATE);
 
-    peak_idx = findLag(samplesRawHydrophone1, samplesRawHydrophone4, RAW_HYDROPHONE_SIZE);
+    peak_idx = findLag(samplesRawHydrophone2, samplesRawHydrophone4, RAW_HYDROPHONE_SIZE);
 
     timeDifferenceOfArrival[3] = ((float32_t)(peak_idx - RAW_HYDROPHONE_SIZE) / SAMPLE_RATE);
 
-    peak_idx = findLag(samplesRawHydrophone1, samplesRawHydrophone5, RAW_HYDROPHONE_SIZE);
+    peak_idx = findLag(samplesRawHydrophone2, samplesRawHydrophone5, RAW_HYDROPHONE_SIZE);
 
     timeDifferenceOfArrival[4] = ((float32_t)(peak_idx - RAW_HYDROPHONE_SIZE) / SAMPLE_RATE);
 
-    if (tdoa_multilateration(hydrophonePositions, timeDifferenceOfArrival + 1, soundLocation)) {
+    if (tdoa_multilateration(hydrophonePositions + 1, timeDifferenceOfArrival + 1, soundLocation)) {
         Serial.println("Multilateration failed");
     }
 
