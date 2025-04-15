@@ -19,7 +19,7 @@ def generate_launch_description():
             Node(
                 package='acoustics_interface',
                 namespace='acoustics_interface',
-                executable='acoustics_interface_node.py',
+                executable='acoustics_interface_node',
                 name='acoustics_interface_node',
                 output='screen',
                 parameters=[yaml_file_path],

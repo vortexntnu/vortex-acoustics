@@ -8,9 +8,10 @@
   <license>MIT</license>
 
   <!-- Execution dependencies -->
-  <depend>rclpy</depend>
+
+  <depend>rclcpp</depend>
   <depend>std_msgs</depend>
-  <depend>ros2launch</depend>
+
 
   <!-- Export the build type as ament_cmake for CMake projects -->
   <export>
