@@ -45,6 +45,7 @@ License: MIT
 
 // Libraries for Ethernet
 #include "ethernet_module.h"
+#include "stack/fnet_stdlib.h"
 #include "teensy_udp.h"
 
 #define MAX_LAG (2 * RAW_HYDROPHONE_SIZE - 1)
@@ -52,17 +53,12 @@ License: MIT
 // Variables for Sampling ==========
 float sample_period = 2.4;     // >= MIN_SAMP_PERIOD_BLOCKING, Recomended: 2.4
 #define SAMPLING_TIMEOUT 10000 // [ms]
-int16_t samplesRawHydrophone1[RAW_HYDROPHONE_SIZE];
-int16_t samplesRawHydrophone2[RAW_HYDROPHONE_SIZE];
-int16_t samplesRawHydrophone3[RAW_HYDROPHONE_SIZE];
-int16_t samplesRawHydrophone4[RAW_HYDROPHONE_SIZE];
-int16_t samplesRawHydrophone5[RAW_HYDROPHONE_SIZE];
 
 // Variables for Digital Signal Processing ==========
-int16_t samplesRawForDSP[SAMPLE_LENGTH];
-q15_t* samplesFiltered;
-q15_t* FFTResultsRaw;
-q15_t* FFTResultsMagnified;
+int16_t samplesRawForDSP[SAMPLE_LENGTH] = {0};
+q15_t samplesFiltered[SAMPLE_LENGTH] = {0};
+q15_t FFTResultsRaw[2 * SAMPLE_LENGTH] = {0};
+q15_t FFTResultsMagnified[SAMPLE_LENGTH] = {0};
 Peak* peaks;
 size_t num_peaks;
 
@@ -141,10 +137,6 @@ void setup() {
     Serial.println("4 - DSP Setup");
     // Fill up buffers with 0s first to not get unexpected errors
 
-    samplesFiltered = filter_butterwort_9th_order_50kHz(samplesRawForDSP);
-    FFTResultsRaw = FFT_raw(samplesFiltered);
-    FFTResultsMagnified = FFT_mag(FFTResultsRaw);
-    peaks = peak_detection(FFTResultsRaw, FFTResultsMagnified, &num_peaks);
     Serial.println("DSP Setup Complete");
     Serial.println();
     // Digital Signal Processing Setup (STOP) ====================================================================================================
@@ -191,11 +183,11 @@ void loop() {
 
         // Digital Signal Processing (START) ====================================================================================================
         // Filter raw samples
-        samplesFiltered = filter_butterwort_1th_order_50kHz(adc::samplesRawHydrophones[0] + (buffer_to_check * SAMPLE_LENGTH_ADC));
+        filter_butterwort_1th_order_50kHz(adc::samplesRawHydrophones[0] + (buffer_to_check * SAMPLE_LENGTH_ADC), samplesFiltered);
 
         // Preform FFT calculations on filtered samples
-        FFTResultsRaw = FFT_raw(samplesFiltered);
-        FFTResultsMagnified = FFT_mag(FFTResultsRaw);
+        FFT_raw(samplesFiltered, FFTResultsRaw);
+        FFT_mag(FFTResultsRaw, FFTResultsMagnified);
 
         // Get peaks of frequencies that might be of interest and their useful information like amplitude, frequency and phase
         peaks = peak_detection(FFTResultsRaw, FFTResultsMagnified, &num_peaks);
@@ -235,43 +227,15 @@ void loop() {
     // We make sure the last buffer that we are interested in is filled before continuing
     // This ensures we have the not only the data signal of the peak, but also what happens after the peaks in the signal frequency we are interested in
     // adc::startConversion(sample_period, adc::BLOCKING);
-    while (!adc::buffer_filled[buffer_to_check])
-        ;
-    buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
+    for (int i = 1; i < BUFFER_PER_CHANNEL; i++) {
+        while (!adc::buffer_filled[buffer_to_check])
+            ;
+        buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
+    }
 
-    while (!adc::buffer_filled[buffer_to_check])
-        ;
-    buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
-
-    while (!adc::buffer_filled[buffer_to_check])
-        ;
-    buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
-
-    // Stop ADC sampling once we have every ring buffer sampled
     adc::stopConversion();
     Serial.println("1 - SAMPLING: Stoped sampling");
 
-    // Process data from the ring buffers
-    // active buffer is one further than the last filled one, which is the oldest one now thats why we iterate with one
-    uint8_t bufferIndex = adc::active_buffer;
-    // Saving finished processed and sampled Hyfrophone data
-    uint16_t index = 0;
-    for (uint8_t i = 0; i < BUFFER_PER_CHANNEL; i++) {
-        // Combine all 3 buffers from chanels into one BIG array
-        for (uint16_t u = 0; u < SAMPLE_LENGTH; u++) {
-            index = (SAMPLE_LENGTH * i) + u;
-
-            samplesRawHydrophone1[index] = (int16_t)adc::channel_buff_ptr[1][bufferIndex][u];
-            samplesRawHydrophone2[index] = (int16_t)adc::channel_buff_ptr[2][bufferIndex][u];
-            samplesRawHydrophone3[index] = (int16_t)adc::channel_buff_ptr[3][bufferIndex][u];
-            samplesRawHydrophone4[index] = (int16_t)adc::channel_buff_ptr[4][bufferIndex][u];
-            samplesRawHydrophone5[index] = (int16_t)adc::channel_buff_ptr[0][bufferIndex][u];
-        }
-        bufferIndex = (bufferIndex + 1) % BUFFER_PER_CHANNEL;
-    }
-
-    // Clean ring buffers
-    // this is done so that next time we can add new data into the ring buffers withouth getting errors
     for (uint8_t i = 0; i < BUFFER_PER_CHANNEL; i++) {
         adc::buffer_filled[i] = 0;
     }

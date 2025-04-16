@@ -2,6 +2,7 @@
 
 #include "Include/arm_math.h"
 #include "Include/arm_const_structs.h"
+#include "arm_math.h"
 #include "dsp.h"
 
 // How fast the ADC samples, important to know for FFT, the max is 510 kHz, HOWEVER for some reason ADC can not go max, real value is lower at:
@@ -207,8 +208,7 @@ q15_t *filter_butterwort_2th_order_50kHz(int16_t *samplesRaw) {
 
 
 
-q15_t *filter_butterworth_1st_order_50kHz(const int16_t *samplesRaw) {
-    static q15_t samples[SAMPLE_LENGTH];
+void filter_butterworth_1st_order_50kHz(const int16_t *samplesRaw, q15_t* samples) {
 
     static q15_t x_prev = 0;
     static q15_t y_prev = 0;
@@ -237,7 +237,6 @@ q15_t *filter_butterworth_1st_order_50kHz(const int16_t *samplesRaw) {
         y_prev = y_current;
     }
 
-    return samples;
 }
 
 /*
@@ -246,14 +245,13 @@ We calculating first the raw values out of FFT witch are "Real" and "Imaginary"
 values these values are really interesting since this raw format can be used to
 calculate both amplitude, frequencies and phase shift of a signal
 */
-q15_t *FFT_raw(q15_t *samples) {
+void FFT_raw(q15_t *samples, q15_t* resultsRaw) {
   /*
   To store the results of fft with
   complex numbers, need to have double the
   size of the sample length
   z = a + bi, (a1, b1, a2, b2, a3, b3 ... )
   */
-  static q15_t resultsRaw[2 * SAMPLE_LENGTH];
 
   /* Forward transform, which is what we want,
   we want to go from time to frequency domain.*/
@@ -270,22 +268,19 @@ q15_t *FFT_raw(q15_t *samples) {
   // The FFT itself, output is the FFT complex array
   arm_rfft_q15(&fftInstance, samples, resultsRaw);
 
-  return resultsRaw;
 }
 
-q15_t *FFT_mag(q15_t *resultsRaw) {
+ void FFT_mag(q15_t *resultsRaw, q15_t* results) {
   /*
   Create an empty array to store the magnitude
   calculations of the FFT.
   As we are not dealing with complex numbers
   anymore, it is the size of the sample length
   */
-  static q15_t results[SAMPLE_LENGTH];
 
   // Converts the complex array into a magnitude array.
   arm_cmplx_mag_q15(resultsRaw, results, SAMPLE_LENGTH);
 
-  return results;
 }
 
 

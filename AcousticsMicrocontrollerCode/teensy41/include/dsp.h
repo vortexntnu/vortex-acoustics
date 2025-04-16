@@ -2,6 +2,7 @@
 #define DSP_H
 
 // How fast the ADC samples, important to know for FFT, the max is 510 kHz, HOWEVER for some reason ADC can not go max, real value is lower at:
+#include "arm_math.h"
 #define SAMPLE_RATE 430000 // 430.0 kHz
 // How many samples we want from ADC
 #define SAMPLE_LENGTH 1024
@@ -46,10 +47,10 @@ typedef struct {
 
 q15_t* filter_butterwort_9th_order_50kHz(int16_t* samplesRaw);
 q15_t* filter_butterwort_2th_order_50kHz(int16_t* samplesRaw);
-q15_t* filter_butterwort_1th_order_50kHz(int16_t* samplesRaw);
+void filter_butterwort_1th_order_50kHz(int16_t* samplesRaw, q15_t* samples);
 
-q15_t* FFT_raw(q15_t* samples);
-q15_t* FFT_mag(q15_t* resultsRaw);
+void FFT_raw(q15_t* samples, q15_t* resultsRaw);
+void FFT_mag(q15_t* resultsRaw, q15_t* results);
 
 Peak* peak_detection(const q15_t *resultsRaw, const q15_t *results, size_t *out_num_peaks); 
 
