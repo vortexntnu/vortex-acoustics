@@ -185,7 +185,7 @@ void loop() {
 
         // Save raw sampled data from ADC
         for (uint16_t i = 0; i < SAMPLE_LENGTH; i++) {
-            samplesRawForDSP[i] = (int16_t)adc::channel_buff_ptr[1][buffer_to_check][i];
+            samplesRawForDSP[i] = (int16_t)adc::channel_buff_ptr[2][buffer_to_check][i];
         }
 
         // Digital Signal Processing (START) ====================================================================================================
