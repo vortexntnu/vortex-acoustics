@@ -77,11 +77,6 @@ volatile uint8_t channels_processed;
 uint16_t testing_value_par;
 #endif
 
-sample_buff_3_1024 chanA0;
-sample_buff_3_1024 chanA1;
-sample_buff_3_1024 chanB0;
-sample_buff_3_1024 chanB1;
-sample_buff_3_1024 chanC0;
 
 int16_t samplesRawHydrophone1[RAW_HYDROPHONE_SIZE];
 int16_t samplesRawHydrophone2[RAW_HYDROPHONE_SIZE];
@@ -91,7 +86,6 @@ int16_t samplesRawHydrophone5[RAW_HYDROPHONE_SIZE];
 
 time_buff_3_1024 timestamps;
 
-buffer_ptr channel_buff_ptr[5] = {chanA0, chanA1, chanB0, chanB1, chanC0};
 
 int16_t* samplesRawHydrophones[5] = {samplesRawHydrophone1, samplesRawHydrophone2, samplesRawHydrophone3, samplesRawHydrophone4, samplesRawHydrophone5};
 

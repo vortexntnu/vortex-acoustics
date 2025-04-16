@@ -123,22 +123,12 @@ const int DB15 = CORE_PIN27_BIT; // GPIO 1.31
 #define SAMPLE_LENGTH_ADC 1024
 #define BUFFER_PER_CHANNEL 6 // 6 is max. (space = BUFFER_PER_CHANNEL * SAMPLE_LENGTH_ADC * hydrophones * (datatype_size in bytes) = 6*1024*5*16/8 = 61_440. This must be less than 64_000 = 64 kilo bytes) 
 #define RAW_HYDROPHONE_SIZE (SAMPLE_LENGTH_ADC * BUFFER_PER_CHANNEL)
-typedef int16_t (*buffer_ptr)[SAMPLE_LENGTH_ADC]; // the number of rows will be specified when creating variable
-typedef int16_t sample_buff_3_1024[BUFFER_PER_CHANNEL][SAMPLE_LENGTH_ADC];
 typedef int32_t time_buff_3_1024[BUFFER_PER_CHANNEL][SAMPLE_LENGTH_ADC];
 
 
 
-extern sample_buff_3_1024 chanA0;
-extern sample_buff_3_1024 chanA1;
-extern sample_buff_3_1024 chanB0;
-extern sample_buff_3_1024 chanB1;
-extern sample_buff_3_1024 chanC0;
 
 extern time_buff_3_1024 timestamps;
-
-// pointer to the buffers of each channel, in order A0,A1,B0,B1,C0
-extern buffer_ptr channel_buff_ptr[5];
 
 
 extern int16_t* samplesRawHydrophones[5];
