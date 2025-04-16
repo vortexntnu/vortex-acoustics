@@ -30,6 +30,8 @@ License: MIT
 #include <cstring>
 #include <vector>
 
+#include <stdlib.h>
+
 // Sampling Analog to Digital Converter (ADC) Libraries
 #include "GPT.h"
 #include "adc.h"
@@ -76,15 +78,12 @@ float32_t soundLocation[POSITION_DATA_LENGTH];       // X, Y, Z [m]
 
 // Variables for data transmission ==========
 int32_t lastSendTime = 0;
-void setupTeensyCommunication();
-void sendDataToClient();
 
 void setup() {
     // Debugging Setup (START) ====================================================================================================
     Serial.begin(9600);
     delay(5000); //  pause to giving time to enter serial monitor
     Serial.println("1 - Debuging Setup");
-    Serial.println();
 
     // Debugging Setup (STOP) ====================================================================================================
 
@@ -114,23 +113,20 @@ void setup() {
         frequenciesOfInterestMin[i] = frequenciesOfInterest[i] - frequencyVariances[i];
     }
     Serial.println("Client CONNECTED");
-    Serial.println();
     // Ethernet Setup (STOP) ====================================================================================================
 
     // Sampling Setup (START) ====================================================================================================
-    // initializing ADC before being able to use it
+
     Serial.println("3 - Sampling Setup");
     adc::init();
 
-    // Setup parameters for ADC
     uint32_t ADC_reg_config;
     ADC_reg_config = (1 << CONFIG_WRITE_EN) | (1 << CONFIG_PD_D) | (1 << CONFIG_REFEN) | (0x3FF << CONFIG_REFDAC) | (1 << CONFIG_VREF);
-    // Configure ADC
+
     adc::config(ADC_reg_config);
     adc::setup();
 
     Serial.println("Sampling Setup complete");
-    Serial.println();
     // Sampling Setup (STOP) ====================================================================================================
 
     // Digital Signal Processing Setup (START) ====================================================================================================
@@ -138,14 +134,11 @@ void setup() {
     // Fill up buffers with 0s first to not get unexpected errors
 
     Serial.println("DSP Setup Complete");
-    Serial.println();
     // Digital Signal Processing Setup (STOP) ====================================================================================================
 
-    Serial.println();
     Serial.println("==================================================");
     Serial.println("SETUP COMPLETE :D");
     Serial.println("==================================================");
-    Serial.println();
 }
 
 void loop() {
@@ -155,57 +148,37 @@ void loop() {
     ! Digital Signal Processing (DSP) MUST be FASTER than Sampling !
     ! Now the whole DSP + peak detection (PD) is less than 700 us, this is good !
     ! DSP + PD should NEVER be over 2000 us, this will CRASH the system !
-
-    Have a endless loop that samples signals
-    Process signal and check for any peaks
-    If peaks of interest detected exit loop and process data further down the line
-
-    If sampling takes to long to find a peak we exit the loop and try again later
     */
     Serial.println("1 - SAMPLING: Start Sampling");
 
     uint8_t not_found = 1;
-    uint8_t buffer_to_check = 0;                // Reset buffer to start filling to 0 // this is the NOW buffer
-    unsigned long samplingStartTime = millis(); // For sampling timeout, in case we sample for to long, we want to break the loop
+    uint8_t buffer_to_check = 0;                
+    unsigned long samplingStartTime = millis(); 
 
-    // Start sampling ADC data imediately
     adc::startConversion(sample_period, adc::BLOCKING);
 
     while (not_found) {
-        // Start sampling into the buffer and wait until the latest one is filled before moving on and leting it continue to fill up into the next buffer
         while (!adc::buffer_filled[buffer_to_check])
             ;
-
-        // Save raw sampled data from ADC
-        // for (uint16_t i = 0; i < SAMPLE_LENGTH; i++) {
-        //     samplesRawForDSP[i] = (int16_t)adc::channel_buff_ptr[1][buffer_to_check][i];
-        // }
-
         // Digital Signal Processing (START) ====================================================================================================
-        // Filter raw samples
+    
         filter_butterwort_1th_order_50kHz(adc::samplesRawHydrophones[0] + (buffer_to_check * SAMPLE_LENGTH_ADC), samplesFiltered);
 
-        // Preform FFT calculations on filtered samples
         FFT_raw(samplesFiltered, FFTResultsRaw);
         FFT_mag(FFTResultsRaw, FFTResultsMagnified);
 
-        // Get peaks of frequencies that might be of interest and their useful information like amplitude, frequency and phase
         peaks = peak_detection(FFTResultsRaw, FFTResultsMagnified, &num_peaks);
 
         if (peaks == NULL || num_peaks == 0) {
-            // No peaks detected; handle accordingly (for example, continue sampling)
-            return;
+            continue;
         }
 
-        // Print or process the peaks.
-        // For example, check each peak if it is in our frequency range of interest.
         for (size_t i = 0; i < num_peaks; i++) {
             int32_t peakFrequency = peaks[i].frequency;
-            // For debugging: you can also print using Serial.print or printf as needed.
             for (int j = 0; j < FREQUENCY_LIST_LENGTH; j++) {
                 if ((peakFrequency < frequenciesOfInterestMax[j]) && (peakFrequency > frequenciesOfInterestMin[j])) {
                     not_found = 0;
-                    break; // Stop checking frequency ranges once a match is found
+                    break;
                 }
             }
         }
@@ -213,15 +186,12 @@ void loop() {
         // Clean up the allocated peaks array when done.
         // free(peaks);
 
-        // Take further actions depending on whether a frequency of interest was found
         buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
-        // Check if sampling has taken to long and if so exit the loop and try again later
+
         if (millis() - samplingStartTime > SAMPLING_TIMEOUT) {
-            //Serial.println("1 - SAMPLING: !WARNING! Sampling timed out");
             break;
         }
 
-        // Iterate into the next ring buffer and stop sampling for this round
     }
 
     // We make sure the last buffer that we are interested in is filled before continuing
@@ -243,7 +213,7 @@ void loop() {
     // Sampling (STOP) ====================================================================================================
 
     // Multilateration (START) ====================================================================================================
-    // TODO: It is up to you my student finish acoustics for us T^T
+  
     Serial.println("2 - MULTILATERATION: Started the Calculations");
 
     timeDifferenceOfArrival[0] = 0;
@@ -277,6 +247,9 @@ void loop() {
     send_data_udp(FFTResultsMagnified, sizeof(q15_t) * SAMPLE_LENGTH);
 
     // send_peak_data(peaks, lengthOfPeakArray);
+ 
+  
+    free(peaks);
 
     send_data_udp(timeDifferenceOfArrival, sizeof(float32_t) * TDOA_DATA_LENGTH);
     send_data_udp(soundLocation, sizeof(float32_t) * POSITION_DATA_LENGTH);
@@ -285,10 +258,6 @@ void loop() {
     Serial.println("3 - DATA SEND: Data sent sucsessfully");
     // Send data (STOP) ====================================================================================================
 
-    Serial.println();
     Serial.println("--------------------------------------------------");
-    Serial.println();
 
-    // A small delay for debugging (Delete later)
-    // delay(1000);
 }
