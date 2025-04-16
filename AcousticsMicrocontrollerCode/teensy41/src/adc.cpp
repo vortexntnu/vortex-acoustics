@@ -2,10 +2,11 @@
 #include "Arduino.h"
 #include "DMAChannel.h"
 #include "GPT.h"
-#include "pit.h"
 #include "clock.h"
 #include "gpio.h"
 #include "gpio_interrupt.h"
+#include "pit.h"
+#include <cstdint>
 
 // used to link Quad timers to DMA channels
 extern "C" void xbar_connect(unsigned int input, unsigned int output); // in pwm.c
@@ -82,9 +83,17 @@ sample_buff_3_1024 chanB0;
 sample_buff_3_1024 chanB1;
 sample_buff_3_1024 chanC0;
 
+int16_t samplesRawHydrophone1[RAW_HYDROPHONE_SIZE];
+int16_t samplesRawHydrophone2[RAW_HYDROPHONE_SIZE];
+int16_t samplesRawHydrophone3[RAW_HYDROPHONE_SIZE];
+int16_t samplesRawHydrophone4[RAW_HYDROPHONE_SIZE];
+int16_t samplesRawHydrophone5[RAW_HYDROPHONE_SIZE];
+
 time_buff_3_1024 timestamps;
 
 buffer_ptr channel_buff_ptr[5] = {chanA0, chanA1, chanB0, chanB1, chanC0};
+
+int16_t* samplesRawHydrophones[5] = {samplesRawHydrophone1, samplesRawHydrophone2, samplesRawHydrophone3, samplesRawHydrophone4, samplesRawHydrophone5};
 
 volatile uint8_t stop_sampling;
 
@@ -299,7 +308,6 @@ void triggerConversion() {
 void read_loop() {
     // timestamps[active_buffer][sample_index] = ARM_DWT_CYCCNT - clk_cyc;
 
-
     if (stop_sampling) {
         return;
     }
@@ -317,7 +325,8 @@ void read_loop() {
         // delayNanoseconds(T_RDL);
 
         // ringbuffer_channels_ptr[i]->insert(read_ADC_par());
-        channel_buff_ptr[hydroph][active_buffer][sample_index] = read_ADC_par();
+        // channel_buff_ptr[hydroph][active_buffer][sample_index] = read_ADC_par();
+        samplesRawHydrophones[hydroph][sample_index] = read_ADC_par();
         IMXRT_GPIO9.DR_SET |= (1 << _RD);
         // gpio::write_pin(_RD, 1, _RD_GPIO_PORT_NORMAL);
         //  this is already enough delay for 2ns (toggeling takes more than 2ns)

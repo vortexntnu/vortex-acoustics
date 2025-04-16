@@ -27,6 +27,7 @@ License: MIT
 #include <Arduino.h>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <vector>
 
 // Sampling Analog to Digital Converter (ADC) Libraries
@@ -46,7 +47,6 @@ License: MIT
 #include "ethernet_module.h"
 #include "teensy_udp.h"
 
-#define RAW_HYDROPHONE_SIZE (SAMPLE_LENGTH * BUFFER_PER_CHANNEL)
 #define MAX_LAG (2 * RAW_HYDROPHONE_SIZE - 1)
 
 // Variables for Sampling ==========
@@ -172,22 +172,23 @@ void loop() {
     */
     Serial.println("1 - SAMPLING: Start Sampling");
 
-    uint8_t found = 0;
+    uint8_t not_found = 1;
     uint8_t buffer_to_check = 0;                // Reset buffer to start filling to 0 // this is the NOW buffer
     unsigned long samplingStartTime = millis(); // For sampling timeout, in case we sample for to long, we want to break the loop
 
     // Start sampling ADC data imediately
     adc::startConversion(sample_period, adc::BLOCKING);
 
-    while (!found) {
+    while (not_found) {
         // Start sampling into the buffer and wait until the latest one is filled before moving on and leting it continue to fill up into the next buffer
         while (!adc::buffer_filled[buffer_to_check])
             ;
 
         // Save raw sampled data from ADC
-        for (uint16_t i = 0; i < SAMPLE_LENGTH; i++) {
-            samplesRawForDSP[i] = (int16_t)adc::channel_buff_ptr[1][buffer_to_check][i];
-        }
+        // for (uint16_t i = 0; i < SAMPLE_LENGTH; i++) {
+        //     samplesRawForDSP[i] = (int16_t)adc::channel_buff_ptr[1][buffer_to_check][i];
+        // }
+        memcpy(samplesRawForDSP, adc::channel_buff_ptr[1][buffer_to_check], SAMPLE_LENGTH);
 
         // Digital Signal Processing (START) ====================================================================================================
         // Filter raw samples
@@ -207,18 +208,14 @@ void loop() {
 
         // Print or process the peaks.
         // For example, check each peak if it is in our frequency range of interest.
-        int found = 0;
         for (size_t i = 0; i < num_peaks; i++) {
             int32_t peakFrequency = peaks[i].frequency;
             // For debugging: you can also print using Serial.print or printf as needed.
             for (int j = 0; j < FREQUENCY_LIST_LENGTH; j++) {
                 if ((peakFrequency < frequenciesOfInterestMax[j]) && (peakFrequency > frequenciesOfInterestMin[j])) {
-                    found = 1;
+                    not_found = 0;
                     break; // Stop checking frequency ranges once a match is found
                 }
-            }
-            if (found) {
-                break; // Exit once a peak matching the target frequency is found.
             }
         }
 
@@ -226,8 +223,6 @@ void loop() {
         // free(peaks);
 
         // Take further actions depending on whether a frequency of interest was found
-        if (found) {
-        }
         buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
         // Check if sampling has taken to long and if so exit the loop and try again later
         if (millis() - samplingStartTime > SAMPLING_TIMEOUT) {
@@ -311,7 +306,7 @@ void loop() {
     timeDifferenceOfArrival[4] = ((float32_t)(peek_idx - RAW_HYDROPHONE_SIZE) / SAMPLE_RATE);
 
     if (tdoa_multilateration(hydrophonePositions, timeDifferenceOfArrival + 1, soundLocation)) {
-      Serial.println("Multilateration failed");
+        Serial.println("Multilateration failed");
     }
 
     Serial.println("2 - MULTILATERATION: Got the results");
