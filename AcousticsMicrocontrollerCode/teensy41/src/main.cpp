@@ -188,11 +188,10 @@ void loop() {
         // for (uint16_t i = 0; i < SAMPLE_LENGTH; i++) {
         //     samplesRawForDSP[i] = (int16_t)adc::channel_buff_ptr[1][buffer_to_check][i];
         // }
-        memcpy(samplesRawForDSP, adc::channel_buff_ptr[1][buffer_to_check], SAMPLE_LENGTH);
 
         // Digital Signal Processing (START) ====================================================================================================
         // Filter raw samples
-        samplesFiltered = filter_butterwort_1th_order_50kHz(samplesRawForDSP);
+        samplesFiltered = filter_butterwort_1th_order_50kHz(adc::samplesRawHydrophones[0] + (buffer_to_check * SAMPLE_LENGTH_ADC));
 
         // Preform FFT calculations on filtered samples
         FFTResultsRaw = FFT_raw(samplesFiltered);
@@ -276,6 +275,7 @@ void loop() {
     for (uint8_t i = 0; i < BUFFER_PER_CHANNEL; i++) {
         adc::buffer_filled[i] = 0;
     }
+
     // Sampling (STOP) ====================================================================================================
 
     // Multilateration (START) ====================================================================================================
@@ -283,27 +283,17 @@ void loop() {
     Serial.println("2 - MULTILATERATION: Started the Calculations");
 
     timeDifferenceOfArrival[0] = 0;
-
     q15_t correlation_array[MAX_LAG];
-    arm_correlate_q15(samplesRawHydrophone1, RAW_HYDROPHONE_SIZE, samplesRawHydrophone2, RAW_HYDROPHONE_SIZE, correlation_array);
-    size_t peek_idx = find_peak_index(correlation_array, MAX_LAG);
+    q15_t max_number;
+    size_t peak_index;
 
-    timeDifferenceOfArrival[1] = ((float32_t)(peek_idx - RAW_HYDROPHONE_SIZE) / SAMPLE_RATE);
+    for (int i = 1; i < NUM_HYDROPHONES; i++) {
+        arm_correlate_q15(adc::samplesRawHydrophones[0], RAW_HYDROPHONE_SIZE, adc::samplesRawHydrophones[i], RAW_HYDROPHONE_SIZE, correlation_array);
 
-    arm_correlate_q15(samplesRawHydrophone1, RAW_HYDROPHONE_SIZE, samplesRawHydrophone3, RAW_HYDROPHONE_SIZE, correlation_array);
-    peek_idx = find_peak_index(correlation_array, MAX_LAG);
+        arm_max_q15(correlation_array, MAX_LAG, &max_number, &peak_index);
 
-    timeDifferenceOfArrival[2] = ((float32_t)(peek_idx - RAW_HYDROPHONE_SIZE) / SAMPLE_RATE);
-
-    arm_correlate_q15(samplesRawHydrophone1, RAW_HYDROPHONE_SIZE, samplesRawHydrophone4, RAW_HYDROPHONE_SIZE, correlation_array);
-    peek_idx = find_peak_index(correlation_array, MAX_LAG);
-
-    timeDifferenceOfArrival[3] = ((float32_t)(peek_idx - RAW_HYDROPHONE_SIZE) / SAMPLE_RATE);
-
-    arm_correlate_q15(samplesRawHydrophone1, RAW_HYDROPHONE_SIZE, samplesRawHydrophone5, RAW_HYDROPHONE_SIZE, correlation_array);
-    peek_idx = find_peak_index(correlation_array, MAX_LAG);
-
-    timeDifferenceOfArrival[4] = ((float32_t)(peek_idx - RAW_HYDROPHONE_SIZE) / SAMPLE_RATE);
+        timeDifferenceOfArrival[i] = ((float32_t)(peak_index - RAW_HYDROPHONE_SIZE) / SAMPLE_RATE);
+    }
 
     if (tdoa_multilateration(hydrophonePositions, timeDifferenceOfArrival + 1, soundLocation)) {
         Serial.println("Multilateration failed");
@@ -315,11 +305,9 @@ void loop() {
     // Send data (START) ====================================================================================================
     Serial.println("3 - DATA SEND: Start sending data");
 
-    send_data_udp(samplesRawHydrophone1, sizeof(int16_t) * RAW_HYDROPHONE_SIZE);
-    send_data_udp(samplesRawHydrophone2, sizeof(int16_t) * RAW_HYDROPHONE_SIZE);
-    send_data_udp(samplesRawHydrophone3, sizeof(int16_t) * RAW_HYDROPHONE_SIZE);
-    send_data_udp(samplesRawHydrophone4, sizeof(int16_t) * RAW_HYDROPHONE_SIZE);
-    send_data_udp(samplesRawHydrophone5, sizeof(int16_t) * RAW_HYDROPHONE_SIZE);
+    for (int i = 0; i < NUM_HYDROPHONES; i++) {
+        send_data_udp(adc::samplesRawHydrophones[i], sizeof(int16_t) * RAW_HYDROPHONE_SIZE);
+    }
 
     send_data_udp(samplesFiltered, sizeof(q15_t) * SAMPLE_LENGTH);
     send_data_udp(FFTResultsMagnified, sizeof(q15_t) * SAMPLE_LENGTH);

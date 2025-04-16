@@ -339,6 +339,12 @@ void read_loop() {
     // stopwatch = elapsedMicros();
     sample_index++;
     if (sample_index >= SAMPLE_LENGTH_ADC) {
+        buffer_filled[active_buffer];
+        sample_index %= SAMPLE_LENGTH_ADC;
+        active_buffer = (active_buffer + 1) % BUFFER_PER_CHANNEL;
+    }
+
+    if (sample_index >= SAMPLE_LENGTH_ADC) {
         // updating global variables
         buffer_filled[active_buffer] = 1;
         sample_index = sample_index % SAMPLE_LENGTH_ADC; // or maybe to 0
