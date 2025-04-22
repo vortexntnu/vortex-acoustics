@@ -26,7 +26,7 @@ def estimate_position(hydrophones, tdoas, c=1500.0):
 
     x_linear = np.linalg.lstsq(A, b, rcond=None)[0]  # Initial estimate
 
-    print(x_linear)
+    print("Initial estimate: ", x_linear)
 
     # Step 2: Nonlinear refinement
     def tdoa_residuals(x):
@@ -50,7 +50,7 @@ hydrophones = np.array([
 
 # Simulated TDOA values relative to hydrophone 0 (in seconds)
 tdoas = np.array([
--0.0006967227, -0.0006985525, -0.0008852526, -0.0006837616
+-0.0003790698, -0.0002093023, -0.0006023256, -0.0005720930
 ])
 
 position = estimate_position(hydrophones, tdoas, c=1500.0)

@@ -85,7 +85,7 @@ void loop() {
 
 
 
-        Multilateration::Pos real_pinger_pos(-3, 6, 2);
+        Multilateration::Pos real_pinger_pos(-30, 60, 100);
         Serial.println("Real: ");
         real_pinger_pos.display();
         
@@ -115,6 +115,9 @@ void loop() {
                 hydrophone_data_array[i+1][j] = timelaged_array[j];
             }
         }
+
+
+        
 
         Multilateration::Pos pinger = Multilateration::find_pinger(hydrophone_data_array, TDOA_VALUES, SAMPLE_RATE);
         Serial.println("Calculated: ");

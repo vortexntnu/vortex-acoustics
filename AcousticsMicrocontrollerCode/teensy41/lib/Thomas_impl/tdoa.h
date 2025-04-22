@@ -52,6 +52,14 @@ const Pos hydrophonePositions[NUM_HYDROPHONES] {
     {0.9, 1.3, 1.2},
     {1.1, 1.4, 0.9}
 };
+const float32_t test_hydrophones[NUM_HYDROPHONES][3] = {
+    {0.0, 0.0, 0.0},
+    {1.0, 1.0, 1.0},
+    {1.2, 0.8, 1.1},
+    {0.9, 1.3, 1.2},
+    {1.1, 1.4, 0.9}
+};
+
 
 
 float32_t calculate_tdoa(Pos pos, Pos pinger_pos, float32_t v);
@@ -61,4 +69,16 @@ Pos tdoa_multilateration(const Pos hydrophone_pos_array[NUM_HYDROPHONES], const 
 
 Pos find_pinger(int hydrophone_value_array[NUM_HYDROPHONES][HYDROPHONE_DATA_SIZE], double TDOA[TDOA_DATA_LENGHT], const int sampling_frequency);
 
+
+
+
+
+// Testing!!!
+
+void linearLeastSquaresEstimate(const float32_t hydrophones[NUM_HYDROPHONES][3],
+                                  const float32_t tdoas[TDOA_DATA_LENGHT],
+                                  float32_t x_est[3], float32_t c);
+void nonlinearRefinement(const float32_t hydrophones[NUM_HYDROPHONES][3],
+                         const float32_t tdoas[TDOA_DATA_LENGHT],
+                         float32_t x_est[3], float32_t c);
 }
