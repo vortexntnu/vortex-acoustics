@@ -6,6 +6,7 @@
 #include "gpio.h"
 #include "gpio_interrupt.h"
 #include "pit.h"
+#include <cstddef>
 #include <cstdint>
 
 // used to link Quad timers to DMA channels
@@ -92,8 +93,8 @@ int16_t* samplesRawHydrophones[5] = {samplesRawHydrophone1, samplesRawHydrophone
 volatile uint8_t stop_sampling;
 
 volatile uint8_t active_buffer; // to know which one is being filled, [0, BUFFER_PER_CHANNEL-1]
-volatile uint16_t sample_index;
-volatile uint8_t buffer_filled[BUFFER_PER_CHANNEL]; // to know which have been filled with new values
+volatile size_t sample_index;
+volatile uint16_t buffer_filled = 0;
 volatile uint32_t overall_buffer_count;
 
 elapsedMicros stopwatch;
@@ -188,9 +189,7 @@ void setup() {
 
     active_buffer = 0;
     overall_buffer_count = 0;
-    for (uint8_t i = 0; i < BUFFER_PER_CHANNEL; i++) {
-        buffer_filled[i] = 0; // no sampling yet
-    }
+    buffer_filled = 0;
     // ! connect beginRead() to BUSY/INT interrupt -> is done in trigger_conversion()
 }
 
@@ -312,7 +311,7 @@ void read_loop() {
     // * write both at the same time to go faster
     IMXRT_GPIO7.DR_CLEAR = 1 << CONVST | 1 << _CS;
 
-    for (uint16_t hydroph = 0; hydroph < N_HYDROPHONES; hydroph++) {
+    for (uint16_t hydrophone = 0; hydrophone < N_HYDROPHONES; hydrophone++) {
         // gpio::write_pin(_RD, 0, _RD_GPIO_PORT_NORMAL);
         IMXRT_GPIO9.DR_CLEAR |= (1 << _RD);
         // maybe not needed
@@ -320,7 +319,7 @@ void read_loop() {
 
         // ringbuffer_channels_ptr[i]->insert(read_ADC_par());
         // channel_buff_ptr[hydroph][active_buffer][sample_index] = read_ADC_par();
-        samplesRawHydrophones[hydroph][sample_index] = read_ADC_par();
+        samplesRawHydrophones[hydrophone][sample_index + active_buffer * SAMPLE_LENGTH_ADC] = read_ADC_par();
         IMXRT_GPIO9.DR_SET |= (1 << _RD);
         // gpio::write_pin(_RD, 1, _RD_GPIO_PORT_NORMAL);
         //  this is already enough delay for 2ns (toggeling takes more than 2ns)
@@ -332,18 +331,13 @@ void read_loop() {
     // timestamps[active_buffer][sample_index] = stopwatch;
     // stopwatch = elapsedMicros();
     sample_index++;
-    if (sample_index >= SAMPLE_LENGTH_ADC) {
-        buffer_filled[active_buffer];
-        sample_index %= SAMPLE_LENGTH_ADC;
-        active_buffer = (active_buffer + 1) % BUFFER_PER_CHANNEL;
-    }
 
     if (sample_index >= SAMPLE_LENGTH_ADC) {
         // updating global variables
-        buffer_filled[active_buffer] = 1;
+        buffer_filled |= (1 << active_buffer);
         sample_index = sample_index % SAMPLE_LENGTH_ADC; // or maybe to 0
         active_buffer = (active_buffer + 1) % BUFFER_PER_CHANNEL;
-        buffer_filled[active_buffer] = 0;
+        buffer_filled &= ~(1 << active_buffer);
 
         overall_buffer_count++;
     }

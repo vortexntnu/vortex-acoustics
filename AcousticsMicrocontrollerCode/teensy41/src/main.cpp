@@ -158,7 +158,7 @@ void loop() {
     adc::startConversion(sample_period, adc::BLOCKING);
 
     while (not_found) {
-        while (!adc::buffer_filled[buffer_to_check])
+        while (!(adc::buffer_filled & (1 << buffer_to_check)))
             ;
         // Digital Signal Processing (START) ====================================================================================================
 
@@ -192,7 +192,7 @@ void loop() {
     // This ensures we have the not only the data signal of the peak, but also what happens after the peaks in the signal frequency we are interested in
     // adc::startConversion(sample_period, adc::BLOCKING);
     for (int i = 1; i < BUFFER_PER_CHANNEL; i++) {
-        while (!adc::buffer_filled[buffer_to_check])
+        while (!(adc::buffer_filled & (1 << buffer_to_check)))
             ;
         buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
     }
@@ -200,9 +200,7 @@ void loop() {
     adc::stopConversion();
     Serial.println("1 - SAMPLING: Stoped sampling");
 
-    for (uint8_t i = 0; i < BUFFER_PER_CHANNEL; i++) {
-        adc::buffer_filled[i] = 0;
-    }
+    adc::buffer_filled = 0;
 
     // Sampling (STOP) ====================================================================================================
 

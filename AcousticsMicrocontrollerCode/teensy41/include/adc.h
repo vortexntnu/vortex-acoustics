@@ -2,6 +2,7 @@
 #include "core_pins.h"
 #include "imxrt.h"
 #include "ring_buffer.h"
+#include <cstddef>
 #include <cstdint>
 
 extern uint8_t DMA_test_variable;
@@ -135,8 +136,8 @@ extern int16_t* samplesRawHydrophones[5];
 
 
 volatile extern uint8_t active_buffer;                     // to know which one is being filled, [0, BUFFER_PER_CHANNEL-1]
-volatile extern uint16_t sample_index;                            // To know what ring buffer memory we are in [0, SAMPLE_LENGTH_ADC-1]
-volatile extern uint8_t buffer_filled[BUFFER_PER_CHANNEL]; // to know which have been filled with new values
+volatile extern size_t sample_index;                            // To know what ring buffer memory we are in [0, SAMPLE_LENGTH_ADC-1]
+volatile extern uint16_t buffer_filled;
 volatile extern uint32_t overall_buffer_count;
 
 void init();                   // inits pins
