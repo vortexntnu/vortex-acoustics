@@ -61,7 +61,8 @@ int16_t samplesRawForDSP[SAMPLE_LENGTH] = {0};
 q15_t samplesFiltered[SAMPLE_LENGTH] = {0};
 q15_t FFTResultsRaw[2 * SAMPLE_LENGTH] = {0};
 q15_t FFTResultsMagnified[SAMPLE_LENGTH] = {0};
-Peak* peaks;
+Peak peaks_buffer[SAMPLE_LENGTH];
+size_t samples_interest = 32;
 size_t num_peaks;
 
 // Variables for Peak Detection ==========
@@ -120,8 +121,7 @@ void setup() {
     Serial.println("3 - Sampling Setup");
     adc::init();
 
-    uint32_t ADC_reg_config;
-    ADC_reg_config = (1 << CONFIG_WRITE_EN) | (1 << CONFIG_PD_D) | (1 << CONFIG_REFEN) | (0x3FF << CONFIG_REFDAC) | (1 << CONFIG_VREF);
+    const uint32_t ADC_reg_config = (1 << CONFIG_WRITE_EN) | (1 << CONFIG_PD_D) | (1 << CONFIG_REFEN) | (0x3FF << CONFIG_REFDAC) | (1 << CONFIG_VREF);
 
     adc::config(ADC_reg_config);
     adc::setup();
@@ -151,9 +151,9 @@ void loop() {
     */
     Serial.println("1 - SAMPLING: Start Sampling");
 
-    uint8_t not_found = 1;
-    uint8_t buffer_to_check = 0;                
-    unsigned long samplingStartTime = millis(); 
+    bool not_found = true;
+    uint8_t buffer_to_check = 0;
+    unsigned long samplingStartTime = millis();
 
     adc::startConversion(sample_period, adc::BLOCKING);
 
@@ -161,37 +161,31 @@ void loop() {
         while (!adc::buffer_filled[buffer_to_check])
             ;
         // Digital Signal Processing (START) ====================================================================================================
-    
-        filter_butterwort_1th_order_50kHz(adc::samplesRawHydrophones[0] + (buffer_to_check * SAMPLE_LENGTH_ADC), samplesFiltered);
+
+        filter_butterworth_1st_order_50kHz(adc::samplesRawHydrophones[0] + (buffer_to_check * SAMPLE_LENGTH_ADC), samplesFiltered);
 
         FFT_raw(samplesFiltered, FFTResultsRaw);
         FFT_mag(FFTResultsRaw, FFTResultsMagnified);
 
-        peaks = peak_detection(FFTResultsRaw, FFTResultsMagnified, &num_peaks);
-
-        if (peaks == NULL || num_peaks == 0) {
+        if (peak_detection(FFTResultsRaw, FFTResultsMagnified, samples_interest, peaks_buffer, SAMPLE_LENGTH, &num_peaks)) {
             continue;
         }
 
         for (size_t i = 0; i < num_peaks; i++) {
-            int32_t peakFrequency = peaks[i].frequency;
+            int32_t peakFrequency = peaks_buffer[i].frequency;
             for (int j = 0; j < FREQUENCY_LIST_LENGTH; j++) {
                 if ((peakFrequency < frequenciesOfInterestMax[j]) && (peakFrequency > frequenciesOfInterestMin[j])) {
-                    not_found = 0;
+                    not_found = false;
                     break;
                 }
             }
         }
-
-        // Clean up the allocated peaks array when done.
-        // free(peaks);
 
         buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
 
         if (millis() - samplingStartTime > SAMPLING_TIMEOUT) {
             break;
         }
-
     }
 
     // We make sure the last buffer that we are interested in is filled before continuing
@@ -213,7 +207,7 @@ void loop() {
     // Sampling (STOP) ====================================================================================================
 
     // Multilateration (START) ====================================================================================================
-  
+
     Serial.println("2 - MULTILATERATION: Started the Calculations");
 
     timeDifferenceOfArrival[0] = 0;
@@ -247,9 +241,6 @@ void loop() {
     send_data_udp(FFTResultsMagnified, sizeof(q15_t) * SAMPLE_LENGTH);
 
     // send_peak_data(peaks, lengthOfPeakArray);
- 
-  
-    free(peaks);
 
     send_data_udp(timeDifferenceOfArrival, sizeof(float32_t) * TDOA_DATA_LENGTH);
     send_data_udp(soundLocation, sizeof(float32_t) * POSITION_DATA_LENGTH);
@@ -259,5 +250,4 @@ void loop() {
     // Send data (STOP) ====================================================================================================
 
     Serial.println("--------------------------------------------------");
-
 }

@@ -23,20 +23,17 @@
 
 #include "Include/arm_const_structs.h"
 #include "Include/arm_math.h"
-#include <stdlib.h>
-#include <stdint.h>
 #include <stddef.h>
-#include <string.h>  // for memset()
-#include <stdio.h>   // for debugging prints, if needed
+#include <stdint.h>
+#include <stdio.h> // for debugging prints, if needed
+#include <stdlib.h>
+#include <string.h> // for memset()
 
 #ifdef __cplusplus
 
-extern "C"{
+extern "C" {
 
 #endif // __cplusplus
-
-
-
 
 typedef struct {
     size_t index;    // FFT bin index (optional, for debugging)
@@ -47,12 +44,13 @@ typedef struct {
 
 q15_t* filter_butterwort_9th_order_50kHz(int16_t* samplesRaw);
 q15_t* filter_butterwort_2th_order_50kHz(int16_t* samplesRaw);
-void filter_butterwort_1th_order_50kHz(int16_t* samplesRaw, q15_t* samples);
+void filter_butterworth_1st_order_50kHz(const int16_t* samplesRaw, q15_t* samples);
+
 
 void FFT_raw(q15_t* samples, q15_t* resultsRaw);
 void FFT_mag(q15_t* resultsRaw, q15_t* results);
 
-Peak* peak_detection(const q15_t *resultsRaw, const q15_t *results, size_t *out_num_peaks); 
+int peak_detection(const q15_t* resultsRaw, const q15_t* results, size_t samplesOfInterest, Peak* outPeaks, size_t outBufSize, size_t* outNumPeaks);
 
 float32_t phaseQ31_to_radianFloat32(q31_t phaseQ15);
 

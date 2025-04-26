@@ -1,11 +1,12 @@
 
 
-#include "Include/arm_math.h"
-#include "Include/arm_const_structs.h"
-#include "arm_math.h"
 #include "dsp.h"
+#include "Include/arm_const_structs.h"
+#include "Include/arm_math.h"
+#include "arm_math.h"
 
-// How fast the ADC samples, important to know for FFT, the max is 510 kHz, HOWEVER for some reason ADC can not go max, real value is lower at:
+// How fast the ADC samples, important to know for FFT, the max is 510 kHz,
+// HOWEVER for some reason ADC can not go max, real value is lower at:
 #define SAMPLE_RATE 430000 // 430.0 kHz
 // How many samples we want from ADC
 #define SAMPLE_LENGTH 1024
@@ -15,21 +16,23 @@
 
 // For FFT to shift bits
 #define BITSHIFT 9
-// How more pronounced the peaks of a frequencies will be in contrast with the lower
-// dont have it to high as this will make the noise have high peaks as well
+// How more pronounced the peaks of a frequencies will be in contrast with the
+// lower dont have it to high as this will make the noise have high peaks as
+// well
 #define SCALE_FACTOR 1000.0
 // The upper frequency limit of the frequency band we actually want to check
 #define FREQUENCY_LIMIT 60000
 
-// A manual variable to filter out small peaks that don't manage to get over the threshold, so called "fake peaks"
+// A manual variable to filter out small peaks that don't manage to get over the
+// threshold, so called "fake peaks"
 #define PEAK_THRESHOLD 1000
 
-#define fOrder  9
-#define fOrder2  2
+#define fOrder 9
+#define fOrder2 2
 
 // We do not care about frequencies up to 510k Hz, so we define a variable for
 // indexes of indexes, go to the h file
-const q15_t samplesOfInterest = FREQUENCY_LIMIT * SAMPLE_LENGTH / SAMPLE_RATE;
+const q15_t samples_of_interest = FREQUENCY_LIMIT * SAMPLE_LENGTH / SAMPLE_RATE;
 
 /*
 Coefficients for filter found at https://www.meme.net.au/butterworth.html,
@@ -63,24 +66,23 @@ algorithms for increase efficiency.
 const uint32_t doBitReverse = 1;
 
 // Constants in q_15 format done right
-const q15_t PI_q15 = (q15_t)(PI * (1 << 15) + 0.5);
-
+const q15_t PI_Q15 = (q15_t)(PI * (1 << 15) + 0.5);
 
 static q15_t q15_divide(q15_t a, q15_t b) {
-    if (b == 0) {
-        return (a >= 0) ? 0x7FFF : 0x8000;  
-    }
+  if (b == 0) {
+    return (a >= 0) ? 0x7FFF : 0x8000;
+  }
 
-    int32_t a_scaled = (int32_t)a << 15;
-    int32_t result = a_scaled / b;
+  int32_t a_scaled = (int32_t)a << 15;
+  int32_t result = a_scaled / b;
 
-    if (result > 0x7FFF) {
-        result = 0x7FFF;
-    } else if (result < -0x8000) {
-        result = -0x8000;
-    }
+  if (result > 0x7FFF) {
+    result = 0x7FFF;
+  } else if (result < -0x8000) {
+    result = -0x8000;
+  }
 
-    return (q15_t)result;
+  return (q15_t)result;
 }
 
 /*
@@ -94,33 +96,30 @@ Check wiki for more info:
 https://proofwiki.org/wiki/Power_Series_Expansion_for_Real_Arctangent_Function
 */
 
-
 static q15_t q15_taylor_atan(q15_t x) {
-    const int TAYLOR_TERMS = 10;
-    
-    // Compute x^2 in Q15 with rounding.
-    q15_t x_sq = (q15_t)(((int32_t)x * x + (1 << 14)) >> 15);
+  const int TAYLOR_TERMS = 10;
 
-    q15_t term = x;
-    q15_t result = x;
+  // Compute x^2 in Q15 with rounding.
+  q15_t x_sq = (q15_t)(((int32_t)x * x + (1 << 14)) >> 15);
 
-    for (int i = 1; i < TAYLOR_TERMS; i++) {
-        term = (q15_t)(((int32_t)term * x_sq + (1 << 14)) >> 15);
-        
-        int divisor = 2 * i + 1;
-        q15_t term_div = (q15_t)(((int32_t)term + divisor / 2) / divisor);
+  q15_t term = x;
+  q15_t result = x;
 
-        if (i % 2 == 1) {
-            result -= term_div;
-        } else {
-            result += term_div;
-        }
+  for (int i = 1; i < TAYLOR_TERMS; i++) {
+    term = (q15_t)(((int32_t)term * x_sq + (1 << 14)) >> 15);
+
+    int divisor = 2 * i + 1;
+    q15_t term_div = (q15_t)(((int32_t)term + divisor / 2) / divisor);
+
+    if (i % 2 == 1) {
+      result -= term_div;
+    } else {
+      result += term_div;
     }
+  }
 
-    return result;
+  return result;
 }
-
-
 
 q15_t *filter_butterwort_9th_order_50kHz(int16_t *samplesRaw) {
   // Create array to store the filtered samples
@@ -206,37 +205,38 @@ q15_t *filter_butterwort_2th_order_50kHz(int16_t *samplesRaw) {
   return samples;
 }
 
+void filter_butterworth_1st_order_50kHz(const int16_t *samplesRaw,
+                                        q15_t *samples) {
 
+  static q15_t x_prev = 0;
+  static q15_t y_prev = 0;
 
-void filter_butterworth_1st_order_50kHz(const int16_t *samplesRaw, q15_t* samples) {
+  for (int n = 0; n < SAMPLE_LENGTH; n++) {
+    // Convert the raw sample to Q15 and scale it by the amplification factor.
+    // Assuming the raw sample is in a similar Q15 range or is appropriately
+    // scaled.
+    q15_t x_current = ((q15_t)samplesRaw[n] * FILTER_AMPLIFICATION);
 
-    static q15_t x_prev = 0;
-    static q15_t y_prev = 0;
+    // Compute the filter output in two stages:
+    // 1. Compute the numerator (b0*x[n] + b1*x[n-1])
+    q15_t num = (bFilterCoeffs1[0] * x_current) + (bFilterCoeffs1[1] * x_prev);
 
-    for (int n = 0; n < SAMPLE_LENGTH; n++) {
-        // Convert the raw sample to Q15 and scale it by the amplification factor.
-        // Assuming the raw sample is in a similar Q15 range or is appropriately scaled.
-        q15_t x_current = ((q15_t)samplesRaw[n] * FILTER_AMPLIFICATION);
+    // 2. Compute the denominator term (a1*y[n-1]) and subtract from the
+    // numerator.
+    q15_t den = (aFilterCoeffs1[1] * y_prev);
+    q15_t temp = num - den;
 
-        // Compute the filter output in two stages:
-        // 1. Compute the numerator (b0*x[n] + b1*x[n-1])
-        q15_t num = (bFilterCoeffs1[0] * x_current) + (bFilterCoeffs1[1] * x_prev);
+    // Multiply by a0 (normally, a0 equals 1.0 in Q15, i.e., 0x7FFF, so this
+    // might be a no-op if normalized).
+    q15_t y_current = (aFilterCoeffs1[0] * temp);
 
-        // 2. Compute the denominator term (a1*y[n-1]) and subtract from the numerator.
-        q15_t den = (aFilterCoeffs1[1] * y_prev);
-        q15_t temp = num - den;
+    // Store the output.
+    samples[n] = y_current;
 
-        // Multiply by a0 (normally, a0 equals 1.0 in Q15, i.e., 0x7FFF, so this might be a no-op if normalized).
-        q15_t y_current = (aFilterCoeffs1[0] * temp);
-
-        // Store the output.
-        samples[n] = y_current;
-
-        // Update filter state.
-        x_prev = x_current;
-        y_prev = y_current;
-    }
-
+    // Update filter state.
+    x_prev = x_current;
+    y_prev = y_current;
+  }
 }
 
 /*
@@ -245,7 +245,7 @@ We calculating first the raw values out of FFT witch are "Real" and "Imaginary"
 values these values are really interesting since this raw format can be used to
 calculate both amplitude, frequencies and phase shift of a signal
 */
-void FFT_raw(q15_t *samples, q15_t* resultsRaw) {
+void FFT_raw(q15_t *samples, q15_t *resultsRaw) {
   /*
   To store the results of fft with
   complex numbers, need to have double the
@@ -267,10 +267,9 @@ void FFT_raw(q15_t *samples, q15_t* resultsRaw) {
 
   // The FFT itself, output is the FFT complex array
   arm_rfft_q15(&fftInstance, samples, resultsRaw);
-
 }
 
- void FFT_mag(q15_t *resultsRaw, q15_t* results) {
+void FFT_mag(q15_t *resultsRaw, q15_t *results) {
   /*
   Create an empty array to store the magnitude
   calculations of the FFT.
@@ -280,120 +279,134 @@ void FFT_raw(q15_t *samples, q15_t* resultsRaw) {
 
   // Converts the complex array into a magnitude array.
   arm_cmplx_mag_q15(resultsRaw, results, SAMPLE_LENGTH);
-
 }
 
+// Compute phase from real and imag in Q15 format
+static inline q15_t compute_phase(q15_t real, q15_t imag) {
+  if (real == 0 && imag == 0) {
+    return 0;
+  } else if (real == 0) {
+    // +90 or -90 degrees
+    return (imag > 0) ? q15_divide(PI_Q15, 2) : (q15_t)(-q15_divide(PI_Q15, 2));
+  } else {
+    // atan(imag/real)
+    return q15_taylor_atan(q15_divide(imag, real));
+  }
+}
 
+// Simple median via insertion sort on small array
+// Median via Quickselect (Hoare's algorithm) for O(n) average complexity
+static size_t partition(q15_t *arr, size_t left, size_t right,
+                        size_t pivot_index) {
+  q15_t pivot_value = arr[pivot_index];
+  // Move pivot to end
+  q15_t tmp = arr[pivot_index];
+  arr[pivot_index] = arr[right];
+  arr[right] = tmp;
+  size_t store_index = left;
+  for (size_t i = left; i < right; ++i) {
+    if (arr[i] < pivot_value) {
+      tmp = arr[store_index];
+      arr[store_index] = arr[i];
+      arr[i] = tmp;
+      ++store_index;
+    }
+  }
+  // Move pivot to its final place
+  tmp = arr[right];
+  arr[right] = arr[store_index];
+  arr[store_index] = tmp;
+  return store_index;
+}
+
+static q15_t quickselect_median(q15_t *arr, size_t n) {
+  size_t left = 0, right = n - 1;
+  size_t median_index = n / 2;
+  while (1) {
+    if (left == right) {
+      return arr[left];
+    }
+    // Choose pivot as middle element
+    size_t pivot_index = left + (right - left) / 2;
+    pivot_index = partition(arr, left, right, pivot_index);
+    if (pivot_index == median_index) {
+      return arr[median_index];
+    } else if (median_index < pivot_index) {
+      right = pivot_index - 1;
+    } else {
+      left = pivot_index + 1;
+    }
+  }
+}
+
+// Median wrapper: handles even/odd length
+static q15_t median_of(q15_t *arr, size_t n) {
+    if (n == 0) return 0;
+    q15_t median = quickselect_median(arr, n);
+    if ((n & 1) == 0) {
+        // Even count: average the two middle values
+        // Find the max in the lower half
+        q15_t max_lower = arr[0];
+        for (size_t i = 1; i < n/2; ++i) {
+            if (arr[i] > max_lower) max_lower = arr[i];
+        }
+        int sum = (int)max_lower + (int)median;
+        return (q15_t)(sum >> 1);
+    }
+    return median;
+}
 /*
  * peak_detection():
- *   - resultsRaw: pointer to interleaved FFT raw data (real and imaginary parts) in Q15.
- *   - results: pointer to an array of FFT magnitudes in Q15.
- *   - out_num_peaks: output parameter that will contain the number of detected peaks.
+ *   - resultsRaw: pointer to interleaved FFT raw data (real, imag) in Q15,
+ * length = 2*SAMPLE_LENGTH
+ *   - results:    pointer to FFT magnitudes in Q15, length = SAMPLE_LENGTH
+ *   - samplesOfInterest: number of low-frequency bins to use for median
+ * threshold
+ *   - outPeaks:   caller-allocated array of Peaks, size = outBufSize
+ *   - outBufSize: capacity of outPeaks[]
+ *   - outNumPeaks: pointer to size_t for number of peaks detected
  *
- * Returns:
- *   A dynamically allocated array of Peak structures (or NULL if none detected or on error).
- *   The caller is responsible for freeing the returned array.
+ * Returns 0 on success (outNumPeaks filled), -1 on error (outNumPeaks = 0).
  */
-Peak* peak_detection(const q15_t *resultsRaw, const q15_t *results, size_t *out_num_peaks) {
-    size_t i;
-    size_t candidate_count = 0;
+int peak_detection(const q15_t *resultsRaw, const q15_t *results,
+                   size_t samplesOfInterest, Peak *outPeaks, size_t outBufSize,
+                   size_t *outNumPeaks) {
+  if (!resultsRaw || !results || !outPeaks || !outNumPeaks) {
+    return -1;
+  }
+  if (samplesOfInterest == 0 || samplesOfInterest > SAMPLE_LENGTH) {
+    *outNumPeaks = 0;
+    return -1;
+  }
 
-    // Allocate worst-case candidate array (each bin might be a candidate)
-    Peak *candidates = (Peak *) malloc(SAMPLE_LENGTH * sizeof(Peak));
-    if (!candidates) {
-        *out_num_peaks = 0;
-        return NULL;
-    }
+  // 1) Compute median-based threshold using first samplesOfInterest bins
+  q15_t scratch[samplesOfInterest];
+  memcpy(scratch, results, samplesOfInterest * sizeof(q15_t));
+  q15_t med = median_of(scratch, samplesOfInterest);
+  // threshold = med*3 + PEAK_THRESHOLD, in Q15
+  int32_t thr_q31 = (int32_t)med * 3 + (int32_t)PEAK_THRESHOLD;
+  if (thr_q31 > 0x7FFF)
+    thr_q31 = 0x7FFF;
+  if (thr_q31 < -0x8000)
+    thr_q31 = -0x8000;
+  q15_t threshold = (q15_t)thr_q31;
 
-    // First pass: detect local maxima from index 1 to SAMPLE_LENGTH-2.
-    for (i = 1; i < SAMPLE_LENGTH - 1; i++) {
-        if (results[i] >= results[i - 1] && results[i] >= results[i + 1]) {
-            // Store this candidate.
-            candidates[candidate_count].index = i;
-            // Promote amplitude from Q15 to Q31 (simple cast; adjust scaling if needed)
-            candidates[candidate_count].amplitude = (q31_t)results[i];
-            // Frequency computation: bin index to frequency.
-            candidates[candidate_count].frequency = (q31_t)((i * SAMPLE_RATE) / SAMPLE_LENGTH);
-            candidates[candidate_count].phase = 0;
-            candidate_count++;
-        }
+  // 2) Single-pass peak detection and filtering
+  size_t count = 0;
+  for (size_t i = 1; i < SAMPLE_LENGTH - 1; ++i) {
+    q15_t mag = results[i];
+    // local max and above threshold
+    if (mag >= results[i - 1] && mag >= results[i + 1] && mag > threshold) {
+      if (count >= outBufSize)
+        break;
+      Peak *p = &outPeaks[count++];
+      p->index = i;
+      p->amplitude = (q31_t)mag;
+      p->frequency = (q31_t)((i * SAMPLE_RATE) / SAMPLE_LENGTH);
+      p->phase = compute_phase(resultsRaw[2 * i], resultsRaw[2 * i + 1]);
     }
+  }
 
-    // Prepare to compute a median from the first samplesOfInterest values of 'results'.
-    q15_t *resultsSort = (q15_t *) malloc(samplesOfInterest * sizeof(q15_t));
-    if (!resultsSort) {
-        free(candidates);
-        *out_num_peaks = 0;
-        return NULL;
-    }
-    for (i = 0; i < samplesOfInterest; i++) {
-        resultsSort[i] = results[i];
-    }
-    // Insertion sort (or qsort, if available) on the subset.
-    for (i = 1; i < samplesOfInterest; i++) {
-        q15_t key = resultsSort[i];
-        int j = i - 1;
-        while (j >= 0 && resultsSort[j] > key) {
-            resultsSort[j + 1] = resultsSort[j];
-            j--;
-        }
-        resultsSort[j + 1] = key;
-    }
-    q15_t median;
-    if (samplesOfInterest % 2 == 0) {
-        median = (resultsSort[samplesOfInterest/2 - 1] + resultsSort[samplesOfInterest/2]) / 2;
-    } else {
-        median = resultsSort[samplesOfInterest/2];
-    }
-    free(resultsSort);
-
-    // Define a threshold: median * 3 + PEAK_THRESHOLD.
-    q15_t threshold = median * 3 + PEAK_THRESHOLD;
-
-    // Allocate the final peaks array.
-    // Worst-case, all candidates are valid.
-    Peak *final_peaks = (Peak *) malloc(candidate_count * sizeof(Peak));
-    if (!final_peaks) {
-        free(candidates);
-        *out_num_peaks = 0;
-        return NULL;
-    }
-    size_t final_count = 0;
-
-    // For each candidate, if amplitude exceeds the threshold, compute phase.
-    for (i = 0; i < candidate_count; i++) {
-        if (candidates[i].amplitude > threshold) {
-            size_t idx = candidates[i].index;
-            q15_t real = resultsRaw[idx * 2];
-            q15_t imag = resultsRaw[idx * 2 + 1];
-            q15_t phase;
-            // Compute phase safely.
-            if ((real == 0) && (imag == 0)) {
-                phase = 0;
-            } else if ((real == 0) && (imag > 0)) {
-                phase = q15_divide(PI_q15, 2);
-            } else if ((real == 0) && (imag < 0)) {
-                phase = -q15_divide(PI_q15, 2);
-            } else {
-                phase = q15_taylor_atan(q15_divide(imag, real));
-            }
-            candidates[i].phase = phase;
-            final_peaks[final_count++] = candidates[i];
-        }
-    }
-    free(candidates);
-
-    // Optionally, shrink the allocated array using realloc.
-    if (final_count == 0) {
-        free(final_peaks);
-        *out_num_peaks = 0;
-        return NULL;
-    } else {
-        Peak *resized = (Peak *) realloc(final_peaks, final_count * sizeof(Peak));
-        if (resized != NULL) {
-            final_peaks = resized;
-        }
-        *out_num_peaks = final_count;
-        return final_peaks;
-    }
+  *outNumPeaks = count;
+  return 0;
 }
