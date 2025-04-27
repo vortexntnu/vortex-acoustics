@@ -7,6 +7,7 @@
 #include <ifaddrs.h>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,6 +22,14 @@
 #define BUFFER_PER_CHANNEL 6
 #define RAW_HYDROPHONE_SIZE (SAMPLE_LENGTH * BUFFER_PER_CHANNEL)
 
+#define MTU_PAYLOAD_SIZE 1471 // for example
+#define HYDRO_PKTS_PER_HYDROPHONE 6
+#define NUM_HYDROPHONES 5
+#define FILTERED_PKTS 2
+#define SEQ_HYDRO_END (HYDRO_PKTS_PER_HYDROPHONE * NUM_HYDROPHONES) // 30
+#define SEQ_FILTERED_END (SEQ_HYDRO_END + FILTERED_PKTS)
+#define SEQ_FFT_END (SEQ_FILTERED_END + FILTERED_PKTS)
+
 int16_t samples_raw_hydrophone1[RAW_HYDROPHONE_SIZE];
 int16_t samples_raw_hydrophone2[RAW_HYDROPHONE_SIZE];
 int16_t samples_raw_hydrophone3[RAW_HYDROPHONE_SIZE];
@@ -31,15 +40,34 @@ int16_t *samples_raw_hydrophones[5] = {
     samples_raw_hydrophone1, samples_raw_hydrophone2, samples_raw_hydrophone3,
     samples_raw_hydrophone4, samples_raw_hydrophone5};
 
-int16_t samples_filtered[SAMPLE_LENGTH];
-int16_t fft_magnified[2 * SAMPLE_LENGTH];
+int16_t samples_filtered[SAMPLE_LENGTH] = {0};
+int16_t fft_magnified[SAMPLE_LENGTH] = {0};
 
-int32_t peaks[10];
+typedef struct {
+  size_t index;      // FFT bin index (optional, for debugging)
+  int32_t amplitude; // Peak amplitude (converted to Q31)
+  int32_t frequency; // Frequency (in Hz, represented in Q31 if needed)
+  int16_t phase;     // Phase shift in Q15 format
+} Peak;
 
-float time_difference_of_arrival[4];
-float pinger_position[3];
+typedef struct {
+  uint8_t expected_seq;
+  size_t offset;
+  uint16_t peaks_bytes;
+} StreamState;
 
-char *get_local_ip(void) {
+Peak peaks[SAMPLE_LENGTH] = {0};
+
+float time_diff[5] = {0};
+float position[4] = {0};
+
+void stream_init(StreamState *st) {
+  st->expected_seq = 0;
+  st->offset = 0;
+  st->peaks_bytes = 0;
+}
+
+char *get_local_ip() {
   struct ifaddrs *ifaddr, *ifa;
   static char ip[INET_ADDRSTRLEN] = "127.0.0.1"; // Default IP
 
@@ -168,7 +196,7 @@ void send_frequencies_of_interest(TeensyCommunicationUDP *comm,
 void fetch_data(TeensyCommunicationUDP *comm) {
   int attempts = 0;
   while (attempts < 1000) {
-    uint8_t buffer[1024] = {0};
+    uint8_t buffer[1500] = {0};
     socklen_t addrlen = sizeof(comm->teensy_addr);
     int n = recvfrom(comm->client_socket, buffer, sizeof(buffer) - 1, 0,
                      (struct sockaddr *)&comm->teensy_addr, &addrlen);
@@ -180,16 +208,61 @@ void fetch_data(TeensyCommunicationUDP *comm) {
   }
 }
 
-void handle_data(uint8_t *buffer, int length) {
-  static uint16_t msg_num = 0;
-  static uint16_t offset = 0;
-  if (msg_num < 5) {
-    memcpy(samples_raw_hydrophones[msg_num] + offset, buffer, length);
-    offset += length;
-    if (offset == RAW_HYDROPHONE_SIZE) {
-      msg_num += 1;
-      offset = 0;
+int handle_data(StreamState *st, const uint8_t *buf, uint32_t len) {
+  uint8_t seq = buf[0];
+  if (seq != st->expected_seq) {
+    // out of order packet
+    return -1;
+  }
+
+  // Hydrophones: seq in [0 .. 29]
+  if (seq < SEQ_HYDRO_END) {
+    int hp = seq / HYDRO_PKTS_PER_HYDROPHONE; // 0..4
+    memcpy(samples_raw_hydrophones[hp] + st->offset, buf + 1, len - 1);
+    st->offset += (len - 1);
+    if (st->offset >= RAW_HYDROPHONE_SIZE) {
+      st->offset = 0;
     }
   }
-  
+  // Filtered: seq in [30..31]
+  else if (seq < SEQ_FILTERED_END) {
+    memcpy(samples_filtered + st->offset, buf + 1, len - 1);
+    st->offset += (len - 1);
+    if (st->offset >= SAMPLE_LENGTH) {
+      st->offset = 0;
+    }
+  }
+  // FFT: seq in [32..33]
+  else if (seq < SEQ_FFT_END) {
+    memcpy(samples_fft + st->offset, buf + 1, len - 1);
+    st->offset += (len - 1);
+    if (st->offset >= SAMPLE_LENGTH) {
+      st->offset = 0;
+    }
+  }
+  // Peak header: exactly seq == SEQ_PEAK_HDR
+  else if (seq == SEQ_PEAK_HDR) {
+    st->peaks_bytes = buf[1]; // total number of peak‐data packets
+    st->offset = 0;
+  }
+  // Peak data: next `peaks_bytes` sequences
+  else if (seq < SEQ_PEAK_HDR + st->peaks_bytes) {
+    // payload starts at buf+2, length = len-2
+    memcpy(peaks + st->offset, buf + 2, len - 2);
+    st->offset += (len - 2);
+  }
+  // TDOA: next packet
+  else if (seq == SEQ_PEAK_HDR + st->peaks_bytes) {
+    memcpy(time_diff, buf + 1, len - 1);
+  }
+  // Position: final packet
+  else if (seq == SEQ_PEAK_HDR + st->peaks_bytes + 1) {
+    memcpy(position, buf + 1, len - 1);
+
+    // Done with this frame… reset for next
+    stream_init(st);
+  }
+
+  st->expected_seq++;
+  return 0;
 }
