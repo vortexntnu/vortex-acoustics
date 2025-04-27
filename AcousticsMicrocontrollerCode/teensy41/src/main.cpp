@@ -113,6 +113,7 @@ void setup() {
         frequenciesOfInterestMax[i] = frequenciesOfInterest[i] + frequencyVariances[i];
         frequenciesOfInterestMin[i] = frequenciesOfInterest[i] - frequencyVariances[i];
     }
+
     Serial.println("Client CONNECTED");
     // Ethernet Setup (STOP) ====================================================================================================
 
@@ -128,13 +129,6 @@ void setup() {
 
     Serial.println("Sampling Setup complete");
     // Sampling Setup (STOP) ====================================================================================================
-
-    // Digital Signal Processing Setup (START) ====================================================================================================
-    Serial.println("4 - DSP Setup");
-    // Fill up buffers with 0s first to not get unexpected errors
-
-    Serial.println("DSP Setup Complete");
-    // Digital Signal Processing Setup (STOP) ====================================================================================================
 
     Serial.println("==================================================");
     Serial.println("SETUP COMPLETE :D");
@@ -230,6 +224,8 @@ void loop() {
 
     // Send data (START) ====================================================================================================
     Serial.println("3 - DATA SEND: Start sending data");
+
+    sequence = 0;
 
     for (int i = 0; i < NUM_HYDROPHONES; i++) {
         send_data_udp(adc::samplesRawHydrophones[i], sizeof(int16_t) * RAW_HYDROPHONE_SIZE);

@@ -341,19 +341,21 @@ static q15_t quickselect_median(q15_t *arr, size_t n) {
 
 // Median wrapper: handles even/odd length
 static q15_t median_of(q15_t *arr, size_t n) {
-    if (n == 0) return 0;
-    q15_t median = quickselect_median(arr, n);
-    if ((n & 1) == 0) {
-        // Even count: average the two middle values
-        // Find the max in the lower half
-        q15_t max_lower = arr[0];
-        for (size_t i = 1; i < n/2; ++i) {
-            if (arr[i] > max_lower) max_lower = arr[i];
-        }
-        int sum = (int)max_lower + (int)median;
-        return (q15_t)(sum >> 1);
+  if (n == 0)
+    return 0;
+  q15_t median = quickselect_median(arr, n);
+  if ((n & 1) == 0) {
+    // Even count: average the two middle values
+    // Find the max in the lower half
+    q15_t max_lower = arr[0];
+    for (size_t i = 1; i < n / 2; ++i) {
+      if (arr[i] > max_lower)
+        max_lower = arr[i];
     }
-    return median;
+    int sum = (int)max_lower + (int)median;
+    return (q15_t)(sum >> 1);
+  }
+  return median;
 }
 /*
  * peak_detection():
@@ -387,7 +389,7 @@ int peak_detection(const q15_t *resultsRaw, const q15_t *results,
   int32_t thr_q31 = (int32_t)med * 3 + (int32_t)PEAK_THRESHOLD;
   if (thr_q31 > 0x7FFF)
     thr_q31 = 0x7FFF;
-  if (thr_q31 < -0x8000)
+  else if (thr_q31 < -0x8000)
     thr_q31 = -0x8000;
   q15_t threshold = (q15_t)thr_q31;
 
