@@ -106,14 +106,68 @@ DMAChannel dma1 = DMAChannel();
 DMAChannel dma2 = DMAChannel();
 DMAChannel dma3 = DMAChannel();
 
-// sets pins accordingly to value (no control signals)
-void write_ADC_par(uint16_t value);
-// returns value on par-bus to ADC (no control signals)
-uint16_t read_ADC_par();
+static void write_ADC_par(uint16_t value) {
+    // The ADC pins are located at bits 16-31 of GPIO port (1)
+    gpio::write_port(value << DB_REG_SHIFT, DB_GPIO_PORT_NORMAL, DB_MASK);
+}
 
-// should not be accessed from outside, get called when triggerconversion is called.
-// trigger conversion can be called from the outside to sample only once.
-void read_loop();
+static uint16_t read_ADC_par() {
+    // we want the 16 highest bits
+    return gpio::read_port(DB_GPIO_PORT_NORMAL) >> DB_REG_SHIFT;
+}
+
+static void read_loop() {
+    // timestamps[active_buffer][sample_index] = ARM_DWT_CYCCNT - clk_cyc;
+
+    if (stop_sampling) {
+        return;
+    }
+    NVIC_DISABLE_IRQ(IRQ_PIT);
+    // detachInterrupt(BUSYINT_ARDUINO_PIN);
+
+    // no need to have CONVST high now
+    // * write both at the same time to go faster
+    IMXRT_GPIO7.DR_CLEAR = 1 << CONVST | 1 << _CS;
+
+    for (uint16_t hydrophone = 0; hydrophone < N_HYDROPHONES; hydrophone++) {
+        // gpio::write_pin(_RD, 0, _RD_GPIO_PORT_NORMAL);
+        IMXRT_GPIO9.DR_CLEAR |= (1 << _RD);
+        // maybe not needed
+        // delayNanoseconds(T_RDL);
+
+        // ringbuffer_channels_ptr[i]->insert(read_ADC_par());
+        // channel_buff_ptr[hydroph][active_buffer][sample_index] = read_ADC_par();
+        size_t index = sample_index + active_buffer * SAMPLE_LENGTH_ADC;
+        samples_raw_hydrophones[hydrophone][index] = read_ADC_par();
+        IMXRT_GPIO9.DR_SET |= (1 << _RD);
+        // gpio::write_pin(_RD, 1, _RD_GPIO_PORT_NORMAL);
+        //  this is already enough delay for 2ns (toggeling takes more than 2ns)
+        //  delayNanoseconds(20);
+    }
+
+    _CS_GPIO_PORT_NORMAL.DR_SET |= (1 << _CS);
+
+    // timestamps[active_buffer][sample_index] = stopwatch;
+    // stopwatch = elapsedMicros();
+    sample_index++;
+
+    if (sample_index >= SAMPLE_LENGTH_ADC) {
+        // updating global variables
+        buffer_filled |= (1 << active_buffer);
+        sample_index = sample_index % SAMPLE_LENGTH_ADC; // or maybe to 0
+        active_buffer = (active_buffer + 1) % BUFFER_PER_CHANNEL;
+        buffer_filled &= ~(1 << active_buffer);
+
+        overall_buffer_count++;
+    }
+    // timestamps[active_buffer][sample_index] = ARM_DWT_CYCCNT - clk_cyc;
+    // unsigned long time_to_read = stopwatch;
+    // Serial.print("time 1 read: ");
+    // Serial.println(time_to_read);
+    NVIC_ENABLE_IRQ(IRQ_PIT);
+}
+
+
 
 void adc_init() {
     // ! commented because we test with using the fast pins
@@ -294,57 +348,6 @@ void adc_trigger_conversion() {
         break;
     }
     // clk_cyc = ARM_DWT_CYCCNT;
-}
-
-void read_loop() {
-    // timestamps[active_buffer][sample_index] = ARM_DWT_CYCCNT - clk_cyc;
-
-    if (stop_sampling) {
-        return;
-    }
-    NVIC_DISABLE_IRQ(IRQ_PIT);
-    // detachInterrupt(BUSYINT_ARDUINO_PIN);
-
-    // no need to have CONVST high now
-    // * write both at the same time to go faster
-    IMXRT_GPIO7.DR_CLEAR = 1 << CONVST | 1 << _CS;
-
-    for (uint16_t hydrophone = 0; hydrophone < N_HYDROPHONES; hydrophone++) {
-        // gpio::write_pin(_RD, 0, _RD_GPIO_PORT_NORMAL);
-        IMXRT_GPIO9.DR_CLEAR |= (1 << _RD);
-        // maybe not needed
-        // delayNanoseconds(T_RDL);
-
-        // ringbuffer_channels_ptr[i]->insert(read_ADC_par());
-        // channel_buff_ptr[hydroph][active_buffer][sample_index] = read_ADC_par();
-        size_t index = sample_index + active_buffer * SAMPLE_LENGTH_ADC;
-        samples_raw_hydrophones[hydrophone][index] = read_ADC_par();
-        IMXRT_GPIO9.DR_SET |= (1 << _RD);
-        // gpio::write_pin(_RD, 1, _RD_GPIO_PORT_NORMAL);
-        //  this is already enough delay for 2ns (toggeling takes more than 2ns)
-        //  delayNanoseconds(20);
-    }
-
-    _CS_GPIO_PORT_NORMAL.DR_SET |= (1 << _CS);
-
-    // timestamps[active_buffer][sample_index] = stopwatch;
-    // stopwatch = elapsedMicros();
-    sample_index++;
-
-    if (sample_index >= SAMPLE_LENGTH_ADC) {
-        // updating global variables
-        buffer_filled |= (1 << active_buffer);
-        sample_index = sample_index % SAMPLE_LENGTH_ADC; // or maybe to 0
-        active_buffer = (active_buffer + 1) % BUFFER_PER_CHANNEL;
-        buffer_filled &= ~(1 << active_buffer);
-
-        overall_buffer_count++;
-    }
-    // timestamps[active_buffer][sample_index] = ARM_DWT_CYCCNT - clk_cyc;
-    // unsigned long time_to_read = stopwatch;
-    // Serial.print("time 1 read: ");
-    // Serial.println(time_to_read);
-    NVIC_ENABLE_IRQ(IRQ_PIT);
 }
 
 // void sample_fasfb(uint16_t nb_samples) {
@@ -529,14 +532,6 @@ void config(uint32_t reg_val) {
     gpio::configPort(DB_GPIO_PORT_NORMAL, 0x00000000, DB_MASK);
 }
 
-void write_ADC_par(uint16_t value) {
-    // The ADC pins are located at bits 16-31 of GPIO port (1)
-    gpio::write_port(value << DB_REG_SHIFT, DB_GPIO_PORT_NORMAL, DB_MASK);
-}
-uint16_t read_ADC_par() {
-    // we want the 16 highest bits
-    return gpio::read_port(DB_GPIO_PORT_NORMAL) >> DB_REG_SHIFT;
-}
 
 void setting_up_timers_DMA() {
     // max value for counter: 0xFFFF

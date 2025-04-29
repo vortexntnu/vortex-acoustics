@@ -1,4 +1,6 @@
-#pragma once
+#ifndef ADC_H
+#define ADC_H
+
 #include "core_pins.h"
 #include "imxrt.h"
 #include <cstddef>
@@ -150,7 +152,9 @@ void adc_stop_conversion();                                                     
 
 void adc_trigger_conversion(); // tell ADC to start converting.
 
-void sample_fasfb(uint16_t nb_samples);
+// void sample_fasfb(uint16_t nb_samples);
 
 void setting_up_timers_DMA();
 void setting_up_DMA_channels();
+
+#endif // !ADC_H
