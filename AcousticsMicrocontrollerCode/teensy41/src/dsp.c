@@ -4,34 +4,22 @@
 #include "Include/arm_const_structs.h"
 #include "Include/arm_math.h"
 #include "arm_math.h"
+#include <cstdint>
 
-// How fast the ADC samples, important to know for FFT, the max is 510 kHz,
-// HOWEVER for some reason ADC can not go max, real value is lower at:
 #define SAMPLE_RATE 430000 // 430.0 kHz
-// How many samples we want from ADC
 #define SAMPLE_LENGTH 1024
 
-// How much should the signal should be amplified before filtering it
 #define FILTER_AMPLIFICATION 2
 
-// For FFT to shift bits
 #define BITSHIFT 9
-// How more pronounced the peaks of a frequencies will be in contrast with the
-// lower dont have it to high as this will make the noise have high peaks as
-// well
 #define SCALE_FACTOR 1000.0
-// The upper frequency limit of the frequency band we actually want to check
 #define FREQUENCY_LIMIT 60000
 
-// A manual variable to filter out small peaks that don't manage to get over the
-// threshold, so called "fake peaks"
 #define PEAK_THRESHOLD 1000
 
 #define fOrder 9
 #define fOrder2 2
 
-// We do not care about frequencies up to 510k Hz, so we define a variable for
-// indexes of indexes, go to the h file
 const q15_t samples_of_interest = FREQUENCY_LIMIT * SAMPLE_LENGTH / SAMPLE_RATE;
 
 /*
@@ -67,6 +55,16 @@ const uint32_t doBitReverse = 1;
 
 // Constants in q_15 format done right
 const q15_t PI_Q15 = (q15_t)(PI * (1 << 15) + 0.5);
+
+static int16_t samplesRawForDSP[SAMPLE_LENGTH] = {0};
+static size_t samples_interest = 32;
+static q15_t FFTResultsRaw[2 * SAMPLE_LENGTH] = {0};
+
+
+q15_t samplesFiltered[SAMPLE_LENGTH] = {0};
+q15_t FFTResultsMagnified[SAMPLE_LENGTH] = {0};
+Peak peaks_buffer[SAMPLE_LENGTH];
+size_t num_peaks;
 
 static q15_t q15_divide(q15_t a, q15_t b) {
   if (b == 0) {
@@ -121,7 +119,7 @@ static q15_t q15_taylor_atan(q15_t x) {
   return result;
 }
 
-q15_t *filter_butterwort_9th_order_50kHz(int16_t *samplesRaw) {
+static q15_t *filter_butterwort_9th_order_50kHz(int16_t *samplesRaw) {
   // Create array to store the filtered samples
   static q15_t samples[SAMPLE_LENGTH];
 
@@ -163,7 +161,7 @@ q15_t *filter_butterwort_9th_order_50kHz(int16_t *samplesRaw) {
   return samples;
 }
 
-q15_t *filter_butterwort_2th_order_50kHz(int16_t *samplesRaw) {
+static q15_t *filter_butterwort_2th_order_50kHz(int16_t *samplesRaw) {
   // Create array to store the filtered samples
   static q15_t samples[SAMPLE_LENGTH];
 
@@ -205,7 +203,7 @@ q15_t *filter_butterwort_2th_order_50kHz(int16_t *samplesRaw) {
   return samples;
 }
 
-void filter_butterworth_1st_order_50kHz(const int16_t *samplesRaw,
+static void filter_butterworth_1st_order_50kHz(const int16_t *samplesRaw,
                                         q15_t *samples) {
 
   static q15_t x_prev = 0;
@@ -245,7 +243,7 @@ We calculating first the raw values out of FFT witch are "Real" and "Imaginary"
 values these values are really interesting since this raw format can be used to
 calculate both amplitude, frequencies and phase shift of a signal
 */
-void FFT_raw(q15_t *samples, q15_t *resultsRaw) {
+static void FFT_raw(q15_t *samples, q15_t *resultsRaw) {
   /*
   To store the results of fft with
   complex numbers, need to have double the
@@ -269,7 +267,7 @@ void FFT_raw(q15_t *samples, q15_t *resultsRaw) {
   arm_rfft_q15(&fftInstance, samples, resultsRaw);
 }
 
-void FFT_mag(q15_t *resultsRaw, q15_t *results) {
+static inline void FFT_mag(q15_t *resultsRaw, q15_t *results) {
   /*
   Create an empty array to store the magnitude
   calculations of the FFT.
@@ -370,7 +368,7 @@ static q15_t median_of(q15_t *arr, size_t n) {
  *
  * Returns 0 on success (outNumPeaks filled), -1 on error (outNumPeaks = 0).
  */
-int peak_detection(const q15_t *resultsRaw, const q15_t *results,
+static int peak_detection(const q15_t *resultsRaw, const q15_t *results,
                    size_t samplesOfInterest, Peak *outPeaks, size_t outBufSize,
                    size_t *outNumPeaks) {
   if (!resultsRaw || !results || !outPeaks || !outNumPeaks) {
@@ -410,5 +408,31 @@ int peak_detection(const q15_t *resultsRaw, const q15_t *results,
   }
 
   *outNumPeaks = count;
+  return 0;
+}
+
+int dsp_find_signal(uint8_t buffer_to_check) {
+
+  filter_butterworth_1st_order_50kHz(samplesRawHydrophones[0] +
+                                         (buffer_to_check * SAMPLE_LENGTH_ADC),
+                                     samplesFiltered);
+
+  FFT_raw(samplesFiltered, FFTResultsRaw);
+  FFT_mag(FFTResultsRaw, FFTResultsMagnified);
+
+  if (peak_detection(FFTResultsRaw, FFTResultsMagnified, samples_interest,
+                     peaks_buffer, SAMPLE_LENGTH, &num_peaks)) {
+    return 0;
+  }
+
+  for (size_t i = 0; i < num_peaks; i++) {
+    int32_t peakFrequency = peaks_buffer[i].frequency;
+    for (int j = 0; j < FREQUENCY_LIST_LENGTH; j++) {
+      if ((peakFrequency < freq_interest_max[j]) &&
+          (peakFrequency > freq_interest_min[j])) {
+        return 1;
+      }
+    }
+  }
   return 0;
 }

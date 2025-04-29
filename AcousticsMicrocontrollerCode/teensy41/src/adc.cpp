@@ -67,7 +67,6 @@ Repeat:
 
 uint8_t DMA_test_variable;
 
-namespace adc {
 
 ADC_sample_mode ADC_mode;
 
@@ -117,7 +116,7 @@ uint16_t read_ADC_par();
 // trigger conversion can be called from the outside to sample only once.
 void read_loop();
 
-void init() {
+void adc_init() {
     // ! commented because we test with using the fast pins
     // gpio::set_normal_GPIO(1 << adc::_WR, _WR_GPIO_PORT_NORMAL);
     // gpio::set_normal_GPIO(1 << adc::_RD, _RD_GPIO_PORT_NORMAL);
@@ -183,7 +182,7 @@ void init() {
 }
 
 // set up sampling
-void setup() {
+void adc_setup() {
     clock_ADC::setup(); /// the clockfrequency needs to be defined somewhere, does it need to be called also if adc is not init()
     PIT::setup();
 
@@ -198,7 +197,7 @@ void setup() {
    @param sample_period_us : a conversion will happen every "sample_period_us" microseconds
    @param sample_mode : ONLY use BLOCKING
 */
-void startConversion(float sample_period_us, ADC_sample_mode sample_mode) {
+void adc_start_conversion(float sample_period_us, ADC_sample_mode sample_mode) {
     // Serial.println("Starting conversion");
     // ? do it in one call?
     // PIT::setUpPeriodicISR(triggerConversion, clock_ADC::get_clockcycles_micro(1000000), PIT::PIT_0);
@@ -240,13 +239,13 @@ void startConversion(float sample_period_us, ADC_sample_mode sample_mode) {
     // {
     //     sample_period_us = MIN_SAMPLING_PERIOD;
     // }
-    PIT::setUpPeriodicISR(triggerConversion, clock_ADC::get_clockcycles_micro(bounded_period), PIT::PIT_0);
+    PIT::setUpPeriodicISR(adc_trigger_conversion, clock_ADC::get_clockcycles_micro(bounded_period), PIT::PIT_0);
 
     PIT::startPeriodic(PIT::PIT_0); // will call triggerConversion
     stopwatch = elapsedMicros();    // to see how much time per sample(in average)
 }
 
-void stopConversion() {
+void adc_stop_conversion() {
     stop_sampling = 1;
     // no new conversion
     PIT::stopPeriodic(PIT::PIT_0);
@@ -268,7 +267,7 @@ void stopConversion() {
 }
 
 /// @brief function to start the conversion of data from ADC. once ADC is ready to output data, GpioISR will be triggered by the BUSY pin
-void triggerConversion() {
+void adc_trigger_conversion() {
     // Serial.println("t");
 
     // will pull the CONVST line high, that indicates to the adc to start conversion on all channels
@@ -681,4 +680,3 @@ void setting_up_DMA_channels() {
     dma2.enable();
     dma3.enable();
 }
-}; // namespace adc

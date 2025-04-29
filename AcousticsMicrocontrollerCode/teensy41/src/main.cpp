@@ -57,19 +57,6 @@ float sample_period = 2.4;     // >= MIN_SAMP_PERIOD_BLOCKING, Recomended: 2.4
 #define SAMPLING_TIMEOUT 10000 // [ms]
 
 // Variables for Digital Signal Processing ==========
-int16_t samplesRawForDSP[SAMPLE_LENGTH] = {0};
-q15_t samplesFiltered[SAMPLE_LENGTH] = {0};
-q15_t FFTResultsRaw[2 * SAMPLE_LENGTH] = {0};
-q15_t FFTResultsMagnified[SAMPLE_LENGTH] = {0};
-Peak peaks_buffer[SAMPLE_LENGTH];
-size_t samples_interest = 32;
-size_t num_peaks;
-
-// Variables for Peak Detection ==========
-int32_t frequenciesOfInterest[FREQUENCY_LIST_LENGTH];    // 0 Hz
-int32_t frequencyVariances[FREQUENCY_LIST_LENGTH];       // +-0 Hz
-int32_t frequenciesOfInterestMax[FREQUENCY_LIST_LENGTH]; // 0 Hz
-int32_t frequenciesOfInterestMin[FREQUENCY_LIST_LENGTH]; // 0 Hz
 
 // Variables for Multilateration ==========
 #define TDOA_DATA_LENGTH 5                           // TODO: Should be moved into multilateration library once that is operational
@@ -107,12 +94,7 @@ void setup() {
 
     // Wait for client input into what frequencies we sould detect and send sound signals of
     Serial.println("Waiting for client configuration...");
-    setupTeensyCommunication(frequenciesOfInterest, frequencyVariances);
-
-    for (int i = 0; i < FREQUENCY_LIST_LENGTH; i++) {
-        frequenciesOfInterestMax[i] = frequenciesOfInterest[i] + frequencyVariances[i];
-        frequenciesOfInterestMin[i] = frequenciesOfInterest[i] - frequencyVariances[i];
-    }
+    setupTeensyCommunication();
 
     Serial.println("Client CONNECTED");
     // Ethernet Setup (STOP) ====================================================================================================
@@ -120,12 +102,12 @@ void setup() {
     // Sampling Setup (START) ====================================================================================================
 
     Serial.println("3 - Sampling Setup");
-    adc::init();
+    adc_init();
 
     const uint32_t ADC_reg_config = (1 << CONFIG_WRITE_EN) | (1 << CONFIG_PD_D) | (1 << CONFIG_REFEN) | (0x3FF << CONFIG_REFDAC) | (1 << CONFIG_VREF);
 
-    adc::config(ADC_reg_config);
-    adc::setup();
+    adc_config(ADC_reg_config);
+    setup();
 
     Serial.println("Sampling Setup complete");
     // Sampling Setup (STOP) ====================================================================================================
@@ -149,30 +131,15 @@ void loop() {
     uint8_t buffer_to_check = 0;
     unsigned long samplingStartTime = millis();
 
-    adc::startConversion(sample_period, adc::BLOCKING);
+    adc_start_conversion(sample_period, BLOCKING);
 
     while (not_found) {
-        while (!(adc::buffer_filled & (1 << buffer_to_check)))
+        while (!(buffer_filled & (1 << buffer_to_check)))
             ;
         // Digital Signal Processing (START) ====================================================================================================
-
-        filter_butterworth_1st_order_50kHz(adc::samplesRawHydrophones[0] + (buffer_to_check * SAMPLE_LENGTH_ADC), samplesFiltered);
-
-        FFT_raw(samplesFiltered, FFTResultsRaw);
-        FFT_mag(FFTResultsRaw, FFTResultsMagnified);
-
-        if (peak_detection(FFTResultsRaw, FFTResultsMagnified, samples_interest, peaks_buffer, SAMPLE_LENGTH, &num_peaks)) {
-            continue;
-        }
-
-        for (size_t i = 0; i < num_peaks; i++) {
-            int32_t peakFrequency = peaks_buffer[i].frequency;
-            for (int j = 0; j < FREQUENCY_LIST_LENGTH; j++) {
-                if ((peakFrequency < frequenciesOfInterestMax[j]) && (peakFrequency > frequenciesOfInterestMin[j])) {
-                    not_found = false;
-                    break;
-                }
-            }
+    
+        if (dsp_find_signal(buffer_to_check)) {
+            break;
         }
 
         buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
@@ -184,17 +151,17 @@ void loop() {
 
     // We make sure the last buffer that we are interested in is filled before continuing
     // This ensures we have the not only the data signal of the peak, but also what happens after the peaks in the signal frequency we are interested in
-    // adc::startConversion(sample_period, adc::BLOCKING);
-    for (int i = 1; i < BUFFER_PER_CHANNEL; i++) {
-        while (!(adc::buffer_filled & (1 << buffer_to_check)))
+    // startConversion(sample_period, adc::BLOCKING);
+    for (int i = 2; i < BUFFER_PER_CHANNEL; i++) {
+        while (!(buffer_filled & (1 << buffer_to_check)))
             ;
         buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
     }
 
-    adc::stopConversion();
+    adc_stop_conversion();
     Serial.println("1 - SAMPLING: Stoped sampling");
 
-    adc::buffer_filled = 0;
+    buffer_filled = 0;
 
     // Sampling (STOP) ====================================================================================================
 
@@ -208,7 +175,7 @@ void loop() {
     size_t peak_index;
 
     for (int i = 1; i < NUM_HYDROPHONES; i++) {
-        arm_correlate_q15(adc::samplesRawHydrophones[0], RAW_HYDROPHONE_SIZE, adc::samplesRawHydrophones[i], RAW_HYDROPHONE_SIZE, correlation_array);
+        arm_correlate_q15(samplesRawHydrophones[0], RAW_HYDROPHONE_SIZE, samplesRawHydrophones[i], RAW_HYDROPHONE_SIZE, correlation_array);
 
         arm_max_q15(correlation_array, MAX_LAG, &max_number, &peak_index);
 
@@ -228,7 +195,7 @@ void loop() {
     sequence = 0;
 
     for (int i = 0; i < NUM_HYDROPHONES; i++) {
-        send_data_udp(adc::samplesRawHydrophones[i], sizeof(int16_t) * RAW_HYDROPHONE_SIZE);
+        send_data_udp(samplesRawHydrophones[i], sizeof(int16_t) * RAW_HYDROPHONE_SIZE);
     }
 
     send_data_udp(samplesFiltered, sizeof(q15_t) * SAMPLE_LENGTH);

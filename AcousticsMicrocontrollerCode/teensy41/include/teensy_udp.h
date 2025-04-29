@@ -20,11 +20,16 @@
 
 extern uint8_t sequence;
 
-void frequency_data_from_client(int32_t* frequenciesOfInterest, int32_t* frequencyVariances);
+
+extern int32_t freq_interest_max[FREQUENCY_LIST_LENGTH]; // 0 Hz
+extern int32_t freq_interest_min[FREQUENCY_LIST_LENGTH]; // 0 Hz
+
+
+void frequency_data_from_client(void);
 
 void send_data_udp(void* data, uint32_t length);
 
-void setupTeensyCommunication(int32_t* frequenciesOfInterest, int32_t* frequencyVariances);
+void setupTeensyCommunication(void);
 
 
 #endif // !TEENSYUDP

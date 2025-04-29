@@ -23,6 +23,8 @@
 
 #include "Include/arm_const_structs.h"
 #include "Include/arm_math.h"
+#include "teensy_udp.h"
+#include "adc.h"
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h> // for debugging prints, if needed
@@ -35,6 +37,8 @@ extern "C" {
 
 #endif // __cplusplus
 
+
+
 typedef struct {
     size_t index;    // FFT bin index (optional, for debugging)
     q31_t amplitude; // Peak amplitude (converted to Q31)
@@ -42,17 +46,20 @@ typedef struct {
     q15_t phase;     // Phase shift in Q15 format
 } Peak;
 
-q15_t* filter_butterwort_9th_order_50kHz(int16_t* samplesRaw);
-q15_t* filter_butterwort_2th_order_50kHz(int16_t* samplesRaw);
-void filter_butterworth_1st_order_50kHz(const int16_t* samplesRaw, q15_t* samples);
 
 
-void FFT_raw(q15_t* samples, q15_t* resultsRaw);
-void FFT_mag(q15_t* resultsRaw, q15_t* results);
+extern q15_t samplesFiltered[SAMPLE_LENGTH];
+extern q15_t FFTResultsMagnified[SAMPLE_LENGTH];
+extern Peak peaks_buffer[SAMPLE_LENGTH];
+extern size_t num_peaks;
 
-int peak_detection(const q15_t* resultsRaw, const q15_t* results, size_t samplesOfInterest, Peak* outPeaks, size_t outBufSize, size_t* outNumPeaks);
-
-float32_t phaseQ31_to_radianFloat32(q31_t phaseQ15);
+/**
+* @brief checks if signal with set frequency is found in current sample
+* @param buffer_to_check Which adc buffer to check
+* @return 1 if signal found
+*         0 if signal is not found
+*/
+int dsp_find_signal(uint8_t buffer_to_check); 
 
 #ifdef __cplusplus
 }
