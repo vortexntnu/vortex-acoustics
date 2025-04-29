@@ -9,7 +9,9 @@
 #include <cstdint>
 
 #include "ethernet_module.h"
-
+#include "dsp.h"
+#include "adc.h"
+#include "multilateration.h"
 
 
 #define MAX_CLIENT_CAPACITY 100
@@ -18,7 +20,6 @@
 #define FREQUENCY_LIST_LENGTH 10
 
 
-extern uint8_t sequence;
 
 
 extern int32_t freq_interest_max[FREQUENCY_LIST_LENGTH]; // 0 Hz
@@ -27,9 +28,9 @@ extern int32_t freq_interest_min[FREQUENCY_LIST_LENGTH]; // 0 Hz
 
 void frequency_data_from_client(void);
 
-void send_data_udp(void* data, uint32_t length);
-
 void setupTeensyCommunication(void);
+
+void transmit_data_udp(void);
 
 
 #endif // !TEENSYUDP

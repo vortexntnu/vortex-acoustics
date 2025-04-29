@@ -23,13 +23,6 @@
 #include "stack/fnet_stdlib.h"
 #include "teensy_udp.h"
 
-// Variables for Sampling ==========
-float sample_period = 2.4;     // >= MIN_SAMP_PERIOD_BLOCKING, Recomended: 2.4
-#define SAMPLING_TIMEOUT 10000 // [ms]
-
-
-// Variables for data transmission ==========
-int32_t lastSendTime = 0;
 
 void setup() {
     // Debugging Setup (START) ====================================================================================================
@@ -64,10 +57,9 @@ void setup() {
     Serial.println("3 - Sampling Setup");
     adc_init();
 
-    const uint32_t ADC_reg_config = (1 << CONFIG_WRITE_EN) | (1 << CONFIG_PD_D) | (1 << CONFIG_REFEN) | (0x3FF << CONFIG_REFDAC) | (1 << CONFIG_VREF);
 
     adc_config(ADC_reg_config);
-    setup();
+    adc_setup();
 
     Serial.println("Sampling Setup complete");
     // Sampling Setup (STOP) ====================================================================================================
@@ -91,7 +83,7 @@ void loop() {
     uint8_t buffer_to_check = 0;
     unsigned long samplingStartTime = millis();
 
-    adc_start_conversion(sample_period, BLOCKING);
+    adc_start_conversion(SAMPLE_PERIOD, BLOCKING);
 
     while (not_found) {
         while (!(buffer_filled & (1 << buffer_to_check)))
@@ -125,34 +117,20 @@ void loop() {
     // Sampling (STOP) ====================================================================================================
 
     // Multilateration (START) ====================================================================================================
+    Serial.println("2 - MULTILATERATION: Started the Calculations");
 
     if (find_pinger_position()) {
         Serial.println("Multilateration failed");
     }
-
-    Serial.println("2 - MULTILATERATION: Started the Calculations");
 
     Serial.println("2 - MULTILATERATION: Got the results");
     // Multilateration (STOP) ====================================================================================================
 
     // Send data (START) ====================================================================================================
     Serial.println("3 - DATA SEND: Start sending data");
-
-    sequence = 0;
-
-    for (int i = 0; i < NUM_HYDROPHONES; i++) {
-        send_data_udp(samples_raw_hydrophones[i], sizeof(int16_t) * RAW_HYDROPHONE_SIZE);
-    }
-
-    send_data_udp(samplesFiltered, sizeof(q15_t) * SAMPLE_LENGTH);
-    send_data_udp(FFTResultsMagnified, sizeof(q15_t) * SAMPLE_LENGTH);
-
-    // send_peak_data(peaks, lengthOfPeakArray);
-
-    send_data_udp(timeDifferenceOfArrival, sizeof(float32_t) * TDOA_DATA_LENGTH);
-    send_data_udp(soundLocation, sizeof(float32_t) * POSITION_DATA_LENGTH);
-
-    UDP_clean_message_memory();
+    
+    transmit_data_udp();
+  
     Serial.println("3 - DATA SEND: Data sent sucsessfully");
     // Send data (STOP) ====================================================================================================
 
