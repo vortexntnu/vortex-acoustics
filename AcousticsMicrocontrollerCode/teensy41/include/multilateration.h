@@ -8,7 +8,15 @@
 
 #include <stddef.h>
 #include "arm_math.h"
+#include "adc.h"
+#include "dsp.h"
 // #include <Arduino.h>
+
+#define MAX_LAG (2 * RAW_HYDROPHONE_SIZE - 1)
+
+#define TDOA_DATA_LENGTH 5                           // TODO: Should be moved into multilateration library once that is operational
+#define POSITION_DATA_LENGTH 3 + 1                   // TODO: Should be moved into multilateration library once that is operational
+
 
 #ifdef __cplusplus
 
@@ -34,10 +42,12 @@ const float32_t hydrophonePositions[NUM_HYDROPHONES][NUM_DIMENSIONS] = {
 };
 
 
-size_t find_peak_index(q15_t* signal, int size);
+extern float32_t timeDifferenceOfArrival[TDOA_DATA_LENGTH]; // time difference for hydrophone 1, 2, 3, 4, 5 [s]
+extern float32_t soundLocation[POSITION_DATA_LENGTH];       // X, Y, Z [m]
 
 
-arm_status tdoa_multilateration(const float32_t hydrophone_array[4][3], const float32_t TDOA[4], float32_t* result); 
+
+int find_pinger_position(void);
 
 #ifdef __cplusplus
 

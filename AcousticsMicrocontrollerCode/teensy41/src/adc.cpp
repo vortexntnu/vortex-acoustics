@@ -78,16 +78,16 @@ uint16_t testing_value_par;
 #endif
 
 
-int16_t samplesRawHydrophone1[RAW_HYDROPHONE_SIZE];
-int16_t samplesRawHydrophone2[RAW_HYDROPHONE_SIZE];
-int16_t samplesRawHydrophone3[RAW_HYDROPHONE_SIZE];
-int16_t samplesRawHydrophone4[RAW_HYDROPHONE_SIZE];
-int16_t samplesRawHydrophone5[RAW_HYDROPHONE_SIZE];
+int16_t samples_raw_hydro_1[RAW_HYDROPHONE_SIZE];
+int16_t samples_raw_hydro_2[RAW_HYDROPHONE_SIZE];
+int16_t samples_raw_hydro_3[RAW_HYDROPHONE_SIZE];
+int16_t samples_raw_hydro_4[RAW_HYDROPHONE_SIZE];
+int16_t samples_raw_hydro_5[RAW_HYDROPHONE_SIZE];
 
 time_buff_3_1024 timestamps;
 
 
-int16_t* samplesRawHydrophones[5] = {samplesRawHydrophone1, samplesRawHydrophone2, samplesRawHydrophone3, samplesRawHydrophone4, samplesRawHydrophone5};
+int16_t* samples_raw_hydrophones[5] = {samples_raw_hydro_1, samples_raw_hydro_2, samples_raw_hydro_3, samples_raw_hydro_4, samples_raw_hydro_5};
 
 volatile uint8_t stop_sampling;
 
@@ -318,7 +318,7 @@ void read_loop() {
 
         // ringbuffer_channels_ptr[i]->insert(read_ADC_par());
         // channel_buff_ptr[hydroph][active_buffer][sample_index] = read_ADC_par();
-        samplesRawHydrophones[hydrophone][sample_index + active_buffer * SAMPLE_LENGTH_ADC] = read_ADC_par();
+        samples_raw_hydrophones[hydrophone][sample_index + active_buffer * SAMPLE_LENGTH_ADC] = read_ADC_par();
         IMXRT_GPIO9.DR_SET |= (1 << _RD);
         // gpio::write_pin(_RD, 1, _RD_GPIO_PORT_NORMAL);
         //  this is already enough delay for 2ns (toggeling takes more than 2ns)

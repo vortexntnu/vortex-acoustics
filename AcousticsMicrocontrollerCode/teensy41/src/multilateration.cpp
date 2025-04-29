@@ -5,6 +5,8 @@
 #include <stddef.h>
 
 
+float32_t timeDifferenceOfArrival[TDOA_DATA_LENGTH]; // time difference for hydrophone 1, 2, 3, 4, 5 [s]
+float32_t soundLocation[POSITION_DATA_LENGTH];       // X, Y, Z [m]
 
 
 // Helper function for squaring a number.
@@ -13,26 +15,6 @@ static inline float32_t square(float32_t x) {
 }
 
 
-
-
-size_t find_peak_index(q15_t* signal, int size) {
-    // If the signal is empty, return 0
-    if (size == 0) {
-        return 0;
-    }
-
-    int peakIndex = 0;
-    int peakValue = signal[0];
-
-    // Loop through the signal starting from the first element.
-    for (int i = 1; i < size; ++i) {
-        if (signal[i] > peakValue) {
-            peakValue = signal[i];
-            peakIndex = i;
-        }
-    }
-    return peakIndex;
-}
 
 
 
@@ -46,7 +28,7 @@ size_t find_peak_index(q15_t* signal, int size) {
  * Returns:
  *   A pointer to a static array of 4 float32_t values (the solution vector).
  */
-arm_status tdoa_multilateration(const float32_t hydrophone_array[4][3], const float32_t TDOA[4], float32_t* result) {
+static arm_status tdoa_multilateration(const float32_t hydrophone_array[4][3], const float32_t TDOA[4], float32_t* result) {
 
     // Speed of sound in water.
     const float32_t c = 1500.0f;
@@ -94,6 +76,30 @@ arm_status tdoa_multilateration(const float32_t hydrophone_array[4][3], const fl
 
     return status;
 }
+
+
+
+
+int find_pinger_position(){
+    timeDifferenceOfArrival[0] = 0;
+    q15_t correlation_array[MAX_LAG];
+    q15_t max_number;
+    size_t peak_index;
+
+    for (int i = 1; i < NUM_HYDROPHONES; i++) {
+        arm_correlate_q15(samples_raw_hydrophones[0], RAW_HYDROPHONE_SIZE, samples_raw_hydrophones[i], RAW_HYDROPHONE_SIZE, correlation_array);
+
+        arm_max_q15(correlation_array, MAX_LAG, &max_number, &peak_index);
+
+        timeDifferenceOfArrival[i] = ((float32_t)(peak_index - RAW_HYDROPHONE_SIZE) / SAMPLE_RATE);
+    }
+
+    if (tdoa_multilateration(hydrophonePositions, timeDifferenceOfArrival + 1, soundLocation)) {
+      return -1;
+    }
+    return 0;
+}
+
 
 
 

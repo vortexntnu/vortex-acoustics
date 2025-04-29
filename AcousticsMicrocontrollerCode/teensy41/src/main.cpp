@@ -50,8 +50,6 @@ License: MIT
 #include "stack/fnet_stdlib.h"
 #include "teensy_udp.h"
 
-#define MAX_LAG (2 * RAW_HYDROPHONE_SIZE - 1)
-
 // Variables for Sampling ==========
 float sample_period = 2.4;     // >= MIN_SAMP_PERIOD_BLOCKING, Recomended: 2.4
 #define SAMPLING_TIMEOUT 10000 // [ms]
@@ -59,10 +57,6 @@ float sample_period = 2.4;     // >= MIN_SAMP_PERIOD_BLOCKING, Recomended: 2.4
 // Variables for Digital Signal Processing ==========
 
 // Variables for Multilateration ==========
-#define TDOA_DATA_LENGTH 5                           // TODO: Should be moved into multilateration library once that is operational
-#define POSITION_DATA_LENGTH 3 + 1                   // TODO: Should be moved into multilateration library once that is operational
-float32_t timeDifferenceOfArrival[TDOA_DATA_LENGTH]; // time difference for hydrophone 1, 2, 3, 4, 5 [s]
-float32_t soundLocation[POSITION_DATA_LENGTH];       // X, Y, Z [m]
 
 // Variables for data transmission ==========
 int32_t lastSendTime = 0;
@@ -137,7 +131,7 @@ void loop() {
         while (!(buffer_filled & (1 << buffer_to_check)))
             ;
         // Digital Signal Processing (START) ====================================================================================================
-    
+
         if (dsp_find_signal(buffer_to_check)) {
             break;
         }
@@ -167,24 +161,11 @@ void loop() {
 
     // Multilateration (START) ====================================================================================================
 
-    Serial.println("2 - MULTILATERATION: Started the Calculations");
-
-    timeDifferenceOfArrival[0] = 0;
-    q15_t correlation_array[MAX_LAG];
-    q15_t max_number;
-    size_t peak_index;
-
-    for (int i = 1; i < NUM_HYDROPHONES; i++) {
-        arm_correlate_q15(samplesRawHydrophones[0], RAW_HYDROPHONE_SIZE, samplesRawHydrophones[i], RAW_HYDROPHONE_SIZE, correlation_array);
-
-        arm_max_q15(correlation_array, MAX_LAG, &max_number, &peak_index);
-
-        timeDifferenceOfArrival[i] = ((float32_t)(peak_index - RAW_HYDROPHONE_SIZE) / SAMPLE_RATE);
-    }
-
-    if (tdoa_multilateration(hydrophonePositions, timeDifferenceOfArrival + 1, soundLocation)) {
+    if (find_pinger_position()) {
         Serial.println("Multilateration failed");
     }
+
+    Serial.println("2 - MULTILATERATION: Started the Calculations");
 
     Serial.println("2 - MULTILATERATION: Got the results");
     // Multilateration (STOP) ====================================================================================================
@@ -195,7 +176,7 @@ void loop() {
     sequence = 0;
 
     for (int i = 0; i < NUM_HYDROPHONES; i++) {
-        send_data_udp(samplesRawHydrophones[i], sizeof(int16_t) * RAW_HYDROPHONE_SIZE);
+        send_data_udp(samples_raw_hydrophones[i], sizeof(int16_t) * RAW_HYDROPHONE_SIZE);
     }
 
     send_data_udp(samplesFiltered, sizeof(q15_t) * SAMPLE_LENGTH);
