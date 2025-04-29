@@ -1,7 +1,6 @@
 #include "adc.h"
 #include "Arduino.h"
 #include "DMAChannel.h"
-#include "GPT.h"
 #include "clock.h"
 #include "gpio.h"
 #include "gpio_interrupt.h"
@@ -318,7 +317,8 @@ void read_loop() {
 
         // ringbuffer_channels_ptr[i]->insert(read_ADC_par());
         // channel_buff_ptr[hydroph][active_buffer][sample_index] = read_ADC_par();
-        samples_raw_hydrophones[hydrophone][sample_index + active_buffer * SAMPLE_LENGTH_ADC] = read_ADC_par();
+        size_t index = sample_index + active_buffer * SAMPLE_LENGTH_ADC;
+        samples_raw_hydrophones[hydrophone][index] = read_ADC_par();
         IMXRT_GPIO9.DR_SET |= (1 << _RD);
         // gpio::write_pin(_RD, 1, _RD_GPIO_PORT_NORMAL);
         //  this is already enough delay for 2ns (toggeling takes more than 2ns)

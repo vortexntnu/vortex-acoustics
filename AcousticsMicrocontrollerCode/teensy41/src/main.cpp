@@ -1,28 +1,3 @@
-
-/*
-Main Firmware code for Acoustics PCB
-
-How the code works:
-- Conncets to the Ethernet and waits for the Client
-- Sets parameters specified by the Client. like frequency of interest
-- Confgures ADC on the Acoustics PCB 
-
-- Start endless loop of Sampling
-- Does DSP (Digital Signal Processing) on the signals collected
-- Checks for frequencies of interest in the signal
-- Multilaterates the signal with the frequency of interest to find out the sound source it is comming from and how far away we are from it (OBS! NOT IMPLEMENTED YET, to be continued.....)
-- Sends all the frequency of interest DSP data, Hydrophone recorded signal data and Multilaterated data back to the Client
-- The infinite loop continues 
-
-Code written by: Vortex NTNUs
-All rights reserved to: Vortex NTNU
-License: MIT
-*/
-
-// CMSIS Libraries
-#include "Include/arm_const_structs.h"
-#include "Include/arm_math.h"
-
 // Arduino Libraries
 #include <Arduino.h>
 #include <cstddef>
@@ -33,9 +8,7 @@ License: MIT
 #include <stdlib.h>
 
 // Sampling Analog to Digital Converter (ADC) Libraries
-#include "GPT.h"
 #include "adc.h"
-#include "arm_math.h"
 #include "clock.h"
 #include "gpio.h"
 #include "gpio_interrupt.h"
@@ -54,9 +27,6 @@ License: MIT
 float sample_period = 2.4;     // >= MIN_SAMP_PERIOD_BLOCKING, Recomended: 2.4
 #define SAMPLING_TIMEOUT 10000 // [ms]
 
-// Variables for Digital Signal Processing ==========
-
-// Variables for Multilateration ==========
 
 // Variables for data transmission ==========
 int32_t lastSendTime = 0;
@@ -75,18 +45,14 @@ void setup() {
     Why? I have no Idea, some configuration of the ISP protocol clock timer and PINS that both Comuniaction and Sampling codes uses from what it seems, probably... =_=
     */
 
-    // Ethernet init
     Serial.println("2 - Ethernet Setup");
     UDP_init();
 
-    // delay(20000); //  Test stuff
 
-    // Wait until someone is connected and get their IP and Port address
     Serial.println("Waiting for client connection...");
     while (!UDP_check_if_connected())
         ;
 
-    // Wait for client input into what frequencies we sould detect and send sound signals of
     Serial.println("Waiting for client configuration...");
     setupTeensyCommunication();
 
@@ -145,7 +111,6 @@ void loop() {
 
     // We make sure the last buffer that we are interested in is filled before continuing
     // This ensures we have the not only the data signal of the peak, but also what happens after the peaks in the signal frequency we are interested in
-    // startConversion(sample_period, adc::BLOCKING);
     for (int i = 2; i < BUFFER_PER_CHANNEL; i++) {
         while (!(buffer_filled & (1 << buffer_to_check)))
             ;
