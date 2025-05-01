@@ -34,7 +34,7 @@ void setup() {
 
     // Ethernet Setup (START) ====================================================================================================
     /*
-    NOTE: This code NEEDS to come befor "Sampling Setup", otherwise some PINS and values are configured incorrectly in in Comunications
+    NOTE: This code NEEDS to come before "Sampling Setup", otherwise some PINS and values are configured incorrectly in in Comunications
     Why? I have no Idea, some configuration of the ISP protocol clock timer and PINS that both Comuniaction and Sampling codes uses from what it seems, probably... =_=
     */
 
@@ -79,13 +79,12 @@ void loop() {
     */
     Serial.println("1 - SAMPLING: Start Sampling");
 
-    bool not_found = true;
     uint8_t buffer_to_check = 0;
     unsigned long samplingStartTime = millis();
 
     adc_start_conversion(SAMPLE_PERIOD, BLOCKING);
 
-    while (not_found) {
+    while (1) {
         while (!(buffer_filled & (1 << buffer_to_check)))
             ;
         // Digital Signal Processing (START) ====================================================================================================
@@ -110,9 +109,9 @@ void loop() {
     }
 
     adc_stop_conversion();
+
     Serial.println("1 - SAMPLING: Stoped sampling");
 
-    buffer_filled = 0;
 
     // Sampling (STOP) ====================================================================================================
 

@@ -106,17 +106,17 @@ DMAChannel dma1 = DMAChannel();
 DMAChannel dma2 = DMAChannel();
 DMAChannel dma3 = DMAChannel();
 
-static void write_ADC_par(uint16_t value) {
+static inline void write_ADC_par(uint16_t value) {
     // The ADC pins are located at bits 16-31 of GPIO port (1)
     gpio::write_port(value << DB_REG_SHIFT, DB_GPIO_PORT_NORMAL, DB_MASK);
 }
 
-static uint16_t read_ADC_par() {
+static inline uint16_t read_ADC_par() {
     // we want the 16 highest bits
     return gpio::read_port(DB_GPIO_PORT_NORMAL) >> DB_REG_SHIFT;
 }
 
-static void read_loop() {
+void read_loop() {
     // timestamps[active_buffer][sample_index] = ARM_DWT_CYCCNT - clk_cyc;
 
     if (stop_sampling) {
@@ -132,11 +132,8 @@ static void read_loop() {
     for (uint16_t hydrophone = 0; hydrophone < N_HYDROPHONES; hydrophone++) {
         // gpio::write_pin(_RD, 0, _RD_GPIO_PORT_NORMAL);
         IMXRT_GPIO9.DR_CLEAR |= (1 << _RD);
-        // maybe not needed
         // delayNanoseconds(T_RDL);
 
-        // ringbuffer_channels_ptr[i]->insert(read_ADC_par());
-        // channel_buff_ptr[hydroph][active_buffer][sample_index] = read_ADC_par();
         size_t index = sample_index + active_buffer * SAMPLE_LENGTH_ADC;
         samples_raw_hydrophones[hydrophone][index] = read_ADC_par();
         IMXRT_GPIO9.DR_SET |= (1 << _RD);
@@ -261,6 +258,7 @@ void adc_start_conversion(float sample_period_us, ADC_sample_mode sample_mode) {
     // * to check if buffer needs to be set to 0.
     active_buffer = 0;
     overall_buffer_count = 0;
+    buffer_filled = 0;
 
     gpio::write_pin(RESET, 1, RESET_GPIO_PORT_NORMAL);
     delay(1);

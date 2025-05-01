@@ -122,24 +122,21 @@ const int DB15 = CORE_PIN27_BIT; // GPIO 1.31
 
 // * new way
 #define SAMPLE_LENGTH_ADC 1024
-#define BUFFER_PER_CHANNEL 6 // 6 is max. (space = BUFFER_PER_CHANNEL * SAMPLE_LENGTH_ADC * hydrophones * (datatype_size in bytes) = 6*1024*5*16/8 = 61_440. This must be less than 64_000 = 64 kilo bytes) 
+#define BUFFER_PER_CHANNEL 6 // 6 is max. (space = BUFFER_PER_CHANNEL * SAMPLE_LENGTH_ADC * hydrophones * (datatype_size in bytes) = 6*1024*5*16/8 = 61_440. This must be less than 64_000 = 64 kilo bytes)
 #define RAW_HYDROPHONE_SIZE (SAMPLE_LENGTH_ADC * BUFFER_PER_CHANNEL)
 typedef int32_t time_buff_3_1024[BUFFER_PER_CHANNEL][SAMPLE_LENGTH_ADC];
 
 #define SAMPLING_TIMEOUT 10000 // [ms]
-#define  SAMPLE_PERIOD 2.4
+#define SAMPLE_PERIOD 2.4
+
 const uint32_t ADC_reg_config = (1 << CONFIG_WRITE_EN) | (1 << CONFIG_PD_D) | (1 << CONFIG_REFEN) | (0x3FF << CONFIG_REFDAC) | (1 << CONFIG_VREF);
-
-
 
 extern time_buff_3_1024 timestamps;
 
-
 extern int16_t* samples_raw_hydrophones[5];
 
-
-volatile extern uint8_t active_buffer;                     // to know which one is being filled, [0, BUFFER_PER_CHANNEL-1]
-volatile extern size_t sample_index;                            // To know what ring buffer memory we are in [0, SAMPLE_LENGTH_ADC-1]
+volatile extern uint8_t active_buffer; // to know which one is being filled, [0, BUFFER_PER_CHANNEL-1]
+volatile extern size_t sample_index;   // To know what ring buffer memory we are in [0, SAMPLE_LENGTH_ADC-1]
 volatile extern uint16_t buffer_filled;
 volatile extern uint32_t overall_buffer_count;
 

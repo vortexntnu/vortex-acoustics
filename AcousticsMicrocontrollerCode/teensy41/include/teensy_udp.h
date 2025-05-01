@@ -30,6 +30,9 @@ void frequency_data_from_client(void);
 
 void setupTeensyCommunication(void);
 
+/**
+* @brief transmit all relevant data over udp
+*/
 void transmit_data_udp(void);
 
 
