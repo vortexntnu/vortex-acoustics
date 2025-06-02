@@ -59,7 +59,7 @@ extern size_t num_peaks;
 * @return 1 if signal found
 *         0 if signal is not found
 */
-int dsp_find_signal(uint8_t buffer_to_check); 
+int dsp_found_signal(uint8_t buffer_to_check); 
 
 #ifdef __cplusplus
 }

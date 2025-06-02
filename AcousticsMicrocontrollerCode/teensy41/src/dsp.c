@@ -411,7 +411,7 @@ static int peak_detection(const q15_t *resultsRaw, const q15_t *results,
   return 0;
 }
 
-int dsp_find_signal(uint8_t buffer_to_check) {
+int dsp_found_signal(uint8_t buffer_to_check) {
 
   filter_butterworth_1st_order_50kHz(samples_raw_hydrophones[0] +
                                          (buffer_to_check * SAMPLE_LENGTH_ADC),

@@ -70,7 +70,7 @@ void UDP_send_ready_signal(uint8_t* remoteIPArray, uint16_t remotePort) {
 
     // Start sending data
     Udp.beginPacket(remoteIP, remotePort);
-    for (int16_t i = 0; i < 5; i++) {
+    for (size_t i = 0; i < 5; i++) {
         tempByte = (byte)UDPReplyBuffer[i];
         Udp.write(tempByte);
     }

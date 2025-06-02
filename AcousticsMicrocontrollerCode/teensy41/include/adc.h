@@ -141,8 +141,6 @@ volatile extern uint16_t buffer_filled;
 volatile extern uint32_t overall_buffer_count;
 
 void adc_init();                   // inits pins
-void adc_setup();                  // setup the ADC
-void adc_config(uint32_t reg_val); // configure ADC so it's ready to send data.
 
 void adc_start_conversion(float sample_period_us, ADC_sample_mode sample_mode = BLOCKING); // setup periodic timer interrupts.
 void adc_stop_conversion();                                                                // stop periodic timer interrupts

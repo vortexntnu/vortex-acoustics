@@ -90,10 +90,10 @@ int16_t* samples_raw_hydrophones[5] = {samples_raw_hydro_1, samples_raw_hydro_2,
 
 volatile uint8_t stop_sampling;
 
-volatile uint8_t active_buffer; // to know which one is being filled, [0, BUFFER_PER_CHANNEL-1]
-volatile size_t sample_index;
+volatile uint8_t active_buffer = 0; // to know which one is being filled, [0, BUFFER_PER_CHANNEL-1]
+volatile size_t sample_index = 0;
 volatile uint16_t buffer_filled = 0;
-volatile uint32_t overall_buffer_count;
+volatile uint32_t overall_buffer_count = 0;
 
 elapsedMicros stopwatch;
 uint32_t clk_cyc = 0;
@@ -115,6 +115,41 @@ static inline uint16_t read_ADC_par() {
     // we want the 16 highest bits
     return gpio::read_port(DB_GPIO_PORT_NORMAL) >> DB_REG_SHIFT;
 }
+
+static void adc_config(uint32_t reg_val) {
+    // pins as output
+    gpio::configPort(DB_GPIO_PORT_NORMAL, 0xFFFF0000, DB_MASK);
+    //* see write access timing diagram on p.19 of ADC data sheet
+    // check p.39 for info about config register
+    // starting write access to ADC
+    gpio::write_pin(_CS, 0, _CS_GPIO_PORT_NORMAL);
+    gpio::write_pin(_WR, 0, _WR_GPIO_PORT_NORMAL);
+
+    // writing MSBs first
+    write_ADC_par(reg_val >> 16);
+
+    delayNanoseconds(15); // t_WRL; t_SUDI/t_HDI
+
+    gpio::write_pin(_WR, 1, _WR_GPIO_PORT_NORMAL);
+
+    delayNanoseconds(10); // t_WRH
+
+    // then writing LSBs, timing of t_HDI is respected
+    write_ADC_par(reg_val & 0xFFFF);
+    gpio::write_pin(_WR, 0, _WR_GPIO_PORT_NORMAL);
+
+    delayNanoseconds(15); // t_WRL
+
+    gpio::write_pin(_WR, 1, _WR_GPIO_PORT_NORMAL); // stop 2nd write access
+    gpio::write_pin(_CS, 1, _CS_GPIO_PORT_NORMAL);
+
+    delayNanoseconds(5); // t_HDI
+
+    // pins back as inputs
+    gpio::configPort(DB_GPIO_PORT_NORMAL, 0x00000000, DB_MASK);
+}
+
+
 
 void read_loop() {
     // timestamps[active_buffer][sample_index] = ARM_DWT_CYCCNT - clk_cyc;
@@ -229,18 +264,17 @@ void adc_init() {
     // output, for testing pourpuse (LEDs)
     gpio::configPort(DB_GPIO_PORT_NORMAL, 0xFFFF0000, DB_MASK);
 #endif
-}
 
-// set up sampling
-void adc_setup() {
+
+    
+    adc_config(ADC_reg_config);
+    
     clock_ADC::setup(); /// the clockfrequency needs to be defined somewhere, does it need to be called also if adc is not init()
     PIT::setup();
 
-    active_buffer = 0;
-    overall_buffer_count = 0;
-    buffer_filled = 0;
     // ! connect beginRead() to BUSY/INT interrupt -> is done in trigger_conversion()
 }
+
 
 /**
    @brief is starting the major loop timer, PIT0 that will trigger the conversion until stopped
@@ -497,38 +531,6 @@ void adc_trigger_conversion() {
       @brief configures the internal 32-bit config register of the ADC
       @param reg_val: value of the 32bit register
     */
-void config(uint32_t reg_val) {
-    // pins as output
-    gpio::configPort(DB_GPIO_PORT_NORMAL, 0xFFFF0000, DB_MASK);
-    //* see write access timing diagram on p.19 of ADC data sheet
-    // check p.39 for info about config register
-    // starting write access to ADC
-    gpio::write_pin(_CS, 0, _CS_GPIO_PORT_NORMAL);
-    gpio::write_pin(_WR, 0, _WR_GPIO_PORT_NORMAL);
-
-    // writing MSBs first
-    write_ADC_par(reg_val >> 16);
-
-    delayNanoseconds(15); // t_WRL; t_SUDI/t_HDI
-
-    gpio::write_pin(_WR, 1, _WR_GPIO_PORT_NORMAL);
-
-    delayNanoseconds(10); // t_WRH
-
-    // then writing LSBs, timing of t_HDI is respected
-    write_ADC_par(reg_val & 0xFFFF);
-    gpio::write_pin(_WR, 0, _WR_GPIO_PORT_NORMAL);
-
-    delayNanoseconds(15); // t_WRL
-
-    gpio::write_pin(_WR, 1, _WR_GPIO_PORT_NORMAL); // stop 2nd write access
-    gpio::write_pin(_CS, 1, _CS_GPIO_PORT_NORMAL);
-
-    delayNanoseconds(5); // t_HDI
-
-    // pins back as inputs
-    gpio::configPort(DB_GPIO_PORT_NORMAL, 0x00000000, DB_MASK);
-}
 
 
 void setting_up_timers_DMA() {
