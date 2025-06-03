@@ -17,6 +17,14 @@
 
 #define PEAK_THRESHOLD 1000
 
+#define Q15_SCALE 32768.0f
+
+#define FLOAT_TO_Q15(x)                                                        \
+  ((q15_t)((x) >= 0.0f ? ((x) * Q15_SCALE + 0.5f) : ((x) * Q15_SCALE - 0.5f)))
+
+#define NUM_STAGES 2
+#define BLOCK_SIZE 256
+
 #define fOrder 9
 #define fOrder2 2
 
@@ -41,6 +49,10 @@ const float32_t aFilterCoeffs2[fOrder2] = {0.00101196462632, -0.00035885208947};
 const float32_t bFilterCoeffs2[fOrder2 + 1] = {
     0.000086700190740, 0.000173400381481, 0.000086700190740};
 
+static q15_t biquadCoeffsQ15[NUM_STAGES * 5];
+static q15_t biquadStateQ15[4 * NUM_STAGES] = {0};
+static arm_biquad_casd_df1_inst_q15 S_q15;
+
 // Coefficients for 1th order filter, 430 kHz sampling rate, 50 kHz cut-off
 // calculated manually with the help of this research paper
 // https://www.researchgate.net/publication/338022014_Digital_Implementation_of_Butterworth_First-Order_Filter_Type_IIR
@@ -59,7 +71,6 @@ const q15_t PI_Q15 = (q15_t)(PI * (1 << 15) + 0.5);
 static int16_t samplesRawForDSP[SAMPLE_LENGTH] = {0};
 static size_t samples_interest = 32;
 static q15_t FFTResultsRaw[2 * SAMPLE_LENGTH] = {0};
-
 
 q15_t samplesFiltered[SAMPLE_LENGTH] = {0};
 q15_t FFTResultsMagnified[SAMPLE_LENGTH] = {0};
@@ -161,6 +172,38 @@ static q15_t *filter_butterwort_9th_order_50kHz(int16_t *samplesRaw) {
   return samples;
 }
 
+void filter_butterwork_4th_order_init(void) {
+  for (size_t stage = 0; stage < NUM_STAGES; stage++) {
+       float32_t b0 = bFilterCoeffs2[0];
+        float32_t b1 = bFilterCoeffs2[1];
+        float32_t b2 = bFilterCoeffs2[2];
+        float32_t a1 = aFilterCoeffs2[0];  
+        float32_t a2 = aFilterCoeffs2[1]; 
+
+        biquadCoeffsQ15[5*stage + 0] = FLOAT_TO_Q15(b0);
+        biquadCoeffsQ15[5*stage + 1] = FLOAT_TO_Q15(b1);
+        biquadCoeffsQ15[5*stage + 2] = FLOAT_TO_Q15(b2);
+        biquadCoeffsQ15[5*stage + 3] = FLOAT_TO_Q15(-a1);
+        biquadCoeffsQ15[5*stage + 4] = FLOAT_TO_Q15(-a2);
+  }
+
+  const int8_t postShift = 0;
+  arm_biquad_cascade_df1_init_q15(&S_q15, NUM_STAGES, biquadCoeffsQ15,
+                                  biquadStateQ15, postShift);
+}
+
+
+static inline void process_block(int16_t * rawADC, q15_t * filteredQ15, uint32_t blockSize) {
+    arm_biquad_cascade_df1_q15(
+        &S_q15,
+        rawADC,
+        filteredQ15,
+        blockSize
+    );
+
+    // 'filteredQ15' now contains your band-limited or low-passed data.
+}
+
 static q15_t *filter_butterwort_2th_order_50kHz(int16_t *samplesRaw) {
   // Create array to store the filtered samples
   static q15_t samples[SAMPLE_LENGTH];
@@ -204,7 +247,7 @@ static q15_t *filter_butterwort_2th_order_50kHz(int16_t *samplesRaw) {
 }
 
 static void filter_butterworth_1st_order_50kHz(const int16_t *samplesRaw,
-                                        q15_t *samples) {
+                                               q15_t *samples) {
 
   static q15_t x_prev = 0;
   static q15_t y_prev = 0;
@@ -369,8 +412,8 @@ static q15_t median_of(q15_t *arr, size_t n) {
  * Returns 0 on success (outNumPeaks filled), -1 on error (outNumPeaks = 0).
  */
 static int peak_detection(const q15_t *resultsRaw, const q15_t *results,
-                   size_t samplesOfInterest, Peak *outPeaks, size_t outBufSize,
-                   size_t *outNumPeaks) {
+                          size_t samplesOfInterest, Peak *outPeaks,
+                          size_t outBufSize, size_t *outNumPeaks) {
   if (!resultsRaw || !results || !outPeaks || !outNumPeaks) {
     return -1;
   }

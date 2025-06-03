@@ -1,5 +1,6 @@
 #include "teensy_udp.h"
 #include "stack/fnet_netbuf.h"
+#include <cstddef>
 #include <cstdint>
 
 static uint8_t sequence = 0;
@@ -28,12 +29,12 @@ void frequency_data_from_client(void) {
     }
 }
 
-static void send_data_udp(const void* data_ptr, uint32_t len) {
+static void send_data_udp(const void* data_ptr, size_t len) {
     const uint8_t* p = (const uint8_t*)data_ptr;
-    uint32_t offset = 0;
+    size_t offset = 0;
 
     while (offset < len) {
-        uint32_t chunk = len - offset;
+        size_t chunk = len - offset;
         if (chunk > MTU_PAYLOAD_SIZE)
             chunk = MTU_PAYLOAD_SIZE;
 
@@ -49,14 +50,14 @@ static void send_data_udp(const void* data_ptr, uint32_t len) {
 }
 
 // Since peaks is variable length we use a different function
-static void send_peaks_udp(const void* peaks, uint32_t len) {
+static void send_peaks_udp(const void* peaks, size_t len) {
     const uint8_t* p = (const uint8_t*)peaks;
     uint8_t packets_sent = len / MAX_CLIENT_CAPACITY;
 
     uint8_t packet[MTU_RAW];
     packet[0] = sequence;
     packet[1] = packets_sent;
-    uint32_t chunk = len;
+    size_t chunk = len;
     if (chunk > MTU_PAYLOAD_SIZE) {
         chunk = MTU_PAYLOAD_SIZE;
     }

@@ -12,11 +12,11 @@
 #include "clock.h"
 #include "gpio.h"
 #include "gpio_interrupt.h"
-#include "multilateration.h"
 #include "pit.h"
 
 // Digital Signal Processing (DSP) Libraries
 #include "dsp.h"
+#include "multilateration.h"
 
 // Libraries for Ethernet
 #include "ethernet_module.h"
@@ -57,7 +57,8 @@ void loop() {
             break;
         }
     }
-
+    
+    // filling buffers to ensure all hydrophones capture signal
     for (int i = 2; i < BUFFER_PER_CHANNEL; i++) {
         while (!(buffer_filled & (1 << buffer_to_check)))
             ;
@@ -68,6 +69,7 @@ void loop() {
 
 
     if (find_pinger_position()) {
+      // should add some error handling here
     }
 
     
