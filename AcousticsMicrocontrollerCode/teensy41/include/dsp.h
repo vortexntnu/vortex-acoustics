@@ -53,6 +53,9 @@ extern q15_t FFTResultsMagnified[SAMPLE_LENGTH];
 extern Peak peaks_buffer[SAMPLE_LENGTH];
 extern size_t num_peaks;
 
+
+void filter_butterworth_4th_order_init(void); 
+
 /**
 * @brief checks if signal with set frequency is found in current sample
 * @param buffer_to_check Which adc buffer to check

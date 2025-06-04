@@ -34,6 +34,9 @@ void setup() {
     setupTeensyCommunication();
 
     adc_init();
+
+    filter_butterworth_4th_order_init();
+  
 }
 
 void loop() {

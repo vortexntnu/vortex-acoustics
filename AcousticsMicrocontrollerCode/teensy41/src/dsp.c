@@ -31,7 +31,7 @@
 const q15_t samples_of_interest = FREQUENCY_LIMIT * SAMPLE_LENGTH / SAMPLE_RATE;
 
 /*
-Coefficients for filter found at https://www.meme.net.au/butterworth.html,
+Coefficients for filter found at https://www.meme.net.au/butterwort.html,
 put 9th order filter, 510kHz sampling rate and 50kHz cut-off
 put 2th order filter, 430kHz sampling rate and 50kHz cut-off
 */
@@ -55,7 +55,7 @@ static arm_biquad_casd_df1_inst_q15 S_q15;
 
 // Coefficients for 1th order filter, 430 kHz sampling rate, 50 kHz cut-off
 // calculated manually with the help of this research paper
-// https://www.researchgate.net/publication/338022014_Digital_Implementation_of_Butterworth_First-Order_Filter_Type_IIR
+// https://www.researchgate.net/publication/338022014_Digital_Implementation_of_Butterwort_First-Order_Filter_Type_IIR
 const float32_t aFilterCoeffs1[] = {1.0, -0.44669};
 const float32_t bFilterCoeffs1[] = {0.27665, 0.27665};
 
@@ -139,7 +139,7 @@ static q15_t *filter_butterwort_9th_order_50kHz(int16_t *samplesRaw) {
   y = (a_1 * y_1 + .... + a_n * y_n) + (b_1 * x_1 + ... b_m * x_m)
   Se Wiki:
   http://vortex.a2hosted.com/index.php/Acoustics_Digital_Signal_Processing_(DSP)
-  Se source: https://www.meme.net.au/butterworth.html
+  Se source: https://www.meme.net.au/butterwort.html
   */
 
   /*
@@ -172,7 +172,7 @@ static q15_t *filter_butterwort_9th_order_50kHz(int16_t *samplesRaw) {
   return samples;
 }
 
-void filter_butterwork_4th_order_init(void) {
+void filter_butterwort_4th_order_init(void) {
   for (size_t stage = 0; stage < NUM_STAGES; stage++) {
        float32_t b0 = bFilterCoeffs2[0];
         float32_t b1 = bFilterCoeffs2[1];
@@ -200,8 +200,6 @@ static inline void process_block(int16_t * rawADC, q15_t * filteredQ15, uint32_t
         filteredQ15,
         blockSize
     );
-
-    // 'filteredQ15' now contains your band-limited or low-passed data.
 }
 
 static q15_t *filter_butterwort_2th_order_50kHz(int16_t *samplesRaw) {
@@ -213,7 +211,7 @@ static q15_t *filter_butterwort_2th_order_50kHz(int16_t *samplesRaw) {
   y = (a_1 * y_1 + .... + a_n * y_n) + (b_1 * x_1 + ... b_m * x_m)
   Se Wiki:
   http://vortex.a2hosted.com/index.php/Acoustics_Digital_Signal_Processing_(DSP)
-  Se source: https://www.meme.net.au/butterworth.html
+  Se source: https://www.meme.net.au/butterwort.html
   */
 
   /*
@@ -246,7 +244,7 @@ static q15_t *filter_butterwort_2th_order_50kHz(int16_t *samplesRaw) {
   return samples;
 }
 
-static void filter_butterworth_1st_order_50kHz(const int16_t *samplesRaw,
+static void filter_butterwort_1st_order_50kHz(const int16_t *samplesRaw,
                                                q15_t *samples) {
 
   static q15_t x_prev = 0;
@@ -311,14 +309,6 @@ static void FFT_raw(q15_t *samples, q15_t *resultsRaw) {
 }
 
 static inline void FFT_mag(q15_t *resultsRaw, q15_t *results) {
-  /*
-  Create an empty array to store the magnitude
-  calculations of the FFT.
-  As we are not dealing with complex numbers
-  anymore, it is the size of the sample length
-  */
-
-  // Converts the complex array into a magnitude array.
   arm_cmplx_mag_q15(resultsRaw, results, SAMPLE_LENGTH);
 }
 
@@ -456,7 +446,7 @@ static int peak_detection(const q15_t *resultsRaw, const q15_t *results,
 
 int dsp_found_signal(uint8_t buffer_to_check) {
 
-  filter_butterworth_1st_order_50kHz(samples_raw_hydrophones[0] +
+  filter_butterwort_1st_order_50kHz(samples_raw_hydrophones[0] +
                                          (buffer_to_check * SAMPLE_LENGTH_ADC),
                                      samplesFiltered);
 
