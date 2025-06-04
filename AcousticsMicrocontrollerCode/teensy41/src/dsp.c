@@ -49,7 +49,11 @@ const float32_t aFilterCoeffs2[fOrder2] = {0.00101196462632, -0.00035885208947};
 const float32_t bFilterCoeffs2[fOrder2 + 1] = {
     0.000086700190740, 0.000173400381481, 0.000086700190740};
 
-static q15_t biquadCoeffsQ15[NUM_STAGES * 5];
+const float32_t sos_floats[NUM_STAGES][6] = {
+    {0.00802494, 0.01604989, 0.00802494, 1, -0.92145, 0.23722397},
+    {1, 2, 1, 1, -1.18653637, 0.59315345}};
+
+static q15_t biquadCoeffsQ15[NUM_STAGES * 6];
 static q15_t biquadStateQ15[4 * NUM_STAGES] = {0};
 static arm_biquad_casd_df1_inst_q15 S_q15;
 
@@ -93,17 +97,6 @@ static q15_t q15_divide(q15_t a, q15_t b) {
 
   return (q15_t)result;
 }
-
-/*
-Since the CMSIS ARM libary uses FIXED pointer arithmetic we cant use
-conventional means Normal Arduino math uses FLOAT pointer arithmetic which are
-slower and not compatible with CMSIS q_15 data type This is why we make a FIXED
-pointer arithmetic function to do "arctan" to get angle This method of arctan is
-a aproximation algorithm using taylor series
-
-Check wiki for more info:
-https://proofwiki.org/wiki/Power_Series_Expansion_for_Real_Arctangent_Function
-*/
 
 static q15_t q15_taylor_atan(q15_t x) {
   const int TAYLOR_TERMS = 10;
@@ -172,34 +165,35 @@ static q15_t *filter_butterwort_9th_order_50kHz(int16_t *samplesRaw) {
   return samples;
 }
 
-void filter_butterwort_4th_order_init(void) {
-  for (size_t stage = 0; stage < NUM_STAGES; stage++) {
-       float32_t b0 = bFilterCoeffs2[0];
-        float32_t b1 = bFilterCoeffs2[1];
-        float32_t b2 = bFilterCoeffs2[2];
-        float32_t a1 = aFilterCoeffs2[0];  
-        float32_t a2 = aFilterCoeffs2[1]; 
+void buildCoeffs(void) {
+  // Section 1:
+  biquadCoeffsQ15[0] = FLOAT_TO_Q15(sos_floats[0][0]); // b0_1
+  biquadCoeffsQ15[1] = FLOAT_TO_Q15(sos_floats[0][1]); // b1_1
+  biquadCoeffsQ15[2] = FLOAT_TO_Q15(sos_floats[0][2]); // b2_1
+  biquadCoeffsQ15[3] =  0x7FFF;                         // a0_1 = +1.0
+  biquadCoeffsQ15[4] = FLOAT_TO_Q15(sos_floats[0][4]); // a1_1
+  biquadCoeffsQ15[5] = FLOAT_TO_Q15(sos_floats[0][5]); // a2_1
 
-        biquadCoeffsQ15[5*stage + 0] = FLOAT_TO_Q15(b0);
-        biquadCoeffsQ15[5*stage + 1] = FLOAT_TO_Q15(b1);
-        biquadCoeffsQ15[5*stage + 2] = FLOAT_TO_Q15(b2);
-        biquadCoeffsQ15[5*stage + 3] = FLOAT_TO_Q15(-a1);
-        biquadCoeffsQ15[5*stage + 4] = FLOAT_TO_Q15(-a2);
-  }
+  // Section 2:
+  biquadCoeffsQ15[6]  = FLOAT_TO_Q15(sos_floats[1][0]); // b0_2
+  biquadCoeffsQ15[7]  = FLOAT_TO_Q15(sos_floats[1][1]); // b1_2
+  biquadCoeffsQ15[8]  = FLOAT_TO_Q15(sos_floats[1][2]); // b2_2
+  biquadCoeffsQ15[9]  =  0x7FFF;                         // a0_2 = +1.0
+  biquadCoeffsQ15[10] = FLOAT_TO_Q15(sos_floats[1][4]); // a1_2
+  biquadCoeffsQ15[11] = FLOAT_TO_Q15(sos_floats[1][5]); // a2_2
+}
+void filter_butterwort_4th_order_init(void) {
+
+  buildCoeffs();
 
   const int8_t postShift = 0;
   arm_biquad_cascade_df1_init_q15(&S_q15, NUM_STAGES, biquadCoeffsQ15,
                                   biquadStateQ15, postShift);
 }
 
-
-static inline void process_block(int16_t * rawADC, q15_t * filteredQ15, uint32_t blockSize) {
-    arm_biquad_cascade_df1_q15(
-        &S_q15,
-        rawADC,
-        filteredQ15,
-        blockSize
-    );
+static inline void process_block(int16_t *rawADC, q15_t *filteredQ15,
+                                 uint32_t blockSize) {
+  arm_biquad_cascade_df1_q15(&S_q15, rawADC, filteredQ15, blockSize);
 }
 
 static q15_t *filter_butterwort_2th_order_50kHz(int16_t *samplesRaw) {
@@ -245,7 +239,7 @@ static q15_t *filter_butterwort_2th_order_50kHz(int16_t *samplesRaw) {
 }
 
 static void filter_butterwort_1st_order_50kHz(const int16_t *samplesRaw,
-                                               q15_t *samples) {
+                                              q15_t *samples) {
 
   static q15_t x_prev = 0;
   static q15_t y_prev = 0;
@@ -447,8 +441,8 @@ static int peak_detection(const q15_t *resultsRaw, const q15_t *results,
 int dsp_found_signal(uint8_t buffer_to_check) {
 
   filter_butterwort_1st_order_50kHz(samples_raw_hydrophones[0] +
-                                         (buffer_to_check * SAMPLE_LENGTH_ADC),
-                                     samplesFiltered);
+                                        (buffer_to_check * SAMPLE_LENGTH_ADC),
+                                    samplesFiltered);
 
   FFT_raw(samplesFiltered, FFTResultsRaw);
   FFT_mag(FFTResultsRaw, FFTResultsMagnified);
