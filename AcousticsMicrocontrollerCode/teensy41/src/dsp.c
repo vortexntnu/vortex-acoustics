@@ -30,25 +30,7 @@
 
 const q15_t samples_of_interest = FREQUENCY_LIMIT * SAMPLE_LENGTH / SAMPLE_RATE;
 
-/*
-Coefficients for filter found at https://www.meme.net.au/butterwort.html,
-put 9th order filter, 510kHz sampling rate and 50kHz cut-off
-put 2th order filter, 430kHz sampling rate and 50kHz cut-off
-*/
-const float32_t aFilterCoeffs[fOrder] = {
-    5.4569203401896500,   -13.7047980216478000, 20.6476635308150000,
-    -20.4748421533297000, 13.8143215886326000,  -6.3261752484730100,
-    1.8924462642157100,   -0.3350397779275800,  0.0267111235596287};
-const float32_t bFilterCoeffs[fOrder + 1] = {
-    0.00000545381633879714, 0.00004908434704917420, 0.00019633738819669700,
-    0.00045812057245895900, 0.00068718085868843900, 0.00068718085868843900,
-    0.00045812057245895900, 0.00019633738819669700, 0.00004908434704917420,
-    0.00000545381633879714};
-
-const float32_t aFilterCoeffs2[fOrder2] = {0.00101196462632, -0.00035885208947};
-const float32_t bFilterCoeffs2[fOrder2 + 1] = {
-    0.000086700190740, 0.000173400381481, 0.000086700190740};
-
+//Coeffs for 430kHz sampling and 50kHz cut-off
 const float32_t sos_floats[NUM_STAGES][6] = {
     {0.00802494, 0.01604989, 0.00802494, 1, -0.92145, 0.23722397},
     {1, 2, 1, 1, -1.18653637, 0.59315345}};
@@ -123,48 +105,9 @@ static q15_t q15_taylor_atan(q15_t x) {
   return result;
 }
 
-static q15_t *filter_butterwort_9th_order_50kHz(int16_t *samplesRaw) {
-  // Create array to store the filtered samples
-  static q15_t samples[SAMPLE_LENGTH];
-
-  /*
-  Implement Butterwort filter of "fOrder"
-  y = (a_1 * y_1 + .... + a_n * y_n) + (b_1 * x_1 + ... b_m * x_m)
-  Se Wiki:
-  http://vortex.a2hosted.com/index.php/Acoustics_Digital_Signal_Processing_(DSP)
-  Se source: https://www.meme.net.au/butterwort.html
-  */
-
-  /*
-  Iterate through each index of the raw samples, and apply filtering to
-  them. Starting at fOrder because we can't use an index outside of the
-  samples array.
-  */
-  for (int i = fOrder; i < SAMPLE_LENGTH; i++) {
-    float32_t output_influence = 0;
-    /* We iterate through the previous filtered samples for the
-    filtering, as it is more clean and convenient. */
-    for (int k = 0; k < fOrder; k++) {
-      output_influence += aFilterCoeffs[k] * samples[i - (k + 1)];
-    }
-
-    float32_t input_influence = 0;
-    /* We iterate through the previous unfilteredsamples for the
-    filtering, as it is more clean and convenient.*/
-    for (int k = 0; k < fOrder + 1; k++) {
-      input_influence += bFilterCoeffs[k] * (samplesRaw[i - k]);
-      input_influence += bFilterCoeffs[k] * (samplesRaw[i - k]);
-    }
-
-    float influenceTotalFloat = output_influence + input_influence;
-
-    // Convert float to q15 datatype in the correct way
-    q15_t influenceTotalQ15 = (q15_t)influenceTotalFloat;
-    samples[i] = influenceTotalQ15 * FILTER_AMPLIFICATION;
-  }
-  return samples;
-}
-
+/**
+ *@brief Converting Coefficients from float to q15
+ */
 void buildCoeffs(void) {
   // Section 1:
   biquadCoeffsQ15[0] = FLOAT_TO_Q15(sos_floats[0][0]); // b0_1
@@ -182,6 +125,9 @@ void buildCoeffs(void) {
   biquadCoeffsQ15[10] = FLOAT_TO_Q15(sos_floats[1][4]); // a1_2
   biquadCoeffsQ15[11] = FLOAT_TO_Q15(sos_floats[1][5]); // a2_2
 }
+
+
+
 void filter_butterwort_4th_order_init(void) {
 
   buildCoeffs();
@@ -196,48 +142,8 @@ static inline void process_block(int16_t *rawADC, q15_t *filteredQ15,
   arm_biquad_cascade_df1_q15(&S_q15, rawADC, filteredQ15, blockSize);
 }
 
-static q15_t *filter_butterwort_2th_order_50kHz(int16_t *samplesRaw) {
-  // Create array to store the filtered samples
-  static q15_t samples[SAMPLE_LENGTH];
 
-  /*
-  Implement Butterwort filter of "fOrder"
-  y = (a_1 * y_1 + .... + a_n * y_n) + (b_1 * x_1 + ... b_m * x_m)
-  Se Wiki:
-  http://vortex.a2hosted.com/index.php/Acoustics_Digital_Signal_Processing_(DSP)
-  Se source: https://www.meme.net.au/butterwort.html
-  */
-
-  /*
-  Iterate through each index of the raw samples, and apply filtering to
-  them. Starting at fOrder2 because we can't use an index outside of the
-  samples array.
-  */
-  for (int i = fOrder2; i < SAMPLE_LENGTH; i++) {
-    float32_t output_influence = 0;
-    /* We iterate through the previous filtered samples for the
-    filtering, as it is more clean and convenient. */
-    for (int k = 0; k < fOrder2; k++) {
-      output_influence += aFilterCoeffs2[k] * samples[i - (k + 1)];
-    }
-
-    float32_t input_influence = 0;
-    /* We iterate through the previous unfilteredsamples for the
-    filtering, as it is more clean and convenient.*/
-    for (int k = 0; k < fOrder2 + 1; k++) {
-      input_influence +=
-          bFilterCoeffs2[k] * (samplesRaw[i - k] * FILTER_AMPLIFICATION);
-    }
-
-    float influenceTotalFloat = output_influence + input_influence;
-
-    // Convert float to q15 datatype in the correct way
-    q15_t influenceTotalQ15 = (q15_t)influenceTotalFloat;
-    samples[i] = influenceTotalQ15;
-  }
-  return samples;
-}
-
+// keep for now
 static void filter_butterwort_1st_order_50kHz(const int16_t *samplesRaw,
                                               q15_t *samples) {
 
@@ -272,33 +178,18 @@ static void filter_butterwort_1st_order_50kHz(const int16_t *samplesRaw,
   }
 }
 
-/*
-Instead of taking the full FFT in a signle function we split it
-We calculating first the raw values out of FFT witch are "Real" and "Imaginary"
-values these values are really interesting since this raw format can be used to
-calculate both amplitude, frequencies and phase shift of a signal
-*/
 static void FFT_raw(q15_t *samples, q15_t *resultsRaw) {
-  /*
-  To store the results of fft with
-  complex numbers, need to have double the
-  size of the sample length
-  z = a + bi, (a1, b1, a2, b2, a3, b3 ... )
-  */
 
   /* Forward transform, which is what we want,
   we want to go from time to frequency domain.*/
   uint32_t ifftFlag = 0;
 
-  arm_rfft_instance_q15 fftInstance; // Must exist, nothing to say.
+  arm_rfft_instance_q15 fftInstance; 
 
-  // Initialize the rfft
   arm_rfft_init_q15(&fftInstance, SAMPLE_LENGTH, ifftFlag, doBitReverse);
 
-  // Scale the samples for better contrasts.
   arm_scale_q15(samples, SCALE_FACTOR, BITSHIFT, samples, SAMPLE_LENGTH);
 
-  // The FFT itself, output is the FFT complex array
   arm_rfft_q15(&fftInstance, samples, resultsRaw);
 }
 
