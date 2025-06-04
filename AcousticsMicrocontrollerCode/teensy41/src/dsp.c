@@ -175,7 +175,7 @@ static void filter_butterwort_1st_order_50kHz(const int16_t *samplesRaw,
   }
 }
 
-static void FFT_raw(q15_t *samples, q15_t *resultsRaw) {
+static void fft_raw(q15_t *samples, q15_t *resultsRaw) {
 
   /* Forward transform, which is what we want,
   we want to go from time to frequency domain.*/
@@ -190,7 +190,7 @@ static void FFT_raw(q15_t *samples, q15_t *resultsRaw) {
   arm_rfft_q15(&fftInstance, samples, resultsRaw);
 }
 
-static inline void FFT_mag(q15_t *resultsRaw, q15_t *results) {
+static inline void fft_mag(q15_t *resultsRaw, q15_t *results) {
   arm_cmplx_mag_q15(resultsRaw, results, SAMPLE_LENGTH);
 }
 
@@ -326,19 +326,19 @@ static int peak_detection(const q15_t *resultsRaw, const q15_t *results,
   return 0;
 }
 
-int dsp_found_signal(uint8_t buffer_to_check) {
+int dsp_found_signal(uint8_t bufferToCheck) {
 
   // old way
   filter_butterwort_1st_order_50kHz(samples_raw_hydrophones[0] +
-                                        (buffer_to_check * SAMPLE_LENGTH_ADC),
+                                        (bufferToCheck * SAMPLE_LENGTH_ADC),
                                     samples_filtered);
   // new way
   process_block(samples_raw_hydrophones[0] +
-                    (buffer_to_check * SAMPLE_LENGTH_ADC),
+                    (bufferToCheck * SAMPLE_LENGTH_ADC),
                 samples_filtered, SAMPLE_LENGTH_ADC);
 
-  FFT_raw(samples_filtered, fft_results_raw);
-  FFT_mag(fft_results_raw, fft_results_magnified);
+  fft_raw(samples_filtered, fft_results_raw);
+  fft_mag(fft_results_raw, fft_results_magnified);
 
   if (peak_detection(fft_results_raw, fft_results_magnified, samples_interest,
                      peaks_buffer, SAMPLE_LENGTH, &num_peaks)) {

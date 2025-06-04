@@ -36,7 +36,6 @@ void setup() {
     adc_init();
 
     filter_butterworth_4th_order_init();
-  
 }
 
 void loop() {
@@ -70,13 +69,9 @@ void loop() {
 
     adc_stop_conversion();
 
-
     if (find_pinger_position()) {
       // should add some error handling here
     }
 
-    
     transmit_data_udp();
-  
-
 }
