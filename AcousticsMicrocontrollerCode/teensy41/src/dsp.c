@@ -3,6 +3,7 @@
 #include "dsp.h"
 #include "Include/arm_const_structs.h"
 #include "Include/arm_math.h"
+#include "adc.h"
 #include "arm_math.h"
 #include <cstdint>
 
@@ -30,7 +31,7 @@
 
 const q15_t samples_of_interest = FREQUENCY_LIMIT * SAMPLE_LENGTH / SAMPLE_RATE;
 
-//Coeffs for 430kHz sampling and 50kHz cut-off
+// Coeffs for 430kHz sampling and 50kHz cut-off
 const float32_t sos_floats[NUM_STAGES][6] = {
     {0.00802494, 0.01604989, 0.00802494, 1, -0.92145, 0.23722397},
     {1, 2, 1, 1, -1.18653637, 0.59315345}};
@@ -54,12 +55,11 @@ const uint32_t doBitReverse = 1;
 // Constants in q_15 format done right
 const q15_t PI_Q15 = (q15_t)(PI * (1 << 15) + 0.5);
 
-static int16_t samplesRawForDSP[SAMPLE_LENGTH] = {0};
 static size_t samples_interest = 32;
-static q15_t FFTResultsRaw[2 * SAMPLE_LENGTH] = {0};
+static q15_t fft_results_raw[2 * SAMPLE_LENGTH] = {0};
 
-q15_t samplesFiltered[SAMPLE_LENGTH] = {0};
-q15_t FFTResultsMagnified[SAMPLE_LENGTH] = {0};
+q15_t samples_filtered[SAMPLE_LENGTH] = {0};
+q15_t fft_results_magnified[SAMPLE_LENGTH] = {0};
 Peak peaks_buffer[SAMPLE_LENGTH];
 size_t num_peaks;
 
@@ -108,25 +108,23 @@ static q15_t q15_taylor_atan(q15_t x) {
 /**
  *@brief Converting Coefficients from float to q15
  */
-void buildCoeffs(void) {
+static void buildCoeffs(void) {
   // Section 1:
   biquadCoeffsQ15[0] = FLOAT_TO_Q15(sos_floats[0][0]); // b0_1
   biquadCoeffsQ15[1] = FLOAT_TO_Q15(sos_floats[0][1]); // b1_1
   biquadCoeffsQ15[2] = FLOAT_TO_Q15(sos_floats[0][2]); // b2_1
-  biquadCoeffsQ15[3] =  0x7FFF;                         // a0_1 = +1.0
+  biquadCoeffsQ15[3] = 0x7FFF;                         // a0_1 = +1.0
   biquadCoeffsQ15[4] = FLOAT_TO_Q15(sos_floats[0][4]); // a1_1
   biquadCoeffsQ15[5] = FLOAT_TO_Q15(sos_floats[0][5]); // a2_1
 
   // Section 2:
-  biquadCoeffsQ15[6]  = FLOAT_TO_Q15(sos_floats[1][0]); // b0_2
-  biquadCoeffsQ15[7]  = FLOAT_TO_Q15(sos_floats[1][1]); // b1_2
-  biquadCoeffsQ15[8]  = FLOAT_TO_Q15(sos_floats[1][2]); // b2_2
-  biquadCoeffsQ15[9]  =  0x7FFF;                         // a0_2 = +1.0
+  biquadCoeffsQ15[6] = FLOAT_TO_Q15(sos_floats[1][0]);  // b0_2
+  biquadCoeffsQ15[7] = FLOAT_TO_Q15(sos_floats[1][1]);  // b1_2
+  biquadCoeffsQ15[8] = FLOAT_TO_Q15(sos_floats[1][2]);  // b2_2
+  biquadCoeffsQ15[9] = 0x7FFF;                          // a0_2 = +1.0
   biquadCoeffsQ15[10] = FLOAT_TO_Q15(sos_floats[1][4]); // a1_2
   biquadCoeffsQ15[11] = FLOAT_TO_Q15(sos_floats[1][5]); // a2_2
 }
-
-
 
 void filter_butterwort_4th_order_init(void) {
 
@@ -141,7 +139,6 @@ static inline void process_block(int16_t *rawADC, q15_t *filteredQ15,
                                  uint32_t blockSize) {
   arm_biquad_cascade_df1_q15(&S_q15, rawADC, filteredQ15, blockSize);
 }
-
 
 // keep for now
 static void filter_butterwort_1st_order_50kHz(const int16_t *samplesRaw,
@@ -184,7 +181,7 @@ static void FFT_raw(q15_t *samples, q15_t *resultsRaw) {
   we want to go from time to frequency domain.*/
   uint32_t ifftFlag = 0;
 
-  arm_rfft_instance_q15 fftInstance; 
+  arm_rfft_instance_q15 fftInstance;
 
   arm_rfft_init_q15(&fftInstance, SAMPLE_LENGTH, ifftFlag, doBitReverse);
 
@@ -331,14 +328,19 @@ static int peak_detection(const q15_t *resultsRaw, const q15_t *results,
 
 int dsp_found_signal(uint8_t buffer_to_check) {
 
+  // old way
   filter_butterwort_1st_order_50kHz(samples_raw_hydrophones[0] +
                                         (buffer_to_check * SAMPLE_LENGTH_ADC),
-                                    samplesFiltered);
+                                    samples_filtered);
+  // new way
+  process_block(samples_raw_hydrophones[0] +
+                    (buffer_to_check * SAMPLE_LENGTH_ADC),
+                samples_filtered, SAMPLE_LENGTH_ADC);
 
-  FFT_raw(samplesFiltered, FFTResultsRaw);
-  FFT_mag(FFTResultsRaw, FFTResultsMagnified);
+  FFT_raw(samples_filtered, fft_results_raw);
+  FFT_mag(fft_results_raw, fft_results_magnified);
 
-  if (peak_detection(FFTResultsRaw, FFTResultsMagnified, samples_interest,
+  if (peak_detection(fft_results_raw, fft_results_magnified, samples_interest,
                      peaks_buffer, SAMPLE_LENGTH, &num_peaks)) {
     return 0;
   }

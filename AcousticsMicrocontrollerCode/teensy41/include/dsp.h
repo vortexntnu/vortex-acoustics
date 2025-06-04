@@ -48,8 +48,8 @@ typedef struct {
 
 
 
-extern q15_t samplesFiltered[SAMPLE_LENGTH];
-extern q15_t FFTResultsMagnified[SAMPLE_LENGTH];
+extern q15_t samples_filtered[SAMPLE_LENGTH];
+extern q15_t fft_results_magnified[SAMPLE_LENGTH];
 extern Peak peaks_buffer[SAMPLE_LENGTH];
 extern size_t num_peaks;
 

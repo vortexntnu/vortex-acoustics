@@ -86,8 +86,8 @@ void transmit_data_udp(void) {
         send_data_udp(samples_raw_hydrophones[i], sizeof(int16_t) * RAW_HYDROPHONE_SIZE);
     }
 
-    send_data_udp(samplesFiltered, sizeof(q15_t) * SAMPLE_LENGTH);
-    send_data_udp(FFTResultsMagnified, sizeof(q15_t) * SAMPLE_LENGTH);
+    send_data_udp(samples_filtered, sizeof(q15_t) * SAMPLE_LENGTH);
+    send_data_udp(fft_results_magnified, sizeof(q15_t) * SAMPLE_LENGTH);
 
     // send_peak_data(peaks, lengthOfPeakArray);
 
