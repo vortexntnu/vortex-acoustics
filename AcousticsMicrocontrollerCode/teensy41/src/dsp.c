@@ -5,6 +5,7 @@
 #include "Include/arm_math.h"
 #include "adc.h"
 #include "arm_math.h"
+#include <cstddef>
 #include <cstdint>
 
 #define SAMPLE_RATE 430000 // 430.0 kHz
@@ -31,7 +32,7 @@
 
 const q15_t samples_of_interest = FREQUENCY_LIMIT * SAMPLE_LENGTH / SAMPLE_RATE;
 
-// Coeffs for 430kHz sampling and 50kHz cut-off
+// Coefficients for 430kHz sampling and 50kHz cut-off
 const float32_t sos_floats[NUM_STAGES][6] = {
     {0.00802494, 0.01604989, 0.00802494, 1, -0.92145, 0.23722397},
     {1, 2, 1, 1, -1.18653637, 0.59315345}};
@@ -135,6 +136,12 @@ void filter_butterwort_4th_order_init(void) {
                                   biquadStateQ15, postShift);
 }
 
+/**
+ *@brief 4th order butterworth filter
+ *@param raw signal
+ *@param output filtered sigal
+ *@param block size
+ */
 static inline void process_block(int16_t *rawADC, q15_t *filteredQ15,
                                  uint32_t blockSize) {
   arm_biquad_cascade_df1_q15(&S_q15, rawADC, filteredQ15, blockSize);
@@ -180,14 +187,16 @@ static void fft_raw(q15_t *samples, q15_t *resultsRaw) {
   /* Forward transform, which is what we want,
   we want to go from time to frequency domain.*/
   uint32_t ifftFlag = 0;
+  q15_t temp[SAMPLE_LENGTH];
 
   arm_rfft_instance_q15 fftInstance;
 
   arm_rfft_init_q15(&fftInstance, SAMPLE_LENGTH, ifftFlag, doBitReverse);
 
-  arm_scale_q15(samples, SCALE_FACTOR, BITSHIFT, samples, SAMPLE_LENGTH);
 
-  arm_rfft_q15(&fftInstance, samples, resultsRaw);
+  arm_scale_q15(samples, SCALE_FACTOR, BITSHIFT, temp, SAMPLE_LENGTH);
+
+  arm_rfft_q15(&fftInstance, temp, resultsRaw);
 }
 
 static inline void fft_mag(q15_t *resultsRaw, q15_t *results) {
@@ -329,9 +338,9 @@ static int peak_detection(const q15_t *resultsRaw, const q15_t *results,
 int dsp_found_signal(uint8_t bufferToCheck) {
 
   // old way
-  filter_butterwort_1st_order_50kHz(samples_raw_hydrophones[0] +
-                                        (bufferToCheck * SAMPLE_LENGTH_ADC),
-                                    samples_filtered);
+  // filter_butterwort_1st_order_50kHz(samples_raw_hydrophones[0] +
+  //                                       (bufferToCheck * SAMPLE_LENGTH_ADC),
+  //                                   samples_filtered);
   // new way
   process_block(samples_raw_hydrophones[0] +
                     (bufferToCheck * SAMPLE_LENGTH_ADC),
@@ -347,7 +356,7 @@ int dsp_found_signal(uint8_t bufferToCheck) {
 
   for (size_t i = 0; i < num_peaks; i++) {
     int32_t peakFrequency = peaks_buffer[i].frequency;
-    for (int j = 0; j < FREQUENCY_LIST_LENGTH; j++) {
+    for (size_t j = 0; j < FREQUENCY_LIST_LENGTH; j++) {
       if ((peakFrequency < freq_interest_max[j]) &&
           (peakFrequency > freq_interest_min[j])) {
         return 1;
