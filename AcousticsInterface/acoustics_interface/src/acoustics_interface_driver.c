@@ -22,44 +22,47 @@
 #define BUFFER_PER_CHANNEL 6
 #define RAW_HYDROPHONE_SIZE (SAMPLE_LENGTH * BUFFER_PER_CHANNEL)
 
-#define MTU_PAYLOAD_SIZE 1471 // for example
+#define MTU_PAYLOAD_SIZE 1471
 #define HYDRO_PKTS_PER_HYDROPHONE 6
 #define NUM_HYDROPHONES 5
 #define FILTERED_PKTS 2
-#define SEQ_HYDRO_END (HYDRO_PKTS_PER_HYDROPHONE * NUM_HYDROPHONES) // 30
-#define SEQ_FILTERED_END (SEQ_HYDRO_END + FILTERED_PKTS)
-#define SEQ_FFT_END (SEQ_FILTERED_END + FILTERED_PKTS)
+#define NUM_BUFFERS 9
 
 int16_t samples_raw_hydrophone1[RAW_HYDROPHONE_SIZE];
 int16_t samples_raw_hydrophone2[RAW_HYDROPHONE_SIZE];
 int16_t samples_raw_hydrophone3[RAW_HYDROPHONE_SIZE];
 int16_t samples_raw_hydrophone4[RAW_HYDROPHONE_SIZE];
 int16_t samples_raw_hydrophone5[RAW_HYDROPHONE_SIZE];
-
-int16_t *samples_raw_hydrophones[5] = {
-    samples_raw_hydrophone1, samples_raw_hydrophone2, samples_raw_hydrophone3,
-    samples_raw_hydrophone4, samples_raw_hydrophone5};
-
 int16_t samples_filtered[SAMPLE_LENGTH] = {0};
 int16_t fft_magnified[SAMPLE_LENGTH] = {0};
+float time_diff[5] = {0};
+float position[4] = {0};
 
-typedef struct {
-  size_t index;      // FFT bin index (optional, for debugging)
-  int32_t amplitude; // Peak amplitude (converted to Q31)
-  int32_t frequency; // Frequency (in Hz, represented in Q31 if needed)
-  int16_t phase;     // Phase shift in Q15 format
-} Peak;
+void *all_arrays[NUM_BUFFERS] = {samples_raw_hydrophone1,
+                                 samples_raw_hydrophone2,
+                                 samples_raw_hydrophone3,
+                                 samples_raw_hydrophone4,
+                                 samples_raw_hydrophone5,
+                                 samples_filtered,
+                                 fft_magnified,
+                                 time_diff,
+                                 position};
+
+uint16_t array_sizes[NUM_BUFFERS] = {RAW_HYDROPHONE_SIZE,
+                                     RAW_HYDROPHONE_SIZE,
+                                     RAW_HYDROPHONE_SIZE,
+                                     RAW_HYDROPHONE_SIZE,
+                                     RAW_HYDROPHONE_SIZE,
+                                     SAMPLE_LENGTH,
+                                     SAMPLE_LENGTH,
+                                     5,
+                                     4};
 
 typedef struct {
   uint8_t expected_seq;
   size_t offset;
   uint16_t peaks_bytes;
 } StreamState;
-
-Peak peaks[SAMPLE_LENGTH] = {0};
-
-float time_diff[5] = {0};
-float position[4] = {0};
 
 void stream_init(StreamState *st) {
   st->expected_seq = 0;
@@ -208,61 +211,35 @@ void fetch_data(TeensyCommunicationUDP *comm) {
   }
 }
 
-int handle_data(StreamState *st, const uint8_t *buf, uint32_t len) {
-  uint8_t seq = buf[0];
-  if (seq != st->expected_seq) {
-    // out of order packet
+
+/**
+*@brief handles incoming udp data
+*@param message buffer
+*@param message length
+*@return 0 on success
+* -1 on message to sall
+* -2 invalid sequence header
+* -3 invalid offset
+*/
+int handle_data(const uint8_t *buf, uint32_t len) {
+  if (len < 6) {
     return -1;
   }
+  uint8_t seq = buf[0];
+  if (seq >= NUM_BUFFERS) {
+    return -2;
+  }
+  uint32_t offset = ((uint32_t)buf[1] << 24) | ((uint32_t)buf[2] << 16) |
+                    ((uint32_t)buf[3] << 8) | ((uint32_t)buf[4]);
 
-  // Hydrophones: seq in [0 .. 29]
-  if (seq < SEQ_HYDRO_END) {
-    int hp = seq / HYDRO_PKTS_PER_HYDROPHONE; // 0..4
-    memcpy(samples_raw_hydrophones[hp] + st->offset, buf + 1, len - 1);
-    st->offset += (len - 1);
-    if (st->offset >= RAW_HYDROPHONE_SIZE) {
-      st->offset = 0;
-    }
-  }
-  // Filtered: seq in [30..31]
-  else if (seq < SEQ_FILTERED_END) {
-    memcpy(samples_filtered + st->offset, buf + 1, len - 1);
-    st->offset += (len - 1);
-    if (st->offset >= SAMPLE_LENGTH) {
-      st->offset = 0;
-    }
-  }
-  // FFT: seq in [32..33]
-  else if (seq < SEQ_FFT_END) {
-    memcpy(samples_fft + st->offset, buf + 1, len - 1);
-    st->offset += (len - 1);
-    if (st->offset >= SAMPLE_LENGTH) {
-      st->offset = 0;
-    }
-  }
-  // Peak header: exactly seq == SEQ_PEAK_HDR
-  else if (seq == SEQ_PEAK_HDR) {
-    st->peaks_bytes = buf[1]; // total number of peak‐data packets
-    st->offset = 0;
-  }
-  // Peak data: next `peaks_bytes` sequences
-  else if (seq < SEQ_PEAK_HDR + st->peaks_bytes) {
-    // payload starts at buf+2, length = len-2
-    memcpy(peaks + st->offset, buf + 2, len - 2);
-    st->offset += (len - 2);
-  }
-  // TDOA: next packet
-  else if (seq == SEQ_PEAK_HDR + st->peaks_bytes) {
-    memcpy(time_diff, buf + 1, len - 1);
-  }
-  // Position: final packet
-  else if (seq == SEQ_PEAK_HDR + st->peaks_bytes + 1) {
-    memcpy(position, buf + 1, len - 1);
+  const uint8_t *data_ptr = buf + 5;
+  uint32_t data_len = len - 5;
 
-    // Done with this frame… reset for next
-    stream_init(st);
+  if (offset + data_len > array_sizes[seq]) {
+    return -3;
   }
 
-  st->expected_seq++;
-  return 0;
+  memcpy(all_arrays[seq] + offset, data_ptr, data_len);
+
+  return 0; 
 }
