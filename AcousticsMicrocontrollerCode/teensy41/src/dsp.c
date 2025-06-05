@@ -9,7 +9,6 @@ static arm_biquad_casd_df1_inst_q15 S_q15;
 // Constants in q_15 format done right
 const q15_t PI_Q15 = (q15_t)(PI * (1 << 15) + 0.5);
 
-static size_t samples_interest = 32;
 static q15_t fft_results_raw[2 * SAMPLE_LENGTH] = {0};
 
 q15_t samples_filtered[SAMPLE_LENGTH] = {0};

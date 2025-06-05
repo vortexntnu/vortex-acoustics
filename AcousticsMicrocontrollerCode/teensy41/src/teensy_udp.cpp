@@ -3,33 +3,28 @@
 #include <cstddef>
 #include <cstdint>
 
-static uint8_t sequence = 0;
-
 int32_t freq_interest_max[FREQUENCY_LIST_LENGTH]; // 0 Hz
 int32_t freq_interest_min[FREQUENCY_LIST_LENGTH]; // 0 Hz
+//
+FrequencyInterest frequencyInterest[FREQUENCY_LIST_LENGTH];
 
-void frequency_data_from_client(void) {
-    for (int i = 0; i < FREQUENCY_LIST_LENGTH; i++) {
-        while (!UDP_check_if_connected())
-            ;
-
-        char* frequencyMessage = UDP_read_message();
-        char* token;
-
-        token = strtok(frequencyMessage, ",");
-        int32_t freq_interest = atoi(token);
-        int32_t freq_variance = atoi(strtok(NULL, ","));
-
-        freq_interest_max[i] = freq_interest + freq_variance;
-        freq_interest_min[i] = freq_interest - freq_variance;
-
-        Serial.print(freq_interest);
-        Serial.print(", ");
-        Serial.println(freq_variance);
+int frequency_data_from_client(void) {
+    while (!UDP_check_if_connected())
+        ;
+    uint8_t* data = (uint8_t*)(UDP_read_message() + 1);
+    if (data[0] != 1) {
+        return -1;
+    }
+    for (size_t i = 0; i < 10; i++) {
+        size_t idx = 8 * (i) + 1;
+        int freq = ((int)data[idx] << 24) | ((int)data[idx + 1] << 16) | ((int)data[idx + 2] << 8) | ((int)data[idx + 3]);
+        int variance = ((int)data[idx+4] << 24) | ((int)data[idx + 5] << 16) | ((int)data[idx + 6] << 8) | ((int)data[idx + 7]);
+        frequencyInterest[i].frequency = freq;
+        frequencyInterest[i].variance = variance;
     }
 }
 
-static void send_data_udp(const void* data_ptr, size_t len) {
+static void send_data_udp(const void* data_ptr, size_t len, uint8_t sequence) {
     const uint8_t* p = (const uint8_t*)data_ptr;
     size_t offset = 0;
 
@@ -39,35 +34,16 @@ static void send_data_udp(const void* data_ptr, size_t len) {
             chunk = MTU_PAYLOAD_SIZE;
 
         uint8_t packet[MTU_RAW];
-        packet[0] = sequence;                  // sequence ID
-        memcpy(packet + 1, p + offset, chunk); // copy up to MTU_PAYLOAD_SIZE
-
-        UDP_send_message_raw(packet, chunk + 1);
+        packet[0] = sequence;
+        packet[1] = (offset >> 24) & 0xFF;
+        packet[2] = (offset >> 16) & 0xFF;
+        packet[3] = (offset >> 8) & 0xFF;
+        packet[4] = (offset >> 0) & 0xFF;
+        memcpy(packet + 5, p + offset, chunk);
+        UDP_send_message_raw(packet, chunk + 5);
 
         offset += chunk;
-        sequence = (uint8_t)(sequence + 1); // wrap at 255→0 automatically
     }
-}
-
-// Since peaks is variable length we use a different function
-static void send_peaks_udp(const void* peaks, size_t len) {
-    const uint8_t* p = (const uint8_t*)peaks;
-    uint8_t packets_sent = len / MAX_CLIENT_CAPACITY;
-
-    uint8_t packet[MTU_RAW];
-    packet[0] = sequence;
-    packet[1] = packets_sent;
-    size_t chunk = len;
-    if (chunk > MTU_PAYLOAD_SIZE) {
-        chunk = MTU_PAYLOAD_SIZE;
-    }
-    memcpy(packet + 2, p, chunk);
-    UDP_send_message_raw(packet, chunk + 1);
-    sequence++;
-    if (chunk == MTU_PAYLOAD_SIZE) {
-        return;
-    }
-    send_data_udp(p + chunk, len - chunk);
 }
 
 void setupTeensyCommunication(void) {
@@ -80,19 +56,13 @@ void setupTeensyCommunication(void) {
 }
 
 void transmit_data_udp(void) {
-    sequence = 0;
-
-    for (int i = 0; i < NUM_HYDROPHONES; i++) {
-        send_data_udp(samples_raw_hydrophones[i], sizeof(int16_t) * RAW_HYDROPHONE_SIZE);
+    for (uint8_t i = 0; i < NUM_HYDROPHONES; i++) {
+        send_data_udp(samples_raw_hydrophones[i], sizeof(int16_t) * RAW_HYDROPHONE_SIZE, i);
     }
-
-    send_data_udp(samples_filtered, sizeof(q15_t) * SAMPLE_LENGTH);
-    send_data_udp(fft_results_magnified, sizeof(q15_t) * SAMPLE_LENGTH);
-
-    // send_peak_data(peaks, lengthOfPeakArray);
-
-    send_data_udp(timeDifferenceOfArrival, sizeof(float32_t) * TDOA_DATA_LENGTH);
-    send_data_udp(soundLocation, sizeof(float32_t) * POSITION_DATA_LENGTH);
+    send_data_udp(samples_filtered, sizeof(q15_t) * SAMPLE_LENGTH, 5);
+    send_data_udp(fft_results_magnified, sizeof(q15_t) * SAMPLE_LENGTH, 6);
+    send_data_udp(timeDifferenceOfArrival, sizeof(float32_t) * TDOA_DATA_LENGTH, 7);
+    send_data_udp(soundLocation, sizeof(float32_t) * POSITION_DATA_LENGTH, 8);
 
     UDP_clean_message_memory();
 }
