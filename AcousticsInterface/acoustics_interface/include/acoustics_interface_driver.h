@@ -42,24 +42,23 @@ extern "C"{
 typedef struct {
   int frequency;
   int variance;
-} FrequencyInterest;
+} frequencyInterest;
 
 typedef struct {
   int client_socket;
   struct sockaddr_in teensy_addr;
   struct sockaddr_in my_addr;
   char data_string[1024];
-  char data_target[64];
 } TeensyCommunicationUDP;
 
 /* Function prototypes */
 char *get_local_ip(void);
-int init_communication(TeensyCommunicationUDP *comm, FrequencyInterest freq[],
+int init_communication(TeensyCommunicationUDP *comm, frequencyInterest freq[],
                        int freq_count);
 void send_acknowledge_signal(TeensyCommunicationUDP *comm);
 int check_if_ready(TeensyCommunicationUDP *comm);
 void send_frequencies_of_interest(TeensyCommunicationUDP *comm,
-                                  FrequencyInterest freq[], int freq_count);
+                                  frequencyInterest freq[], int freq_count);
 void fetch_data(TeensyCommunicationUDP *comm);
 
 

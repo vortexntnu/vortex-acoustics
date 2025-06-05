@@ -3,6 +3,7 @@
 #include "acoustics_interface_driver.h"
 #include <arpa/inet.h>
 #include <assert.h>
+#include <cstdint>
 #include <errno.h>
 #include <ifaddrs.h>
 #include <netdb.h>
@@ -48,27 +49,19 @@ void *all_arrays[NUM_BUFFERS] = {samples_raw_hydrophone1,
                                  time_diff,
                                  position};
 
-uint16_t array_sizes[NUM_BUFFERS] = {RAW_HYDROPHONE_SIZE,
-                                     RAW_HYDROPHONE_SIZE,
-                                     RAW_HYDROPHONE_SIZE,
-                                     RAW_HYDROPHONE_SIZE,
-                                     RAW_HYDROPHONE_SIZE,
-                                     SAMPLE_LENGTH,
-                                     SAMPLE_LENGTH,
-                                     5,
-                                     4};
+size_t array_byte_sizes[NUM_BUFFERS] = {
+    RAW_HYDROPHONE_SIZE * sizeof(int16_t), // i.e. 1024*2 = 2048 bytes
+    RAW_HYDROPHONE_SIZE * sizeof(int16_t),
+    RAW_HYDROPHONE_SIZE * sizeof(int16_t),
+    RAW_HYDROPHONE_SIZE * sizeof(int16_t),
+    RAW_HYDROPHONE_SIZE * sizeof(int16_t),
 
-typedef struct {
-  uint8_t expected_seq;
-  size_t offset;
-  uint16_t peaks_bytes;
-} StreamState;
+    SAMPLE_LENGTH * sizeof(int16_t), // e.g. 512*2 = 1024 bytes
+    SAMPLE_LENGTH * sizeof(int16_t),
 
-void stream_init(StreamState *st) {
-  st->expected_seq = 0;
-  st->offset = 0;
-  st->peaks_bytes = 0;
-}
+    5 * sizeof(float), // time_diff is a float[5], i.e. 20 bytes total
+    4 * sizeof(float)  // position is a float[4], i.e. 16 bytes total
+};
 
 char *get_local_ip() {
   struct ifaddrs *ifaddr, *ifa;
@@ -98,7 +91,7 @@ char *get_local_ip() {
   return ip;
 }
 
-int init_communication(TeensyCommunicationUDP *comm, FrequencyInterest freq[],
+int init_communication(TeensyCommunicationUDP *comm, frequencyInterest freq[],
                        int freq_count) {
 
   comm->client_socket = socket(AF_INET, SOCK_DGRAM, 0);
@@ -180,20 +173,47 @@ int check_if_ready(TeensyCommunicationUDP *comm) {
 }
 
 void send_frequencies_of_interest(TeensyCommunicationUDP *comm,
-                                  FrequencyInterest freq[], int freq_count) {
-  assert(freq_count == 10);
-  char msg[64];
-  for (int i = 0; i < freq_count; i++) {
-    snprintf(msg, sizeof(msg), "%d,%d,", freq[i].frequency, freq[i].variance);
-    int sent = sendto(comm->client_socket, msg, strlen(msg), 0,
-                      (struct sockaddr *)&comm->teensy_addr,
-                      sizeof(comm->teensy_addr));
-    if (sent < 0) {
-      perror("sendto (frequencies)");
-    } else {
-      printf("Sent frequency message: %s\n", msg);
+                                  frequencyInterest freq[], int freq_count) {
+
+  uint8_t data[freq_count * sizeof(frequencyInterest)];
+  memcpy(data, (uint8_t *)freq, )
+}
+/**
+ * @brief  Send a large buffer to the Teensy, chunking it into
+ * “seq+offset+payload” packets.
+ * @param  comm   An initialized TeensyCommunicationUDP (socket & teensy_addr
+ * already set).
+ * @param  data   Pointer to the raw data you want to ship.
+ * @param  size   Total size (in bytes) of that data.
+ * @return        0 on success (all chunks sent), or −1 on socket error.
+ */
+int send_data_udp(TeensyCommunicationUDP *comm, void *data, size_t size) {
+  uint8_t *raw = (uint8_t *)data;
+  size_t offset = 0;
+  uint8_t sequence = 0;
+
+  while (offset < size) {
+    size_t chunk = size - offset;
+    if (chunk > MTU_PAYLOAD_SIZE) {
+      chunk = MTU_PAYLOAD_SIZE;
     }
+
+    comm->data_string[0] = sequence;
+
+    memcpy(comm->data_string + 1, raw + offset, chunk);
+
+    ssize_t sent = sendto(
+        comm->client_socket, comm->data_string, (size_t)(chunk + 1), 0,
+        (struct sockaddr *)&comm->teensy_addr, sizeof(comm->teensy_addr));
+
+    if (sent < 0) {
+      perror("sendto failed");
+      return -1;
+    }
+    offset += chunk;
   }
+
+  return 0;
 }
 
 void fetch_data(TeensyCommunicationUDP *comm) {
@@ -211,16 +231,15 @@ void fetch_data(TeensyCommunicationUDP *comm) {
   }
 }
 
-
 /**
-*@brief handles incoming udp data
-*@param message buffer
-*@param message length
-*@return 0 on success
-* -1 on message to sall
-* -2 invalid sequence header
-* -3 invalid offset
-*/
+ * @brief   Handle one incoming UDP “chunk.”
+ * @param   buf   Pointer to the first byte of the UDP payload
+ * @param   len   Length of that payload
+ * @return  0 on success
+ *         -1 if the packet was too small to contain “seq+offset+1 byte data”
+ *         -2 if seq is out of range
+ *         -3 if offset+data_len would overrun the selected buffer
+ */
 int handle_data(const uint8_t *buf, uint32_t len) {
   if (len < 6) {
     return -1;
@@ -235,11 +254,13 @@ int handle_data(const uint8_t *buf, uint32_t len) {
   const uint8_t *data_ptr = buf + 5;
   uint32_t data_len = len - 5;
 
-  if (offset + data_len > array_sizes[seq]) {
+  if (offset + data_len > array_byte_sizes[seq]) {
     return -3;
   }
 
-  memcpy(all_arrays[seq] + offset, data_ptr, data_len);
+  uint8_t *pDest = (uint8_t *)all_arrays[seq];
 
-  return 0; 
+  memcpy(pDest + offset, data_ptr, data_len);
+
+  return 0;
 }
