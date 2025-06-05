@@ -1,62 +1,10 @@
-
-
 #include "dsp.h"
-#include "Include/arm_const_structs.h"
-#include "Include/arm_math.h"
-#include "adc.h"
-#include "arm_math.h"
-#include <cstddef>
-#include <cstdint>
 
-#define SAMPLE_RATE 430000 // 430.0 kHz
-#define SAMPLE_LENGTH 1024
-
-#define FILTER_AMPLIFICATION 2
-
-#define BITSHIFT 9
-#define SCALE_FACTOR 1000.0
-#define FREQUENCY_LIMIT 60000
-
-#define PEAK_THRESHOLD 1000
-
-#define Q15_SCALE 32768.0f
-
-#define FLOAT_TO_Q15(x) ((q15_t)((x) >= 0.0f ? ((x) * Q15_SCALE + 0.5f) : ((x) * Q15_SCALE - 0.5f)))
-
-#define NUM_STAGES 2
-#define BLOCK_SIZE 256
-
-#define fOrder 9
-#define fOrder2 2
-
-// Globals or #defines (set these once):
-#define Fs 50000.0f       // sample rate
-#define N SAMPLE_LENGTH   // FFT length
-#define f_ping 12000.0f   // your target ping freq in Hz
-#define deltaF 200.0f     // allow ±200 Hz of drift
-#define SIDE_BAND_WIDTH 8 // bins on each side for noise floor
-#define MARGIN_Q15 0x1000 // ~+6 dB margin
-
-const q15_t samples_of_interest = FREQUENCY_LIMIT * SAMPLE_LENGTH / SAMPLE_RATE;
-
-// Coefficients for 430kHz sampling and 50kHz cut-off
-const float32_t sos_floats[NUM_STAGES][6] = {{0.00802494, 0.01604989, 0.00802494, 1, -0.92145, 0.23722397}, {1, 2, 1, 1, -1.18653637, 0.59315345}};
 
 static q15_t biquadCoeffsQ15[NUM_STAGES * 6];
 static q15_t biquadStateQ15[4 * NUM_STAGES] = {0};
 static arm_biquad_casd_df1_inst_q15 S_q15;
 
-// Coefficients for 1th order filter, 430 kHz sampling rate, 50 kHz cut-off
-// calculated manually with the help of this research paper
-// https://www.researchgate.net/publication/338022014_Digital_Implementation_of_Butterwort_First-Order_Filter_Type_IIR
-const float32_t aFilterCoeffs1[] = {1.0, -0.44669};
-const float32_t bFilterCoeffs1[] = {0.27665, 0.27665};
-
-/*
-Bit reversing is applied in a lot of FFT
-algorithms for increase efficiency.
-*/
-const uint32_t doBitReverse = 1;
 
 // Constants in q_15 format done right
 const q15_t PI_Q15 = (q15_t)(PI * (1 << 15) + 0.5);
@@ -66,7 +14,6 @@ static q15_t fft_results_raw[2 * SAMPLE_LENGTH] = {0};
 
 q15_t samples_filtered[SAMPLE_LENGTH] = {0};
 q15_t fft_results_magnified[SAMPLE_LENGTH] = {0};
-Peak peaks_buffer[SAMPLE_LENGTH];
 size_t num_peaks;
 
 static q15_t q15_divide(q15_t a, q15_t b) {
@@ -148,50 +95,13 @@ void filter_butterwort_4th_order_init(void) {
  */
 static inline void process_block(int16_t* rawADC, q15_t* filteredQ15, uint32_t blockSize) { arm_biquad_cascade_df1_q15(&S_q15, rawADC, filteredQ15, blockSize); }
 
-// keep for now
-static void filter_butterwort_1st_order_50kHz(const int16_t* samplesRaw, q15_t* samples) {
-
-    static q15_t x_prev = 0;
-    static q15_t y_prev = 0;
-
-    for (int n = 0; n < SAMPLE_LENGTH; n++) {
-        // Convert the raw sample to Q15 and scale it by the amplification factor.
-        // Assuming the raw sample is in a similar Q15 range or is appropriately
-        // scaled.
-        q15_t x_current = ((q15_t)samplesRaw[n] * FILTER_AMPLIFICATION);
-
-        // Compute the filter output in two stages:
-        // 1. Compute the numerator (b0*x[n] + b1*x[n-1])
-        q15_t num = (bFilterCoeffs1[0] * x_current) + (bFilterCoeffs1[1] * x_prev);
-
-        // 2. Compute the denominator term (a1*y[n-1]) and subtract from the
-        // numerator.
-        q15_t den = (aFilterCoeffs1[1] * y_prev);
-        q15_t temp = num - den;
-
-        // Multiply by a0 (normally, a0 equals 1.0 in Q15, i.e., 0x7FFF, so this
-        // might be a no-op if normalized).
-        q15_t y_current = (aFilterCoeffs1[0] * temp);
-
-        // Store the output.
-        samples[n] = y_current;
-
-        // Update filter state.
-        x_prev = x_current;
-        y_prev = y_current;
-    }
-}
 
 static void fft_raw(q15_t* samples, q15_t* resultsRaw) {
-
-    /* Forward transform, which is what we want,
-  we want to go from time to frequency domain.*/
-    uint32_t ifftFlag = 0;
     q15_t temp[SAMPLE_LENGTH];
 
     arm_rfft_instance_q15 fftInstance;
 
-    arm_rfft_init_q15(&fftInstance, SAMPLE_LENGTH, ifftFlag, doBitReverse);
+    arm_rfft_init_q15(&fftInstance, SAMPLE_LENGTH, IFFT_FLAG, BIT_REVERSE);
 
     arm_scale_q15(samples, SCALE_FACTOR, BITSHIFT, temp, SAMPLE_LENGTH);
 
@@ -213,7 +123,7 @@ static inline q15_t compute_phase(q15_t real, q15_t imag) {
     }
 }
 
-bool detect_ping_in_spectrum(const q15_t* fftMag) {
+static int detect_ping_in_spectrum(const q15_t* fftMag) {
     // 1) Compute target bin ± spread:
     float binWidth = Fs / (float)N;
     int k0 = (int)(f_ping / binWidth);
@@ -274,13 +184,7 @@ bool detect_ping_in_spectrum(const q15_t* fftMag) {
 
 int dsp_found_signal(uint8_t bufferToCheck) {
 
-    // old way
-    // filter_butterwort_1st_order_50kHz(samples_raw_hydrophones[0] +
-    //                                       (bufferToCheck * SAMPLE_LENGTH_ADC),
-    //                                   samples_filtered);
-    // new way
     process_block(samples_raw_hydrophones[0] + (bufferToCheck * SAMPLE_LENGTH_ADC), samples_filtered, SAMPLE_LENGTH_ADC);
-
     fft_raw(samples_filtered, fft_results_raw);
     fft_mag(fft_results_raw, fft_results_magnified);
 
