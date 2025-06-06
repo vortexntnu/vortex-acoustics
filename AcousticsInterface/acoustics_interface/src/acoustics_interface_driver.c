@@ -3,7 +3,6 @@
 #include "acoustics_interface_driver.h"
 #include <arpa/inet.h>
 #include <assert.h>
-#include <cstdint>
 #include <errno.h>
 #include <ifaddrs.h>
 #include <netdb.h>
@@ -19,15 +18,9 @@
 #include <time.h>
 #include <unistd.h>
 
-#define SAMPLE_LENGTH 1024
-#define BUFFER_PER_CHANNEL 6
-#define RAW_HYDROPHONE_SIZE (SAMPLE_LENGTH * BUFFER_PER_CHANNEL)
 
-#define MTU_PAYLOAD_SIZE 1471
-#define HYDRO_PKTS_PER_HYDROPHONE 6
-#define NUM_HYDROPHONES 5
-#define FILTERED_PKTS 2
-#define NUM_BUFFERS 9
+
+uint8_t buffer[1500] = {0};
 
 int16_t samples_raw_hydrophone1[RAW_HYDROPHONE_SIZE];
 int16_t samples_raw_hydrophone2[RAW_HYDROPHONE_SIZE];
@@ -63,6 +56,44 @@ size_t array_byte_sizes[NUM_BUFFERS] = {
     4 * sizeof(float)  // position is a float[4], i.e. 16 bytes total
 };
 
+/**
+ * @brief  Send a large buffer to the Teensy, chunking it into
+ * “seq+offset+payload” packets.
+ * @param  comm   An initialized TeensyCommunicationUDP (socket & teensy_addr
+ * already set).
+ * @param  data   Pointer to the raw data you want to ship.
+ * @param  size   Total size (in bytes) of that data.
+ * @return        0 on success (all chunks sent), or −1 on socket error.
+ */
+static int send_data_udp(TeensyCommunicationUDP *comm, void *data, size_t size,
+                         uint8_t sequence) {
+  uint8_t *raw = (uint8_t *)data;
+  size_t offset = 0;
+
+  while (offset < size) {
+    size_t chunk = size - offset;
+    if (chunk > MTU_PAYLOAD_SIZE) {
+      chunk = MTU_PAYLOAD_SIZE;
+    }
+
+    comm->data_string[0] = sequence;
+
+    memcpy(comm->data_string + 1, raw + offset, chunk);
+
+    ssize_t sent = sendto(
+        comm->client_socket, comm->data_string, (size_t)(chunk + 1), 0,
+        (struct sockaddr *)&comm->teensy_addr, sizeof(comm->teensy_addr));
+
+    if (sent < 0) {
+      perror("sendto failed");
+      return -1;
+    }
+    offset += chunk;
+  }
+
+  return 0;
+}
+
 char *get_local_ip() {
   struct ifaddrs *ifaddr, *ifa;
   static char ip[INET_ADDRSTRLEN] = "127.0.0.1"; // Default IP
@@ -91,7 +122,7 @@ char *get_local_ip() {
   return ip;
 }
 
-int init_communication(TeensyCommunicationUDP *comm, frequencyInterest freq[],
+int init_communication(TeensyCommunicationUDP *comm, FrequencyInterest *freq,
                        int freq_count) {
 
   comm->client_socket = socket(AF_INET, SOCK_DGRAM, 0);
@@ -173,60 +204,19 @@ int check_if_ready(TeensyCommunicationUDP *comm) {
 }
 
 void send_frequencies_of_interest(TeensyCommunicationUDP *comm,
-                                  frequencyInterest freq[], int freq_count) {
-
-  uint8_t data[freq_count * sizeof(frequencyInterest)];
-  memcpy(data, (uint8_t *)freq, )
-}
-/**
- * @brief  Send a large buffer to the Teensy, chunking it into
- * “seq+offset+payload” packets.
- * @param  comm   An initialized TeensyCommunicationUDP (socket & teensy_addr
- * already set).
- * @param  data   Pointer to the raw data you want to ship.
- * @param  size   Total size (in bytes) of that data.
- * @return        0 on success (all chunks sent), or −1 on socket error.
- */
-int send_data_udp(TeensyCommunicationUDP *comm, void *data, size_t size) {
-  uint8_t *raw = (uint8_t *)data;
-  size_t offset = 0;
-  uint8_t sequence = 0;
-
-  while (offset < size) {
-    size_t chunk = size - offset;
-    if (chunk > MTU_PAYLOAD_SIZE) {
-      chunk = MTU_PAYLOAD_SIZE;
-    }
-
-    comm->data_string[0] = sequence;
-
-    memcpy(comm->data_string + 1, raw + offset, chunk);
-
-    ssize_t sent = sendto(
-        comm->client_socket, comm->data_string, (size_t)(chunk + 1), 0,
-        (struct sockaddr *)&comm->teensy_addr, sizeof(comm->teensy_addr));
-
-    if (sent < 0) {
-      perror("sendto failed");
-      return -1;
-    }
-    offset += chunk;
-  }
-
-  return 0;
+                                  FrequencyInterest *freq, int freq_count) {
+  send_data_udp(comm, freq, freq_count, 1);
 }
 
 void fetch_data(TeensyCommunicationUDP *comm) {
   int attempts = 0;
   while (attempts < 1000) {
-    uint8_t buffer[1500] = {0};
     socklen_t addrlen = sizeof(comm->teensy_addr);
     int n = recvfrom(comm->client_socket, buffer, sizeof(buffer) - 1, 0,
                      (struct sockaddr *)&comm->teensy_addr, &addrlen);
     if (n <= 0) {
       break;
     }
-    buffer[n] = '\0';
     attempts++;
   }
 }

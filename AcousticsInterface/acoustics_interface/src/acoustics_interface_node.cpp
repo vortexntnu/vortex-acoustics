@@ -1,6 +1,7 @@
 
 #include "acoustics_interface_node.hpp"
 
+#include "acoustics_interface_driver.h"
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/float32_multi_array.hpp"
 #include "std_msgs/msg/int32_multi_array.hpp"
@@ -9,7 +10,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-
 
 AcousticsInterfaceNode::AcousticsInterfaceNode() : Node("acoustics_interface") {
   // Create publishers
@@ -44,67 +44,111 @@ AcousticsInterfaceNode::AcousticsInterfaceNode() : Node("acoustics_interface") {
   // Create timers:
   // Data update timer: calls data_update() frequently (e.g. every 1ms)
   data_update_timer_ = this->create_wall_timer(
-      1ms, std::bind(&AcousticsInterfaceNode::data_update, this));
+      std::chrono::milliseconds(1),
+      std::bind(&AcousticsInterfaceNode::data_update, this));
   // Data publisher timer: publishes data according to the logging rate
   data_publisher_timer_ = this->create_wall_timer(
       std::chrono::duration_cast<std::chrono::milliseconds>(timer_period),
       std::bind(&AcousticsInterfaceNode::data_publisher, this));
 
-  // Declare parameter for frequencies of interest with a default list of 20
-  // zeros.
-  this->declare_parameter<std::vector<int>>("acoustics.frequencies_of_interest",
-                                            std::vector<int>(20, 0));
-  std::vector<int> freq_params =
+  // 1) Declare the parameter as a vector<int64_t> with a default size‐20 array
+  // of zeros:
+  this->declare_parameter<std::vector<int64_t>>(
+      "acoustics.frequencies_of_interest", std::vector<int64_t>(20, 0));
+
+  // 2) When you get it back, store it in a vector<int64_t>:
+  std::vector<int64_t> freq_params =
       this->get_parameter("acoustics.frequencies_of_interest")
           .as_integer_array();
 
+  FrequencyInterest frequencyInterest[NUM_FREQ_INTERESTS];
   // Parse the parameters into a vector of frequency-variance pairs.
-  std::vector<std::pair<int, int>> frequencies_of_interest;
   for (size_t i = 0; i < freq_params.size(); i += 2) {
-    frequencies_of_interest.push_back({freq_params[i], freq_params[i + 1]});
+    frequencyInterest[i].frequency = freq_params[2 * i];
+    frequencyInterest[i].variance = freq_params[2 * i + 1];
   }
 
-  // Initialize communication with TeensyCommunicationUDP. This is expected to
-  // be a static method.
-  this->get_logger()->info("Initializing communication with Acoustics");
-  this->get_logger()->info("Acoustics PCB MCU IP: 10.0.0.111");
-  this->get_logger()->info("Trying to connect...");
-  init_communication(frequencies_of_interest);
-  this->get_logger()->info("Successfully connected to Acoustics PCB MCU :D");
+  init_communication(&comm, frequencyInterest, 10);
 }
 
-void AcousticsInterfaceNode::data_update() {
-  fetch_data();
-}
+void AcousticsInterfaceNode::data_update() { fetch_data(&comm); }
 
 void AcousticsInterfaceNode::data_publisher() {
   std_msgs::msg::Int32MultiArray int_msg;
   std_msgs::msg::Float32MultiArray float_msg;
 
-  int_msg.data = acoustics_data_int["HYDROPHONE_1"];
+  // 1) Publish hydrophone1 (int16_t → int32_t)
+  int_msg.data.clear();
+  int_msg.data.reserve(RAW_HYDROPHONE_SIZE);
+  for (size_t i = 0; i < RAW_HYDROPHONE_SIZE; ++i) {
+    int_msg.data.push_back(static_cast<int32_t>(samples_raw_hydrophone1[i]));
+  }
   hydrophone1_pub_->publish(int_msg);
-  int_msg.data = acoustics_data_int["HYDROPHONE_2"];
+
+  // 2) Publish hydrophone2
+  int_msg.data.clear();
+  int_msg.data.reserve(RAW_HYDROPHONE_SIZE);
+  for (size_t i = 0; i < RAW_HYDROPHONE_SIZE; ++i) {
+    int_msg.data.push_back(static_cast<int32_t>(samples_raw_hydrophone2[i]));
+  }
   hydrophone2_pub_->publish(int_msg);
-  int_msg.data = acoustics_data_int["HYDROPHONE_3"];
+
+  // 3) Publish hydrophone3
+  int_msg.data.clear();
+  int_msg.data.reserve(RAW_HYDROPHONE_SIZE);
+  for (size_t i = 0; i < RAW_HYDROPHONE_SIZE; ++i) {
+    int_msg.data.push_back(static_cast<int32_t>(samples_raw_hydrophone3[i]));
+  }
   hydrophone3_pub_->publish(int_msg);
-  int_msg.data = acoustics_data_int["HYDROPHONE_4"];
+
+  // 4) Publish hydrophone4
+  int_msg.data.clear();
+  int_msg.data.reserve(RAW_HYDROPHONE_SIZE);
+  for (size_t i = 0; i < RAW_HYDROPHONE_SIZE; ++i) {
+    int_msg.data.push_back(static_cast<int32_t>(samples_raw_hydrophone4[i]));
+  }
   hydrophone4_pub_->publish(int_msg);
-  int_msg.data = acoustics_data_int["HYDROPHONE_5"];
+
+  // 5) Publish hydrophone5
+  int_msg.data.clear();
+  int_msg.data.reserve(RAW_HYDROPHONE_SIZE);
+  for (size_t i = 0; i < RAW_HYDROPHONE_SIZE; ++i) {
+    int_msg.data.push_back(static_cast<int32_t>(samples_raw_hydrophone5[i]));
+  }
   hydrophone5_pub_->publish(int_msg);
 
-  int_msg.data = acoustics_data_int["SAMPLES_FILTERED"];
+  // 6) Publish filtered samples array (size = SAMPLE_LENGTH)
+  int_msg.data.clear();
+  int_msg.data.reserve(SAMPLE_LENGTH);
+  for (size_t i = 0; i < SAMPLE_LENGTH; ++i) {
+    int_msg.data.push_back(static_cast<int32_t>(samples_filtered[i]));
+  }
   filter_response_pub_->publish(int_msg);
-  int_msg.data = acoustics_data_int["FFT"];
-  fft_pub_->publish(int_msg);
-  int_msg.data = acoustics_data_int["PEAK"];
-  peak_pub_->publish(int_msg);
 
-  float_msg.data = acoustics_data_float["TDOA"];
+  // 7) Publish FFT magnitudes (size = SAMPLE_LENGTH)
+  int_msg.data.clear();
+  int_msg.data.reserve(SAMPLE_LENGTH);
+  for (size_t i = 0; i < SAMPLE_LENGTH; ++i) {
+    int_msg.data.push_back(static_cast<int32_t>(fft_magnified[i]));
+  }
+  fft_pub_->publish(int_msg);
+
+  // 8) Publish time_diff (float[5])
+  float_msg.data.clear();
+  float_msg.data.reserve(5);
+  for (size_t i = 0; i < 5; ++i) {
+    float_msg.data.push_back(time_diff[i]);
+  }
   tdoa_pub_->publish(float_msg);
-  float_msg.data = acoustics_data_float["LOCATION"];
+
+  // 9) Publish position (float[4])
+  float_msg.data.clear();
+  float_msg.data.reserve(4);
+  for (size_t i = 0; i < 4; ++i) {
+    float_msg.data.push_back(position[i]);
+  }
   position_pub_->publish(float_msg);
 }
-
 
 int main(int argc, char *argv[]) {
   rclcpp::init(argc, argv);

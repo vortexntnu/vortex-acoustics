@@ -30,6 +30,15 @@ extern "C"{
 #include <unistd.h>
 
 
+#define SAMPLE_LENGTH 1024
+#define BUFFER_PER_CHANNEL 6
+#define RAW_HYDROPHONE_SIZE (SAMPLE_LENGTH * BUFFER_PER_CHANNEL)
+
+#define MTU_PAYLOAD_SIZE 1471
+#define HYDRO_PKTS_PER_HYDROPHONE 6
+#define NUM_HYDROPHONES 5
+#define FILTERED_PKTS 2
+#define NUM_BUFFERS 9
 
 #define TEENSY_IP "10.0.0.111"
 #define TEENSY_PORT 8888
@@ -38,11 +47,12 @@ extern "C"{
 #define SOCKET_TIMEOUT_SEC 1
 #define TIMEOUT_MAX_SEC 10
 #define INITIALIZATION_MESSAGE "HELLO :D"
+#define NUM_FREQ_INTERESTS 10
 
 typedef struct {
   int frequency;
   int variance;
-} frequencyInterest;
+} FrequencyInterest;
 
 typedef struct {
   int client_socket;
@@ -51,14 +61,26 @@ typedef struct {
   char data_string[1024];
 } TeensyCommunicationUDP;
 
+
+extern int16_t samples_raw_hydrophone1[RAW_HYDROPHONE_SIZE];
+extern int16_t samples_raw_hydrophone2[RAW_HYDROPHONE_SIZE];
+extern int16_t samples_raw_hydrophone3[RAW_HYDROPHONE_SIZE];
+extern int16_t samples_raw_hydrophone4[RAW_HYDROPHONE_SIZE];
+extern int16_t samples_raw_hydrophone5[RAW_HYDROPHONE_SIZE];
+extern int16_t samples_filtered[SAMPLE_LENGTH];
+extern int16_t fft_magnified[SAMPLE_LENGTH];
+extern float time_diff[5];
+extern float position[4];
+
+
 /* Function prototypes */
 char *get_local_ip(void);
-int init_communication(TeensyCommunicationUDP *comm, frequencyInterest freq[],
+int init_communication(TeensyCommunicationUDP *comm, FrequencyInterest *freq,
                        int freq_count);
 void send_acknowledge_signal(TeensyCommunicationUDP *comm);
 int check_if_ready(TeensyCommunicationUDP *comm);
 void send_frequencies_of_interest(TeensyCommunicationUDP *comm,
-                                  frequencyInterest freq[], int freq_count);
+                                  FrequencyInterest *freq, int freq_count);
 void fetch_data(TeensyCommunicationUDP *comm);
 
 
