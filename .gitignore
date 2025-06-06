@@ -323,3 +323,5 @@ fabric.properties
 # ROS
 log/
 install/
+
+compile_commands.json
