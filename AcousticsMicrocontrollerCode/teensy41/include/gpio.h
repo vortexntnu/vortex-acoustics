@@ -1,7 +1,8 @@
-#pragma once
+#ifndef GPIO_H
+#define GPIO_H
+
 #include "core_pins.h"
 
-namespace gpio {
 void configPin(int pin, int mode, IMXRT_GPIO_t& GPIO_n);
 void configPort(IMXRT_GPIO_t& GPIO_n, uint32_t reg_val, uint32_t mask = 0xFFFFFFFF);
 
@@ -18,4 +19,4 @@ uint32_t read_port(IMXRT_GPIO_t& GPIO_n);
 /// prints values of registers IMXRT_GPIO6.GDIR, IMXRT_GPIO6.DR and IMXRT_GPIO7.GDIR, IMXRT_GPIO7.DR
 void dump_GPIO_registers();
 
-} // namespace gpio
+#endif // !GPIO_H

@@ -108,45 +108,45 @@ DMAChannel dma3 = DMAChannel();
 
 static inline void write_ADC_par(uint16_t value) {
     // The ADC pins are located at bits 16-31 of GPIO port (1)
-    gpio::write_port(value << DB_REG_SHIFT, DB_GPIO_PORT_NORMAL, DB_MASK);
+    write_port(value << DB_REG_SHIFT, DB_GPIO_PORT_NORMAL, DB_MASK);
 }
 
 static inline uint16_t read_ADC_par() {
     // we want the 16 highest bits
-    return gpio::read_port(DB_GPIO_PORT_NORMAL) >> DB_REG_SHIFT;
+    return read_port(DB_GPIO_PORT_NORMAL) >> DB_REG_SHIFT;
 }
 
 static void adc_config(uint32_t reg_val) {
     // pins as output
-    gpio::configPort(DB_GPIO_PORT_NORMAL, 0xFFFF0000, DB_MASK);
+    configPort(DB_GPIO_PORT_NORMAL, 0xFFFF0000, DB_MASK);
     //* see write access timing diagram on p.19 of ADC data sheet
     // check p.39 for info about config register
     // starting write access to ADC
-    gpio::write_pin(_CS, 0, _CS_GPIO_PORT_NORMAL);
-    gpio::write_pin(_WR, 0, _WR_GPIO_PORT_NORMAL);
+    write_pin(_CS, 0, _CS_GPIO_PORT_NORMAL);
+    write_pin(_WR, 0, _WR_GPIO_PORT_NORMAL);
 
     // writing MSBs first
     write_ADC_par(reg_val >> 16);
 
     delayNanoseconds(15); // t_WRL; t_SUDI/t_HDI
 
-    gpio::write_pin(_WR, 1, _WR_GPIO_PORT_NORMAL);
+    write_pin(_WR, 1, _WR_GPIO_PORT_NORMAL);
 
     delayNanoseconds(10); // t_WRH
 
     // then writing LSBs, timing of t_HDI is respected
     write_ADC_par(reg_val & 0xFFFF);
-    gpio::write_pin(_WR, 0, _WR_GPIO_PORT_NORMAL);
+    write_pin(_WR, 0, _WR_GPIO_PORT_NORMAL);
 
     delayNanoseconds(15); // t_WRL
 
-    gpio::write_pin(_WR, 1, _WR_GPIO_PORT_NORMAL); // stop 2nd write access
-    gpio::write_pin(_CS, 1, _CS_GPIO_PORT_NORMAL);
+    write_pin(_WR, 1, _WR_GPIO_PORT_NORMAL); // stop 2nd write access
+    write_pin(_CS, 1, _CS_GPIO_PORT_NORMAL);
 
     delayNanoseconds(5); // t_HDI
 
     // pins back as inputs
-    gpio::configPort(DB_GPIO_PORT_NORMAL, 0x00000000, DB_MASK);
+    configPort(DB_GPIO_PORT_NORMAL, 0x00000000, DB_MASK);
 }
 
 
@@ -165,14 +165,14 @@ void read_loop() {
     IMXRT_GPIO7.DR_CLEAR = 1 << CONVST | 1 << _CS;
 
     for (uint16_t hydrophone = 0; hydrophone < N_HYDROPHONES; hydrophone++) {
-        // gpio::write_pin(_RD, 0, _RD_GPIO_PORT_NORMAL);
+        // write_pin(_RD, 0, _RD_GPIO_PORT_NORMAL);
         IMXRT_GPIO9.DR_CLEAR |= (1 << _RD);
         // delayNanoseconds(T_RDL);
 
         size_t index = sample_index + active_buffer * SAMPLE_LENGTH_ADC;
         samples_raw_hydrophones[hydrophone][index] = read_ADC_par();
         IMXRT_GPIO9.DR_SET |= (1 << _RD);
-        // gpio::write_pin(_RD, 1, _RD_GPIO_PORT_NORMAL);
+        // write_pin(_RD, 1, _RD_GPIO_PORT_NORMAL);
         //  this is already enough delay for 2ns (toggeling takes more than 2ns)
         //  delayNanoseconds(20);
     }
@@ -203,66 +203,66 @@ void read_loop() {
 
 void adc_init() {
     // ! commented because we test with using the fast pins
-    // gpio::set_normal_GPIO(1 << adc::_WR, _WR_GPIO_PORT_NORMAL);
-    // gpio::set_normal_GPIO(1 << adc::_RD, _RD_GPIO_PORT_NORMAL);
-    // gpio::set_normal_GPIO(1 << adc::_CS, _CS_GPIO_PORT_NORMAL);
-    // gpio::set_normal_GPIO(1 << adc::BUSYINT, BUSYINT_GPIO_PORT_NORMAL);
-    // gpio::set_normal_GPIO(1 << adc::HWSW, HWSW_GPIO_PORT_NORMAL);
-    // gpio::set_normal_GPIO(1 << adc::PARSER, PARSER_GPIO_PORT_NORMAL);
-    // gpio::set_normal_GPIO(1 << adc::XCLK, XCLK_GPIO_PORT_NORMAL);
-    // gpio::set_normal_GPIO(1 << adc::STBY, STBY_GPIO_PORT_NORMAL);
-    // gpio::set_normal_GPIO(1 << adc::CONVST, CONVST_GPIO_PORT_NORMAL);
-    // gpio::set_normal_GPIO(1 << adc::RESET, RESET_GPIO_PORT_NORMAL);
+    // set_normal_GPIO(1 << adc::_WR, _WR_GPIO_PORT_NORMAL);
+    // set_normal_GPIO(1 << adc::_RD, _RD_GPIO_PORT_NORMAL);
+    // set_normal_GPIO(1 << adc::_CS, _CS_GPIO_PORT_NORMAL);
+    // set_normal_GPIO(1 << adc::BUSYINT, BUSYINT_GPIO_PORT_NORMAL);
+    // set_normal_GPIO(1 << adc::HWSW, HWSW_GPIO_PORT_NORMAL);
+    // set_normal_GPIO(1 << adc::PARSER, PARSER_GPIO_PORT_NORMAL);
+    // set_normal_GPIO(1 << adc::XCLK, XCLK_GPIO_PORT_NORMAL);
+    // set_normal_GPIO(1 << adc::STBY, STBY_GPIO_PORT_NORMAL);
+    // set_normal_GPIO(1 << adc::CONVST, CONVST_GPIO_PORT_NORMAL);
+    // set_normal_GPIO(1 << adc::RESET, RESET_GPIO_PORT_NORMAL);
 
-    // gpio::set_normal_GPIO(0xFFFF0000, DB_GPIO_PORT_NORMAL);
+    // set_normal_GPIO(0xFFFF0000, DB_GPIO_PORT_NORMAL);
 
     // BUSYINT as input
-    gpio::configPin(BUSYINT, 0, BUSYINT_GPIO_PORT_NORMAL);
+    configPin(BUSYINT, 0, BUSYINT_GPIO_PORT_NORMAL);
     // * no need, will be done in built-in interrupt function
 
     // _CS as output, high because interface is not enable on start-up
-    gpio::configPin(_CS, 1, _CS_GPIO_PORT_NORMAL);
-    gpio::write_pin(_CS, 1, _CS_GPIO_PORT_NORMAL);
+    configPin(_CS, 1, _CS_GPIO_PORT_NORMAL);
+    write_pin(_CS, 1, _CS_GPIO_PORT_NORMAL);
 
     // HWSW as output, HIGH to select software mode
-    gpio::configPin(HWSW, 1, HWSW_GPIO_PORT_NORMAL);
-    gpio::write_pin(HWSW, 1, HWSW_GPIO_PORT_NORMAL);
+    configPin(HWSW, 1, HWSW_GPIO_PORT_NORMAL);
+    write_pin(HWSW, 1, HWSW_GPIO_PORT_NORMAL);
 
     // PAR/SER as output, LOW to select parallel interface
-    gpio::configPin(PARSER, 1, HWSW_GPIO_PORT_NORMAL);
-    gpio::write_pin(PARSER, 0, HWSW_GPIO_PORT_NORMAL);
+    configPin(PARSER, 1, HWSW_GPIO_PORT_NORMAL);
+    write_pin(PARSER, 0, HWSW_GPIO_PORT_NORMAL);
 
     // we are in software mode: XCLK as output, LOW (to ground) because NOT used
-    gpio::configPin(XCLK, 1, XCLK_GPIO_PORT_NORMAL);
-    gpio::write_pin(XCLK, 0, XCLK_GPIO_PORT_NORMAL);
+    configPin(XCLK, 1, XCLK_GPIO_PORT_NORMAL);
+    write_pin(XCLK, 0, XCLK_GPIO_PORT_NORMAL);
 
     // _RD as output, HIGH, communication inactive
-    gpio::configPin(_RD, 1, _RD_GPIO_PORT_NORMAL);
-    gpio::write_pin(_RD, 1, _RD_GPIO_PORT_NORMAL);
+    configPin(_RD, 1, _RD_GPIO_PORT_NORMAL);
+    write_pin(_RD, 1, _RD_GPIO_PORT_NORMAL);
 
     // _WR as output, HIGH, communication inactive
-    gpio::configPin(_WR, 1, _WR_GPIO_PORT_NORMAL);
-    gpio::write_pin(_WR, 1, _WR_GPIO_PORT_NORMAL);
+    configPin(_WR, 1, _WR_GPIO_PORT_NORMAL);
+    write_pin(_WR, 1, _WR_GPIO_PORT_NORMAL);
 
     // _STBY as output, LOW because we use software mode (p8)
-    gpio::configPin(STBY, 1, STBY_GPIO_PORT_NORMAL);
-    gpio::write_pin(STBY, 0, STBY_GPIO_PORT_NORMAL);
+    configPin(STBY, 1, STBY_GPIO_PORT_NORMAL);
+    write_pin(STBY, 0, STBY_GPIO_PORT_NORMAL);
 
     // CONVST as output, LOW
-    gpio::configPin(CONVST, 1, CONVST_GPIO_PORT_NORMAL);
-    gpio::write_pin(CONVST, 0, CONVST_GPIO_PORT_NORMAL);
+    configPin(CONVST, 1, CONVST_GPIO_PORT_NORMAL);
+    write_pin(CONVST, 0, CONVST_GPIO_PORT_NORMAL);
 
     // RESET as output, active high
-    gpio::configPin(RESET, 1, RESET_GPIO_PORT_NORMAL);
-    gpio::write_pin(RESET, 0, RESET_GPIO_PORT_NORMAL);
+    configPin(RESET, 1, RESET_GPIO_PORT_NORMAL);
+    write_pin(RESET, 0, RESET_GPIO_PORT_NORMAL);
 
 #ifndef TESTING
     // configuring parallel interface, as input
-    gpio::configPort(DB_GPIO_PORT_NORMAL, 0x00000000, DB_MASK);
+    configPort(DB_GPIO_PORT_NORMAL, 0x00000000, DB_MASK);
 #endif
 #ifdef TESTING
     // output, for testing pourpuse (LEDs)
-    gpio::configPort(DB_GPIO_PORT_NORMAL, 0xFFFF0000, DB_MASK);
+    configPort(DB_GPIO_PORT_NORMAL, 0xFFFF0000, DB_MASK);
 #endif
 
 
@@ -294,9 +294,9 @@ void adc_start_conversion(float sample_period_us, ADC_sample_mode sample_mode) {
     overall_buffer_count = 0;
     buffer_filled = 0;
 
-    gpio::write_pin(RESET, 1, RESET_GPIO_PORT_NORMAL);
+    write_pin(RESET, 1, RESET_GPIO_PORT_NORMAL);
     delay(1);
-    gpio::write_pin(RESET, 0, RESET_GPIO_PORT_NORMAL);
+    write_pin(RESET, 0, RESET_GPIO_PORT_NORMAL);
 
     ADC_mode = sample_mode;
     float bounded_period = sample_period_us;
@@ -341,14 +341,14 @@ void adc_stop_conversion() {
     }
     detachInterrupt(BUSYINT_ARDUINO_PIN);
 
-    gpio::write_pin(_RD, 1, _RD_GPIO_PORT_NORMAL);
-    gpio::write_pin(CONVST, 0, CONVST_GPIO_PORT_NORMAL);
-    gpio::write_pin(_CS, 1, _CS_GPIO_PORT_NORMAL);
+    write_pin(_RD, 1, _RD_GPIO_PORT_NORMAL);
+    write_pin(CONVST, 0, CONVST_GPIO_PORT_NORMAL);
+    write_pin(_CS, 1, _CS_GPIO_PORT_NORMAL);
 
     // resetting ADC from actual conversion
-    gpio::write_pin(RESET, 1, RESET_GPIO_PORT_NORMAL);
+    write_pin(RESET, 1, RESET_GPIO_PORT_NORMAL);
     delay(1);
-    gpio::write_pin(RESET, 0, RESET_GPIO_PORT_NORMAL);
+    write_pin(RESET, 0, RESET_GPIO_PORT_NORMAL);
 }
 
 /// @brief function to start the conversion of data from ADC. once ADC is ready to output data, GpioISR will be triggered by the BUSY pin
@@ -358,7 +358,7 @@ void adc_trigger_conversion() {
     // will pull the CONVST line high, that indicates to the adc to start conversion on all channels
     // stopwatch = elapsedMicros();
     // clk_cyc = ARM_DWT_CYCCNT;
-    gpio::write_pin(CONVST, 1, CONVST_GPIO_PORT_NORMAL);
+    write_pin(CONVST, 1, CONVST_GPIO_PORT_NORMAL);
     // adding timestamp
     // timestamps[active_buffer][sample_index] = micros();
     if (!stop_sampling) {
@@ -384,9 +384,9 @@ void adc_trigger_conversion() {
 
 // void sample_fasfb(uint16_t nb_samples) {
 //     // resetting ADC to make sure it behaves the same
-//     gpio::write_pin(RESET, 1, RESET_GPIO_PORT_NORMAL);
+//     write_pin(RESET, 1, RESET_GPIO_PORT_NORMAL);
 //     delay(10);
-//     gpio::write_pin(RESET, 0, RESET_GPIO_PORT_NORMAL);
+//     write_pin(RESET, 0, RESET_GPIO_PORT_NORMAL);
 //     delay(100);
 //
 //     uint32_t slack_variable;
@@ -413,8 +413,8 @@ void adc_trigger_conversion() {
 //         // clk_cyc = ARM_DWT_CYCCNT;
 //
 //         // will pull the CONVST line high, that indicates to the adc to start conversion on all channels
-//         gpio::write_pin(CONVST, 1, CONVST_GPIO_PORT_NORMAL);
-//         // gpio::write_pin(CONVST, 1, CONVST_GPIO_PORT_NORMAL);
+//         write_pin(CONVST, 1, CONVST_GPIO_PORT_NORMAL);
+//         // write_pin(CONVST, 1, CONVST_GPIO_PORT_NORMAL);
 //         // CONVST_GPIO_PORT_NORMAL.DR_SET |= 1 << CONVST;
 //         // ringbuffer with the timestamps
 //         // takes a shit load of time (or maybe not)
@@ -433,13 +433,13 @@ void adc_trigger_conversion() {
 //
 //         delayNanoseconds(20);
 //         // to make sure the pin goes high
-//         // while (!gpio::read_pin(BUSYINT, BUSYINT_GPIO_PORT_NORMAL))
+//         // while (!read_pin(BUSYINT, BUSYINT_GPIO_PORT_NORMAL))
 //         // {
 //         //     ;
 //         // }
 //
 //         // waiting for the busy pin to go low again
-//         while (gpio::read_pin(BUSYINT, BUSYINT_GPIO_PORT_NORMAL))
+//         while (read_pin(BUSYINT, BUSYINT_GPIO_PORT_NORMAL))
 //             ;
 //         delayNanoseconds(10);
 //
@@ -449,18 +449,18 @@ void adc_trigger_conversion() {
 //         // clk_cyc = ARM_DWT_CYCCNT;
 //         // delayNanoseconds(500);
 //
-//         // gpio::write_pin(CONVST, 0, CONVST_GPIO_PORT_NORMAL);
-//         // gpio::write_pin(_CS, 0, _CS_GPIO_PORT_NORMAL);
+//         // write_pin(CONVST, 0, CONVST_GPIO_PORT_NORMAL);
+//         // write_pin(_CS, 0, _CS_GPIO_PORT_NORMAL);
 //         // * write both at the same time to go faster
 //         IMXRT_GPIO7.DR_CLEAR = 1 << CONVST | 1 << _CS;
-//         // gpio::write_port(0, IMXRT_GPIO7, 1 << CONVST | 1 << _CS);
+//         // write_port(0, IMXRT_GPIO7, 1 << CONVST | 1 << _CS);
 //
 //         for (uint16_t hydroph = 0; hydroph < N_HYDROPHONES; hydroph++) {
-//             // gpio::write_pin(_RD, 0, _RD_GPIO_PORT_NORMAL);
+//             // write_pin(_RD, 0, _RD_GPIO_PORT_NORMAL);
 //             IMXRT_GPIO9.DR_CLEAR |= (1 << _RD);
 //             // 20ns for data to be valid
 //             // delayNanoseconds(T_RDL);
-//             // gpio::write_pin(_RD, 0, _RD_GPIO_PORT_NORMAL);
+//             // write_pin(_RD, 0, _RD_GPIO_PORT_NORMAL);
 //             // IMXRT_GPIO9.DR_CLEAR |= (1 << _RD);
 //             // delayNanoseconds(10);
 //
@@ -470,7 +470,7 @@ void adc_trigger_conversion() {
 //             // !
 //             channel_buff_ptr[hydroph][active_buffer][iiint % SAMPLE_LENGTH_ADC] = read_ADC_par();
 //             // read_ADC_par();
-//             // gpio::write_pin(_RD, 1, _RD_GPIO_PORT_NORMAL);
+//             // write_pin(_RD, 1, _RD_GPIO_PORT_NORMAL);
 //             IMXRT_GPIO9.DR_SET |= (1 << _RD);
 //
 //             // this is already enough delay for 2ns (toggeling takes more than 2ns)
@@ -509,7 +509,7 @@ void adc_trigger_conversion() {
 //         // IMXRT_GPIO9.DR_SET |= (1 << _RD);
 //         // * end of instead loop
 //
-//         // gpio::write_pin(_CS, 1, _CS_GPIO_PORT_NORMAL);
+//         // write_pin(_CS, 1, _CS_GPIO_PORT_NORMAL);
 //         _CS_GPIO_PORT_NORMAL.DR_SET |= (1 << _CS);
 //         // delayNanoseconds(1000);
 //         // sampleTime.insert(ARM_DWT_CYCCNT - clk_cyc);

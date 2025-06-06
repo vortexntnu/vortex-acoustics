@@ -2,7 +2,6 @@
 
 #include "Arduino.h"
 
-namespace gpio {
 
 /*
         Basic explanations:
@@ -111,4 +110,3 @@ void dump_GPIO_registers() {
     Serial.printf("GPIO7\nGDIR: 0x%X\nDR: 0x%X\n", IMXRT_GPIO7.GDIR, IMXRT_GPIO7.DR);
 }
 
-} // namespace gpio
