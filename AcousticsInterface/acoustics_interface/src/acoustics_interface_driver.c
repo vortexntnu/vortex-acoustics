@@ -208,18 +208,7 @@ void send_frequencies_of_interest(TeensyCommunicationUDP *comm,
   send_data_udp(comm, freq, freq_count, 1);
 }
 
-void fetch_data(TeensyCommunicationUDP *comm) {
-  int attempts = 0;
-  while (attempts < 1000) {
-    socklen_t addrlen = sizeof(comm->teensy_addr);
-    int n = recvfrom(comm->client_socket, buffer, sizeof(buffer) - 1, 0,
-                     (struct sockaddr *)&comm->teensy_addr, &addrlen);
-    if (n <= 0) {
-      break;
-    }
-    attempts++;
-  }
-}
+
 
 /**
  * @brief   Handle one incoming UDP “chunk.”
@@ -254,3 +243,18 @@ int handle_data(const uint8_t *buf, uint32_t len) {
 
   return 0;
 }
+
+void fetch_data(TeensyCommunicationUDP *comm) {
+  int attempts = 0;
+  while (attempts < 1000) {
+    socklen_t addrlen = sizeof(comm->teensy_addr);
+    int n = recvfrom(comm->client_socket, buffer, sizeof(buffer) - 1, 0,
+                     (struct sockaddr *)&comm->teensy_addr, &addrlen);
+    if (n <= 0) {
+      break;
+    }
+    attempts++;
+    handle_data(buffer, n);
+  }
+}
+

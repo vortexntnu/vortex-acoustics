@@ -1,8 +1,0 @@
-source;share/acoustics_setup/hook/cmake_prefix_path.ps1
-source;share/acoustics_setup/hook/cmake_prefix_path.dsv
-source;share/acoustics_setup/hook/cmake_prefix_path.sh
-source;share/acoustics_setup/local_setup.bash
-source;share/acoustics_setup/local_setup.dsv
-source;share/acoustics_setup/local_setup.ps1
-source;share/acoustics_setup/local_setup.sh
-source;share/acoustics_setup/local_setup.zsh
