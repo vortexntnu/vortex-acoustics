@@ -269,8 +269,10 @@ void adc_init() {
     
     adc_config(ADC_reg_config);
     
-    clock_ADC::setup(); /// the clockfrequency needs to be defined somewhere, does it need to be called also if adc is not init()
-    PIT::setup();
+    clock_setup(); /// the clockfrequency needs to be defined somewhere, does it need to be called also if adc is not init()
+    pit_setup();
+
+
 
     // ! connect beginRead() to BUSY/INT interrupt -> is done in trigger_conversion()
 }
@@ -284,7 +286,7 @@ void adc_init() {
 void adc_start_conversion(float sample_period_us, ADC_sample_mode sample_mode) {
     // Serial.println("Starting conversion");
     // ? do it in one call?
-    // PIT::setUpPeriodicISR(triggerConversion, clock_ADC::get_clockcycles_micro(1000000), PIT::PIT_0);
+    // setUpPeriodicISR(triggerConversion, clock_ADC::get_clockcycles_micro(1000000), PIT_0);
     // value found by trial and error.
 
     sample_index = 0;
@@ -324,20 +326,20 @@ void adc_start_conversion(float sample_period_us, ADC_sample_mode sample_mode) {
     // {
     //     sample_period_us = MIN_SAMPLING_PERIOD;
     // }
-    PIT::setUpPeriodicISR(adc_trigger_conversion, clock_ADC::get_clockcycles_micro(bounded_period), PIT::PIT_0);
 
-    PIT::startPeriodic(PIT::PIT_0); // will call triggerConversion
+    setUpPeriodicISR(adc_trigger_conversion, get_clockcycles_micro(bounded_period), PIT_0);
+    startPeriodic(PIT_0); // will call triggerConversion
     stopwatch = elapsedMicros();    // to see how much time per sample(in average)
 }
 
 void adc_stop_conversion() {
     stop_sampling = 1;
     // no new conversion
-    PIT::stopPeriodic(PIT::PIT_0);
+    stopPeriodic(PIT_0);
     // to finish the ongoing reading
     // delayMicroseconds(100);
     for (uint8_t i = 1; i < 3; i++) {
-        PIT::stopPeriodic(i);
+        stopPeriodic(i);
     }
     detachInterrupt(BUSYINT_ARDUINO_PIN);
 

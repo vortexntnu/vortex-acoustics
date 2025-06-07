@@ -5,7 +5,6 @@
 // ! It is possible to give priorities to interrupts in case the timer interrrupts are critical
 // see in intervalTimer.cpp (library for PIT)
 // #include <IntervalTimer.h>
-namespace PIT {
 /// will be changed later, this keeps it generic
 static void dummyISR(void) { Serial.println("Ahhh"); }
 
@@ -59,7 +58,7 @@ void ISR() {
     NVIC_ENABLE_IRQ(IRQ_PIT);
 }
 
-void setup() {
+void pit_setup() {
     PIT_MCR &= ~PIT_MCR_MDIS; // activates clock for periodic timers
 
     // PIT can only be used through this interface, because the ISR is defined here
@@ -90,29 +89,9 @@ void setUpPeriodicISR(void_function_ptr function, uint32_t clockcycles, PIT_chan
     PIT[PIT_number]->LDVAL = clockcycles;
 }
 
-void setUpPeriodicISR(void_function_ptr function, PIT_channels PIT_number) {
-    if (PIT_number > 3)
-        return;
-    isr_funct_table[PIT_number] = function;
+void startPeriodic(PIT_channels PIT_number, uint8_t chained = 0) {
+  PIT[PIT_number]->TCTRL = (chained ? PIT_TCTRL_CHN | PIT_TCTRL_TEN | PIT_TCTRL_TIE : PIT_TCTRL_TEN | PIT_TCTRL_TIE);
 }
-
-void startPeriodic(void_function_ptr ISR_func, uint32_t clockcycles, PIT_channels PIT_number, uint8_t chained = 0) {
-    if (PIT_number > 3)
-        return;
-    isr_funct_table[PIT_number] = ISR_func;
-    startPeriodic(clockcycles, PIT_number, chained);
-}
-
-void startPeriodic(uint32_t clockcycles, PIT_channels PIT_number, uint8_t chained = 0) {
-    if (PIT_number > 3)
-        return;
-
-    PIT[PIT_number]->LDVAL = clockcycles;
-    startPeriodic(PIT_number, chained);
-    // PIT[PIT_number]->TCTRL = PIT_TCTRL_TEN | PIT_TCTRL_TIE;
-}
-
-void startPeriodic(PIT_channels PIT_number, uint8_t chained = 0) { PIT[PIT_number]->TCTRL = (chained ? PIT_TCTRL_CHN | PIT_TCTRL_TEN | PIT_TCTRL_TIE : PIT_TCTRL_TEN | PIT_TCTRL_TIE); }
 
 void stopPeriodic(PIT_channels PIT_number) {
     if (PIT_number > 3)
@@ -120,4 +99,3 @@ void stopPeriodic(PIT_channels PIT_number) {
     PIT[PIT_number]->TCTRL &= ~(PIT_TCTRL_TIE | PIT_TCTRL_TEN);
 }
 
-} // namespace PIT
