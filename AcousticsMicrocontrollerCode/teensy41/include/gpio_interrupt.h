@@ -1,3 +1,8 @@
+#ifndef GPIO_INTERRUPT_H
+#define GPIO_INTERRUPT_H
+
+
+
 #include "imxrt.h"
 #include "stdlib.h"
 #include <Arduino.h>
@@ -26,3 +31,7 @@ void configPin(int pin, int mode); /// not implemented
 
 void dump_GPIO_interrupt_registers();
 }; // namespace gpioInterrupt
+//
+//
+//
+#endif // !GPIO_INTERRUPT_H

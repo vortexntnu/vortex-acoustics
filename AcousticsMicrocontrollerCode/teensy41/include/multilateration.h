@@ -3,9 +3,6 @@
 
 
 
-
-
-
 #include <stddef.h>
 #include "arm_math.h"
 #include "adc.h"
@@ -14,8 +11,8 @@
 
 #define MAX_LAG (2 * RAW_HYDROPHONE_SIZE - 1)
 
-#define TDOA_DATA_LENGTH 5                           // TODO: Should be moved into multilateration library once that is operational
-#define POSITION_DATA_LENGTH 3 + 1                   // TODO: Should be moved into multilateration library once that is operational
+#define TDOA_DATA_LENGTH 5       
+#define POSITION_DATA_LENGTH 3 + 1  
 
 
 #ifdef __cplusplus
