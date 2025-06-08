@@ -31,6 +31,17 @@ void uart1_init(void) {
       LPUART_CTRL_RE | LPUART_CTRL_TE | LPUART_CTRL_RIE | LPUART_CTRL_TIE;
 }
 
+static void enqueue_tx(const char *buf, int len) {
+    for (int i = 0; i < len; i++) {
+        uint16_t next = (tx_head + 1) % UART1_TX_BUF_SIZE;
+        // while (next == tx_tail) {
+        // }
+        tx_buf[tx_head] = buf[i];
+        tx_head = next;
+    }
+    LPUART1_CTRL |= LPUART_CTRL_TIE;
+}
+
 void uart1_printf(const char *fmt, ...) {
   char buf[128];
 
@@ -39,11 +50,7 @@ void uart1_printf(const char *fmt, ...) {
 
   int len = vsnprintf(buf, sizeof(buf), fmt, args);
 
-  for (int i = 0; i < len; i++) {
-    while (!(LPUART1_STAT & LPUART_STAT_TDRE))
-      ;
-    LPUART1_DATA = buf[i];
-  }
+  enqueue_tx(buf, len);
 }
 
 void uart1_send_byte(uint8_t c) {
