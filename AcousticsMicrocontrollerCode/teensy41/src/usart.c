@@ -1,8 +1,8 @@
 #include "usart.h"
 #include "imxrt.h"
 #include <stdarg.h>
-#include <stdio.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #define UART1_RX_BUF_SIZE 128
 #define UART1_TX_BUF_SIZE 128
@@ -11,7 +11,6 @@ uint8_t rx_buf[UART1_RX_BUF_SIZE];
 uint8_t tx_buf[UART1_TX_BUF_SIZE];
 uint16_t rx_tail, rx_head;
 uint16_t tx_tail, tx_head;
-
 
 void uart1_init(void) {
 
@@ -28,7 +27,8 @@ void uart1_init(void) {
   LPUART1_BAUD = (43 << 0)     /* SBR[12:0] */
                  | (13 << 16); /* BRFA[4:0] */
 
-  LPUART1_CTRL |= LPUART_CTRL_RE | LPUART_CTRL_TE;
+  LPUART1_CTRL |=
+      LPUART_CTRL_RE | LPUART_CTRL_TE | LPUART_CTRL_RIE | LPUART_CTRL_TIE;
 }
 
 void uart1_printf(const char *fmt, ...) {
@@ -47,45 +47,42 @@ void uart1_printf(const char *fmt, ...) {
 }
 
 void uart1_send_byte(uint8_t c) {
-    uint16_t next = (tx_head + 1) % UART1_TX_BUF_SIZE;
-    while (next == tx_tail) { /* buffer full: spin or block */ }
-    tx_buf[tx_head] = c;
-    tx_head = next;
-    /* ensure TX interrupt is enabled so IRQ will kick */
-    LPUART1_CTRL |= (1 << 7);  // TIE
+  uint16_t next = (tx_head + 1) % UART1_TX_BUF_SIZE;
+  while (next == tx_tail) { /* buffer full: spin or block */
+  }
+  tx_buf[tx_head] = c;
+  tx_head = next;
+  LPUART1_CTRL |= LPUART_CTRL_TIE;
 }
 
 /* Called by application to get a received byte (or -1 if none) */
 int uart1_read_byte(void) {
-    if (rx_head == rx_tail) return -1;
-    uint8_t c = rx_buf[rx_tail];
-    rx_tail = (rx_tail + 1) % UART1_RX_BUF_SIZE;
-    return c;
+  if (rx_head == rx_tail)
+    return -1;
+  uint8_t c = rx_buf[rx_tail];
+  rx_tail = (rx_tail + 1) % UART1_RX_BUF_SIZE;
+  return c;
 }
 
 void __attribute__((used)) LPUART1_IRQHandler(void) {
-    uint32_t status = LPUART1_STAT;
+  uint32_t status = LPUART1_STAT;
 
-    /* RX: data ready? */
-    if (status & (1 << 21)) {            // RDRF = bit 21
-        uint8_t c = (uint8_t)LPUART1_DATA;
-        uint16_t next = (rx_head + 1) % UART1_RX_BUF_SIZE;
-        if (next != rx_tail) {
-            rx_buf[rx_head] = c;
-            rx_head = next;
-        }
-        // else overflow: drop byte
+  if (status & LPUART_STAT_RDRF) { 
+    uint8_t c = (uint8_t)LPUART1_DATA;
+    uint16_t next = (rx_head + 1) % UART1_RX_BUF_SIZE;
+    if (next != rx_tail) {
+      rx_buf[rx_head] = c;
+      rx_head = next;
     }
+    // else overflow: drop byte
+  }
 
-    /* TX: can send next? */
-    if (status & (1 << 23)) {            // TDRE = bit 23
-        if (tx_tail != tx_head) {
-            LPUART1_DATA = tx_buf[tx_tail];
-            tx_tail = (tx_tail + 1) % UART1_TX_BUF_SIZE;
-        } else {
-            /* no more data: disable TX interrupt */
-            LPUART1_CTRL &= ~(1 << 7);  // clear TIE
-        }
+  if (status & LPUART_STAT_TDRE) { // TDRE = bit 23
+    if (tx_tail != tx_head) {
+      LPUART1_DATA = tx_buf[tx_tail];
+      tx_tail = (tx_tail + 1) % UART1_TX_BUF_SIZE;
+    } else {
+      LPUART1_CTRL &= ~(1 << 7); // clear TIE
     }
+  }
 }
-
