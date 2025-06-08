@@ -5,6 +5,7 @@
 #include "gpio.h"
 #include "gpio_interrupt.h"
 #include "pit.h"
+#include "imxrt.h"
 #include <cstddef>
 #include <cstdint>
 
@@ -118,35 +119,38 @@ static inline uint16_t read_ADC_par() {
 
 static void adc_config(uint32_t reg_val) {
     // pins as output
-    configPort(DB_GPIO_PORT_NORMAL, 0xFFFF0000, DB_MASK);
+    // configPort(DB_GPIO_PORT_NORMAL, 0xFFFF0000, DB_MASK);
+    DB_GPIO_PORT_NORMAL.GDIR = (DB_GPIO_PORT_NORMAL.GDIR & ~DB_MASK) | (DB_MASK);
     //* see write access timing diagram on p.19 of ADC data sheet
     // check p.39 for info about config register
     // starting write access to ADC
-    write_pin(_CS, 0, _CS_GPIO_PORT_NORMAL);
-    write_pin(_WR, 0, _WR_GPIO_PORT_NORMAL);
+    _CS_GPIO_PORT_NORMAL.DR_CLEAR = (1 << _CS);
+    _WR_GPIO_PORT_NORMAL.DR_CLEAR = (1 << _WR);
 
     // writing MSBs first
     write_ADC_par(reg_val >> 16);
 
     delayNanoseconds(15); // t_WRL; t_SUDI/t_HDI
 
-    write_pin(_WR, 1, _WR_GPIO_PORT_NORMAL);
+    _WR_GPIO_PORT_NORMAL.DR_SET = (1 << _WR);
 
     delayNanoseconds(10); // t_WRH
 
     // then writing LSBs, timing of t_HDI is respected
     write_ADC_par(reg_val & 0xFFFF);
-    write_pin(_WR, 0, _WR_GPIO_PORT_NORMAL);
+    _WR_GPIO_PORT_NORMAL.DR_CLEAR = (1 << _WR);
 
     delayNanoseconds(15); // t_WRL
 
-    write_pin(_WR, 1, _WR_GPIO_PORT_NORMAL); // stop 2nd write access
-    write_pin(_CS, 1, _CS_GPIO_PORT_NORMAL);
+    _WR_GPIO_PORT_NORMAL.DR_CLEAR = (1 << _WR);
+    _CS_GPIO_PORT_NORMAL.DR_SET = (1 << _CS);
 
     delayNanoseconds(5); // t_HDI
 
     // pins back as inputs
-    configPort(DB_GPIO_PORT_NORMAL, 0x00000000, DB_MASK);
+    DB_GPIO_PORT_NORMAL.GDIR = (DB_GPIO_PORT_NORMAL.GDIR & ~DB_MASK) | (0);
+
+    DB_GPIO_PORT_NORMAL.GDIR &= ~DB_MASK;
 }
 
 
@@ -217,44 +221,44 @@ void adc_init() {
     // set_normal_GPIO(0xFFFF0000, DB_GPIO_PORT_NORMAL);
 
     // BUSYINT as input
-    configPin(BUSYINT, 0, BUSYINT_GPIO_PORT_NORMAL);
+    BUSYINT_GPIO_PORT_NORMAL.GDIR &= (1 << BUSYINT);
     // * no need, will be done in built-in interrupt function
 
     // _CS as output, high because interface is not enable on start-up
-    configPin(_CS, 1, _CS_GPIO_PORT_NORMAL);
-    write_pin(_CS, 1, _CS_GPIO_PORT_NORMAL);
+    _CS_GPIO_PORT_NORMAL.GDIR |= (1 << _CS);
+    _CS_GPIO_PORT_NORMAL.DR_SET = (1 << _CS);
 
     // HWSW as output, HIGH to select software mode
-    configPin(HWSW, 1, HWSW_GPIO_PORT_NORMAL);
-    write_pin(HWSW, 1, HWSW_GPIO_PORT_NORMAL);
+    HWSW_GPIO_PORT_NORMAL.GDIR |= (1 << HWSW);
+    HWSW_GPIO_PORT_NORMAL.DR_SET = (1 << HWSW);
 
     // PAR/SER as output, LOW to select parallel interface
-    configPin(PARSER, 1, HWSW_GPIO_PORT_NORMAL);
-    write_pin(PARSER, 0, HWSW_GPIO_PORT_NORMAL);
+    HWSW_GPIO_PORT_NORMAL.GDIR |= (1 << PARSER);
+    HWSW_GPIO_PORT_NORMAL.DR_CLEAR = (1 << PARSER);
 
     // we are in software mode: XCLK as output, LOW (to ground) because NOT used
-    configPin(XCLK, 1, XCLK_GPIO_PORT_NORMAL);
-    write_pin(XCLK, 0, XCLK_GPIO_PORT_NORMAL);
+    XCLK_GPIO_PORT_NORMAL.GDIR |= (1 << XCLK);
+    XCLK_GPIO_PORT_NORMAL.DR_CLEAR = (1 << XCLK);
 
     // _RD as output, HIGH, communication inactive
-    configPin(_RD, 1, _RD_GPIO_PORT_NORMAL);
-    write_pin(_RD, 1, _RD_GPIO_PORT_NORMAL);
+    _RD_GPIO_PORT_NORMAL.GDIR |= (1 << _RD);
+    _RD_GPIO_PORT_NORMAL.DR_SET = (1 << _RD);
 
     // _WR as output, HIGH, communication inactive
-    configPin(_WR, 1, _WR_GPIO_PORT_NORMAL);
-    write_pin(_WR, 1, _WR_GPIO_PORT_NORMAL);
+    _WR_GPIO_PORT_NORMAL.GDIR |= (1 << _WR);
+    _WR_GPIO_PORT_NORMAL.DR_SET = (1 << _WR);
 
     // _STBY as output, LOW because we use software mode (p8)
-    configPin(STBY, 1, STBY_GPIO_PORT_NORMAL);
-    write_pin(STBY, 0, STBY_GPIO_PORT_NORMAL);
+    STBY_GPIO_PORT_NORMAL.GDIR |= (1 << STBY);
+    STBY_GPIO_PORT_NORMAL.DR_CLEAR = (1 << STBY);
 
     // CONVST as output, LOW
-    configPin(CONVST, 1, CONVST_GPIO_PORT_NORMAL);
-    write_pin(CONVST, 0, CONVST_GPIO_PORT_NORMAL);
+    CONVST_GPIO_PORT_NORMAL.GDIR = (1 << CONVST);
+    CONVST_GPIO_PORT_NORMAL.DR_CLEAR = (1 << CONVST);
 
     // RESET as output, active high
-    configPin(RESET, 1, RESET_GPIO_PORT_NORMAL);
-    write_pin(RESET, 0, RESET_GPIO_PORT_NORMAL);
+    RESET_GPIO_PORT_NORMAL.GDIR |= (1 << RESET);
+    RESET_GPIO_PORT_NORMAL.DR_CLEAR = (1 << RESET);
 
 #ifndef TESTING
     // configuring parallel interface, as input
@@ -296,9 +300,9 @@ void adc_start_conversion(float sample_period_us, ADC_sample_mode sample_mode) {
     overall_buffer_count = 0;
     buffer_filled = 0;
 
-    write_pin(RESET, 1, RESET_GPIO_PORT_NORMAL);
+    RESET_GPIO_PORT_NORMAL.DR_SET = (1 << RESET);
     delay(1);
-    write_pin(RESET, 0, RESET_GPIO_PORT_NORMAL);
+    RESET_GPIO_PORT_NORMAL.DR_CLEAR = (1 << RESET);
 
     ADC_mode = sample_mode;
     float bounded_period = sample_period_us;
@@ -343,14 +347,15 @@ void adc_stop_conversion() {
     }
     detachInterrupt(BUSYINT_ARDUINO_PIN);
 
-    write_pin(_RD, 1, _RD_GPIO_PORT_NORMAL);
-    write_pin(CONVST, 0, CONVST_GPIO_PORT_NORMAL);
-    write_pin(_CS, 1, _CS_GPIO_PORT_NORMAL);
+    _RD_GPIO_PORT_NORMAL.DR_SET = (1 << _RD);
+    CONVST_GPIO_PORT_NORMAL.DR_CLEAR = (1 << CONVST);
+    _CS_GPIO_PORT_NORMAL.DR_SET = (1 << _CS);
 
     // resetting ADC from actual conversion
-    write_pin(RESET, 1, RESET_GPIO_PORT_NORMAL);
+    RESET_GPIO_PORT_NORMAL.DR_SET = (1 << RESET);
     delay(1);
     write_pin(RESET, 0, RESET_GPIO_PORT_NORMAL);
+    RESET_GPIO_PORT_NORMAL.DR_CLEAR = (1 << RESET);
 }
 
 /// @brief function to start the conversion of data from ADC. once ADC is ready to output data, GpioISR will be triggered by the BUSY pin
@@ -360,7 +365,7 @@ void adc_trigger_conversion() {
     // will pull the CONVST line high, that indicates to the adc to start conversion on all channels
     // stopwatch = elapsedMicros();
     // clk_cyc = ARM_DWT_CYCCNT;
-    write_pin(CONVST, 1, CONVST_GPIO_PORT_NORMAL);
+    CONVST_GPIO_PORT_NORMAL.DR_SET = (1 << CONVST);
     // adding timestamp
     // timestamps[active_buffer][sample_index] = micros();
     if (!stop_sampling) {

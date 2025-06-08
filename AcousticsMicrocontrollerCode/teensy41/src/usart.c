@@ -89,7 +89,7 @@ void __attribute__((used)) LPUART1_IRQHandler(void) {
       LPUART1_DATA = tx_buf[tx_tail];
       tx_tail = (tx_tail + 1) % UART1_TX_BUF_SIZE;
     } else {
-      LPUART1_CTRL &= ~(1 << 7); // clear TIE
+      LPUART1_CTRL &= ~(LPUART_CTRL_TIE); // clear TIE
     }
   }
 }
