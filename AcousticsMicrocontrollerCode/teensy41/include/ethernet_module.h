@@ -3,19 +3,19 @@
 #include <NativeEthernetUdp.h>
 #include <cstdint>
 
-void UDP_init();
+void udp_init();
 
-int16_t UDP_check_if_connected();
+int16_t udp_check_if_connected();
 
 uint8_t* get_remoteIP();
 uint16_t get_remotePort();
 
-void UDP_send_ready_signal(uint8_t* remoteIPArray, uint16_t remotePort);
+void udp_send_ready_signal(uint8_t* remoteIPArray, uint16_t remotePort);
 
-char* UDP_read_message();
+char* udp_read_message();
 
-void UDP_send_message(char* UDPReplyBuffer, int16_t sizeOfMessage, int16_t startIndexForMessage);
+void udp_send_message(char* UDPReplyBuffer, int16_t sizeOfMessage, int16_t startIndexForMessage);
 
-void UDP_send_message_raw(void* UDPReplyBuffer, uint32_t sizeOfMessage);
+void udp_send_message_raw(void* UDPReplyBuffer, uint32_t sizeOfMessage);
 
-void UDP_clean_message_memory();
+void udp_clean_message_memory();

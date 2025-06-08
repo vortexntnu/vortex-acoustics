@@ -9,9 +9,9 @@ int32_t freq_interest_min[FREQUENCY_LIST_LENGTH]; // 0 Hz
 FrequencyInterest frequencyInterest[FREQUENCY_LIST_LENGTH];
 
 int frequency_data_from_client(void) {
-    while (!UDP_check_if_connected())
+    while (!udp_check_if_connected())
         ;
-    uint8_t* data = (uint8_t*)(UDP_read_message() + 1);
+    uint8_t* data = (uint8_t*)(udp_read_message() + 1);
     if (data[0] != 1) {
         return -1;
     }
@@ -40,19 +40,19 @@ static void send_data_udp(const void* data_ptr, size_t len, uint8_t sequence) {
         packet[3] = (offset >> 8) & 0xFF;
         packet[4] = (offset >> 0) & 0xFF;
         memcpy(packet + 5, p + offset, chunk);
-        UDP_send_message_raw(packet, chunk + 5);
+        udp_send_message_raw(packet, chunk + 5);
 
         offset += chunk;
     }
 }
 
-void setupTeensyCommunication(void) {
-    UDP_send_ready_signal(get_remoteIP(), get_remotePort());
+void setup_communication(void) {
+    udp_send_ready_signal(get_remoteIP(), get_remotePort());
 
     // After this, the client and teensy are connected
     frequency_data_from_client();
 
-    UDP_clean_message_memory();
+    udp_clean_message_memory();
 }
 
 void transmit_data_udp(void) {
@@ -64,5 +64,5 @@ void transmit_data_udp(void) {
     send_data_udp(timeDifferenceOfArrival, sizeof(float32_t) * TDOA_DATA_LENGTH, 7);
     send_data_udp(soundLocation, sizeof(float32_t) * POSITION_DATA_LENGTH, 8);
 
-    UDP_clean_message_memory();
+    udp_clean_message_memory();
 }

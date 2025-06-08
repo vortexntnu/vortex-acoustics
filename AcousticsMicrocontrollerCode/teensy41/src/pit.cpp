@@ -1,6 +1,6 @@
 #include "pit.h"
-
 #include <Arduino.h>
+#include <cstdint>
 
 // ! It is possible to give priorities to interrupts in case the timer interrrupts are critical
 // see in intervalTimer.cpp (library for PIT)
@@ -82,18 +82,18 @@ void pit_setup() {
 //* ----------- general function, generelized for all 4 timers ---------------
 
 // setting up timer, so that a call to startPeriodic is enought (chained has to be set there if needed)
-void setUpPeriodicISR(void_function_ptr function, uint32_t clockcycles, PIT_channels PIT_number) {
+void setUpPeriodicISR(void_function_ptr function, uint32_t clockcycles, uint8_t PIT_number) {
     if (PIT_number > 3)
         return;
     isr_funct_table[PIT_number] = function;
     PIT[PIT_number]->LDVAL = clockcycles;
 }
 
-void startPeriodic(PIT_channels PIT_number, uint8_t chained = 0) {
+void startPeriodic(uint8_t PIT_number, uint8_t chained = 0) {
   PIT[PIT_number]->TCTRL = (chained ? PIT_TCTRL_CHN | PIT_TCTRL_TEN | PIT_TCTRL_TIE : PIT_TCTRL_TEN | PIT_TCTRL_TIE);
 }
 
-void stopPeriodic(PIT_channels PIT_number) {
+void stopPeriodic(uint8_t PIT_number) {
     if (PIT_number > 3)
         return;
     PIT[PIT_number]->TCTRL &= ~(PIT_TCTRL_TIE | PIT_TCTRL_TEN);

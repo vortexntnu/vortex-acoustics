@@ -13,7 +13,7 @@ char UDPReceiveBuffer[UDP_TX_PACKET_MAX_SIZE];
 EthernetUDP Udp;
 
 
-void UDP_init() {
+void udp_init() {
     // Configure pins for Teensy
     Ethernet.init(20);
 
@@ -38,7 +38,7 @@ void UDP_init() {
     }
 }
 
-int16_t UDP_check_if_connected() {
+int16_t udp_check_if_connected() {
     int16_t packetSize = Udp.parsePacket();
     return packetSize;
 }
@@ -60,7 +60,7 @@ uint16_t get_remotePort() {
     return tempPort;
 }
 
-void UDP_send_ready_signal(uint8_t* remoteIPArray, uint16_t remotePort) {
+void udp_send_ready_signal(uint8_t* remoteIPArray, uint16_t remotePort) {
     // Variables
     
     char UDPReplyBuffer[] = "READY";
@@ -79,7 +79,7 @@ void UDP_send_ready_signal(uint8_t* remoteIPArray, uint16_t remotePort) {
     Serial.println("Sent ready signal");
 }
 
-char* UDP_read_message() {
+char* udp_read_message() {
     // read the message into buffer
     Udp.read(UDPReceiveBuffer, UDP_TX_PACKET_MAX_SIZE);
 
@@ -87,7 +87,7 @@ char* UDP_read_message() {
 }
 
 
-void UDP_send_message_raw(void* data, size_t dataSize){
+void udp_send_message_raw(void* data, size_t dataSize){
     IPAddress remoteIP = Udp.remoteIP();
     uint16_t remotePort = Udp.remotePort();
 
@@ -96,7 +96,7 @@ void UDP_send_message_raw(void* data, size_t dataSize){
     Udp.endPacket();
 }
 
-void UDP_clean_message_memory() {
+void udp_clean_message_memory() {
     memset(UDPReceiveBuffer, 0, UDP_TX_PACKET_MAX_SIZE); //clear out the packetBuffer array
 }
 

@@ -28,10 +28,10 @@ void setup() {
     Serial.begin(9600);
     delay(5000); 
 
-    UDP_init();
-    while (!UDP_check_if_connected())
+    udp_init();
+    while (!udp_check_if_connected())
         ;
-    setupTeensyCommunication();
+    setup_communication();
 
     adc_init();
 

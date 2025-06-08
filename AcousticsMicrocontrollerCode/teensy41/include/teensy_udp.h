@@ -35,7 +35,7 @@ extern int32_t freq_interest_min[FREQUENCY_LIST_LENGTH]; // 0 Hz
 
 int frequency_data_from_client(void);
 
-void setupTeensyCommunication(void);
+void setup_communication(void);
 
 /**
 * @brief transmit all relevant data over udp
