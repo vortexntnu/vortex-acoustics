@@ -2,8 +2,6 @@
 #include "Arduino.h"
 #include "DMAChannel.h"
 #include "clock.h"
-#include "gpio.h"
-#include "gpio_interrupt.h"
 #include "pit.h"
 #include "imxrt.h"
 #include <cstddef>
@@ -380,6 +378,7 @@ void adc_trigger_conversion() {
     }
     // clk_cyc = ARM_DWT_CYCCNT;
 }
+
 
 /**
       @brief configures the internal 32-bit config register of the ADC

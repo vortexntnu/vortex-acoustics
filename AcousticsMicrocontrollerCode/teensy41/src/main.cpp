@@ -10,8 +10,6 @@
 // Sampling Analog to Digital Converter (ADC) Libraries
 #include "adc.h"
 #include "clock.h"
-#include "gpio.h"
-#include "gpio_interrupt.h"
 #include "pit.h"
 
 // Digital Signal Processing (DSP) Libraries
