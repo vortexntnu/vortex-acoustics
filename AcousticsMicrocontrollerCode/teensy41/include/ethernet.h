@@ -6,6 +6,10 @@
 #include <stdint.h>
 #include <stddef.h>
 
+
+
+const uint8_t mac_address[6] = {0x00, 0x01, 0xBE, 0xEE, 0xFE, 0xED};
+
 #ifdef __cplusplus
 
 extern "C" {

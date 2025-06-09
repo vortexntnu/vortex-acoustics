@@ -1,0 +1,62 @@
+#include "can_fd.h"
+#include "imxrt.h"
+
+#define FLEXCAN_MCR_MDIS (1 << 31)
+#define FLEXCAN_MCR_FRZ (1 << 30)
+#define FLEXCAN_MCR_HALT (1 << 28)
+#define FLEXCAN_MCR_SOFTRST (1 << 25)
+#define FLEXCAN_MCR_FRZACK (1 << 24)
+#define FLEXCAN_MCR_FDEN (1 << 11)
+
+#define FLEXCAN_CTRL1_PRESDIV(x) (x << 24)
+#define FLEXCAN_CTRL1_PROPSEG(x) (x << 0)
+#define FLEXCAN_CTRL1_PSEG1(x) (x << 16)
+#define FLEXCAN_CTRL1_PSEG2(x) (x << 19)
+#define FLEXCAN_CTRL1_RJW(x) (x << 22)
+
+void canfd_init(void) {
+  CCM_CCGR0 |= CCM_CCGR0_CAN1(0x3) | CCM_CCGR0_CAN1_SERIAL(0x3);
+
+
+  IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B0_08 = 2;
+  IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_08 = 0x10B0; // 100 MHz, pull-up, etc.
+
+  // CAN1_RX on AD_B1_09 as ALT2
+  IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_09 = 2;
+  IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_09 = 0x10B0;
+
+  IOMUXC_CANFD_IPP_IND_CANRX_SELECT_INPUT = 1;
+
+  FLEXCAN1_MCR |= FLEXCAN_MCR_MDIS | FLEXCAN_MCR_FRZ | FLEXCAN_MCR_HALT;
+
+  while (!(FLEXCAN1_MCR & FLEXCAN_MCR_FRZACK))
+    ;
+
+  FLEXCAN1_MCR |= FLEXCAN_MCR_SOFTRST;
+
+  while (FLEXCAN1_MCR & FLEXCAN_MCR_SOFTRST)
+    ;
+    
+  // nominal bit timing
+  FLEXCAN1_CTRL1 = FLEXCAN_CTRL1_PRESDIV(9) | FLEXCAN_CTRL1_PROPSEG(5) |
+                   FLEXCAN_CTRL1_PSEG1(5) | FLEXCAN_CTRL1_PSEG2(2) |
+                   FLEXCAN_CTRL1_RJW(1);
+ 
+  
+  // Enable CANFD
+  FLEXCAN1_MCR |= FLEXCAN_MCR_FDEN;
+  
+
+
+  FLEXCAN1_IMASK1 = 0xFFFFFFFF;
+  FLEXCAN1_IFLAG1 = 0xFFFFFFFF;
+
+  // Reenable module
+  FLEXCAN1_MCR &= ~(FLEXCAN_MCR_HALT | FLEXCAN_MCR_FRZ);
+
+  while (FLEXCAN1_MCR & FLEXCAN_MCR_FRZACK); 
+  
+  FLEXCAN1_MCR &= ~FLEXCAN_MCR_MDIS;
+}
+
+int canfd_send() {}

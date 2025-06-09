@@ -4,6 +4,7 @@
 void ethernet_init(const uint8_t mac[6]) {
   CCM_CCGR1 |= CCM_CCGR1_ENET(0x3);
 
+
   IOMUXC_ENET_IPG_CLK_RMII_SELECT_INPUT = 1;
 
   IOMUXC_ENET_MDIO_SELECT_INPUT = 1;
