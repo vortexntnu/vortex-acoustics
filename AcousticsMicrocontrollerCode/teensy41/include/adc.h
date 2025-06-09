@@ -3,8 +3,8 @@
 
 #include "core_pins.h"
 #include "imxrt.h"
-#include <cstddef>
-#include <cstdint>
+#include <stddef.h>
+#include <stddef.h>
 
 extern uint8_t DMA_test_variable;
 
@@ -12,7 +12,7 @@ const int N_CHANNELS = 8; // no. of channels on the ADC
 const int N_HYDROPHONES = 5;
 const int SAMPLE_SIZE = 12; // bits in one sample
 
-enum ADC_sample_mode { BLOCKING, TIMER, DMA };
+typedef enum { BLOCKING, TIMER, DMA } ADC_sample_mode;
 
 /*
         *Pin definition of Control signals
@@ -140,7 +140,7 @@ volatile extern size_t sample_index;   // To know what ring buffer memory we are
 volatile extern uint16_t buffer_filled;
 volatile extern uint32_t overall_buffer_count;
 
-void adc_init();                   // inits pins
+void adc_init(); // inits pins
 
 void adc_start_conversion(float sample_period_us, ADC_sample_mode sample_mode = BLOCKING); // setup periodic timer interrupts.
 void adc_stop_conversion();                                                                // stop periodic timer interrupts

@@ -15,11 +15,14 @@ CPU_FLAGS := -mcpu=cortex-m7 -mthumb -mfpu=fpv5-d16 -mfloat-abi=hard -O2
 # Include paths: your headers + CMSIS + device + drivers
 INCLUDES := \
   -Iinclude \
-  -I$(SDK_ROOT)/include \
-  -I$(SDK_ROOT)/startup \
-  -I$(SDK_ROOT)/system \
-  -I$(SDK_ROOT)/drivers
+  -I$(SDK_ROOT)/\
 
+SRCS := \
+  src/main.c \
+  src/canfd.c \
+	src/dsp.c \
+	src/adc.c \
+	src/mulitilateration.c
 # Combine
 CFLAGS := $(CPU_FLAGS) $(INCLUDES) -ffunction-sections -fdata-sections
 

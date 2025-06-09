@@ -1,54 +1,40 @@
 #include "pit.h"
-#include <Arduino.h>
-#include <cstdint>
 
 // ! It is possible to give priorities to interrupts in case the timer interrrupts are critical
 // see in intervalTimer.cpp (library for PIT)
 // #include <IntervalTimer.h>
 /// will be changed later, this keeps it generic
-static void dummyISR(void) { Serial.println("Ahhh"); }
 
 // inspired from <IntervalTimer.h>, makes it possible to have one general function for 4 timers
 IMXRT_PIT_CHANNEL_t* PIT[4] = {IMXRT_PIT_CHANNELS, IMXRT_PIT_CHANNELS + 1, IMXRT_PIT_CHANNELS + 2, IMXRT_PIT_CHANNELS + 3};
 
-static void (*isr_funct_table[4])(void) __attribute((aligned(32))) = {dummyISR, dummyISR, dummyISR, dummyISR};
+static void (*isr_funct_table[4])(void) __attribute((aligned(32))) = {NULL, NULL, NULL, NULL};
 
 #ifdef SERIAL_DEBUG
-void dumpPeriodicRegisters() {
-    Serial.printf("PIT.MCR: 0x%X\r\n", PIT_MCR);
-    Serial.printf("PIT.LDVAL0: 0x%X\r\n", PIT_LDVAL0);
-    Serial.printf("PIT.LDVAL1: 0x%X\r\n", PIT_LDVAL1);
-    Serial.printf("PIT.LDVAL2: 0x%X\r\n", PIT_LDVAL2);
-    Serial.printf("PIT.LDVAL3: 0x%X\r\n", PIT_LDVAL3);
-    Serial.printf("PIT.TCTRL0: 0x%X\r\n", PIT_TCTRL0);
-    Serial.printf("PIT.TCTRL1: 0x%X\r\n", PIT_TCTRL1);
-    Serial.printf("PIT.TCTRL2: 0x%X\r\n", PIT_TCTRL2);
-    Serial.printf("PIT.TCTRL3: 0x%X\r\n", PIT_TCTRL3);
-}
 #endif
 
 void ISR() {
     NVIC_DISABLE_IRQ(IRQ_PIT);
-    if (PIT_TFLG0 && isr_funct_table[0] != nullptr) { // bit 0 of this register: interupt pending
+    if (PIT_TFLG0 && isr_funct_table[0] != NULL) { // bit 0 of this register: interupt pending
         PIT_TFLG0 = 0x1;
         // Serial.println("0");
         //(*isr_periodic_func3)();
         (*isr_funct_table[0])();
     }
     // making sure it is not an empty pointer that would crash the programm
-    else if (PIT_TFLG3 && isr_funct_table[3] != nullptr) { // bit 0 of this register: interupt pending
+    else if (PIT_TFLG3 && isr_funct_table[3] != NULL) { // bit 0 of this register: interupt pending
         PIT_TFLG3 = 0x1;
         //(*isr_periodic_func3)();
         (*isr_funct_table[3])();
     }
 
-    else if (PIT_TFLG2 && isr_funct_table[2] != nullptr) { // bit 0 of this register: interupt pending
+    else if (PIT_TFLG2 && isr_funct_table[2] != NULL) { // bit 0 of this register: interupt pending
         PIT_TFLG2 = 0x1;
         //(*isr_periodic_func3)();
         (*isr_funct_table[2])();
     }
 
-    else if (PIT_TFLG1 && isr_funct_table[1] != nullptr) { // bit 0 of this register: interupt pending
+    else if (PIT_TFLG1 && isr_funct_table[1] != NULL) { // bit 0 of this register: interupt pending
         PIT_TFLG1 = 0x1;
         //(*isr_periodic_func3)();
         // Serial.println("1");
@@ -71,9 +57,6 @@ void pit_setup() {
     // all PIT interrupts are grouped into one IRQ
     attachInterruptVector(IRQ_PIT, ISR);
     NVIC_ENABLE_IRQ(IRQ_PIT); /// is activating the interrupt management for IRQ_PIT
-#ifdef SERIAL_DEBUGs
-    dumpPeriodicRegisters();
-#endif
 }
 
 // info: usefull info from datasheet: MCR[FRZ] can freeze the timers to debug. Datasheet page 2975
@@ -89,7 +72,7 @@ void setUpPeriodicISR(void_function_ptr function, uint32_t clockcycles, uint8_t 
     PIT[PIT_number]->LDVAL = clockcycles;
 }
 
-void startPeriodic(uint8_t PIT_number, uint8_t chained = 0) {
+void startPeriodic(uint8_t PIT_number, uint8_t chained) {
   PIT[PIT_number]->TCTRL = (chained ? PIT_TCTRL_CHN | PIT_TCTRL_TEN | PIT_TCTRL_TIE : PIT_TCTRL_TEN | PIT_TCTRL_TIE);
 }
 

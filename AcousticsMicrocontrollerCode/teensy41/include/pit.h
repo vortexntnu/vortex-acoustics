@@ -8,11 +8,18 @@
 #ifndef PIT_H
 #define PIT_H
 
-
+#include <stddef.h>
+#include <stdint.h>
 #include "imxrt.h"
-#ifdef SERIAL_DEBUG
-#include "Arduino.h"
-#endif
+
+
+#ifdef __cplusplus
+
+extern "C"{
+
+
+
+#endif // __cplusplus
 
 
 typedef void (*void_function_ptr)(void);
@@ -21,8 +28,13 @@ typedef enum PIT_channels { PIT_0, PIT_1, PIT_2, PIT_3 } PIT_channels;
 void pit_setup();
 
 // general
-void setUpPeriodicISR(void_function_ptr function, uint32_t clockcycles, PIT_channels PIT_number);
-void startPeriodic(PIT_channels PIT_number, uint8_t chained = 0);
-void stopPeriodic(PIT_channels PIT_number);
+void setUpPeriodicISR(void_function_ptr function, uint32_t clockcycles, uint8_t PIT_number); 
+void startPeriodic(uint8_t PIT_number, uint8_t chained); 
+void stopPeriodic(uint8_t PIT_number); 
+
+
+#ifdef __cplusplus
+}
+#endif // __cplusplus
 
 #endif // !PIT_H

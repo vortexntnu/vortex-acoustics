@@ -1,8 +1,4 @@
 #include "multilateration.h"
-#include "arm_math.h"
-#include <cstddef>
-#include <stdint.h>
-#include <stddef.h>
 
 
 float32_t timeDifferenceOfArrival[TDOA_DATA_LENGTH]; // time difference for hydrophone 1, 2, 3, 4, 5 [s]

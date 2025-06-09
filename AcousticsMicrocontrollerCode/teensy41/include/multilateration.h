@@ -1,33 +1,28 @@
 #ifndef MULTILATERATION_H
 #define MULTILATERATION_H
 
-
-
-#include <stddef.h>
-#include "arm_math.h"
 #include "adc.h"
+#include "arm_math.h"
 #include "dsp.h"
-// #include <Arduino.h>
+#include <stddef.h>
+#include <stdint.h>
 
 #define MAX_LAG (2 * RAW_HYDROPHONE_SIZE - 1)
 
-#define TDOA_DATA_LENGTH 5       
-#define POSITION_DATA_LENGTH 3 + 1  
+#define TDOA_DATA_LENGTH 5
+#define POSITION_DATA_LENGTH 3 + 1
 
+#define NUM_HYDROPHONES 5
+#define NUM_DIMENSIONS 3
 
 #ifdef __cplusplus
 
-extern "C"{
-
+extern "C" {
 
 #endif // __cplusplus
 
-const int32_t NUM_HYDROPHONES = 5;
-const int32_t NUM_DIMENSIONS = 3;
-
 const float32_t SOUND_SPEED = 1480.0; //[m/s]
 const int SAMPLING_FREQ = 300000;     //[Hz]
-
 
 // OBS: use same x, y, z system as autonomous
 const float32_t hydrophonePositions[NUM_HYDROPHONES][NUM_DIMENSIONS] = {
@@ -38,19 +33,14 @@ const float32_t hydrophonePositions[NUM_HYDROPHONES][NUM_DIMENSIONS] = {
     {0.4f, 0.0f, -0.4f}     // Hydrophone 4: {x, y, z}
 };
 
-
 extern float32_t timeDifferenceOfArrival[TDOA_DATA_LENGTH]; // time difference for hydrophone 1, 2, 3, 4, 5 [s]
 extern float32_t soundLocation[POSITION_DATA_LENGTH];       // X, Y, Z [m]
-
-
 
 int find_pinger_position(void);
 
 #ifdef __cplusplus
-
 }
 
 #endif // __cplusplus
-
 
 #endif // !MULTILATERATION_H

@@ -4,7 +4,6 @@
 
 #include "imxrt.h"
 #ifdef SERIAL_DEBUG
-#include "Arduino.h"
 #endif
 
 /// @brief to activate the clock_ADC
