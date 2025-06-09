@@ -1,6 +1,0 @@
-
-CompileFlags:
-  Add: 
-    - -Wall
-    - -Wextra
-
