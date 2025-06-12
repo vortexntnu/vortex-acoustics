@@ -2,8 +2,6 @@
 #include "clock.h"
 #include "pit.h"
 #include "imxrt.h"
-#include <cstddef>
-#include <cstdint>
 
 
 /*
@@ -59,7 +57,6 @@ Repeat:
         ! min time between 2 CONVST rising edges: 240ns
 */
 
-uint8_t DMA_test_variable;
 
 
 ADC_sample_mode ADC_mode;
@@ -90,16 +87,12 @@ volatile size_t sample_index = 0;
 volatile uint16_t buffer_filled = 0;
 volatile uint32_t overall_buffer_count = 0;
 
-elapsedMicros stopwatch;
 uint32_t clk_cyc = 0;
 
 // * DMA ----------------------
 uint8_t _RD_reg_value = 1 << _RD;
 uint8_t vec_RD_values[5];
 
-DMAChannel dma1 = DMAChannel();
-DMAChannel dma2 = DMAChannel();
-DMAChannel dma3 = DMAChannel();
 
 static void adc_config(uint32_t reg_val) {
     // pins as output
@@ -249,7 +242,7 @@ void adc_init() {
 
 #ifndef TESTING
     // configuring parallel interface, as input
-    configPort(DB_GPIO_PORT_NORMAL, 0x00000000, DB_MASK);
+    DB_GPIO_PORT_NORMAL.GDIR = (DB_GPIO_PORT_NORMAL.GDIR & ~DB_MASK) | (0);
 #endif
 #ifdef TESTING
     // output, for testing pourpuse (LEDs)
@@ -320,7 +313,6 @@ void adc_start_conversion(float sample_period_us, ADC_sample_mode sample_mode) {
 
     setUpPeriodicISR(adc_trigger_conversion, get_clockcycles_micro(bounded_period), PIT_0);
     startPeriodic(PIT_0); // will call triggerConversion
-    stopwatch = elapsedMicros();    // to see how much time per sample(in average)
 }
 
 void adc_stop_conversion() {

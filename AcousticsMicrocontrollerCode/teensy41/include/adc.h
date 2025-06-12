@@ -6,11 +6,10 @@
 #include <stddef.h>
 #include <stddef.h>
 
-extern uint8_t DMA_test_variable;
 
-const int N_CHANNELS = 8; // no. of channels on the ADC
-const int N_HYDROPHONES = 5;
-const int SAMPLE_SIZE = 12; // bits in one sample
+#define N_CHANNELS  8 // no. of channels on the ADC
+#define N_HYDROPHONES  5
+#define  SAMPLE_SIZE  12 // bits in one sample
 
 typedef enum { BLOCKING, TIMER, DMA } ADC_sample_mode;
 
@@ -129,6 +128,12 @@ typedef int32_t time_buff_3_1024[BUFFER_PER_CHANNEL][SAMPLE_LENGTH_ADC];
 #define SAMPLING_TIMEOUT 10000 // [ms]
 #define SAMPLE_PERIOD 2.4
 
+#ifdef __cplusplus
+
+extern "C"{
+
+#endif // __cplusplus
+
 const uint32_t ADC_reg_config = (1 << CONFIG_WRITE_EN) | (1 << CONFIG_PD_D) | (1 << CONFIG_REFEN) | (0x3FF << CONFIG_REFDAC) | (1 << CONFIG_VREF);
 
 extern time_buff_3_1024 timestamps;
@@ -142,14 +147,15 @@ volatile extern uint32_t overall_buffer_count;
 
 void adc_init(); // inits pins
 
-void adc_start_conversion(float sample_period_us, ADC_sample_mode sample_mode = BLOCKING); // setup periodic timer interrupts.
+void adc_start_conversion(float sample_period_us, ADC_sample_mode sample_mode); // setup periodic timer interrupts.
 void adc_stop_conversion();                                                                // stop periodic timer interrupts
 
 void adc_trigger_conversion(); // tell ADC to start converting.
 
-// void sample_fasfb(uint16_t nb_samples);
+#ifdef __cplusplus
+}
 
-void setting_up_timers_DMA();
-void setting_up_DMA_channels();
+#endif // __cplusplus
+
 
 #endif // !ADC_H
