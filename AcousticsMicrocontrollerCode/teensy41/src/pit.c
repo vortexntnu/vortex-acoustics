@@ -1,4 +1,5 @@
 #include "pit.h"
+#include "MIMXRT1062_COMMON.h"
 
 // ! It is possible to give priorities to interrupts in case the timer interrrupts are critical
 // see in intervalTimer.cpp (library for PIT)
@@ -6,7 +7,6 @@
 /// will be changed later, this keeps it generic
 
 // inspired from <IntervalTimer.h>, makes it possible to have one general function for 4 timers
-IMXRT_PIT_CHANNEL_t* PIT[4] = {IMXRT_PIT_CHANNELS, IMXRT_PIT_CHANNELS + 1, IMXRT_PIT_CHANNELS + 2, IMXRT_PIT_CHANNELS + 3};
 
 static void (*isr_funct_table[4])(void) __attribute((aligned(32))) = {NULL, NULL, NULL, NULL};
 
@@ -14,7 +14,7 @@ static void (*isr_funct_table[4])(void) __attribute((aligned(32))) = {NULL, NULL
 #endif
 
 void ISR() {
-    NVIC_DISABLE_IRQ(IRQ_PIT);
+    NVIC_DISABLE_IRQ(PIT_IRQn);
     if (PIT_TFLG0 && isr_funct_table[0] != NULL) { // bit 0 of this register: interupt pending
         PIT_TFLG0 = 0x1;
         // Serial.println("0");
@@ -41,7 +41,7 @@ void ISR() {
         (*isr_funct_table[1])();
     }
 
-    NVIC_ENABLE_IRQ(IRQ_PIT);
+    NVIC_ENABLE_IRQ(PIT_IRQn);
 }
 
 void pit_setup() {
@@ -55,8 +55,8 @@ void pit_setup() {
     PIT_TCTRL3 = 0x0;
 
     // all PIT interrupts are grouped into one IRQ
-    attachInterruptVector(IRQ_PIT, ISR);
-    NVIC_ENABLE_IRQ(IRQ_PIT); /// is activating the interrupt management for IRQ_PIT
+    // attachInterruptVector(PIT_IRQn, ISR);
+    NVIC_ENABLE_IRQ(PIT_IRQn); /// is activating the interrupt management for IRQ_PIT
 }
 
 // info: usefull info from datasheet: MCR[FRZ] can freeze the timers to debug. Datasheet page 2975

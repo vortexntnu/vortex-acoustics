@@ -10,7 +10,9 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include "imxrt.h"
+#include "MIMXRT1062.h"
+#include "MIMXRT1062_COMMON.h"
+#include "PERI_PIT.h"
 
 
 #ifdef __cplusplus

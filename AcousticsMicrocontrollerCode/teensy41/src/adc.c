@@ -1,7 +1,6 @@
 #include "adc.h"
 #include "clock.h"
 #include "pit.h"
-#include "imxrt.h"
 
 
 /*
@@ -96,41 +95,41 @@ uint8_t vec_RD_values[5];
 
 static void adc_config(uint32_t reg_val) {
     // pins as output
-    // configPort(DB_GPIO_PORT_NORMAL, 0xFFFF0000, DB_MASK);
-    DB_GPIO_PORT_NORMAL.GDIR = (DB_GPIO_PORT_NORMAL.GDIR & ~DB_MASK) | (DB_MASK);
+    // configPort(DB_GPIO_PORT_NORMAL-> 0xFFFF0000, DB_MASK);
+    DB_GPIO_PORT_NORMAL->>GDIR = (DB_GPIO_PORT_NORMAL->GDIR & ~DB_MASK) | (DB_MASK);
     //* see write access timing diagram on p.19 of ADC data sheet
     // check p.39 for info about config register
     // starting write access to ADC
-    _CS_GPIO_PORT_NORMAL.DR_CLEAR = (1 << _CS);
-    _WR_GPIO_PORT_NORMAL.DR_CLEAR = (1 << _WR);
+    _CS_GPIO_PORT_NORMAL->>DR_CLEAR = (1 << _CS);
+    _WR_GPIO_PORT_NORMAL->>DR_CLEAR = (1 << _WR);
 
     // writing MSBs first
-    DB_GPIO_PORT_NORMAL.DR_SET = ((reg_val >> 16) & DB_MASK);
-    DB_GPIO_PORT_NORMAL.DR_CLEAR = (~(reg_val >> 16)) & DB_MASK;
+    DB_GPIO_PORT_NORMAL->>DR_SET = ((reg_val >> 16) & DB_MASK);
+    DB_GPIO_PORT_NORMAL->>DR_CLEAR = (~(reg_val >> 16)) & DB_MASK;
 
-    delayNanoseconds(15); // t_WRL; t_SUDI/t_HDI
+    // delayNanoseconds(15); // t_WRL; t_SUDI/t_HDI
 
-    _WR_GPIO_PORT_NORMAL.DR_SET = (1 << _WR);
+    _WR_GPIO_PORT_NORMAL->>DR_SET = (1 << _WR);
 
-    delayNanoseconds(10); // t_WRH
+    // delayNanoseconds(10); // t_WRH
 
     // then writing LSBs, timing of t_HDI is respected
-    DB_GPIO_PORT_NORMAL.DR_SET = ((reg_val & 0xFFFF) & DB_MASK);
-    DB_GPIO_PORT_NORMAL.DR_CLEAR = (~(reg_val & 0xFFFF)) & DB_MASK;
+    DB_GPIO_PORT_NORMAL->>DR_SET = ((reg_val & 0xFFFF) & DB_MASK);
+    DB_GPIO_PORT_NORMAL->>DR_CLEAR = (~(reg_val & 0xFFFF)) & DB_MASK;
 
-    _WR_GPIO_PORT_NORMAL.DR_CLEAR = (1 << _WR);
+    _WR_GPIO_PORT_NORMAL->>DR_CLEAR = (1 << _WR);
 
-    delayNanoseconds(15); // t_WRL
+    // delayNanoseconds(15); // t_WRL
 
-    _WR_GPIO_PORT_NORMAL.DR_CLEAR = (1 << _WR);
-    _CS_GPIO_PORT_NORMAL.DR_SET = (1 << _CS);
+    _WR_GPIO_PORT_NORMAL->>DR_CLEAR = (1 << _WR);
+    _CS_GPIO_PORT_NORMAL->>DR_SET = (1 << _CS);
 
-    delayNanoseconds(5); // t_HDI
+    // delayNanoseconds(5); // t_HDI
 
     // pins back as inputs
-    DB_GPIO_PORT_NORMAL.GDIR = (DB_GPIO_PORT_NORMAL.GDIR & ~DB_MASK) | (0);
+    DB_GPIO_PORT_NORMAL->>GDIR = (DB_GPIO_PORT_NORMAL.GDIR & ~DB_MASK) | (0);
 
-    DB_GPIO_PORT_NORMAL.GDIR &= ~DB_MASK;
+    DB_GPIO_PORT_NORMAL->>GDIR &= ~DB_MASK;
 }
 
 
@@ -149,19 +148,19 @@ void read_loop() {
     IMXRT_GPIO7.DR_CLEAR = 1 << CONVST | 1 << _CS;
 
     for (uint16_t hydrophone = 0; hydrophone < N_HYDROPHONES; hydrophone++) {
-        // write_pin(_RD, 0, _RD_GPIO_PORT_NORMAL);
+        // write_pin(_RD, 0, _RD_GPIO_PORT_NORMAL->;
         IMXRT_GPIO9.DR_CLEAR |= (1 << _RD);
         // delayNanoseconds(T_RDL);
 
         size_t index = sample_index + active_buffer * SAMPLE_LENGTH_ADC;
-        samples_raw_hydrophones[hydrophone][index] = DB_GPIO_PORT_NORMAL.PSR >> DB_REG_SHIFT;
+        samples_raw_hydrophones[hydrophone][index] = DB_GPIO_PORT_NORMAL->PSR >> DB_REG_SHIFT;
         IMXRT_GPIO9.DR_SET |= (1 << _RD);
-        // write_pin(_RD, 1, _RD_GPIO_PORT_NORMAL);
+        // write_pin(_RD, 1, _RD_GPIO_PORT_NORMAL->;
         //  this is already enough delay for 2ns (toggeling takes more than 2ns)
         //  delayNanoseconds(20);
     }
 
-    _CS_GPIO_PORT_NORMAL.DR_SET |= (1 << _CS);
+    _CS_GPIO_PORT_NORMAL->DR_SET |= (1 << _CS);
 
     // timestamps[active_buffer][sample_index] = stopwatch;
     // stopwatch = elapsedMicros();
@@ -187,66 +186,66 @@ void read_loop() {
 
 void adc_init() {
     // ! commented because we test with using the fast pins
-    // set_normal_GPIO(1 << adc::_WR, _WR_GPIO_PORT_NORMAL);
-    // set_normal_GPIO(1 << adc::_RD, _RD_GPIO_PORT_NORMAL);
-    // set_normal_GPIO(1 << adc::_CS, _CS_GPIO_PORT_NORMAL);
-    // set_normal_GPIO(1 << adc::BUSYINT, BUSYINT_GPIO_PORT_NORMAL);
-    // set_normal_GPIO(1 << adc::HWSW, HWSW_GPIO_PORT_NORMAL);
-    // set_normal_GPIO(1 << adc::PARSER, PARSER_GPIO_PORT_NORMAL);
-    // set_normal_GPIO(1 << adc::XCLK, XCLK_GPIO_PORT_NORMAL);
-    // set_normal_GPIO(1 << adc::STBY, STBY_GPIO_PORT_NORMAL);
-    // set_normal_GPIO(1 << adc::CONVST, CONVST_GPIO_PORT_NORMAL);
-    // set_normal_GPIO(1 << adc::RESET, RESET_GPIO_PORT_NORMAL);
+    // set_normal_GPIO(1 << adc::_WR, _WR_GPIO_PORT_NORMAL->;
+    // set_normal_GPIO(1 << adc::_RD, _RD_GPIO_PORT_NORMAL->;
+    // set_normal_GPIO(1 << adc::_CS, _CS_GPIO_PORT_NORMAL->;
+    // set_normal_GPIO(1 << adc::BUSYINT, BUSYINT_GPIO_PORT_NORMAL->;
+    // set_normal_GPIO(1 << adc::HWSW, HWSW_GPIO_PORT_NORMAL->;
+    // set_normal_GPIO(1 << adc::PARSER, PARSER_GPIO_PORT_NORMAL->;
+    // set_normal_GPIO(1 << adc::XCLK, XCLK_GPIO_PORT_NORMAL->;
+    // set_normal_GPIO(1 << adc::STBY, STBY_GPIO_PORT_NORMAL->;
+    // set_normal_GPIO(1 << adc::CONVST, CONVST_GPIO_PORT_NORMAL->;
+    // set_normal_GPIO(1 << adc::RESET, RESET_GPIO_PORT_NORMAL->;
 
-    // set_normal_GPIO(0xFFFF0000, DB_GPIO_PORT_NORMAL);
+    // set_normal_GPIO(0xFFFF0000, DB_GPIO_PORT_NORMAL->;
 
     // BUSYINT as input
-    BUSYINT_GPIO_PORT_NORMAL.GDIR &= (1 << BUSYINT);
+    BUSYINT_GPIO_PORT_NORMAL->>GDIR &= (1 << BUSYINT);
     // * no need, will be done in built-in interrupt function
 
     // _CS as output, high because interface is not enable on start-up
-    _CS_GPIO_PORT_NORMAL.GDIR |= (1 << _CS);
-    _CS_GPIO_PORT_NORMAL.DR_SET = (1 << _CS);
+    _CS_GPIO_PORT_NORMAL->GDIR |= (1 << _CS);
+    _CS_GPIO_PORT_NORMAL->DR_SET = (1 << _CS);
 
     // HWSW as output, HIGH to select software mode
-    HWSW_GPIO_PORT_NORMAL.GDIR |= (1 << HWSW);
-    HWSW_GPIO_PORT_NORMAL.DR_SET = (1 << HWSW);
+    HWSW_GPIO_PORT_NORMAL->GDIR |= (1 << HWSW);
+    HWSW_GPIO_PORT_NORMAL->DR_SET = (1 << HWSW);
 
     // PAR/SER as output, LOW to select parallel interface
-    HWSW_GPIO_PORT_NORMAL.GDIR |= (1 << PARSER);
-    HWSW_GPIO_PORT_NORMAL.DR_CLEAR = (1 << PARSER);
+    HWSW_GPIO_PORT_NORMAL->GDIR |= (1 << PARSER);
+    HWSW_GPIO_PORT_NORMAL->DR_CLEAR = (1 << PARSER);
 
     // we are in software mode: XCLK as output, LOW (to ground) because NOT used
-    XCLK_GPIO_PORT_NORMAL.GDIR |= (1 << XCLK);
-    XCLK_GPIO_PORT_NORMAL.DR_CLEAR = (1 << XCLK);
+    XCLK_GPIO_PORT_NORMAL->GDIR |= (1 << XCLK);
+    XCLK_GPIO_PORT_NORMAL->DR_CLEAR = (1 << XCLK);
 
     // _RD as output, HIGH, communication inactive
-    _RD_GPIO_PORT_NORMAL.GDIR |= (1 << _RD);
-    _RD_GPIO_PORT_NORMAL.DR_SET = (1 << _RD);
+    _RD_GPIO_PORT_NORMAL->GDIR |= (1 << _RD);
+    _RD_GPIO_PORT_NORMAL->DR_SET = (1 << _RD);
 
     // _WR as output, HIGH, communication inactive
-    _WR_GPIO_PORT_NORMAL.GDIR |= (1 << _WR);
-    _WR_GPIO_PORT_NORMAL.DR_SET = (1 << _WR);
+    _WR_GPIO_PORT_NORMAL->GDIR |= (1 << _WR);
+    _WR_GPIO_PORT_NORMAL->DR_SET = (1 << _WR);
 
     // _STBY as output, LOW because we use software mode (p8)
-    STBY_GPIO_PORT_NORMAL.GDIR |= (1 << STBY);
-    STBY_GPIO_PORT_NORMAL.DR_CLEAR = (1 << STBY);
+    STBY_GPIO_PORT_NORMAL->GDIR |= (1 << STBY);
+    STBY_GPIO_PORT_NORMAL->DR_CLEAR = (1 << STBY);
 
     // CONVST as output, LOW
-    CONVST_GPIO_PORT_NORMAL.GDIR = (1 << CONVST);
-    CONVST_GPIO_PORT_NORMAL.DR_CLEAR = (1 << CONVST);
+    CONVST_GPIO_PORT_NORMAL->GDIR = (1 << CONVST);
+    CONVST_GPIO_PORT_NORMAL->DR_CLEAR = (1 << CONVST);
 
     // RESET as output, active high
-    RESET_GPIO_PORT_NORMAL.GDIR |= (1 << RESET);
-    RESET_GPIO_PORT_NORMAL.DR_CLEAR = (1 << RESET);
+    RESET_GPIO_PORT_NORMAL->GDIR |= (1 << RESET);
+    RESET_GPIO_PORT_NORMAL->DR_CLEAR = (1 << RESET);
 
 #ifndef TESTING
     // configuring parallel interface, as input
-    DB_GPIO_PORT_NORMAL.GDIR = (DB_GPIO_PORT_NORMAL.GDIR & ~DB_MASK) | (0);
+    DB_GPIO_PORT_NORMAL->GDIR = (DB_GPIO_PORT_NORMAL.GDIR & ~DB_MASK) | (0);
 #endif
 #ifdef TESTING
     // output, for testing pourpuse (LEDs)
-    configPort(DB_GPIO_PORT_NORMAL, 0xFFFF0000, DB_MASK);
+    configPort(DB_GPIO_PORT_NORMAL-> 0xFFFF0000, DB_MASK);
 #endif
 
 
@@ -280,9 +279,9 @@ void adc_start_conversion(float sample_period_us, ADC_sample_mode sample_mode) {
     overall_buffer_count = 0;
     buffer_filled = 0;
 
-    RESET_GPIO_PORT_NORMAL.DR_SET = (1 << RESET);
+    RESET_GPIO_PORT_NORMAL->DR_SET = (1 << RESET);
     delay(1);
-    RESET_GPIO_PORT_NORMAL.DR_CLEAR = (1 << RESET);
+    RESET_GPIO_PORT_NORMAL->DR_CLEAR = (1 << RESET);
 
     ADC_mode = sample_mode;
     float bounded_period = sample_period_us;
@@ -324,16 +323,16 @@ void adc_stop_conversion() {
     for (uint8_t i = 1; i < 3; i++) {
         stopPeriodic(i);
     }
-    detachInterrupt(BUSYINT_ARDUINO_PIN);
+    // detachInterrupt(BUSYINT_ARDUINO_PIN);
 
-    _RD_GPIO_PORT_NORMAL.DR_SET = (1 << _RD);
-    CONVST_GPIO_PORT_NORMAL.DR_CLEAR = (1 << CONVST);
-    _CS_GPIO_PORT_NORMAL.DR_SET = (1 << _CS);
+    _RD_GPIO_PORT_NORMAL->DR_SET = (1 << _RD);
+    CONVST_GPIO_PORT_NORMAL->DR_CLEAR = (1 << CONVST);
+    _CS_GPIO_PORT_NORMAL->DR_SET = (1 << _CS);
 
     // resetting ADC from actual conversion
-    RESET_GPIO_PORT_NORMAL.DR_SET = (1 << RESET);
-    delay(1);
-    RESET_GPIO_PORT_NORMAL.DR_CLEAR = (1 << RESET);
+    RESET_GPIO_PORT_NORMAL->DR_SET = (1 << RESET);
+    // delay(1);
+    RESET_GPIO_PORT_NORMAL->DR_CLEAR = (1 << RESET);
 }
 
 /// @brief function to start the conversion of data from ADC. once ADC is ready to output data, GpioISR will be triggered by the BUSY pin
@@ -343,7 +342,7 @@ void adc_trigger_conversion() {
     // will pull the CONVST line high, that indicates to the adc to start conversion on all channels
     // stopwatch = elapsedMicros();
     // clk_cyc = ARM_DWT_CYCCNT;
-    CONVST_GPIO_PORT_NORMAL.DR_SET = (1 << CONVST);
+    CONVST_GPIO_PORT_NORMAL->DR_SET = (1 << CONVST);
     // adding timestamp
     // timestamps[active_buffer][sample_index] = micros();
     if (!stop_sampling) {
@@ -356,7 +355,7 @@ void adc_trigger_conversion() {
     // enable interrupt on BUSY/INT pin
     switch (ADC_mode) {
     case BLOCKING:
-        attachInterrupt(digitalPinToInterrupt(BUSYINT_ARDUINO_PIN), read_loop, FALLING);
+        // attachInterrupt(digitalPinToInterrupt(BUSYINT_ARDUINO_PIN), read_loop, FALLING);
         break;
     case TIMER:
         // attachInterrupt(digitalPinToInterrupt(BUSYINT_ARDUINO_PIN), beginRead, FALLING);

@@ -1,15 +1,16 @@
 #ifndef ADC_H
 #define ADC_H
 
-#include "core_pins.h"
-#include "imxrt.h"
-#include <stddef.h>
+#define CPU_MIMXRT1062DVJ6B
+
+#include "MIMXRT1062.h"
+#include "MIMXRT1062_COMMON.h"
+#include "PERI_GPIO.h"
 #include <stddef.h>
 
-
-#define N_CHANNELS  8 // no. of channels on the ADC
-#define N_HYDROPHONES  5
-#define  SAMPLE_SIZE  12 // bits in one sample
+#define N_CHANNELS 8 // no. of channels on the ADC
+#define N_HYDROPHONES 5
+#define SAMPLE_SIZE 12 // bits in one sample
 
 typedef enum { BLOCKING, TIMER, DMA } ADC_sample_mode;
 
@@ -24,66 +25,37 @@ typedef enum { BLOCKING, TIMER, DMA } ADC_sample_mode;
     */
 // GPIO port+bit is commented
 //! if pin is reallocated, change here the port. Never use directly the port
-const int STBY = CORE_PIN2_BIT; // GPIO 4.4
-// #define STBY_GPIO_PORT_NORMAL IMXRT_GPIO4
-#define STBY_GPIO_PORT_NORMAL IMXRT_GPIO9
-const int RESET = CORE_PIN3_BIT; // GPIO 4.5
-// #define RESET_GPIO_PORT_NORMAL IMXRT_GPIO4
-#define RESET_GPIO_PORT_NORMAL IMXRT_GPIO9
-const int _RD = CORE_PIN4_BIT; // GPIO 4.6
-// #define _RD_GPIO_PORT_NORMAL IMXRT_GPIO4
-#define _RD_GPIO_PORT_NORMAL IMXRT_GPIO9
-const int _CS = CORE_PIN11_BIT; // GPIO 2.2
-// #define _CS_GPIO_PORT_NORMAL IMXRT_GPIO2
-#define _CS_GPIO_PORT_NORMAL IMXRT_GPIO7
-const int PARSER = CORE_PIN12_BIT; // GPIO 2.1
-// #define PARSER_GPIO_PORT_NORMAL IMXRT_GPIO2
-#define PARSER_GPIO_PORT_NORMAL IMXRT_GPIO7
-const int REFEN = CORE_PIN5_BIT; // GPIO 4.8
-const int _WR = CORE_PIN5_BIT;   // same pin as REFEN, depends if PAR or SER
-// #define REFEN_GPIO_PORT_NORMAL IMXRT_GPIO4
-#define REFEN_GPIO_PORT_NORMAL IMXRT_GPIO9
-// #define _WR_GPIO_PORT_NORMAL IMXRT_GPIO4
-#define _WR_GPIO_PORT_NORMAL IMXRT_GPIO9
-const int HWSW = CORE_PIN33_BIT; // GPIO 4.07
-// #define HWSW_GPIO_PORT_NORMAL IMXRT_GPIO4
-#define HWSW_GPIO_PORT_NORMAL IMXRT_GPIO9
-const int CONVST = CORE_PIN34_BIT; // GPIO 2.29
-// #define CONVST_GPIO_PORT_NORMAL IMXRT_GPIO2
-#define CONVST_GPIO_PORT_NORMAL IMXRT_GPIO7
-const int ASLEEP = CORE_PIN35_BIT; // GPIO 2.28
-// #define ASLEEP_GPIO_PORT_NORMAL IMXRT_GPIO2
-#define ASLEEP_GPIO_PORT_NORMAL IMXRT_GPIO7
-const int BUSYINT = CORE_PIN36_BIT; // GPIO 2.18
-// #define BUSYINT_GPIO_PORT_NORMAL IMXRT_GPIO2
-#define BUSYINT_GPIO_PORT_NORMAL IMXRT_GPIO7
+#define STBY 4 // GPIO 4.4
+#define STBY_GPIO_PORT_NORMAL GPIO9
+#define RESET  5 // GPIO 4.5
+#define RESET_GPIO_PORT_NORMAL GPIO9
+#define _RD  6 // GPIO 4.6
+#define _RD_GPIO_PORT_NORMAL GPIO9
+#define  _CS = 2 // GPIO 2.2
+#define _CS_GPIO_PORT_NORMAL GPIO7
+#define PARSER 1 // GPIO 2.1
+#define PARSER_GPIO_PORT_NORMAL GPIO7
+#define REFEN  8 // GPIO 4.8
+#define _WR  8   // same pin as REFEN, depends if PAR or SER
+#define REFEN_GPIO_PORT_NORMAL GPIO9
+#define _WR_GPIO_PORT_NORMAL GPIO9
+#define HWSW  7 // GPIO 4.07
+#define HWSW_GPIO_PORT_NORMAL GPIO9
+#define CONVST  29 // GPIO 2.29
+#define CONVST_GPIO_PORT_NORMAL GPIO7
+#define ASLEEP  28 // GPIO 2.28
+#define ASLEEP_GPIO_PORT_NORMAL GPIO7
+#define BUSYINT  18 // GPIO 2.18
+#define BUSYINT_GPIO_PORT_NORMAL GPIO7
 #define BUSYINT_ARDUINO_PIN 36    // pin number to use for built-in arduino libraries
-const int RANGE = CORE_PIN37_BIT; // GPIO 2.19
-const int XCLK = CORE_PIN37_BIT;  // same pin as RANGE, depending if HW or SW
-#define RANGE_GPIO_PORT_NORMAL IMXRT_GPIO2
-#define XCLK_GPIO_PORT_NORMAL IMXRT_GPIO2
+#define RANGE 19 // GPIO 2.19
+#define XCLK 19  // same pin as RANGE, depending if HW or SW
+#define RANGE_GPIO_PORT_NORMAL GPIO2
+#define XCLK_GPIO_PORT_NORMAL GPIO2
 
-// The pins are rearranged in a way to have the values from adc in the GPIO 1 (or 6 in fast mode)
-// the data will be at bits [16:31], so we only need a shift of 16.
-const int DB0 = CORE_PIN19_BIT;  // GPIO 1.16
-const int DB1 = CORE_PIN18_BIT;  // GPIO 1.17
-const int DB2 = CORE_PIN14_BIT;  // GPIO 1.18
-const int DB3 = CORE_PIN15_BIT;  // GPIO 1.19
-const int DB4 = CORE_PIN40_BIT;  // GPIO 1.20
-const int DB5 = CORE_PIN41_BIT;  // GPIO 1.21
-const int DB6 = CORE_PIN17_BIT;  // GPIO 1.22
-const int DB7 = CORE_PIN16_BIT;  // GPIO 1.23
-const int DB8 = CORE_PIN22_BIT;  // GPIO 1.24
-const int DB9 = CORE_PIN23_BIT;  // GPIO 1.25
-const int DB10 = CORE_PIN20_BIT; // GPIO 1.26
-const int DB11 = CORE_PIN21_BIT; // GPIO 1.27
-const int DB12 = CORE_PIN38_BIT; // GPIO 1.28
-const int DB13 = CORE_PIN39_BIT; // GPIO 1.29
-const int DB14 = CORE_PIN26_BIT; // GPIO 1.30
-const int DB15 = CORE_PIN27_BIT; // GPIO 1.31
 // the port of the DB pins is GPIO port 1 (DMA needs the slower ports)
-#define DB_GPIO_PORT_NORMAL IMXRT_GPIO1
-// #define DB_GPIO_PORT_NORMAL IMXRT_GPIO6
+#define DB_GPIO_PORT_NORMAL GPIO1
+// #define DB_GPIO_PORT_NORMAL GPIO6
 
 // Timing definitions
 
@@ -130,7 +102,7 @@ typedef int32_t time_buff_3_1024[BUFFER_PER_CHANNEL][SAMPLE_LENGTH_ADC];
 
 #ifdef __cplusplus
 
-extern "C"{
+extern "C" {
 
 #endif // __cplusplus
 
@@ -148,7 +120,7 @@ volatile extern uint32_t overall_buffer_count;
 void adc_init(); // inits pins
 
 void adc_start_conversion(float sample_period_us, ADC_sample_mode sample_mode); // setup periodic timer interrupts.
-void adc_stop_conversion();                                                                // stop periodic timer interrupts
+void adc_stop_conversion();                                                     // stop periodic timer interrupts
 
 void adc_trigger_conversion(); // tell ADC to start converting.
 
@@ -156,6 +128,5 @@ void adc_trigger_conversion(); // tell ADC to start converting.
 }
 
 #endif // __cplusplus
-
 
 #endif // !ADC_H

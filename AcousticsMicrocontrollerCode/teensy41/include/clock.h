@@ -2,7 +2,10 @@
 #define CLOCK_H
 
 
-#include "imxrt.h"
+#include "MIMXRT1062.h"
+#include "MIMXRT1062_COMMON.h"
+#include "PERI_CCM.h"
+#include <stdint.h>
 #ifdef SERIAL_DEBUG
 #endif
 
