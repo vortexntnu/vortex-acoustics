@@ -1,8 +1,7 @@
 #ifndef TEENSYUDP_H
 #define TEENSYUDP_H
 
-#include "Include/arm_const_structs.h"
-#include "Include/arm_math.h"
+#include "arm_math.h"
 #include <Arduino.h>
 #include <NativeEthernet.h>
 #include <NativeEthernetUdp.h>

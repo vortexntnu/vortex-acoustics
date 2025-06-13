@@ -31,7 +31,7 @@ typedef enum { BLOCKING, TIMER, DMA } ADC_sample_mode;
 #define RESET_GPIO_PORT_NORMAL GPIO9
 #define _RD  6 // GPIO 4.6
 #define _RD_GPIO_PORT_NORMAL GPIO9
-#define  _CS = 2 // GPIO 2.2
+#define  _CS  2 // GPIO 2.2
 #define _CS_GPIO_PORT_NORMAL GPIO7
 #define PARSER 1 // GPIO 2.1
 #define PARSER_GPIO_PORT_NORMAL GPIO7

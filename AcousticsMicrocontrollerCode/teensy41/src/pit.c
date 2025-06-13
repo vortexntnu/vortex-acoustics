@@ -1,5 +1,6 @@
 #include "pit.h"
 #include "MIMXRT1062_COMMON.h"
+#include "PERI_PIT.h"
 
 // ! It is possible to give priorities to interrupts in case the timer interrrupts are critical
 // see in intervalTimer.cpp (library for PIT)
@@ -13,50 +14,52 @@ static void (*isr_funct_table[4])(void) __attribute((aligned(32))) = {NULL, NULL
 #ifdef SERIAL_DEBUG
 #endif
 
-void ISR() {
-    NVIC_DISABLE_IRQ(PIT_IRQn);
-    if (PIT_TFLG0 && isr_funct_table[0] != NULL) { // bit 0 of this register: interupt pending
-        PIT_TFLG0 = 0x1;
-        // Serial.println("0");
-        //(*isr_periodic_func3)();
-        (*isr_funct_table[0])();
-    }
-    // making sure it is not an empty pointer that would crash the programm
-    else if (PIT_TFLG3 && isr_funct_table[3] != NULL) { // bit 0 of this register: interupt pending
-        PIT_TFLG3 = 0x1;
-        //(*isr_periodic_func3)();
-        (*isr_funct_table[3])();
-    }
-
-    else if (PIT_TFLG2 && isr_funct_table[2] != NULL) { // bit 0 of this register: interupt pending
-        PIT_TFLG2 = 0x1;
-        //(*isr_periodic_func3)();
-        (*isr_funct_table[2])();
-    }
-
-    else if (PIT_TFLG1 && isr_funct_table[1] != NULL) { // bit 0 of this register: interupt pending
-        PIT_TFLG1 = 0x1;
-        //(*isr_periodic_func3)();
-        // Serial.println("1");
-        (*isr_funct_table[1])();
-    }
-
-    NVIC_ENABLE_IRQ(PIT_IRQn);
-}
+// void ISR() {
+//     NVIC_DisableIRQ(PIT_IRQn);
+//     PIT->CHANNEL[0] PIT_TFLG_TIF(0x1);
+//
+//     if (PIT_TFLG0 && isr_funct_table[0] != NULL) { // bit 0 of this register: interupt pending
+//         PIT_TFLG0 = 0x1;
+//         // Serial.println("0");
+//         //(*isr_periodic_func3)();
+//         (*isr_funct_table[0])();
+//     }
+//     // making sure it is not an empty pointer that would crash the programm
+//     else if (PIT_TFLG3 && isr_funct_table[3] != NULL) { // bit 0 of this register: interupt pending
+//         PIT_TFLG3 = 0x1;
+//         //(*isr_periodic_func3)();
+//         (*isr_funct_table[3])();
+//     }
+//
+//     else if (PIT_TFLG2 && isr_funct_table[2] != NULL) { // bit 0 of this register: interupt pending
+//         PIT_TFLG2 = 0x1;
+//         //(*isr_periodic_func3)();
+//         (*isr_funct_table[2])();
+//     }
+//
+//     else if (PIT_TFLG1 && isr_funct_table[1] != NULL) { // bit 0 of this register: interupt pending
+//         PIT_TFLG1 = 0x1;
+//         //(*isr_periodic_func3)();
+//         // Serial.println("1");
+//         (*isr_funct_table[1])();
+//     }
+//
+//     NVIC_EnableIRQ(PIT_IRQn);
+// }
 
 void pit_setup() {
-    PIT_MCR &= ~PIT_MCR_MDIS; // activates clock for periodic timers
+    PIT->MCR &= ~PIT_MCR_MDIS(1);
 
     // PIT can only be used through this interface, because the ISR is defined here
     // it is anyway very unlikely that some library uses PIT (exept for DMA, be careful)
-    PIT_TCTRL0 = 0x0; // no chainmode, interrupt and timer disabled (p 2985)
-    PIT_TCTRL1 = 0x0;
-    PIT_TCTRL2 = 0x0;
-    PIT_TCTRL3 = 0x0;
+    PIT->CHANNEL[0].TCRL = 0;
+    PIT->CHANNEL[1].TCRL = 0;
+    PIT->CHANNEL[2].TCRL = 0;
+    PIT->CHANNEL[3].TCRL = 0;
 
     // all PIT interrupts are grouped into one IRQ
     // attachInterruptVector(PIT_IRQn, ISR);
-    NVIC_ENABLE_IRQ(PIT_IRQn); /// is activating the interrupt management for IRQ_PIT
+    NVIC_EnableIRQ(PIT_IRQn); /// is activating the interrupt management for IRQ_PIT
 }
 
 // info: usefull info from datasheet: MCR[FRZ] can freeze the timers to debug. Datasheet page 2975
@@ -69,16 +72,16 @@ void setUpPeriodicISR(void_function_ptr function, uint32_t clockcycles, uint8_t 
     if (PIT_number > 3)
         return;
     isr_funct_table[PIT_number] = function;
-    PIT[PIT_number]->LDVAL = clockcycles;
+    PIT->CHANNEL[PIT_number].LDVAL = clockcycles;
 }
 
 void startPeriodic(uint8_t PIT_number, uint8_t chained) {
-  PIT[PIT_number]->TCTRL = (chained ? PIT_TCTRL_CHN | PIT_TCTRL_TEN | PIT_TCTRL_TIE : PIT_TCTRL_TEN | PIT_TCTRL_TIE);
+  PIT->CHANNEL[PIT_number].TCTRL = (chained ? PIT_TCTRL_CHN(1) | PIT_TCTRL_TEN(1) | PIT_TCTRL_TIE(1) : PIT_TCTRL_TEN(1) | PIT_TCTRL_TIE(1));
 }
 
 void stopPeriodic(uint8_t PIT_number) {
     if (PIT_number > 3)
         return;
-    PIT[PIT_number]->TCTRL &= ~(PIT_TCTRL_TIE | PIT_TCTRL_TEN);
+    PIT->CHANNEL[PIT_number].TCTRL &= ~(PIT_TCTRL_TIE(1) | PIT_TCTRL_TEN(1));
 }
 

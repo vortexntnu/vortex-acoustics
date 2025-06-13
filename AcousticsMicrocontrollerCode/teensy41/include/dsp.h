@@ -3,9 +3,6 @@
 
 // How fast the ADC samples, important to know for FFT, the max is 510 kHz, HOWEVER for some reason ADC can not go max, real value is lower at:
 #include "arm_math.h"
-#include "Include/arm_const_structs.h"
-#include "Include/arm_math.h"
-#include "teensy_udp.h"
 #include "adc.h"
 #include <stddef.h>
 #include <stdint.h>

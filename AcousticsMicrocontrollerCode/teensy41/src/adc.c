@@ -1,4 +1,5 @@
 #include "adc.h"
+#include "MIMXRT1062_COMMON.h"
 #include "clock.h"
 #include "pit.h"
 
@@ -96,40 +97,40 @@ uint8_t vec_RD_values[5];
 static void adc_config(uint32_t reg_val) {
     // pins as output
     // configPort(DB_GPIO_PORT_NORMAL-> 0xFFFF0000, DB_MASK);
-    DB_GPIO_PORT_NORMAL->>GDIR = (DB_GPIO_PORT_NORMAL->GDIR & ~DB_MASK) | (DB_MASK);
+    DB_GPIO_PORT_NORMAL->GDIR = (DB_GPIO_PORT_NORMAL->GDIR & ~DB_MASK) | (DB_MASK);
     //* see write access timing diagram on p.19 of ADC data sheet
     // check p.39 for info about config register
     // starting write access to ADC
-    _CS_GPIO_PORT_NORMAL->>DR_CLEAR = (1 << _CS);
-    _WR_GPIO_PORT_NORMAL->>DR_CLEAR = (1 << _WR);
+    _CS_GPIO_PORT_NORMAL->DR_CLEAR = (1 << _CS);
+    _WR_GPIO_PORT_NORMAL->DR_CLEAR = (1 << _WR);
 
     // writing MSBs first
-    DB_GPIO_PORT_NORMAL->>DR_SET = ((reg_val >> 16) & DB_MASK);
-    DB_GPIO_PORT_NORMAL->>DR_CLEAR = (~(reg_val >> 16)) & DB_MASK;
+    DB_GPIO_PORT_NORMAL->DR_SET = ((reg_val >> 16) & DB_MASK);
+    DB_GPIO_PORT_NORMAL->DR_CLEAR = (~(reg_val >> 16)) & DB_MASK;
 
     // delayNanoseconds(15); // t_WRL; t_SUDI/t_HDI
 
-    _WR_GPIO_PORT_NORMAL->>DR_SET = (1 << _WR);
+    _WR_GPIO_PORT_NORMAL->DR_SET = (1 << _WR);
 
     // delayNanoseconds(10); // t_WRH
 
     // then writing LSBs, timing of t_HDI is respected
-    DB_GPIO_PORT_NORMAL->>DR_SET = ((reg_val & 0xFFFF) & DB_MASK);
-    DB_GPIO_PORT_NORMAL->>DR_CLEAR = (~(reg_val & 0xFFFF)) & DB_MASK;
+    DB_GPIO_PORT_NORMAL->DR_SET = ((reg_val & 0xFFFF) & DB_MASK);
+    DB_GPIO_PORT_NORMAL->DR_CLEAR = (~(reg_val & 0xFFFF)) & DB_MASK;
 
-    _WR_GPIO_PORT_NORMAL->>DR_CLEAR = (1 << _WR);
+    _WR_GPIO_PORT_NORMAL->DR_CLEAR = (1 << _WR);
 
     // delayNanoseconds(15); // t_WRL
 
-    _WR_GPIO_PORT_NORMAL->>DR_CLEAR = (1 << _WR);
-    _CS_GPIO_PORT_NORMAL->>DR_SET = (1 << _CS);
+    _WR_GPIO_PORT_NORMAL->DR_CLEAR = (1 << _WR);
+    _CS_GPIO_PORT_NORMAL->DR_SET = (1 << _CS);
 
     // delayNanoseconds(5); // t_HDI
 
     // pins back as inputs
-    DB_GPIO_PORT_NORMAL->>GDIR = (DB_GPIO_PORT_NORMAL.GDIR & ~DB_MASK) | (0);
+    DB_GPIO_PORT_NORMAL->GDIR = (DB_GPIO_PORT_NORMAL->GDIR & ~DB_MASK) | (0);
 
-    DB_GPIO_PORT_NORMAL->>GDIR &= ~DB_MASK;
+    DB_GPIO_PORT_NORMAL->GDIR &= ~DB_MASK;
 }
 
 
@@ -140,21 +141,21 @@ void read_loop() {
     if (stop_sampling) {
         return;
     }
-    NVIC_DISABLE_IRQ(IRQ_PIT);
+    NVIC_DisableIRQ(PIT_IRQn);
     // detachInterrupt(BUSYINT_ARDUINO_PIN);
 
     // no need to have CONVST high now
     // * write both at the same time to go faster
-    IMXRT_GPIO7.DR_CLEAR = 1 << CONVST | 1 << _CS;
+    GPIO7->DR_CLEAR = 1 << CONVST | 1 << _CS;
 
     for (uint16_t hydrophone = 0; hydrophone < N_HYDROPHONES; hydrophone++) {
         // write_pin(_RD, 0, _RD_GPIO_PORT_NORMAL->;
-        IMXRT_GPIO9.DR_CLEAR |= (1 << _RD);
+        GPIO9->DR_CLEAR |= (1 << _RD);
         // delayNanoseconds(T_RDL);
 
         size_t index = sample_index + active_buffer * SAMPLE_LENGTH_ADC;
-        samples_raw_hydrophones[hydrophone][index] = DB_GPIO_PORT_NORMAL->PSR >> DB_REG_SHIFT;
-        IMXRT_GPIO9.DR_SET |= (1 << _RD);
+        samples_raw_hydrophones[hydrophone][index] = DB_GPIO_PORT_NORMAL->PSR > DB_REG_SHIFT;
+        GPIO9->DR_SET |= (1 << _RD);
         // write_pin(_RD, 1, _RD_GPIO_PORT_NORMAL->;
         //  this is already enough delay for 2ns (toggeling takes more than 2ns)
         //  delayNanoseconds(20);
@@ -179,7 +180,7 @@ void read_loop() {
     // unsigned long time_to_read = stopwatch;
     // Serial.print("time 1 read: ");
     // Serial.println(time_to_read);
-    NVIC_ENABLE_IRQ(IRQ_PIT);
+    NVIC_EnableIRQ(PIT_IRQn);
 }
 
 
@@ -200,7 +201,7 @@ void adc_init() {
     // set_normal_GPIO(0xFFFF0000, DB_GPIO_PORT_NORMAL->;
 
     // BUSYINT as input
-    BUSYINT_GPIO_PORT_NORMAL->>GDIR &= (1 << BUSYINT);
+    BUSYINT_GPIO_PORT_NORMAL->GDIR &= (1 << BUSYINT);
     // * no need, will be done in built-in interrupt function
 
     // _CS as output, high because interface is not enable on start-up
@@ -241,7 +242,7 @@ void adc_init() {
 
 #ifndef TESTING
     // configuring parallel interface, as input
-    DB_GPIO_PORT_NORMAL->GDIR = (DB_GPIO_PORT_NORMAL.GDIR & ~DB_MASK) | (0);
+    DB_GPIO_PORT_NORMAL->GDIR = (DB_GPIO_PORT_NORMAL->GDIR & ~DB_MASK) | (0);
 #endif
 #ifdef TESTING
     // output, for testing pourpuse (LEDs)
@@ -280,7 +281,7 @@ void adc_start_conversion(float sample_period_us, ADC_sample_mode sample_mode) {
     buffer_filled = 0;
 
     RESET_GPIO_PORT_NORMAL->DR_SET = (1 << RESET);
-    delay(1);
+    // delay(1);
     RESET_GPIO_PORT_NORMAL->DR_CLEAR = (1 << RESET);
 
     ADC_mode = sample_mode;
@@ -311,7 +312,7 @@ void adc_start_conversion(float sample_period_us, ADC_sample_mode sample_mode) {
     // }
 
     setUpPeriodicISR(adc_trigger_conversion, get_clockcycles_micro(bounded_period), PIT_0);
-    startPeriodic(PIT_0); // will call triggerConversion
+    startPeriodic(PIT_0, 0); // will call triggerConversion
 }
 
 void adc_stop_conversion() {
@@ -346,7 +347,7 @@ void adc_trigger_conversion() {
     // adding timestamp
     // timestamps[active_buffer][sample_index] = micros();
     if (!stop_sampling) {
-        timestamps[active_buffer][sample_index] = ARM_DWT_CYCCNT;
+        // timestamps[active_buffer][sample_index] = ARM_DWT_CYCCNT;
     }
 
     // changing indexing to put data at right place is done at end of read loop

@@ -30,7 +30,7 @@ int main(void) {
 
     while (1) {
         uint8_t buffer_to_check = 0;
-        uint32_t samplingStartTime = millis();
+        // uint32_t samplingStartTime = millis();
 
         adc_start_conversion(SAMPLE_PERIOD, BLOCKING);
 
@@ -44,9 +44,9 @@ int main(void) {
 
             buffer_to_check = (buffer_to_check + 1) % (BUFFER_PER_CHANNEL);
 
-            if (millis() - samplingStartTime > SAMPLING_TIMEOUT) {
-                break;
-            }
+            // if (millis() - samplingStartTime > SAMPLING_TIMEOUT) {
+            //     break;
+            // }
         }
 
         // filling buffers to ensure all hydrophones capture signal

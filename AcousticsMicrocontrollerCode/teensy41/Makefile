@@ -19,7 +19,7 @@ CMSIS :=  $(HOME)/mcuxpressosdk/mcuxpresso-sdk/mcuxsdk/arch/arm/CMSIS/
 ####################################
 # CPU and flags
 ####################################
-CPU_FLAGS := -mcpu=cortex-m7 -mthumb -mfpu=fpv5-d16 -mfloat-abi=hard -O2 -g
+CPU_FLAGS := -mcpu=cortex-m7 -mthumb -mfpu=fpv5-d16 -mfloat-abi=hard -O2 -g -DCPU_MIMXRT1062DVJ6
 
 # Include paths: your own headers first, then CMSIS/device/driver headers
 INCLUDES := \
@@ -48,7 +48,6 @@ LDFLAGS := \
 # List your C sources here
 C_SRCS := \
     src/main.c \
-    src/canfd.c \
     src/dsp.c \
     src/adc.c \
     src/pit.c \
