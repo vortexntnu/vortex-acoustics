@@ -59,8 +59,13 @@ extern q15_t fft_results_magnified[SAMPLE_LENGTH];
 extern size_t num_peaks;
 
 
-
+/**
+ *@brief Initializes butterworth filter
+ */
 void filter_butterwort_4th_order_init(void); 
+
+
+
 /**
 * @brief checks if signal with set frequency is found in current sample
 * @param buffer_to_check Which adc buffer to check

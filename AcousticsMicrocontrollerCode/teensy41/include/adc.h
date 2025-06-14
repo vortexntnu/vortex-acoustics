@@ -107,7 +107,6 @@ extern "C" {
 
 
 extern time_buff_3_1024 timestamps;
-
 extern int16_t* samples_raw_hydrophones[5];
 
 volatile extern uint8_t active_buffer; // to know which one is being filled, [0, BUFFER_PER_CHANNEL-1]

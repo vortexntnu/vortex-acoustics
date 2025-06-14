@@ -1,11 +1,12 @@
 #include "dsp.h"
 
+const float32_t sos_floats[NUM_STAGES][6] = {{0.00802494, 0.01604989, 0.00802494, 1, -0.92145, 0.23722397}, {1, 2, 1, 1, -1.18653637, 0.59315345}};
+
 
 static q15_t biquadCoeffsQ15[NUM_STAGES * 6];
 static q15_t biquadStateQ15[4 * NUM_STAGES] = {0};
 static arm_biquad_casd_df1_inst_q15 S_q15;
 
-const float32_t sos_floats[NUM_STAGES][6] = {{0.00802494, 0.01604989, 0.00802494, 1, -0.92145, 0.23722397}, {1, 2, 1, 1, -1.18653637, 0.59315345}};
 
 // Constants in q_15 format done right
 const q15_t PI_Q15 = (q15_t)(PI * (1 << 15) + 0.5);
@@ -61,7 +62,7 @@ static q15_t q15_taylor_atan(q15_t x) {
 /**
  *@brief Converting Coefficients from float to q15
  */
-static void buildCoeffs(void) {
+static inline void buildCoeffs(void) {
     // Section 1:
     biquadCoeffsQ15[0] = FLOAT_TO_Q15(sos_floats[0][0]); // b0_1
     biquadCoeffsQ15[1] = FLOAT_TO_Q15(sos_floats[0][1]); // b1_1

@@ -25,6 +25,12 @@ extern "C" {
 extern float32_t timeDifferenceOfArrival[TDOA_DATA_LENGTH]; // time difference for hydrophone 1, 2, 3, 4, 5 [s]
 extern float32_t soundLocation[POSITION_DATA_LENGTH];       // X, Y, Z [m]
 
+
+/**
+* @brief Find the pinger position using crosscorrelation and TDOA
+* @return 0 on success
+*        -1 on failure
+*/
 int find_pinger_position(void);
 
 #ifdef __cplusplus
