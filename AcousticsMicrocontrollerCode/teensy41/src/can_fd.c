@@ -1,62 +1,47 @@
 #include "can_fd.h"
-#include "imxrt.h"
+#include "MIMXRT1062.h"
+#include "PERI_CAN.h"
+#include "PERI_CCM.h"
 
-#define FLEXCAN_MCR_MDIS (1 << 31)
-#define FLEXCAN_MCR_FRZ (1 << 30)
-#define FLEXCAN_MCR_HALT (1 << 28)
-#define FLEXCAN_MCR_SOFTRST (1 << 25)
-#define FLEXCAN_MCR_FRZACK (1 << 24)
-#define FLEXCAN_MCR_FDEN (1 << 11)
 
-#define FLEXCAN_CTRL1_PRESDIV(x) (x << 24)
-#define FLEXCAN_CTRL1_PROPSEG(x) (x << 0)
-#define FLEXCAN_CTRL1_PSEG1(x) (x << 16)
-#define FLEXCAN_CTRL1_PSEG2(x) (x << 19)
-#define FLEXCAN_CTRL1_RJW(x) (x << 22)
 
 void canfd_init(void) {
-  CCM_CCGR0 |= CCM_CCGR0_CAN1(0x3) | CCM_CCGR0_CAN1_SERIAL(0x3);
+  CCM->CCGR0 |= CCM_CCGR0_CG8(0x3) | CCM_CCGR0_CG7(0x3);
+  
+  // need pin config
 
+  IOMUXC->SELECT_INPUT_1[4] |= 1;
 
-  IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B0_08 = 2;
-  IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_08 = 0x10B0; // 100 MHz, pull-up, etc.
+  CAN1->MCR |= CAN_MCR_MDIS(1) | CAN_MCR_FRZ(1) | CAN_MCR_HALT(1);
 
-  // CAN1_RX on AD_B1_09 as ALT2
-  IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_09 = 2;
-  IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_09 = 0x10B0;
-
-  IOMUXC_CANFD_IPP_IND_CANRX_SELECT_INPUT = 1;
-
-  FLEXCAN1_MCR |= FLEXCAN_MCR_MDIS | FLEXCAN_MCR_FRZ | FLEXCAN_MCR_HALT;
-
-  while (!(FLEXCAN1_MCR & FLEXCAN_MCR_FRZACK))
+  while (!(CAN1->MCR & CAN_MCR_FRZ(1)))
     ;
 
-  FLEXCAN1_MCR |= FLEXCAN_MCR_SOFTRST;
+  CAN1->MCR |= CAN_MCR_SOFTRST(1);
 
-  while (FLEXCAN1_MCR & FLEXCAN_MCR_SOFTRST)
+  while (CAN1->MCR & CAN_MCR_SOFTRST(1));
     ;
     
   // nominal bit timing
-  FLEXCAN1_CTRL1 = FLEXCAN_CTRL1_PRESDIV(9) | FLEXCAN_CTRL1_PROPSEG(5) |
-                   FLEXCAN_CTRL1_PSEG1(5) | FLEXCAN_CTRL1_PSEG2(2) |
-                   FLEXCAN_CTRL1_RJW(1);
+  CAN1->CTRL1 = CAN_CTRL1_PRESDIV(9) | CAN_CTRL1_PROPSEG(5) |
+                   CAN_CTRL1_PSEG1(5) | CAN_CTRL1_PSEG2(2) |
+                   CAN_CTRL1_RJW(1);
  
   
-  // Enable CANFD
-  FLEXCAN1_MCR |= FLEXCAN_MCR_FDEN;
+  // Enable CANFD""
+  CAN1->MCR |= CAN_MCR_FDEN(1);
   
 
 
-  FLEXCAN1_IMASK1 = 0xFFFFFFFF;
-  FLEXCAN1_IFLAG1 = 0xFFFFFFFF;
+  CAN1->IMASK1 = 0xFFFFFFFF;
+  CAN1->IFLAG1 = 0xFFFFFFFF;
 
   // Reenable module
-  FLEXCAN1_MCR &= ~(FLEXCAN_MCR_HALT | FLEXCAN_MCR_FRZ);
+  CAN1->MCR &= ~(CAN_MCR_HALT(1) | CAN_MCR_FRZ(1));
 
-  while (FLEXCAN1_MCR & FLEXCAN_MCR_FRZACK); 
+  while (CAN1->MCR & CAN_MCR_FRZACK(1)); 
   
-  FLEXCAN1_MCR &= ~FLEXCAN_MCR_MDIS;
+  CAN1->MCR &= ~CAN_MCR_MDIS(1);
 }
 
 int canfd_send() {}

@@ -1,8 +1,8 @@
 #ifndef CAN_FD_H
 #define CAN_FD_H
 
-#include "imxrt.h" 
 #include <stdint.h>
+#include "MIMXRT1062.h"
 
 
 #ifdef __cplusplus
