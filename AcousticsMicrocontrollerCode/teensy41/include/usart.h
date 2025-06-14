@@ -1,8 +1,10 @@
 #ifndef USART_H
 #define USART_H
 
-#include "imxrt.h"
 #include <stdint.h>
+#include "MIMXRT1062.h"
+#include "PERI_LPUART.h"
+#include "MIMXRT1062_COMMON.h"
 
 #ifdef __cplusplus
 

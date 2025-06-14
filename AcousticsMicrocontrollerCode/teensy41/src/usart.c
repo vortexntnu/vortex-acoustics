@@ -1,5 +1,5 @@
 #include "usart.h"
-#include "imxrt.h"
+#include "PERI_LPUART.h"
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -14,32 +14,26 @@ uint16_t tx_tail, tx_head;
 
 void uart1_init(void) {
 
-  CCM_CCGR5 |= CCM_CCGR5_LPUART1(1);
-
+  CCM->CCGR5 |= CCM_CCGR5_CG12(0x3);
   /* UART1_TX on pin 1 = GPIO_AD_B0_12 (ALT3) */
-  IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B0_12 = 3;
-  IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_12 = 0x10B0;
+  // needs pin config
 
-  /* UART1_RX on pin 0 = GPIO_AD_B0_13 (ALT3) */
-  IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B0_13 = 3;
-  IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_13 = 0x10B0;
 
-  LPUART1_BAUD = (43 << 0)     /* SBR[12:0] */
-                 | (13 << 16); /* BRFA[4:0] */
-
-  LPUART1_CTRL |=
-      LPUART_CTRL_RE | LPUART_CTRL_TE | LPUART_CTRL_RIE | LPUART_CTRL_TIE;
+  LPUART1->BAUD |= (43 << 0)     /* SBR[12:0] */
+                   | (13 << 16); /* BRFA[4:0] */
+  LPUART1->CTRL |=
+      LPUART_CTRL_RE(1) | LPUART_CTRL_TE(1) | LPUART_CTRL_RIE(1) | LPUART_CTRL_TIE(1);
 }
 
 static void enqueue_tx(const char *buf, int len) {
-    for (int i = 0; i < len; i++) {
-        uint16_t next = (tx_head + 1) % UART1_TX_BUF_SIZE;
-        // while (next == tx_tail) {
-        // }
-        tx_buf[tx_head] = buf[i];
-        tx_head = next;
-    }
-    LPUART1_CTRL |= LPUART_CTRL_TIE;
+  for (int i = 0; i < len; i++) {
+    uint16_t next = (tx_head + 1) % UART1_TX_BUF_SIZE;
+    // while (next == tx_tail) {
+    // }
+    tx_buf[tx_head] = buf[i];
+    tx_head = next;
+  }
+  LPUART1->CTRL |= LPUART_CTRL_TIE(1);
 }
 
 void uart1_printf(const char *fmt, ...) {
@@ -59,7 +53,7 @@ void uart1_send_byte(uint8_t c) {
   }
   tx_buf[tx_head] = c;
   tx_head = next;
-  LPUART1_CTRL |= LPUART_CTRL_TIE;
+  LPUART1->CTRL |= LPUART_CTRL_TIE(1);
 }
 
 /* Called by application to get a received byte (or -1 if none) */
@@ -72,10 +66,10 @@ int uart1_read_byte(void) {
 }
 
 void __attribute__((used)) LPUART1_IRQHandler(void) {
-  uint32_t status = LPUART1_STAT;
+  uint32_t status = LPUART1->STAT;
 
-  if (status & LPUART_STAT_RDRF) { 
-    uint8_t c = (uint8_t)LPUART1_DATA;
+  if (status & LPUART_STAT_RDRF(1)) {
+    uint8_t c = (uint8_t)LPUART1->DATA;
     uint16_t next = (rx_head + 1) % UART1_RX_BUF_SIZE;
     if (next != rx_tail) {
       rx_buf[rx_head] = c;
@@ -84,12 +78,12 @@ void __attribute__((used)) LPUART1_IRQHandler(void) {
     // else overflow: drop byte
   }
 
-  if (status & LPUART_STAT_TDRE) { // TDRE = bit 23
+  if (status & LPUART_STAT_TDRE(1)) { // TDRE = bit 23
     if (tx_tail != tx_head) {
-      LPUART1_DATA = tx_buf[tx_tail];
+      LPUART1->DATA = tx_buf[tx_tail];
       tx_tail = (tx_tail + 1) % UART1_TX_BUF_SIZE;
     } else {
-      LPUART1_CTRL &= ~(LPUART_CTRL_TIE); // clear TIE
+      LPUART1->CTRL &= ~(LPUART_CTRL_TIE(1)); // clear TIE
     }
   }
 }
