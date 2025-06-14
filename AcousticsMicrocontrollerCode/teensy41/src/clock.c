@@ -18,7 +18,7 @@ void clock_setup() {
 
 // #ifndef OSCILLOSCOPE_DEBUG
     // Setup Peripheral Clock
-    CCM->CMBMR |= CCM_CBCMR_PRE_PERIPH_CLK_SEL(3)
+    CCM->CBCMR |= CCM_CBCMR_PRE_PERIPH_CLK_SEL(3);
     // derive Peripheral from Pre-Peripheral Clock
     CCM->CBCDR &= ~CCM_CBCDR_PERIPH_CLK_SEL(3); // Select clock from PRE_PERIPH_CLK_SEL
     CCM->CBCDR |= CCM_CBCDR_AHB_PODF(0);     // divide /1 -> AHB Clock

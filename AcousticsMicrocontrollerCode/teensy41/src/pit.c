@@ -52,10 +52,10 @@ void pit_setup() {
 
     // PIT can only be used through this interface, because the ISR is defined here
     // it is anyway very unlikely that some library uses PIT (exept for DMA, be careful)
-    PIT->CHANNEL[0].TCRL = 0;
-    PIT->CHANNEL[1].TCRL = 0;
-    PIT->CHANNEL[2].TCRL = 0;
-    PIT->CHANNEL[3].TCRL = 0;
+    PIT->CHANNEL[0].TCTRL = 0;
+    PIT->CHANNEL[1].TCTRL = 0;
+    PIT->CHANNEL[2].TCTRL = 0;
+    PIT->CHANNEL[3].TCTRL = 0;
 
     // all PIT interrupts are grouped into one IRQ
     // attachInterruptVector(PIT_IRQn, ISR);

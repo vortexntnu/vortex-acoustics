@@ -3,6 +3,7 @@
 #include "clock.h"
 #include "pit.h"
 
+const uint32_t ADC_reg_config = (1 << CONFIG_WRITE_EN) | (1 << CONFIG_PD_D) | (1 << CONFIG_REFEN) | (0x3FF << CONFIG_REFDAC) | (1 << CONFIG_VREF);
 
 /*
 *---- from ADC datasheet -----

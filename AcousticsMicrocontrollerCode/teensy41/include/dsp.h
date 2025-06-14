@@ -43,7 +43,6 @@
 #define BIT_REVERSE 1 
 #define IFFT_FLAG 0
 // Coefficients for 430kHz sampling and 50kHz cut-off
-const float32_t sos_floats[NUM_STAGES][6] = {{0.00802494, 0.01604989, 0.00802494, 1, -0.92145, 0.23722397}, {1, 2, 1, 1, -1.18653637, 0.59315345}};
 
 
 #ifdef __cplusplus
@@ -60,8 +59,8 @@ extern q15_t fft_results_magnified[SAMPLE_LENGTH];
 extern size_t num_peaks;
 
 
-void filter_butterworth_4th_order_init(void); 
 
+void filter_butterwort_4th_order_init(void); 
 /**
 * @brief checks if signal with set frequency is found in current sample
 * @param buffer_to_check Which adc buffer to check

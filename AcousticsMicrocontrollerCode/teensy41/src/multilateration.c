@@ -1,8 +1,23 @@
 #include "multilateration.h"
+#include <stdint.h>
 
 
 float32_t timeDifferenceOfArrival[TDOA_DATA_LENGTH]; // time difference for hydrophone 1, 2, 3, 4, 5 [s]
 float32_t soundLocation[POSITION_DATA_LENGTH];       // X, Y, Z [m]
+//
+//
+//
+const float32_t SOUND_SPEED = 1480.0; //[m/s]
+const int SAMPLING_FREQ = 300000;     //[Hz]
+
+// OBS: use same x, y, z system as autonomous
+const float32_t hydrophonePositions[NUM_HYDROPHONES][NUM_DIMENSIONS] = {
+    {-0.11f, 0.31f, 0.10f}, // Hydrophone 0: {x, y, z}
+    {0.11f, 0.31f, 0.10f},  // Hydrophone 1: {x, y, z}
+    {0.0f, -0.24f, 0.0f},   // Hydrophone 2: {x, y, z}
+    {0.5f, -0.1f, 0.4f},    // Hydrophone 3: {x, y, z}
+    {0.4f, 0.0f, -0.4f}     // Hydrophone 4: {x, y, z}
+};
 
 
 // Helper function for squaring a number.
@@ -80,7 +95,7 @@ int find_pinger_position(){
     timeDifferenceOfArrival[0] = 0;
     q15_t correlation_array[MAX_LAG];
     q15_t max_number;
-    size_t peak_index;
+    uint32_t peak_index;
 
     for (int i = 1; i < NUM_HYDROPHONES; i++) {
         arm_correlate_q15(samples_raw_hydrophones[0], RAW_HYDROPHONE_SIZE, samples_raw_hydrophones[i], RAW_HYDROPHONE_SIZE, correlation_array);

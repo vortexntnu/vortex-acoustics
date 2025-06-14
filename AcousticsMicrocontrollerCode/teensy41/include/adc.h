@@ -1,7 +1,6 @@
 #ifndef ADC_H
 #define ADC_H
 
-#define CPU_MIMXRT1062DVJ6B
 
 #include "MIMXRT1062.h"
 #include "MIMXRT1062_COMMON.h"
@@ -106,7 +105,6 @@ extern "C" {
 
 #endif // __cplusplus
 
-const uint32_t ADC_reg_config = (1 << CONFIG_WRITE_EN) | (1 << CONFIG_PD_D) | (1 << CONFIG_REFEN) | (0x3FF << CONFIG_REFDAC) | (1 << CONFIG_VREF);
 
 extern time_buff_3_1024 timestamps;
 
