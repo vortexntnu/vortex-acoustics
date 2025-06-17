@@ -1,4 +1,6 @@
 #include "usart.h"
+#include "MIMXRT1062.h"
+#include "MIMXRT1062_COMMON.h"
 #include "PERI_LPUART.h"
 #include <stdarg.h>
 #include <stdint.h>
@@ -6,23 +8,36 @@
 
 #define UART1_RX_BUF_SIZE 128
 #define UART1_TX_BUF_SIZE 128
+#define LPUART_CLOCK 600000
 
 uint8_t rx_buf[UART1_RX_BUF_SIZE];
 uint8_t tx_buf[UART1_TX_BUF_SIZE];
 uint16_t rx_tail, rx_head;
 uint16_t tx_tail, tx_head;
 
-void uart1_init(void) {
+void uart1_init(uint32_t baud) {
 
   CCM->CCGR5 |= CCM_CCGR5_CG12(0x3);
   /* UART1_TX on pin 1 = GPIO_AD_B0_12 (ALT3) */
   // needs pin config
 
 
+
+  LPUART1->CTRL &= ~(LPUART_CTRL_TE_MASK | LPUART_CTRL_RE_MASK);
+
+  uint32_t osr = 15; // 16x oversampling
+  uint32_t sbr = LPUART_CLOCK / ((osr + 1) * baud);
+  uint32_t remainder = LPUART_CLOCK - (baud * (osr + 1) * sbr);
+
+  LPUART1->BAUD =
+      LPUART_BAUD_OSR(osr) | LPUART_BAUD_SBR(sbr);
   LPUART1->BAUD |= (43 << 0)     /* SBR[12:0] */
                    | (13 << 16); /* BRFA[4:0] */
-  LPUART1->CTRL |=
-      LPUART_CTRL_RE(1) | LPUART_CTRL_TE(1) | LPUART_CTRL_RIE(1) | LPUART_CTRL_TIE(1);
+  LPUART1->CTRL |= LPUART_CTRL_RE(1) | LPUART_CTRL_TE(1) | LPUART_CTRL_RIE(1) |
+                   LPUART_CTRL_TIE(1);
+
+  NVIC_SetPriority(LPUART1_IRQn, 2);
+  NVIC_EnableIRQ(LPUART1_IRQn);
 }
 
 static void enqueue_tx(const char *buf, int len) {
@@ -75,15 +90,14 @@ void __attribute__((used)) LPUART1_IRQHandler(void) {
       rx_buf[rx_head] = c;
       rx_head = next;
     }
-    // else overflow: drop byte
   }
 
-  if (status & LPUART_STAT_TDRE(1)) { // TDRE = bit 23
+  if (status & LPUART_STAT_TDRE(1)) {
     if (tx_tail != tx_head) {
       LPUART1->DATA = tx_buf[tx_tail];
       tx_tail = (tx_tail + 1) % UART1_TX_BUF_SIZE;
     } else {
-      LPUART1->CTRL &= ~(LPUART_CTRL_TIE(1)); // clear TIE
+      LPUART1->CTRL &= ~(LPUART_CTRL_TIE(1));
     }
   }
 }
