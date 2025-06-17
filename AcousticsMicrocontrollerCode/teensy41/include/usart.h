@@ -12,7 +12,7 @@ extern "C" {
 
 #endif // __cplusplus
 
-void uart1_init(void);
+void uart1_init(uint32_t baud);
 
 void uart1_prinft(const char *fmt, ...);
 
