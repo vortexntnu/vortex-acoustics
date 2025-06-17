@@ -87,6 +87,8 @@ C_SRCS := \
     src/pit.c \
     src/clock.c \
     src/multilateration.c \
+		src/can_fd.c \
+		src/usart.c \
 		$(SDK_ROOT)/system_MIMXRT1062.c \
 		$(DSP_SRC)
 
