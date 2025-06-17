@@ -11,41 +11,37 @@
 
 static void (*isr_funct_table[4])(void) __attribute((aligned(32))) = {NULL, NULL, NULL, NULL};
 
-#ifdef SERIAL_DEBUG
-#endif
 
-// void ISR() {
-//     NVIC_DisableIRQ(PIT_IRQn);
-//     PIT->CHANNEL[0] PIT_TFLG_TIF(0x1);
-//
-//     if (PIT_TFLG0 && isr_funct_table[0] != NULL) { // bit 0 of this register: interupt pending
-//         PIT_TFLG0 = 0x1;
-//         // Serial.println("0");
-//         //(*isr_periodic_func3)();
-//         (*isr_funct_table[0])();
-//     }
-//     // making sure it is not an empty pointer that would crash the programm
-//     else if (PIT_TFLG3 && isr_funct_table[3] != NULL) { // bit 0 of this register: interupt pending
-//         PIT_TFLG3 = 0x1;
-//         //(*isr_periodic_func3)();
-//         (*isr_funct_table[3])();
-//     }
-//
-//     else if (PIT_TFLG2 && isr_funct_table[2] != NULL) { // bit 0 of this register: interupt pending
-//         PIT_TFLG2 = 0x1;
-//         //(*isr_periodic_func3)();
-//         (*isr_funct_table[2])();
-//     }
-//
-//     else if (PIT_TFLG1 && isr_funct_table[1] != NULL) { // bit 0 of this register: interupt pending
-//         PIT_TFLG1 = 0x1;
-//         //(*isr_periodic_func3)();
-//         // Serial.println("1");
-//         (*isr_funct_table[1])();
-//     }
-//
-//     NVIC_EnableIRQ(PIT_IRQn);
-// }
+void __attribute__((used)) PIT_IRQHandler() {
+    NVIC_DisableIRQ(PIT_IRQn);
+    PIT->CHANNEL[0].TFLG = PIT_TFLG_TIF(0x1);
+
+    if (PIT->CHANNEL[0].TFLG && isr_funct_table[0] != NULL) { // bit 0 of this register: interupt pending
+        PIT->CHANNEL[0].TFLG = 0x1;
+        //(*isr_periodic_func3)();
+        (*isr_funct_table[0])();
+    }
+    // making sure it is not an empty pointer that would crash the programm
+    else if (PIT->CHANNEL[3].TFLG && isr_funct_table[3] != NULL) { // bit 0 of this register: interupt pending
+        PIT->CHANNEL[3].TFLG = 0x1;
+        //(*isr_periodic_func3)();
+        (*isr_funct_table[3])();
+    }
+
+    else if (PIT->CHANNEL[2].TFLG && isr_funct_table[2] != NULL) { // bit 0 of this register: interupt pending
+        PIT->CHANNEL[2].TFLG = 0x1;
+        //(*isr_periodic_func3)();
+        (*isr_funct_table[2])();
+    }
+
+    else if (PIT->CHANNEL[1].TFLG && isr_funct_table[1] != NULL) { // bit 0 of this register: interupt pending
+        PIT->CHANNEL[1].TFLG = 0x1;
+        //(*isr_periodic_func3)();
+        (*isr_funct_table[1])();
+    }
+
+    NVIC_EnableIRQ(PIT_IRQn);
+}
 
 void pit_setup() {
     PIT->MCR &= ~PIT_MCR_MDIS(1);
