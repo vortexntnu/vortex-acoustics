@@ -197,20 +197,6 @@ void read_loop() {
 }
 
 void adc_init() {
-  // ! commented because we test with using the fast pins
-  // set_normal_GPIO(1 << adc::_WR, _WR_GPIO_PORT_NORMAL->;
-  // set_normal_GPIO(1 << adc::_RD, _RD_GPIO_PORT_NORMAL->;
-  // set_normal_GPIO(1 << adc::_CS, _CS_GPIO_PORT_NORMAL->;
-  // set_normal_GPIO(1 << adc::BUSYINT, BUSYINT_GPIO_PORT_NORMAL->;
-  // set_normal_GPIO(1 << adc::HWSW, HWSW_GPIO_PORT_NORMAL->;
-  // set_normal_GPIO(1 << adc::PARSER, PARSER_GPIO_PORT_NORMAL->;
-  // set_normal_GPIO(1 << adc::XCLK, XCLK_GPIO_PORT_NORMAL->;
-  // set_normal_GPIO(1 << adc::STBY, STBY_GPIO_PORT_NORMAL->;
-  // set_normal_GPIO(1 << adc::CONVST, CONVST_GPIO_PORT_NORMAL->;
-  // set_normal_GPIO(1 << adc::RESET, RESET_GPIO_PORT_NORMAL->;
-
-  // set_normal_GPIO(0xFFFF0000, DB_GPIO_PORT_NORMAL->;
-
   // BUSYINT as input
   BUSYINT_GPIO_PORT_NORMAL->GDIR &= (1 << BUSYINT);
   // * no need, will be done in built-in interrupt function
@@ -386,13 +372,10 @@ void adc_trigger_conversion() {
   // clk_cyc = ARM_DWT_CYCCNT;
 }
 
-// should only be triggered by gpio7
 void __attribute__((used)) GPIO6_7_8_9_IRQHandler(void) {
   uint32_t status = GPIO7->ISR & 0xFFFF;
-  if (status & (1u << 12)) {
-    // Clear flag
-    GPIO7->ISR = (1u << 12);
-    // Handle event: e.g., call user callback
+  if (status & (1u << BUSYINT)) {
+    GPIO7->ISR = (1u << BUSYINT);
     read_loop();
   }
 }
