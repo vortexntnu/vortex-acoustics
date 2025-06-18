@@ -248,7 +248,7 @@ void adc_init() {
 
   adc_config(ADC_reg_config);
 
-  clock_setup(); /// the clockfrequency needs to be defined somewhere, does it
+  clock_init(); /// the clockfrequency needs to be defined somewhere, does it
                  /// need to be called also if adc is not init()
   pit_setup();
 

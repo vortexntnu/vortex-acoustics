@@ -1,22 +1,41 @@
 #ifndef CLOCK_H
 #define CLOCK_H
 
-
 #include "MIMXRT1062.h"
 #include "MIMXRT1062_COMMON.h"
 #include "PERI_CCM.h"
 #include <stdint.h>
-#ifdef SERIAL_DEBUG
-#endif
 
-/// @brief to activate the clock_ADC
-extern uint32_t PITclockFreq; //// init in the .cpp but no values given !!!
-void dumpClockRegisters();
-void clock_setup();
+#define CPU_CLOCK 150000000
 
-// clockcycles for microseconds to use in the PITs
+#ifdef __cplusplus
+
+extern "C" {
+
+#endif // __cplusplus
+
+
+/**
+ *@brief Initializes clock
+ */
+void clock_init();
+
+/**
+*@brief Converts microseconds to clockcycles
+*@param microseconds time in microseconds
+*@return time in clockcycles
+*/
 uint32_t get_clockcycles_micro(float microseconds);
-// clockcycles for nanoseconds to use in the PITs
+
+/**
+*@brief Converts nanoseconds to clockcycles
+*@param nanoseconds time in microseconds
+*@return time in clockcycles
+*/
 uint32_t get_clockcycles_nano(float nanoseconds);
+
+#ifdef __cplusplus
+}
+#endif // __cplusplus
 
 #endif
