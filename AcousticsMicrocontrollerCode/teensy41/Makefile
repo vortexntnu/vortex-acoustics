@@ -16,6 +16,7 @@ SDK_ROOT := $(HOME)/mcuxpressosdk/mcuxpresso-sdk/mcuxsdk/devices/RT/RT1060/MIMXR
 PERIPH := $(HOME)/mcuxpressosdk/mcuxpresso-sdk/mcuxsdk/devices/RT/RT1060/periph
 CMSIS :=  $(HOME)/mcuxpressosdk/mcuxpresso-sdk/mcuxsdk/arch/arm/CMSIS
 CMSIS_DSP_SRC_DIR := $(CMSIS)/DSP/Source
+SDK_DRIVERS := $(HOME)/mcuxpressosdk/mcuxpresso-sdk/mcuxsdk/drivers
 
 DSP_BASIC_MATH    := $(CMSIS_DSP_SRC_DIR)/BasicMathFunctions/BasicMathFunctions.c
 DSP_COMPLEX       := $(CMSIS_DSP_SRC_DIR)/ComplexMathFunctions/ComplexMathFunctions.c
@@ -42,7 +43,8 @@ INCLUDES := \
     -I$(PERIPH)/\
     -I$(CMSIS)/Core/Include\
     -I$(CMSIS)/DSP/Include \
-    -I$(CMSIS)/DSP/PrivateInclude
+    -I$(CMSIS)/DSP/PrivateInclude \
+		-I$(SDK_DRIVERS)/flexcan
 
 CFLAGS := $(CPU_FLAGS) $(INCLUDES) -ffunction-sections -fdata-sections
 

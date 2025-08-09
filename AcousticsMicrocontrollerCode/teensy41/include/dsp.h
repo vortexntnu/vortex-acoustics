@@ -31,7 +31,6 @@
 #define fOrder 9
 #define fOrder2 2
 
-// Globals or #defines (set these once):
 #define Fs 50000.0f       // sample rate
 #define N SAMPLE_LENGTH   // FFT length
 #define f_ping 12000.0f   // your target ping freq in Hz
