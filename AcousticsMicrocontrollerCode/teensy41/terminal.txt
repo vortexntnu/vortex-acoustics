@@ -1,0 +1,13 @@
+ rm -rf build                                                                                      6s   mcu
+export ARMGCC_DIR="$(dirname "$(dirname "$(which arm-none-eabi-gcc)")")"
+
+cmake -S . -B build \
+  -G "Unix Makefiles" \
+  -DSdkRootDirPath="$HOME/mcuxpressosdk/mcuxpresso-sdk/mcuxsdk" \
+  -Ddevice=MIMXRT1062 \
+  -Dcore_id=cm7 \
+  -DCONFIG_TOOLCHAIN=armgcc \
+  -DARMGCC_DIR="$ARMGCC_DIR" \
+  -DCMAKE_BUILD_TYPE=debug \   -Dboard_root="devices/RT/RT1060" \
+  -Dboard="evkbmimxrt1060"
+cmake --build build
