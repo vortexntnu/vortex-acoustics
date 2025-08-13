@@ -48,14 +48,14 @@ mcux_add_source(
 # )
 
 # Linker script (FlexSPI NOR). Adjust if your SDK uses a different name.
-set(_ld_dir "${SdkRootDirPath}/devices/RT/RT1060/MIMXRT1062/gcc")
-if(EXISTS "${_ld_dir}/MIMXRT1062xxxxx_flexspi_nor.ld")
-  mcux_add_macro(LD "-T${_ld_dir}/MIMXRT1062xxxxx_flexspi_nor.ld")
-elseif(EXISTS "${_ld_dir}/i_nor.ld")
-  mcux_add_macro(LD "-T${_ld_dir}/i_nor.ld")
-else()
-  message(FATAL_ERROR "No suitable linker script found in ${_ld_dir}")
-endif()
+# set(_ld_dir "${SdkRootDirPath}/devices/RT/RT1060/MIMXRT1062/gcc")
+# if(EXISTS "${_ld_dir}/MIMXRT1062xxxxx_flexspi_nor.ld")
+#   mcux_add_macro(LD "-T${_ld_dir}/MIMXRT1062xxxxx_flexspi_nor.ld")
+# elseif(EXISTS "${_ld_dir}/i_nor.ld")
+#   mcux_add_macro(LD "-T${_ld_dir}/i_nor.ld")
+# else()
+#   message(FATAL_ERROR "No suitable linker script found in ${_ld_dir}")
+# endif()
 
 # Optional: extra driver/source globs if you want to pull from SDK directly
 # (only if you need them and they aren't auto-pulled by prj.conf defaults)

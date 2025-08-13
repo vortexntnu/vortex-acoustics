@@ -1,4 +1,4 @@
- rm -rf build                                                                                      6s   mcu
+rm -rf build                                                                                      6s   mcu
 export ARMGCC_DIR="$(dirname "$(dirname "$(which arm-none-eabi-gcc)")")"
 
 cmake -S . -B build \
