@@ -19,6 +19,16 @@ set(CONFIG_MCUX_COMPONENT_utility.debug_console_template_config TRUE CACHE BOOL 
 set(CONFIG_MCUX_COMPONENT_component.serial_manager TRUE CACHE BOOL "" FORCE)
 set(CONFIG_MCUX_COMPONENT_component.serial_manager TRUE CACHE BOOL "" FORCE)
 set(CONFIG_MCUX_COMPONENT_component.serial_manager_usb_cdc TRUE CACHE BOOL "" FORCE)
+set(CONFIG_MCUX_COMPONENT_component.lists TRUE CACHE BOOL "" FORCE) 
+
+set(CONFIG_MCUX_COMPONENT_component.osa_template_config TRUE CACHE BOOL "" FORCE)
+set(CONFIG_MCUX_COMPONENT_component.osa_bm TRUE CACHE BOOL "" FORCE)
+set(CONFIG_MCUX_COMPONENT_middleware.usb.common_header TRUE CACHE BOOL "" FORCE)
+set(CONFIG_MCUX_COMPONENT_middleware.usb.device.common_header TRUE CACHE BOOL "" FORCE)
+
+set(CONFIG_MCUX_COMPONENT_middleware.usb.device.cdc TRUE CACHE BOOL "" FORCE)
+
+set(CONFIG_MCUX_COMPONENT_middleware.usb.phy TRUE CACHE BOOL "" FORCE)
 
 # Device-only project (no board path)
 project(teensy41 LANGUAGES C ASM)
@@ -33,10 +43,13 @@ set(core_id "cm7"           CACHE STRING "" FORCE)
 # Use your own project root as BASE_PATH for convenience
 
 mcux_add_cmakelists(${SdkRootDirPath}/${device_root}/${soc_portfolio}/${soc_series}/${device})
+mcux_add_cmakelists(${SdkRootDirPath}/components)
 mcux_add_cmakelists(${SdkRootDirPath}/arch/arm/CMSIS)
-mcux_add_cmakelists(${SdkRootDirPath}/components/debug_console)
-mcux_add_cmakelists(${SdkRootDirPath}/components/str)
-mcux_add_cmakelists(${SdkRootDirPath}/components/serial_manager)
+mcux_add_cmakelists(${SdkRootDirPath}/middleware/usb)
+# mcux_add_cmakelists(${SdkRootDirPath}/components/debug_console)
+# mcux_add_cmakelists(${SdkRootDirPath}/components/lists)
+# mcux_add_cmakelists(${SdkRootDirPath}/components/str)
+# mcux_add_cmakelists(${SdkRootDirPath}/components/serial_manager)
 mcux_load_all_cmakelists_in_directory(${SdkRootDirPath}/drivers)
 
 mcux_add_include(
