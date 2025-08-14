@@ -10,6 +10,16 @@ set(SdkRootDirPath "$ENV{HOME}/mcuxpressosdk/mcuxpresso-sdk/mcuxsdk" CACHE PATH 
 # Pull in NXP CMake extensions (defines mcux_add_source/mcux_add_include/etc.)
 include(${SdkRootDirPath}/cmake/extension/mcux.cmake)
 
+set(CONFIG_TOOLCHAIN "armgcc" CACHE STRING "" FORCE)
+set(CONFIG_MCUX_PRJSEG_module.board OFF CACHE BOOL "" FORCE)
+set(CONFIG_MCUX_PRJSEG_module.board.pinmux_project_folder OFF CACHE BOOL "" FORCE)
+set(CONFIG_MCUX_COMPONENT_CMSIS_DSP_Include TRUE CACHE BOOL "" FORCE)
+set(CONFIG_MCUX_COMPONENT_utility.debug_console TRUE CACHE BOOL "" FORCE) 
+set(CONFIG_MCUX_COMPONENT_utility.debug_console_template_config TRUE CACHE BOOL "" FORCE)
+set(CONFIG_MCUX_COMPONENT_component.serial_manager TRUE CACHE BOOL "" FORCE)
+set(CONFIG_MCUX_COMPONENT_component.serial_manager TRUE CACHE BOOL "" FORCE)
+set(CONFIG_MCUX_COMPONENT_component.serial_manager_usb_cdc TRUE CACHE BOOL "" FORCE)
+
 # Device-only project (no board path)
 project(teensy41 LANGUAGES C ASM)
 
@@ -17,16 +27,22 @@ project(teensy41 LANGUAGES C ASM)
 # (We pass them on the cmake command line too; setting here helps for IDEs.)
 set(device  "MIMXRT1062"   CACHE STRING "" FORCE)
 set(core_id "cm7"           CACHE STRING "" FORCE)
-set(CONFIG_TOOLCHAIN "armgcc" CACHE STRING "" FORCE)
-
 # Bring in the SDK’s top-level CMake so device/drivers can be found
-include(${SdkRootDirPath}/CMakeLists.txt)
 
 # ---- Your sources / includes (extension-style) ----
 # Use your own project root as BASE_PATH for convenience
+
+mcux_add_cmakelists(${SdkRootDirPath}/${device_root}/${soc_portfolio}/${soc_series}/${device})
+mcux_add_cmakelists(${SdkRootDirPath}/arch/arm/CMSIS)
+mcux_add_cmakelists(${SdkRootDirPath}/components/debug_console)
+mcux_add_cmakelists(${SdkRootDirPath}/components/str)
+mcux_add_cmakelists(${SdkRootDirPath}/components/serial_manager)
+mcux_load_all_cmakelists_in_directory(${SdkRootDirPath}/drivers)
+
 mcux_add_include(
   BASE_PATH ${CMAKE_SOURCE_DIR}
   INCLUDES include
+           board
 )
 
 mcux_add_source(
@@ -37,6 +53,9 @@ mcux_add_source(
           src/pit.c
           src/clock.c
           src/multilateration.c
+          board/board.c
+          board/clock_config.c
+          board/dcd.c
 )
 
 # CPU flags + newlib stubs for bare-metal
