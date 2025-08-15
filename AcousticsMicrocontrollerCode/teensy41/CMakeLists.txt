@@ -33,6 +33,11 @@ set(CONFIG_MCUX_COMPONENT_middleware.usb.device.common_header TRUE CACHE BOOL ""
 
 set(CONFIG_MCUX_COMPONENT_middleware.usb.device.cdc TRUE CACHE BOOL "" FORCE)
 
+set(CONFIG_MCUX_COMPONENT_middleware.usb.device.ehci TRUE)
+# set(CONFIG_MCUX_COMPONENT_middleware.usb.device.ehci_config_header TRUE)
+
+set(CONFIG_MCUX_COMPONENT_middleware.usb.device.controller.driver TRUE)
+
 set(CONFIG_MCUX_COMPONENT_middleware.usb.phy TRUE CACHE BOOL "" FORCE)
 
 # Device-only project (no board path)
@@ -100,6 +105,10 @@ mcux_add_source(
 #   BASE_PATH ${SdkRootDirPath}
 #   SOURCES drivers/common/*.c drivers/clock/*.c drivers/iomuxc/*.c drivers/igpio/*.c drivers/lpuart/*.c
 # )
+set(_ld_dir "${SdkRootDirPath}/devices/RT/RT1060/MIMXRT1062/gcc")
+target_link_options(teensy41 PRIVATE
+  "-T${_ld_dir}/MIMXRT1062xxxxx_flexspi_nor.ld"
+)
 
 # Produce .bin alongside the .elf
 mcux_convert_binary(BINARY ${APPLICATION_BINARY_DIR}/${MCUX_SDK_PROJECT_NAME}.bin)
