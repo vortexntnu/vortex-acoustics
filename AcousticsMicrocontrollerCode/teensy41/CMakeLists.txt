@@ -14,8 +14,13 @@ set(CONFIG_TOOLCHAIN "armgcc" CACHE STRING "" FORCE)
 set(CONFIG_MCUX_PRJSEG_module.board OFF CACHE BOOL "" FORCE)
 set(CONFIG_MCUX_PRJSEG_module.board.pinmux_project_folder OFF CACHE BOOL "" FORCE)
 set(CONFIG_MCUX_COMPONENT_CMSIS_DSP_Include TRUE CACHE BOOL "" FORCE)
-set(CONFIG_MCUX_COMPONENT_utility.debug_console TRUE CACHE BOOL "" FORCE) 
-set(CONFIG_MCUX_COMPONENT_utility.debug_console_template_config TRUE CACHE BOOL "" FORCE)
+set(CONFIG_MCUX_COMPONENT_CMSIS_DSP_Source TRUE CACHE BOOL "" FORCE)
+# set(CONFIG_MCUX_COMPONENT_utility.debug_console TRUE CACHE BOOL "" FORCE) 
+# set(CONFIG_MCUX_COMPONENT_utility.debug_console_template_config TRUE CACHE BOOL "" FORCE)
+
+
+set(CONFIG_MCUX_COMPONENT_utility.debug_console_lite TRUE CACHE BOOL "" FORCE)
+
 set(CONFIG_MCUX_COMPONENT_component.serial_manager TRUE CACHE BOOL "" FORCE)
 set(CONFIG_MCUX_COMPONENT_component.serial_manager TRUE CACHE BOOL "" FORCE)
 set(CONFIG_MCUX_COMPONENT_component.serial_manager_usb_cdc TRUE CACHE BOOL "" FORCE)
