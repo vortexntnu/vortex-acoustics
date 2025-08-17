@@ -3,16 +3,11 @@
 #ifndef ACOUSTICS_INTERFACE_DRIVER_HPP
 #define ACOUSTICS_INTERFACE_DRIVER_HPP
 
-
 #ifdef __cplusplus
 
-extern "C"{
-
-
+extern "C" {
 
 #endif
-
-
 
 #include <arpa/inet.h>
 #include <assert.h>
@@ -28,7 +23,7 @@ extern "C"{
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
-
+    
 
 #define SAMPLE_LENGTH 1024
 #define BUFFER_PER_CHANNEL 6
@@ -49,18 +44,17 @@ extern "C"{
 #define INITIALIZATION_MESSAGE "HELLO :D"
 #define NUM_FREQ_INTERESTS 10
 
-typedef struct {
-  int frequency;
-  int variance;
-} FrequencyInterest;
+struct FrequencyInterest {
+    int frequency;
+    int variance;
+};
 
-typedef struct {
-  int client_socket;
-  struct sockaddr_in teensy_addr;
-  struct sockaddr_in my_addr;
-  char data_string[1024];
-} TeensyCommunicationUDP;
-
+struct TeensyCommunicationUDP {
+    int client_socket;
+    struct sockaddr_in teensy_addr;
+    struct sockaddr_in my_addr;
+    char data_string[1024];
+};
 
 extern int16_t samples_raw_hydrophone1[RAW_HYDROPHONE_SIZE];
 extern int16_t samples_raw_hydrophone2[RAW_HYDROPHONE_SIZE];
@@ -72,23 +66,20 @@ extern int16_t fft_magnified[SAMPLE_LENGTH];
 extern float time_diff[5];
 extern float position[4];
 
-
-/* Function prototypes */
-char *get_local_ip(void);
-int init_communication(TeensyCommunicationUDP *comm, FrequencyInterest *freq,
+char* get_local_ip(void);
+int init_communication(struct TeensyCommunicationUDP* comm,
+                       struct FrequencyInterest* freq,
                        int freq_count);
-void send_acknowledge_signal(TeensyCommunicationUDP *comm);
-int check_if_ready(TeensyCommunicationUDP *comm);
-void send_frequencies_of_interest(TeensyCommunicationUDP *comm,
-                                  FrequencyInterest *freq, int freq_count);
-void fetch_data(TeensyCommunicationUDP *comm);
-
+void send_acknowledge_signal(struct TeensyCommunicationUDP* comm);
+int check_if_ready(struct TeensyCommunicationUDP* comm);
+void send_frequencies_of_interest(struct TeensyCommunicationUDP* comm,
+                                  struct FrequencyInterest* freq,
+                                  int freq_count);
+void fetch_data(struct TeensyCommunicationUDP* comm);
 
 #ifdef __cplusplus
-
 }
 
 #endif
 
-
-#endif // !ACOUSTICS_INTERFACE_DRIVER_HPP
+#endif  // !ACOUSTICS_INTERFACE_DRIVER_HPP

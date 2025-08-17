@@ -3,7 +3,6 @@
 #include "acoustics_interface_driver.h"
 #include <arpa/inet.h>
 #include <assert.h>
-#include <errno.h>
 #include <ifaddrs.h>
 #include <netdb.h>
 #include <netinet/in.h>
@@ -63,7 +62,7 @@ size_t array_byte_sizes[NUM_BUFFERS] = {
  * @param  size   Total size (in bytes) of that data.
  * @return        0 on success (all chunks sent), or −1 on socket error.
  */
-static int send_data_udp(TeensyCommunicationUDP* comm,
+static int send_data_udp(struct TeensyCommunicationUDP* comm,
                          void* data,
                          size_t size,
                          uint8_t sequence) {
@@ -123,8 +122,8 @@ char* get_local_ip() {
     return ip;
 }
 
-int init_communication(TeensyCommunicationUDP* comm,
-                       FrequencyInterest* freq,
+int init_communication(struct TeensyCommunicationUDP* comm,
+                       struct FrequencyInterest* freq,
                        int freq_count) {
     comm->client_socket = socket(AF_INET, SOCK_DGRAM, 0);
     if (comm->client_socket < 0) {
@@ -177,7 +176,7 @@ int init_communication(TeensyCommunicationUDP* comm,
     return 0;
 }
 
-void send_acknowledge_signal(TeensyCommunicationUDP* comm) {
+void send_acknowledge_signal(struct TeensyCommunicationUDP* comm) {
     int sent =
         sendto(comm->client_socket, INITIALIZATION_MESSAGE,
                strlen(INITIALIZATION_MESSAGE), 0,
@@ -189,7 +188,7 @@ void send_acknowledge_signal(TeensyCommunicationUDP* comm) {
     }
 }
 
-int check_if_ready(TeensyCommunicationUDP* comm) {
+int check_if_ready(struct TeensyCommunicationUDP* comm) {
     char buffer[1024] = {0};
     socklen_t addrlen = sizeof(comm->teensy_addr);
     int n = recvfrom(comm->client_socket, buffer, sizeof(buffer) - 1, 0,
@@ -204,8 +203,8 @@ int check_if_ready(TeensyCommunicationUDP* comm) {
     return 0;
 }
 
-void send_frequencies_of_interest(TeensyCommunicationUDP* comm,
-                                  FrequencyInterest* freq,
+void send_frequencies_of_interest(struct TeensyCommunicationUDP* comm,
+                                  struct FrequencyInterest* freq,
                                   int freq_count) {
     send_data_udp(comm, freq, freq_count, 1);
 }
@@ -244,7 +243,7 @@ int handle_data(const uint8_t* buf, uint32_t len) {
     return 0;
 }
 
-void fetch_data(TeensyCommunicationUDP* comm) {
+void fetch_data(struct TeensyCommunicationUDP* comm) {
     int attempts = 0;
     while (attempts < 1000) {
         socklen_t addrlen = sizeof(comm->teensy_addr);
