@@ -62,7 +62,7 @@ AcousticsInterfaceNode::AcousticsInterfaceNode() : Node("acoustics_interface") {
         this->get_parameter("acoustics.frequencies_of_interest")
             .as_integer_array();
 
-    FrequencyInterest frequencyInterest[NUM_FREQ_INTERESTS];
+    struct frequency_interest frequencyInterest[NUM_FREQ_INTERESTS];
     // Parse the parameters into a vector of frequency-variance pairs.
     for (size_t i = 0; i < freq_params.size(); i += 2) {
         frequencyInterest[i].frequency = freq_params[2 * i];

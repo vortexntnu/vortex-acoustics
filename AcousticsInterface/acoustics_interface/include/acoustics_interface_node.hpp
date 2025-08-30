@@ -21,7 +21,7 @@ public:
 private:
   void data_update();
   void data_publisher();
-  TeensyCommunicationUDP comm;
+  struct teensy_udp comm;
 
   // Publishers for acoustics topics
   rclcpp::Publisher<std_msgs::msg::Int32MultiArray>::SharedPtr hydrophone1_pub_;
