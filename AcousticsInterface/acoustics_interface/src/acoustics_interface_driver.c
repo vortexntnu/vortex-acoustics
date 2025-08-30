@@ -1,21 +1,6 @@
 
 
 #include "acoustics_interface_driver.h"
-#include <arpa/inet.h>
-#include <assert.h>
-#include <ifaddrs.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <time.h>
-#include <unistd.h>
 
 
 int16_t samples_raw_hydrophone1[RAW_HYDROPHONE_SIZE];

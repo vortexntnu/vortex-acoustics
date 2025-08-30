@@ -4,14 +4,12 @@
   <name>acoustics_interface</name>
   <version>1.0.0</version>
   <description>Communicates and gets data from acoustics PCB</description>
-  <maintainer email="karate.martynas1@gmail.com">vortex</maintainer>
+  <maintainer email="nathanif@stud.ntnu.no">vortex</maintainer>
   <license>MIT</license>
 
   <!-- Execution dependencies -->
-
   <depend>rclcpp</depend>
   <depend>std_msgs</depend>
-
 
   <!-- Export the build type as ament_cmake for CMake projects -->
   <export>

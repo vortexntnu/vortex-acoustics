@@ -1,12 +1,9 @@
 
-
 #ifndef ACOUSTICS_INTERFACE_DRIVER_HPP
 #define ACOUSTICS_INTERFACE_DRIVER_HPP
 
 #ifdef __cplusplus
-
 extern "C" {
-
 #endif
 
 #include <arpa/inet.h>
@@ -15,6 +12,8 @@ extern "C" {
 #include <ifaddrs.h>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -23,7 +22,6 @@ extern "C" {
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
-    
 
 #define SAMPLE_LENGTH 1024
 #define BUFFER_PER_CHANNEL 6
@@ -78,7 +76,6 @@ void fetch_data(struct teensy_udp* comm);
 
 #ifdef __cplusplus
 }
-
 #endif
 
 #endif  // !ACOUSTICS_INTERFACE_DRIVER_HPP
