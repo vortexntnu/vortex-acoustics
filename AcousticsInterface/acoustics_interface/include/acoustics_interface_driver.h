@@ -44,16 +44,15 @@ extern "C" {
 #define INITIALIZATION_MESSAGE "HELLO :D"
 #define NUM_FREQ_INTERESTS 10
 
-struct FrequencyInterest {
+struct frequency_interest {
     int frequency;
     int variance;
 };
 
-struct TeensyCommunicationUDP {
+struct teensy_udp {
     int client_socket;
     struct sockaddr_in teensy_addr;
     struct sockaddr_in my_addr;
-    char data_string[1024];
 };
 
 extern int16_t samples_raw_hydrophone1[RAW_HYDROPHONE_SIZE];
@@ -67,15 +66,15 @@ extern float time_diff[5];
 extern float position[4];
 
 char* get_local_ip(void);
-int init_communication(struct TeensyCommunicationUDP* comm,
-                       struct FrequencyInterest* freq,
+int init_communication(struct teensy_udp* comm,
+                       struct frequency_interest* freq,
                        int freq_count);
-void send_acknowledge_signal(struct TeensyCommunicationUDP* comm);
-int check_if_ready(struct TeensyCommunicationUDP* comm);
-void send_frequencies_of_interest(struct TeensyCommunicationUDP* comm,
-                                  struct FrequencyInterest* freq,
+void send_acknowledge_signal(struct teensy_udp* comm);
+int check_if_ready(struct teensy_udp* comm);
+void send_frequencies_of_interest(struct teensy_udp* comm,
+                                  struct frequency_interest* freq,
                                   int freq_count);
-void fetch_data(struct TeensyCommunicationUDP* comm);
+void fetch_data(struct teensy_udp* comm);
 
 #ifdef __cplusplus
 }

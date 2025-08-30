@@ -17,7 +17,6 @@
 #include <time.h>
 #include <unistd.h>
 
-uint8_t buffer[1500] = {0};
 
 int16_t samples_raw_hydrophone1[RAW_HYDROPHONE_SIZE];
 int16_t samples_raw_hydrophone2[RAW_HYDROPHONE_SIZE];
@@ -60,14 +59,17 @@ size_t array_byte_sizes[NUM_BUFFERS] = {
  * already set).
  * @param  data   Pointer to the raw data you want to ship.
  * @param  size   Total size (in bytes) of that data.
- * @return        0 on success (all chunks sent), or −1 on socket error.
+ * @return        0 on success (all chunks sent)
+ *               -1 on socket error.
  */
-static int send_data_udp(struct TeensyCommunicationUDP* comm,
+static int send_data_udp(struct teensy_udp* comm,
                          void* data,
                          size_t size,
                          uint8_t sequence) {
     uint8_t* raw = (uint8_t*)data;
     size_t offset = 0;
+
+    uint8_t buffer[1024];
 
     while (offset < size) {
         size_t chunk = size - offset;
@@ -75,14 +77,13 @@ static int send_data_udp(struct TeensyCommunicationUDP* comm,
             chunk = MTU_PAYLOAD_SIZE;
         }
 
-        comm->data_string[0] = sequence;
+        buffer[0] = sequence;
 
-        memcpy(comm->data_string + 1, raw + offset, chunk);
+        memcpy(buffer + 1, raw + offset, chunk);
 
         ssize_t sent = sendto(
-            comm->client_socket, comm->data_string, (size_t)(chunk + 1), 0,
+            comm->client_socket, buffer, (size_t)(chunk + 1), 0,
             (struct sockaddr*)&comm->teensy_addr, sizeof(comm->teensy_addr));
-
         if (sent < 0) {
             perror("sendto failed");
             return -1;
@@ -122,8 +123,8 @@ char* get_local_ip() {
     return ip;
 }
 
-int init_communication(struct TeensyCommunicationUDP* comm,
-                       struct FrequencyInterest* freq,
+int init_communication(struct teensy_udp* comm,
+                       struct frequency_interest* freq,
                        int freq_count) {
     comm->client_socket = socket(AF_INET, SOCK_DGRAM, 0);
     if (comm->client_socket < 0) {
@@ -176,7 +177,7 @@ int init_communication(struct TeensyCommunicationUDP* comm,
     return 0;
 }
 
-void send_acknowledge_signal(struct TeensyCommunicationUDP* comm) {
+void send_acknowledge_signal(struct teensy_udp* comm) {
     int sent =
         sendto(comm->client_socket, INITIALIZATION_MESSAGE,
                strlen(INITIALIZATION_MESSAGE), 0,
@@ -188,7 +189,7 @@ void send_acknowledge_signal(struct TeensyCommunicationUDP* comm) {
     }
 }
 
-int check_if_ready(struct TeensyCommunicationUDP* comm) {
+int check_if_ready(struct teensy_udp* comm) {
     char buffer[1024] = {0};
     socklen_t addrlen = sizeof(comm->teensy_addr);
     int n = recvfrom(comm->client_socket, buffer, sizeof(buffer) - 1, 0,
@@ -203,8 +204,8 @@ int check_if_ready(struct TeensyCommunicationUDP* comm) {
     return 0;
 }
 
-void send_frequencies_of_interest(struct TeensyCommunicationUDP* comm,
-                                  struct FrequencyInterest* freq,
+void send_frequencies_of_interest(struct teensy_udp* comm,
+                                  struct frequency_interest* freq,
                                   int freq_count) {
     send_data_udp(comm, freq, freq_count, 1);
 }
@@ -218,7 +219,7 @@ void send_frequencies_of_interest(struct TeensyCommunicationUDP* comm,
  *         -2 if seq is out of range
  *         -3 if offset+data_len would overrun the selected buffer
  */
-int handle_data(const uint8_t* buf, uint32_t len) {
+static int handle_data(const uint8_t* buf, uint32_t len) {
     if (len < 6) {
         return -1;
     }
@@ -243,8 +244,9 @@ int handle_data(const uint8_t* buf, uint32_t len) {
     return 0;
 }
 
-void fetch_data(struct TeensyCommunicationUDP* comm) {
+void fetch_data(struct teensy_udp* comm) {
     int attempts = 0;
+    uint8_t buffer[1500];
     while (attempts < 1000) {
         socklen_t addrlen = sizeof(comm->teensy_addr);
         int n = recvfrom(comm->client_socket, buffer, sizeof(buffer) - 1, 0,
