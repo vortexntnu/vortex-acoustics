@@ -94,9 +94,13 @@ void filter_butterwort_4th_order_init(void) {
  *@param output filtered sigal
  *@param block size
  */
-static inline void process_block(int16_t* rawADC, q15_t* filteredQ15, uint32_t blockSize) { arm_biquad_cascade_df1_q15(&S_q15, rawADC, filteredQ15, blockSize); }
+static void process_block(int16_t* rawADC, q15_t* filteredQ15, uint32_t blockSize) { arm_biquad_cascade_df1_q15(&S_q15, rawADC, filteredQ15, blockSize); }
 
-
+/**
+ *@brief fourier transfom of raw input
+ *@param[in] samples pointer to array containing raw adc samples
+ *@param[out] resultsRaw pointer to array where result is stored
+ */
 static void fft_raw(q15_t* samples, q15_t* resultsRaw) {
     q15_t temp[SAMPLE_LENGTH];
 
@@ -109,10 +113,15 @@ static void fft_raw(q15_t* samples, q15_t* resultsRaw) {
     arm_rfft_q15(&fftInstance, temp, resultsRaw);
 }
 
-static inline void fft_mag(q15_t* resultsRaw, q15_t* results) { arm_cmplx_mag_q15(resultsRaw, results, SAMPLE_LENGTH); }
+/**
+ *@brief fft magnify of fft_raw result
+ *@param[in] resultsRaw pointer to array containing fft processed samples
+ *@param[out] results pointer to array where results are stored
+ */
+static void fft_mag(q15_t* resultsRaw, q15_t* results) { arm_cmplx_mag_q15(resultsRaw, results, SAMPLE_LENGTH); }
 
 // Compute phase from real and imag in Q15 format
-static inline q15_t compute_phase(q15_t real, q15_t imag) {
+static q15_t compute_phase(q15_t real, q15_t imag) {
     if (real == 0 && imag == 0) {
         return 0;
     } else if (real == 0) {
@@ -123,7 +132,12 @@ static inline q15_t compute_phase(q15_t real, q15_t imag) {
         return q15_taylor_atan(q15_divide(imag, real));
     }
 }
-
+/**
+ *@brief check for ping in predetermined frequency
+ *@param[in] pointer to array containing fft magnifed data
+ *@return 1 if ping is detected
+ 	  0 if ping is not detected
+ */
 static int detect_ping_in_spectrum(const q15_t* fftMag) {
     // 1) Compute target bin ± spread:
     float binWidth = Fs / (float)N;
